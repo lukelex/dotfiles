@@ -16,6 +16,7 @@ Plugin 'vim-scripts/matchit.zip'
 Plugin 'mattn/emmet-vim'
 Plugin 'slim-template/vim-slim'
 Plugin 'kien/ctrlp.vim'
+Plugin 'tpope/vim-fugitive'
 
 call vundle#end()
 filetype plugin indent on
