@@ -30,7 +30,15 @@ set tabstop=2
 set shiftwidth=2
 
 set expandtab
-set number
+set relativenumber
+
+set winwidth=84
+set winheight=5
+set winminheight=5
+set winheight=999
+
+set splitbelow
+set splitright
 
 set guifont=Monospace:h20
 
