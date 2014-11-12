@@ -38,6 +38,8 @@ set guifont=Monospace:h20
 set textwidth=80
 set colorcolumn=+1
 
+colorscheme railscasts
+
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72
 autocmd FileType gitcommit setlocal spell
