@@ -1,0 +1,9 @@
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+\curl -sSL https://get.rvm.io | bash
+
+brew install ctags
+
+brew install zsh
+echo "/usr/local/bin/zsh" >> /etc/shells
+chsh -s /usr/local/bin/zsh
