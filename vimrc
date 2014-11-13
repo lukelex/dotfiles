@@ -26,21 +26,26 @@ set noswapfile
 set ruler         " show the cursor position all the time
 set showcmd       " display incomplete commands
 
+set nowrap
+set hlsearch
+set incsearch
+setlocal ignorecase
+setlocal smartcase
+set cursorline
+
 set tabstop=2
 set shiftwidth=2
+
+set number
+set relativenumber
 
 set expandtab
 set relativenumber
 
-set winwidth=84
-set winheight=5
-set winminheight=5
-set winheight=999
-
 set splitbelow
 set splitright
 
-set guifont=Monospace:h20
+set guifont=Monaco:h16
 
 " Make it obvious where 80 characters is
 set textwidth=80
