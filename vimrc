@@ -17,6 +17,8 @@ Plugin 'mattn/emmet-vim'
 Plugin 'slim-template/vim-slim'
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'mileszs/ack.vim'
 
 call vundle#end()
 filetype plugin indent on
