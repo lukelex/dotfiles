@@ -1,9 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =7
-let g:netrw_dirhist_1='/Users/lukelex/projects/codelogic/easypong/app/contexts'
-let g:netrw_dirhist_2='/Users/lukelex/dotfiles'
-let g:netrw_dirhist_3='/Users/lukelex/projects/codelogic/easypong'
-let g:netrw_dirhist_4='/Users/lukelex/projects/codelogic/easypong/app'
-let g:netrw_dirhist_5='/Users/lukelex/projects/codelogic/easypong/app/contexts'
-let g:netrw_dirhist_6='/Users/lukelex/projects/autobutler/autobutler'
-let g:netrw_dirhist_7='/Users/lukelex/dotfiles'

@@ -18,7 +18,13 @@ Plugin 'slim-template/vim-slim'
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
 Plugin 'scrooloose/nerdcommenter'
-Plugin 'mileszs/ack.vim'
+Plugin 'MarcWeber/vim-addon-mw-utils'
+Plugin 'tomtom/tlib_vim'
+Plugin 'garbas/vim-snipmate'
+Plugin 'honza/vim-snippets'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'nelstrom/vim-textobj-rubyblock'
+Plugin 'kana/vim-textobj-user'
 
 call vundle#end()
 filetype plugin indent on
@@ -28,21 +34,28 @@ set noswapfile
 set ruler         " show the cursor position all the time
 set showcmd       " display incomplete commands
 
-set nowrap
-set hlsearch
-set incsearch
-setlocal ignorecase
-setlocal smartcase
-set cursorline
+set nowrap " avoid line wrapping
+set hlsearch " highlight search results
+set incsearch " show search results while typing
+setlocal ignorecase " ignore case when searching
+setlocal smartcase " when searching try to be smart about cases
+set cursorline " show cursor line
+set so=7 " cursor padding
 
-set tabstop=2
-set shiftwidth=2
+" master fucking undo
+set undodir=/tmp/undodir
+set undofile
+
+set autoread " autoread files that were changed outside of vim
 
 set number
 set relativenumber
 
+" use 2 spaces instead of tabs
 set expandtab
-set relativenumber
+set smarttab
+set tabstop=2
+set shiftwidth=2
 
 set splitbelow
 set splitright
@@ -53,7 +66,21 @@ set guifont=Monaco:h16
 set textwidth=80
 set colorcolumn=+1
 
+" disable backup files
+set nobackup
+set nowb
+set noswapfile
+
+" disable scrollbars
+set guioptions-=r
+set guioptions-=R
+set guioptions-=l
+set guioptions-=L
+
 colorscheme railscasts
+
+map <leader>p :CtrlP<cr>
+let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
 
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72
@@ -84,3 +111,6 @@ autocmd FileWritePre    * :call TrimWhiteSpace()
 autocmd FileAppendPre   * :call TrimWhiteSpace()
 autocmd FilterWritePre  * :call TrimWhiteSpace()
 autocmd BufWritePre     * :call TrimWhiteSpace()
+
+vmap <Leader>b :<C-U>!git blame <C-R>=expand("%:p") <CR> \| sed -n <C-R>=line("'<") <CR>,<C-R>=line("'>") <CR>p <CR>
+
