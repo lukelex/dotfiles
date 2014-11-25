@@ -73,3 +73,5 @@ fi
 source $(brew --prefix nvm)/nvm.sh
 
 source ~/dotfiles/aliases.sh
+
+which rbenv && eval "$(rbenv init -)"
