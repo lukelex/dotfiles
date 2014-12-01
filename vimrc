@@ -25,6 +25,7 @@ Plugin 'honza/vim-snippets'
 Plugin 'airblade/vim-gitgutter'
 Plugin 'nelstrom/vim-textobj-rubyblock'
 Plugin 'kana/vim-textobj-user'
+Plugin 'tpope/vim-surround'
 
 call vundle#end()
 filetype plugin indent on
@@ -41,6 +42,9 @@ setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
 set cursorline " show cursor line
 set so=7 " cursor padding
+
+" clean the current search
+nmap <leader>h :nohlsearch<cr>
 
 " master fucking undo
 set undodir=/tmp/undodir
