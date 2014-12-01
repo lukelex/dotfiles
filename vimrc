@@ -61,6 +61,7 @@ set smarttab
 set tabstop=2
 set shiftwidth=2
 
+" use natural screen spliting
 set splitbelow
 set splitright
 
