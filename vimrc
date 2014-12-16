@@ -31,7 +31,6 @@ call vundle#end()
 filetype plugin indent on
 
 set backspace=2
-set noswapfile
 set ruler         " show the cursor position all the time
 set showcmd       " display incomplete commands
 
