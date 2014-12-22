@@ -26,6 +26,8 @@ Plugin 'airblade/vim-gitgutter'
 Plugin 'nelstrom/vim-textobj-rubyblock'
 Plugin 'kana/vim-textobj-user'
 Plugin 'tpope/vim-surround'
+Plugin 'xolox/vim-misc'
+Plugin 'xolox/vim-notes'
 
 call vundle#end()
 filetype plugin indent on
@@ -64,7 +66,7 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-set guifont=Monaco:h16
+set guifont=Monaco:h20
 
 " Make it obvious where 80 characters is
 set textwidth=80
@@ -86,6 +88,9 @@ colorscheme railscasts
 map <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
 let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git'
+let g:ctrlp_match_window = 'results:20'
+
+let g:notes_directories = ['~/Dropbox/notes']
 
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72

@@ -1,3 +1,4 @@
+# GIT
 alias g="git"
 alias gs="git status"
 alias gd="git diff"
@@ -14,3 +15,6 @@ alias gpl="git pull --rebase"
 alias gm="git merge"
 alias gr="git rebase"
 alias grhh="git reset --hard HEAD"
+
+# Bundler
+alias be="bundle exec"
