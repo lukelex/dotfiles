@@ -28,6 +28,7 @@ Plugin 'kana/vim-textobj-user'
 Plugin 'tpope/vim-surround'
 Plugin 'xolox/vim-misc'
 Plugin 'xolox/vim-notes'
+Plugin 'mileszs/ack.vim'
 
 call vundle#end()
 filetype plugin indent on
