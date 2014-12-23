@@ -31,6 +31,7 @@ Plugin 'xolox/vim-notes'
 Plugin 'mileszs/ack.vim'
 Plugin 'bling/vim-airline'
 Plugin 'majutsushi/tagbar'
+Plugin 'ervandew/supertab'
 
 call vundle#end()
 filetype plugin indent on
