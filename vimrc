@@ -118,6 +118,15 @@ endfunction
 inoremap <Tab> <c-r>=InsertTabWrapper()<cr>
 inoremap <S-Tab> <c-n>
 
+function! AirlineInit()
+  let g:airline_section_a = airline#section#create(['mode', ' ', 'branch'])
+  let g:airline_section_b = airline#section#create_left(['hunks', '%f'])
+  let g:airline_section_c = airline#section#create(['filetype'])
+  let g:airline_section_c = airline#section#create(['%P'])
+  let g:airline_section_c = airline#section#create(['%B'])
+endfunction
+autocmd VimEnter * call AirlineInit()
+
 " Removes trailing spaces
 function! TrimWhiteSpace()
 	%s/\s\+$//e
