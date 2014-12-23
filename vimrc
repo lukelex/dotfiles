@@ -70,7 +70,7 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-set guifont=Monaco:h20
+set guifont=Monaco\ for\ Powerline:h20
 
 " Make it obvious where 80 characters is
 set textwidth=80
@@ -88,6 +88,11 @@ set guioptions-=l
 set guioptions-=L
 
 colorscheme railscasts
+
+let g:user_emmet_mode='i'
+let g:user_emmet_install_global = 0
+autocmd FileType html,css EmmetInstall
+autocmd FileType html,css imap <expr> <tab> emmet#expandAbbrIntelligent("\<tab>")
 
 nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
@@ -118,6 +123,7 @@ endfunction
 inoremap <Tab> <c-r>=InsertTabWrapper()<cr>
 inoremap <S-Tab> <c-n>
 
+let g:airline_powerline_fonts = 1
 function! AirlineInit()
   let g:airline_section_a = airline#section#create(['mode', ' ', 'branch'])
   let g:airline_section_b = airline#section#create_left(['hunks', '%f'])
