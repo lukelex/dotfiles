@@ -130,7 +130,7 @@ function! AirlineInit()
   let g:airline_section_c = airline#section#create(['filetype'])
   let g:airline_section_x = airline#section#create(['%P'])
   let g:airline_section_y = airline#section#create(['%B'])
-  let g:airline_section_z = airline#section#create(['%l', '%c'])
+  let g:airline_section_z = airline#section#create_right(['%l', '%c'])
 endfunction
 autocmd VimEnter * call AirlineInit()
 set laststatus=2
