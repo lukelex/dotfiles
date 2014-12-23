@@ -29,6 +29,8 @@ Plugin 'tpope/vim-surround'
 Plugin 'xolox/vim-misc'
 Plugin 'xolox/vim-notes'
 Plugin 'mileszs/ack.vim'
+Plugin 'bling/vim-airline'
+Plugin 'majutsushi/tagbar'
 
 call vundle#end()
 filetype plugin indent on
@@ -86,10 +88,13 @@ set guioptions-=L
 
 colorscheme railscasts
 
-map <leader>p :CtrlP<cr>
+nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
-let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git'
-let g:ctrlp_match_window = 'results:20'
+let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\|tags'
+let g:ctrlp_working_path_mode = 'ra'
+let g:ctrlp_max_height = 12
+
+nmap <leader>t :TagbarToggle<CR>
 
 let g:notes_directories = ['~/Dropbox/notes']
 
