@@ -32,6 +32,7 @@ Plugin 'mileszs/ack.vim'
 Plugin 'bling/vim-airline'
 Plugin 'majutsushi/tagbar'
 Plugin 'ervandew/supertab'
+Plugin 'Raimondi/delimitMate'
 
 call vundle#end()
 filetype plugin indent on
