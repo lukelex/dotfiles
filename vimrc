@@ -33,6 +33,7 @@ Plugin 'bling/vim-airline'
 Plugin 'majutsushi/tagbar'
 Plugin 'ervandew/supertab'
 Plugin 'Raimondi/delimitMate'
+Plugin 'rking/ag.vim'
 
 call vundle#end()
 filetype plugin indent on
@@ -53,10 +54,11 @@ set so=7 " cursor padding
 nmap <leader>h :nohlsearch<cr>
 
 " master fucking undo
-set undodir=/tmp/undodir
+set undodir=~/.cache/undodir
 set undofile
 
-set autoread " autoread files that were changed outside of vim
+" autoread files that were changed outside of vim
+set autoread
 
 set number
 set relativenumber
@@ -71,10 +73,10 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-set guifont=Monaco\ for\ Powerline:h20
+set guifont=Monaco\ for\ Powerline:h18
 
 " Make it obvious where 80 characters is
-set textwidth=80
+set textwidth=65
 set colorcolumn=+1
 
 " disable backup files
