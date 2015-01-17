@@ -13,7 +13,6 @@ Plugin 'vim-ruby/vim-ruby'
 Plugin 'tpope/vim-rake'
 Plugin 'tpope/vim-bundler'
 Plugin 'vim-scripts/matchit.zip'
-Plugin 'mattn/emmet-vim'
 Plugin 'slim-template/vim-slim'
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
@@ -92,11 +91,6 @@ set guioptions-=l
 set guioptions-=L
 
 colorscheme railscasts
-
-let g:user_emmet_mode='i'
-let g:user_emmet_install_global = 0
-autocmd FileType html,css EmmetInstall
-autocmd FileType html,css imap <expr> <tab> emmet#expandAbbrIntelligent("\<tab>")
 
 nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
