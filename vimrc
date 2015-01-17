@@ -34,6 +34,7 @@ Plugin 'majutsushi/tagbar'
 Plugin 'ervandew/supertab'
 Plugin 'Raimondi/delimitMate'
 Plugin 'rking/ag.vim'
+Plugin 'wavded/vim-stylus'
 
 call vundle#end()
 filetype plugin indent on
