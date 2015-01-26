@@ -57,6 +57,8 @@ nmap <leader>h :nohlsearch<cr>
 set undodir=~/.cache/undodir
 set undofile
 
+set clipboard+=unnamed
+
 " autoread files that were changed outside of vim
 set autoread
 
