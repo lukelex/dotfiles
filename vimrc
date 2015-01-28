@@ -108,6 +108,8 @@ let g:notes_directories = ['~/Dropbox/notes']
 autocmd FileType gitcommit setlocal textwidth=72
 autocmd FileType gitcommit setlocal spell
 
+au BufRead,BufNewFile *.es6 setfiletype javascript
+
 " Tab completion
 " " will insert tab at beginning of line,
 " " will use completion if not at beginning

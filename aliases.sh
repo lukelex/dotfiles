@@ -18,3 +18,6 @@ alias grhh="git reset --hard HEAD"
 
 # Bundler
 alias be="bundle exec"
+
+# Rails
+alias rc="rails console"
