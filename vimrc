@@ -100,6 +100,17 @@ let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\
 let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_max_height = 12
 
+" Use ag over grep
+set grepprg=ag
+
+" Use ag in CtrlP for listing files
+"let g:ctrlp_user_command = 'ag %s -l --nocolor -g "'
+
+" ag is fast enough that CtrlP doesn't need to cache
+"let g:ctrlp_use_caching = 0
+
+nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
+
 nmap <leader>t :TagbarToggle<CR>
 
 let g:notes_directories = ['~/Dropbox/notes']
