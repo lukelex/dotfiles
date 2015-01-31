@@ -97,12 +97,9 @@ set guioptions-=L
 
 colorscheme railscasts
 
-" Use <Leader>t to run the current spec file.
-map <Leader>s <Plug>RunCurrentSpecFile
-" Use <Leader>l to run the current line in a spec.
-map <Leader>u <Plug>RunFocusedSpec
-" Use <Leader>m to explicitly run the most recent spec.
-map <Leader>v <Plug>RunMostRecentSpec
+map <Leader>sc <Plug>RunCurrentSpecFile
+map <Leader>sl <Plug>RunFocusedSpec
+map <Leader>sm <Plug>RunMostRecentSpec
 
 nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
