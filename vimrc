@@ -13,6 +13,9 @@ Plugin 'vim-ruby/vim-ruby'
 Plugin 'tpope/vim-rake'
 Plugin 'tpope/vim-bundler'
 Plugin 'vim-scripts/matchit.zip'
+Plugin 'slim-template/vim-slim'
+Plugin 'kien/ctrlp.vim'
+Plugin 'tpope/vim-fugitive'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'MarcWeber/vim-addon-mw-utils'
 Plugin 'tomtom/tlib_vim'
@@ -47,7 +50,7 @@ setlocal smartcase " when searching try to be smart about cases
 set cursorline " show cursor line
 set so=7 " cursor padding
 
-let mapleader=" "
+let mapleader = "\<Space>"
 
 " clean the current search
 nmap <leader>h :nohlsearch<cr>
