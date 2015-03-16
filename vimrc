@@ -69,7 +69,7 @@ set relativenumber
 
 " limit sytanx highlight to 120 columns to avoid slow paint
 " cycles
-set synmaxcol=120
+set synmaxcol=200
 
 " use 2 spaces instead of tabs
 set expandtab
