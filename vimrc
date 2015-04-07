@@ -55,6 +55,13 @@ let mapleader = "\<Space>"
 " clean the current search
 nmap <leader>h :nohlsearch<cr>
 
+" handy shortcuts
+map - dd
+
+" adopt new ruby hash syntax
+" :%s/:\([^ ]*\)\(\s*\)=>/\1:/g
+" :%s/:(\w+)(\s*)=>/\1:/g
+
 " master fucking undo
 set undodir=~/.cache/undodir
 set undofile
