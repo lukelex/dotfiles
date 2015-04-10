@@ -33,7 +33,6 @@ Plugin 'ervandew/supertab'
 Plugin 'Raimondi/delimitMate'
 Plugin 'rking/ag.vim'
 Plugin 'wavded/vim-stylus'
-Plugin 'gabebw/vim-spec-runner'
 
 call vundle#end()
 filetype plugin indent on
@@ -106,10 +105,6 @@ set guioptions-=l
 set guioptions-=L
 
 colorscheme railscasts
-
-map <Leader>sc <Plug>RunCurrentSpecFile
-map <Leader>sl <Plug>RunFocusedSpec
-map <Leader>sm <Plug>RunMostRecentSpec
 
 nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
