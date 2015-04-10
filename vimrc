@@ -132,6 +132,10 @@ let g:notes_directories = ['~/Dropbox/notes']
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72
 autocmd FileType gitcommit setlocal spell
+" activate spell checking on Markdown files
+autocmd BufRead,BufNewFile *.md setlocal spell
+" enable word autocompletion
+set complete+=kspell
 
 au BufRead,BufNewFile *.es6 setfiletype javascript
 au BufRead,BufNewFile *.jbuilder setfiletype ruby
