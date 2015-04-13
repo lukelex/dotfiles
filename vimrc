@@ -75,7 +75,10 @@ set relativenumber
 
 " limit sytanx highlight to 120 columns to avoid slow paint
 " cycles
-set synmaxcol=200
+"set synmaxcol=200
+set ttyfast
+set ttyscroll=3
+set lazyredraw
 
 " use 2 spaces instead of tabs
 set expandtab
