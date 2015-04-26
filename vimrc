@@ -141,6 +141,7 @@ autocmd BufRead,BufNewFile *.md setlocal spell
 " enable word autocompletion
 set complete+=kspell
 
+au BufRead,BufNewFile *.hbs setfiletype html
 au BufRead,BufNewFile *.es6 setfiletype javascript
 au BufRead,BufNewFile *.jbuilder setfiletype ruby
 
