@@ -8,11 +8,14 @@ call vundle#begin()
 
 Plugin 'gmarik/Vundle.vim'
 
-Plugin 'kchmck/vim-coffee-script'
 Plugin 'vim-ruby/vim-ruby'
+Plugin 'jelera/vim-javascript-syntax'
+Plugin 'pangloss/vim-javascript'
+Plugin 'kchmck/vim-coffee-script'
 Plugin 'tpope/vim-rake'
 Plugin 'tpope/vim-bundler'
 Plugin 'vim-scripts/matchit.zip'
+Plugin 'nathanaelkane/vim-indent-guides'
 Plugin 'slim-template/vim-slim'
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
@@ -174,7 +177,7 @@ set laststatus=2
 
 " Removes trailing spaces
 function! TrimWhiteSpace()
-	%s/\s\+$//e
+  %s/\s\+$//e
 endfunction
 
 nnoremap <silent> <Leader>rts :call TrimWhiteSpace()<CR>
