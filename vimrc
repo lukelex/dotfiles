@@ -37,6 +37,7 @@ Plugin 'ervandew/supertab'
 Plugin 'Raimondi/delimitMate'
 Plugin 'rking/ag.vim'
 Plugin 'wavded/vim-stylus'
+Plugin 'Shutnik/jshint2.vim'
 
 call vundle#end()
 filetype plugin indent on
@@ -119,6 +120,8 @@ let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rd
 let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\|tags'
 let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_max_height = 12
+
+let jshint2_save = 1
 
 if executable('ag')
   " Use ag over grep
