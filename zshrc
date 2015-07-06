@@ -64,6 +64,9 @@ else
   export EDITOR='mvim'
 fi
 
+# use MacVim vim as the system vim
+alias vim='/Applications/MacVim.app/Contents/MacOS/Vim'
+
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
