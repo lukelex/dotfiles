@@ -52,7 +52,6 @@ set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
 set cursorline " show cursor line
-set so=7 " cursor padding
 
 let mapleader = "\<Space>"
 
