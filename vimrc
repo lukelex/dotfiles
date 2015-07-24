@@ -87,7 +87,6 @@ set expandtab
 set smarttab
 set tabstop=2
 set shiftwidth=2
-retab
 
 " use natural screen spliting
 set splitbelow
