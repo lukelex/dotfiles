@@ -111,6 +111,9 @@ set guioptions-=L
 
 colorscheme railscasts
 
+" remap 0 in normal mode to go to the beginning of the text line
+nmap 0 ^
+
 nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
 let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\|tags'
