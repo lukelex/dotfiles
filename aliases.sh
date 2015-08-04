@@ -19,6 +19,7 @@ alias gr="git rebase"
 alias grhh="git reset --hard HEAD"
 alias gl="git log"
 alias gls="git log --oneline --decorate"
+alias grl="git reflog"
 
 # Bundler
 alias be="bundle exec"
