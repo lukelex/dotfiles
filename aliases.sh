@@ -9,15 +9,20 @@ alias gc="git checkout"
 alias gcb="git checkout -b"
 alias gmv="git mv"
 alias gcm="git commit"
+alias gcmf="git commit --fixup"
 alias gcam="git add . && git commit"
+alias gcamf="git add . && git commit --fixup"
 alias gps="git push"
 alias gpl="git pull --rebase"
 alias gm="git merge"
 alias gr="git rebase"
 alias grhh="git reset --hard HEAD"
+alias gl="git log"
+alias gls="git log --oneline --decorate"
 
 # Bundler
 alias be="bundle exec"
 
 # Rails
 alias rc="rails console"
+alias rs="rails server"
