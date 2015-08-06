@@ -40,6 +40,7 @@ Plugin 'Raimondi/delimitMate'
 Plugin 'rking/ag.vim'
 Plugin 'wavded/vim-stylus'
 Plugin 'Shutnik/jshint2.vim'
+Plugin 'vim-scripts/Gundo'
 
 call vundle#end()
 filetype plugin indent on
@@ -70,6 +71,7 @@ map - dd
 " master fucking undo
 set undodir=~/.cache/undodir
 set undofile
+nnoremap <F5> :GundoToggle<CR>
 
 set clipboard+=unnamed
 
