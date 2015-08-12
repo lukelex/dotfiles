@@ -41,6 +41,7 @@ Plugin 'rking/ag.vim'
 Plugin 'wavded/vim-stylus'
 Plugin 'Shutnik/jshint2.vim'
 Plugin 'vim-scripts/Gundo'
+Plugin 'elixir-lang/vim-elixir'
 
 call vundle#end()
 filetype plugin indent on
