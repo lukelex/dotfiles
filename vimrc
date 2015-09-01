@@ -112,6 +112,10 @@ set guioptions-=R
 set guioptions-=l
 set guioptions-=L
 
+" always horizontally center search results
+nmap n nzz
+nmap N Nzz
+
 colorscheme railscasts
 
 " remap 0 in normal mode to go to the beginning of the text line
