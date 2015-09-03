@@ -95,7 +95,7 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-set guifont=Monaco\ for\ Powerline:h18
+set guifont=Hack:h18
 
 " Make it obvious where 80 characters is
 set textwidth=65
