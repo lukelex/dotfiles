@@ -41,6 +41,7 @@ Plugin 'wavded/vim-stylus'
 Plugin 'Shutnik/jshint2.vim'
 Plugin 'vim-scripts/Gundo'
 Plugin 'elixir-lang/vim-elixir'
+Plugin 'xolox/vim-easytags'
 
 call vundle#end()
 filetype plugin indent on
@@ -55,6 +56,9 @@ set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
 set cursorline " show cursor line
+
+let g:easytags_async = 1
+let g:easytags_auto_highlight = 0
 
 let mapleader = "\<Space>"
 
