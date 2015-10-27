@@ -169,8 +169,8 @@ au BufRead,BufNewFile *.es6 setfiletype javascript
 au BufRead,BufNewFile *.jbuilder setfiletype ruby
 
 " Tab completion
-" " will insert tab at beginning of line,
-" " will use completion if not at beginning
+" will insert tab at beginning of line,
+" will use completion if not at beginning
 set wildmode=list:longest,list:full
 function! InsertTabWrapper()
   let col = col('.') - 1
