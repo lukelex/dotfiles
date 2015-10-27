@@ -146,6 +146,11 @@ endif
 
 nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
 
+" navigate through panes with ctrl + hjkl
+nnoremap <C-J> <C-W><C-J>
+nnoremap <C-K> <C-W><C-K>
+nnoremap <C-L> <C-W><C-L>
+nnoremap <C-H> <C-W><C-H>
 nmap <leader>t :TagbarToggle<CR>
 
 let g:notes_directories = ['~/Dropbox/notes']
