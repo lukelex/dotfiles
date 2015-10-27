@@ -42,6 +42,7 @@ Plugin 'Shutnik/jshint2.vim'
 Plugin 'vim-scripts/Gundo'
 Plugin 'elixir-lang/vim-elixir'
 Plugin 'xolox/vim-easytags'
+Plugin 'scrooloose/syntastic'
 
 call vundle#end()
 filetype plugin indent on
