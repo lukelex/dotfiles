@@ -43,6 +43,7 @@ Plugin 'vim-scripts/Gundo'
 Plugin 'elixir-lang/vim-elixir'
 Plugin 'xolox/vim-easytags'
 Plugin 'scrooloose/syntastic'
+Plugin 'DataWraith/auto_mkdir'
 
 call vundle#end()
 filetype plugin indent on
