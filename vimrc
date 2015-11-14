@@ -44,6 +44,7 @@ Plugin 'elixir-lang/vim-elixir'
 Plugin 'xolox/vim-easytags'
 Plugin 'scrooloose/syntastic'
 Plugin 'DataWraith/auto_mkdir'
+Plugin 'danro/rename.vim'
 
 call vundle#end()
 filetype plugin indent on
