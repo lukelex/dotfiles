@@ -1,9 +1,24 @@
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+if ! [ -x "$(command -v brew)" ]; then
+  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
 
-\curl -sSL https://get.rvm.io | bash
+if ! [ -x "$(command -v rvm)" ]; then
+  \curl -sSL https://get.rvm.io | bash
+fi
 
-brew install ctags
+" developer tools
+brew install ctags postgres redis the_silver_searcher
 
-brew install zsh
+" my favorite editor
+brew install vim macvim
+
+" console tools
+brew install zsh tree
+
 echo "/usr/local/bin/zsh" >> /etc/shells
 chsh -s /usr/local/bin/zsh
+
+git clone https://github.com/lukelex/dotfiles ~/dotfiles
+. ~/dotfiles/makesymlinks.sh
+
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
