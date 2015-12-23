@@ -105,8 +105,8 @@ set splitright
 
 set guifont=Hack:h18
 
-" Make it obvious where 80 characters is
-set textwidth=65
+" Make it obvious where 65 characters is on text files
+autocmd BufRead,BufNewFile *.md set textwidth=65
 set colorcolumn=+1
 
 " disable backup files
