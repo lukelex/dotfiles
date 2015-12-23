@@ -70,6 +70,7 @@ nmap <leader>h :nohlsearch<cr>
 
 " handy shortcuts
 map - dd
+map + o
 
 " adopt new ruby hash syntax
 " :%s/:\([^ ]*\)\(\s*\)=>/\1:/g
