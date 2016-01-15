@@ -170,6 +170,8 @@ set complete+=kspell
 au BufRead,BufNewFile *.hbs setfiletype html
 au BufRead,BufNewFile *.es6 setfiletype javascript
 au BufRead,BufNewFile *.jbuilder setfiletype ruby
+au BufRead,BufNewFile *.eex setfiletype eelixir
+au BufRead,BufNewFile *.exs setfiletype eelixir
 
 " Tab completion
 " will insert tab at beginning of line,
