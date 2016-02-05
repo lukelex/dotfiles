@@ -68,10 +68,6 @@ let mapleader = "\<Space>"
 " clean the current search
 nmap <leader>h :nohlsearch<cr>
 
-" handy shortcuts
-map - dd
-map + o
-
 " adopt new ruby hash syntax
 " :%s/:\([^ ]*\)\(\s*\)=>/\1:/g
 " :%s/:(\w+)(\s*)=>/\1:/g
@@ -128,6 +124,7 @@ colorscheme railscasts
 
 " remap 0 in normal mode to go to the beginning of the text line
 nmap 0 ^
+nmap - ^
 
 nmap <leader>p :CtrlP<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
