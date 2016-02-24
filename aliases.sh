@@ -1,7 +1,7 @@
 # GIT
 alias g="git"
 alias gs="git status"
-alias gd="git diff"
+alias gd="git diff --color"
 alias ga="git add"
 alias gal="git add ."
 alias gb="git branch"
@@ -22,6 +22,9 @@ alias grhh="git reset --hard HEAD"
 alias gl="git log"
 alias gls="git log --oneline --decorate"
 alias grl="git reflog"
+
+git config --global pager.diff "diff-so-fancy | less --tabs=1,5 -RFX"
+git config --global pager.show "diff-so-fancy | less --tabs=1,5 -RFX"
 
 # Bundler
 alias be="bundle exec"

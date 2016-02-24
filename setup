@@ -14,7 +14,7 @@ brew install vim macvim
 brew linkapps
 
 " console tools
-brew install zsh tree
+brew install zsh tree diff-so-fancy
 
 echo "/usr/local/bin/zsh" >> /etc/shells
 chsh -s /usr/local/bin/zsh
