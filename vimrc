@@ -44,6 +44,7 @@ Plugin 'elixir-lang/vim-elixir'
 Plugin 'xolox/vim-easytags'
 Plugin 'scrooloose/syntastic'
 Plugin 'DataWraith/auto_mkdir'
+Plugin 'ap/vim-css-color'
 Plugin 'danro/rename.vim'
 
 call vundle#end()
