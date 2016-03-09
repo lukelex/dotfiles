@@ -22,9 +22,14 @@ alias grhh="git reset --hard HEAD"
 alias gl="git log"
 alias gls="git log --oneline --decorate"
 alias grl="git reflog"
+alias gbam="delete_local_merged_branches"
 
 git config --global pager.diff "diff-so-fancy | less --tabs=1,5 -RFX"
 git config --global pager.show "diff-so-fancy | less --tabs=1,5 -RFX"
+
+function delete_local_merged_branches() {
+  git branch --merged master | grep -v master | xargs git branch -d
+}
 
 # Bundler
 alias be="bundle exec"
