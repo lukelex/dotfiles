@@ -165,9 +165,9 @@ nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
-nmap <leader>t :TagbarToggle<CR>
 
-let g:notes_directories = ['~/Dropbox/notes']
+" SuperTab
+nmap <leader>t :TagbarToggle<CR>
 
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72
