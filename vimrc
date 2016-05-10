@@ -8,44 +8,56 @@ call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
 
+" Ruby
 Plugin 'vim-ruby/vim-ruby'
 Plugin 'tpope/vim-endwise'
+Plugin 'nelstrom/vim-textobj-rubyblock'
+
+" Javascript
 Plugin 'jelera/vim-javascript-syntax'
 Plugin 'mxw/vim-jsx'
 Plugin 'pangloss/vim-javascript'
 Plugin 'kchmck/vim-coffee-script'
-Plugin 'tpope/vim-rake'
-Plugin 'vim-scripts/matchit.zip'
-Plugin 'nathanaelkane/vim-indent-guides'
+Plugin 'Shutnik/jshint2.vim'
+
+" Elixir
+Plugin 'elixir-lang/vim-elixir'
+
+" Html
 Plugin 'slim-template/vim-slim'
+
+" CSS
+Plugin 'wavded/vim-stylus'
+Plugin 'ap/vim-css-color'
+
+" Editor improvements
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
-Plugin 'tpope/vim-commentary'
-Plugin 'MarcWeber/vim-addon-mw-utils'
 Plugin 'tomtom/tlib_vim'
+Plugin 'MarcWeber/vim-addon-mw-utils'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'rking/ag.vim'
+Plugin 'mileszs/ack.vim'
+Plugin 'bling/vim-airline'
+Plugin 'xolox/vim-misc'
+Plugin 'majutsushi/tagbar'
+Plugin 'ervandew/supertab'
+Plugin 'vim-scripts/matchit.zip'
+Plugin 'vim-scripts/Gundo'
+Plugin 'nathanaelkane/vim-indent-guides'
+Plugin 'xolox/vim-easytags'
+Plugin 'DataWraith/auto_mkdir'
+Plugin 'danro/rename.vim'
+
+" Generic code
+Plugin 'tpope/vim-commentary'
 Plugin 'garbas/vim-snipmate'
 Plugin 'honza/vim-snippets'
-Plugin 'airblade/vim-gitgutter'
-Plugin 'nelstrom/vim-textobj-rubyblock'
 Plugin 'kana/vim-textobj-user'
 Plugin 'tpope/vim-surround'
 Plugin 'tpope/vim-repeat'
-Plugin 'xolox/vim-misc'
-Plugin 'mileszs/ack.vim'
-Plugin 'bling/vim-airline'
-Plugin 'majutsushi/tagbar'
-Plugin 'ervandew/supertab'
 Plugin 'Raimondi/delimitMate'
-Plugin 'rking/ag.vim'
-Plugin 'wavded/vim-stylus'
-Plugin 'Shutnik/jshint2.vim'
-Plugin 'vim-scripts/Gundo'
-Plugin 'elixir-lang/vim-elixir'
-Plugin 'xolox/vim-easytags'
 Plugin 'scrooloose/syntastic'
-Plugin 'DataWraith/auto_mkdir'
-Plugin 'ap/vim-css-color'
-Plugin 'danro/rename.vim'
 
 call vundle#end()
 filetype plugin indent on
