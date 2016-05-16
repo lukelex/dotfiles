@@ -26,6 +26,7 @@ alias gbam="delete_local_merged_branches"
 
 git config --global pager.diff "diff-so-fancy | less --tabs=1,5 -RFX"
 git config --global pager.show "diff-so-fancy | less --tabs=1,5 -RFX"
+git config --global rebase.autosquash true
 
 function delete_local_merged_branches() {
   git branch --merged master | grep -v master | xargs git branch -d
