@@ -38,3 +38,9 @@ alias be="bundle exec"
 # Rails
 alias rc="rails console"
 alias rs="rails server"
+
+# Docker
+alias docker_remove="remove_docker_images_nones"
+function remove_docker_images_nones() {
+  docker rmi -f $(docker images | grep "<none>" | awk "{print \$3}")
+}
