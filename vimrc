@@ -36,7 +36,6 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'tomtom/tlib_vim'
 Plugin 'MarcWeber/vim-addon-mw-utils'
 Plugin 'airblade/vim-gitgutter'
-Plugin 'rking/ag.vim'
 Plugin 'mileszs/ack.vim'
 Plugin 'bling/vim-airline'
 Plugin 'xolox/vim-misc'
@@ -149,7 +148,7 @@ let jshint2_save = 1
 
 if executable('ag')
   " Use ag over grep
-  set grepprg=ag\ --nogroup\ --nocolor
+  let g:ackprg = 'ag --vimgrep --smart-case'
 
   " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
   let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
@@ -157,6 +156,11 @@ if executable('ag')
   " ag is fast enough that CtrlP doesn't need to cache
   let g:ctrlp_use_caching = 0
 endif
+
+cnoreabbrev ag Ack
+cnoreabbrev aG Ack
+cnoreabbrev Ag Ack
+cnoreabbrev AG Ack
 
 nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
 
