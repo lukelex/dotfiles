@@ -17,7 +17,6 @@ Plugin 'nelstrom/vim-textobj-rubyblock'
 Plugin 'jelera/vim-javascript-syntax'
 Plugin 'mxw/vim-jsx'
 Plugin 'pangloss/vim-javascript'
-Plugin 'kchmck/vim-coffee-script'
 Plugin 'Shutnik/jshint2.vim'
 
 " Elixir
