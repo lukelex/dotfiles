@@ -47,3 +47,9 @@ alias docker_remove="remove_docker_images_nones"
 function remove_docker_images_nones() {
   docker rmi -f $(docker images | grep "<none>" | awk "{print \$3}")
 }
+
+function clean_docker() {
+  docker rm -v $(docker ps -q --filter status=dead --filter status=exited) &
+    docker rmi $(docker images -qf "dangling=true") &
+    docker volume rm $(docker volume ls -qf "dangling=true")
+}
