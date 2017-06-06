@@ -108,7 +108,7 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-set guifont=Hack:h18
+set guifont=Hack:h17
 
 " Make it obvious where 65 characters is on text files
 autocmd BufRead,BufNewFile *.md set textwidth=65
