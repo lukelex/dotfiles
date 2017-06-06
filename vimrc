@@ -34,8 +34,8 @@ Plugin 'tomtom/tlib_vim'
 Plugin 'MarcWeber/vim-addon-mw-utils'
 Plugin 'airblade/vim-gitgutter'
 Plugin 'mileszs/ack.vim'
-Plugin 'bling/vim-airline'
 Plugin 'xolox/vim-misc'
+Plugin 'itchyny/lightline.vim'
 Plugin 'majutsushi/tagbar'
 Plugin 'ervandew/supertab'
 Plugin 'benjifisher/matchit.zip'
@@ -182,18 +182,6 @@ au BufRead,BufNewFile *.jbuilder setfiletype ruby
 au BufRead,BufNewFile *.eex setfiletype eelixir
 au BufRead,BufNewFile *.exs setfiletype eelixir
 
-let g:airline_powerline_fonts = 1
-function! AirlineInit()
-  let g:airline_section_a = airline#section#create(['mode', ' ', 'branch'])
-  let g:airline_section_b = airline#section#create_left(['hunks', '%f'])
-  let g:airline_section_c = airline#section#create(['filetype'])
-  let g:airline_section_x = airline#section#create(['%P'])
-  let g:airline_section_y = airline#section#create(['%B'])
-  let g:airline_section_z = airline#section#create_right(['%l', '%c'])
-endfunction
-autocmd VimEnter * call AirlineInit()
-set laststatus=2
-
 " Removes trailing spaces
 function! TrimWhiteSpace()
   %s/\s\+$//e
@@ -206,3 +194,56 @@ autocmd FilterWritePre  * :call TrimWhiteSpace()
 autocmd BufWritePre     * :call TrimWhiteSpace()
 
 vmap <Leader>b :<C-U>!git blame <C-R>=expand("%:p") <CR> \| sed -n <C-R>=line("'<") <CR>,<C-R>=line("'>") <CR>p <CR>
+
+set noshowmode " Hide current mode
+let g:lightline = {
+      \ 'colorscheme': 'one',
+      \ 'active': {
+      \   'left': [
+      \     ['mode'],
+      \     ['gitbranch'], ],
+      \ 'right': [
+      \     ['lineinfo'],
+      \     ['percent'],
+      \     ['fileencoding', 'gitgutter', 'filetype'] ]
+      \ },
+      \ 'component_function': {
+      \   'gitbranch': 'LightlineBranchStatus',
+      \   'mode': 'LightlineMode',
+      \   'filetype': 'LightlineFiletype',
+      \   'gitgutter': 'MyGitGutter'
+      \ }
+      \ }
+
+function! LightlineMode()
+  return mode() ==# 'n' ? (expand('%:t') !=# '' ? expand('%:t') : '[No Name]') : lightline#mode()
+endfunction
+function! LightlineFileformat()
+  return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+function! LightlineFiletype()
+  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
+endfunction
+function! LightlineBranchStatus()
+  return fugitive#head(6)
+endfunction
+function! MyGitGutter()
+  if ! exists('*GitGutterGetHunkSummary')
+        \ || ! get(g:, 'gitgutter_enabled', 0)
+        \ || winwidth('.') <= 90
+    return ''
+  endif
+  let symbols = [
+        \ g:gitgutter_sign_added . '',
+        \ g:gitgutter_sign_modified . '',
+        \ g:gitgutter_sign_removed . ''
+        \ ]
+  let hunks = GitGutterGetHunkSummary()
+  let ret = []
+  for i in [0, 1, 2]
+    if hunks[i] > 0
+      call add(ret, symbols[i] . hunks[i])
+    endif
+  endfor
+  return join(ret, '')
+endfunction
