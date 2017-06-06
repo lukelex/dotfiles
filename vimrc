@@ -158,8 +158,6 @@ cnoreabbrev aG Ack
 cnoreabbrev Ag Ack
 cnoreabbrev AG Ack
 
-nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
-
 " navigate through panes with ctrl + hjkl
 nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
