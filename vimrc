@@ -17,7 +17,6 @@ Plugin 'nelstrom/vim-textobj-rubyblock'
 Plugin 'jelera/vim-javascript-syntax'
 Plugin 'mxw/vim-jsx'
 Plugin 'pangloss/vim-javascript'
-Plugin 'Shutnik/jshint2.vim'
 
 " Elixir
 Plugin 'elixir-lang/vim-elixir'
@@ -26,7 +25,6 @@ Plugin 'elixir-lang/vim-elixir'
 Plugin 'slim-template/vim-slim'
 
 " CSS
-Plugin 'wavded/vim-stylus'
 Plugin 'ap/vim-css-color'
 
 " Editor improvements
@@ -142,8 +140,6 @@ let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rd
 let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\|tags'
 let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_max_height = 12
-
-let jshint2_save = 1
 
 if executable('ag')
   " Use ag over grep
