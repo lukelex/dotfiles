@@ -34,14 +34,14 @@ Plugin 'tomtom/tlib_vim'
 Plugin 'MarcWeber/vim-addon-mw-utils'
 Plugin 'airblade/vim-gitgutter'
 Plugin 'mileszs/ack.vim'
-Plugin 'xolox/vim-misc'
 Plugin 'itchyny/lightline.vim'
 Plugin 'majutsushi/tagbar'
 Plugin 'ervandew/supertab'
 Plugin 'benjifisher/matchit.zip'
 Plugin 'vim-scripts/Gundo'
 Plugin 'nathanaelkane/vim-indent-guides'
-Plugin 'xolox/vim-easytags'
+Plugin 'xolox/vim-misc' " dependency of vim-easytags
+Plugin 'xolox/vim-easytags' " auto generate ctags on save
 Plugin 'DataWraith/auto_mkdir'
 Plugin 'danro/rename.vim'
 
@@ -152,6 +152,7 @@ if executable('ag')
   let g:ctrlp_use_caching = 0
 endif
 
+" because I misstype AG quite often
 cnoreabbrev ag Ack
 cnoreabbrev aG Ack
 cnoreabbrev Ag Ack
