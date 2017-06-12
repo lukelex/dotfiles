@@ -144,6 +144,7 @@ nmap 0 ^
 nmap - ^
 
 nmap <leader>p :CtrlP<cr>
+nmap <leader>u :CtrlPBuffer<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
 let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\|tags'
 let g:ctrlp_working_path_mode = 'ra'
