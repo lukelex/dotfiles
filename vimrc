@@ -227,9 +227,6 @@ let g:lightline = {
 function! LightlineMode()
   return mode() ==# 'n' ? (expand('%:t') !=# '' ? expand('%:t') : '[No Name]') : lightline#mode()
 endfunction
-function! LightlineFileformat()
-  return winwidth(0) > 70 ? &fileformat : ''
-endfunction
 function! LightlineFiletype()
   return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
 endfunction
