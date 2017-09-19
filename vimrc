@@ -210,8 +210,8 @@ let g:lightline = {
       \ 'active': {
       \   'left': [
       \     ['mode'],
-      \     ['gitbranch'], ],
-      \ 'right': [
+      \     ['gitbranch'] ],
+      \   'right': [
       \     ['lineinfo'],
       \     ['percent'],
       \     ['fileencoding', 'gitgutter', 'filetype'] ]
@@ -220,25 +220,28 @@ let g:lightline = {
       \   'gitbranch': 'LightlineBranchStatus',
       \   'mode': 'LightlineMode',
       \   'filetype': 'LightlineFiletype',
-      \   'gitgutter': 'MyGitGutter'
-      \ }
+      \   'gitgutter': 'MyGitGutter' }
       \ }
 
 function! LightlineMode()
   return mode() ==# 'n' ? (expand('%:t') !=# '' ? expand('%:t') : '[No Name]') : lightline#mode()
 endfunction
+
 function! LightlineFiletype()
   return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
 endfunction
+
 function! LightlineBranchStatus()
   return fugitive#head(6)
 endfunction
+
 function! MyGitGutter()
   if ! exists('*GitGutterGetHunkSummary')
         \ || ! get(g:, 'gitgutter_enabled', 0)
         \ || winwidth('.') <= 90
     return ''
   endif
+
   let symbols = [
         \ g:gitgutter_sign_added . '',
         \ g:gitgutter_sign_modified . '',
@@ -246,10 +249,12 @@ function! MyGitGutter()
         \ ]
   let hunks = GitGutterGetHunkSummary()
   let ret = []
+
   for i in [0, 1, 2]
     if hunks[i] > 0
       call add(ret, symbols[i] . hunks[i])
     endif
   endfor
+
   return join(ret, '')
 endfunction
