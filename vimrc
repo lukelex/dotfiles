@@ -58,6 +58,7 @@ Plugin 'scrooloose/syntastic'
 call vundle#end()
 filetype plugin indent on
 
+syntax on
 set backspace=2
 set ruler         " show the cursor position all the time
 set showcmd       " display incomplete commands
