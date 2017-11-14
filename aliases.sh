@@ -23,6 +23,7 @@ alias gl="git log"
 alias gls="git log --oneline --decorate"
 alias grl="git reflog"
 alias gbam="delete_local_merged_branches"
+alias gcap="git add . && git commit --amend --no-edit && git push -f"
 
 git config --global color.ui true
 git config --global color.diff-highlight.oldNormal "red bold"
