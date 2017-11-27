@@ -6,6 +6,11 @@ if ! [ -x "$(command -v rvm)" ]; then
   \curl -sSL https://get.rvm.io | bash
 fi
 
+if ! [ -x "$(command -v nvm)" ]; then
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh | bash
+fi
+
+
 " developer tools
 brew install ctags postgres redis the_silver_searcher
 
