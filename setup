@@ -19,7 +19,6 @@ brew install vim macvim
 
 " console tools
 brew install zsh zsh-completions tree diff-so-fancy
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 . ./makesymlinks.sh
 
