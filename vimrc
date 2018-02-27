@@ -68,7 +68,7 @@ set hlsearch " highlight search results
 set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
-set cursorline " show cursor line
+" set cursorline " show cursor line (for whatever reason this has become SUPER slow
 
 " Tweaks for file browsing
 let g:netrw_banner=0        " disable annoying banner
@@ -100,8 +100,8 @@ set clipboard+=unnamed
 " autoread files that were changed outside of vim
 set autoread
 
-set number
-set relativenumber
+" set number
+" set relativenumber " has become SUPER slow
 
 set ttyfast
 set ttyscroll=3
