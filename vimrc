@@ -100,7 +100,7 @@ set clipboard+=unnamed
 " autoread files that were changed outside of vim
 set autoread
 
-" set number
+set number
 " set relativenumber " has become SUPER slow
 
 set ttyfast
