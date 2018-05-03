@@ -11,14 +11,13 @@ if ! [ -x "$(command -v nvm)" ]; then
 fi
 
 
-" developer tools
 brew install ctags postgres redis the_silver_searcher
 
-" my favorite editor
 brew install vim macvim
 
-" console tools
 brew install zsh zsh-completions tree diff-so-fancy
+
+curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
 
 . ./makesymlinks.sh
 
