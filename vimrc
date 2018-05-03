@@ -28,6 +28,7 @@ Plugin 'slim-template/vim-slim'
 Plugin 'ap/vim-css-color'
 
 " Editor improvements
+Plugin 'jpo/vim-railscasts-theme'
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tomtom/tlib_vim'
