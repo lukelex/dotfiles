@@ -45,6 +45,7 @@ Plugin 'xolox/vim-misc' " dependency of vim-easytags
 Plugin 'xolox/vim-easytags' " auto generate ctags on save
 Plugin 'DataWraith/auto_mkdir'
 Plugin 'danro/rename.vim'
+Plugin 'henrik/vim-indexed-search' " show results count for '/' searches
 
 " Generic code
 Plugin 'tpope/vim-commentary'
