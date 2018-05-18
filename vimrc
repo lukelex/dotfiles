@@ -28,7 +28,7 @@ Plugin 'slim-template/vim-slim'
 Plugin 'ap/vim-css-color'
 
 " Editor improvements
-Plugin 'jpo/vim-railscasts-theme'
+Plugin 'oguzbilgic/sexy-railscasts-theme'
 Plugin 'kien/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tomtom/tlib_vim'
@@ -70,7 +70,7 @@ set hlsearch " highlight search results
 set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
-" set cursorline " show cursor line (for whatever reason this has become SUPER slow
+" set cursorline " show cursor line (for whatever reason this has become SUPER slow)
 
 " Tweaks for file browsing
 let g:netrw_banner=0        " disable annoying banner
@@ -140,7 +140,8 @@ set guioptions-=L
 nmap n nzz
 nmap N Nzz
 
-colorscheme railscasts
+colorscheme sexy-railscasts
+hi LineNr                    guifg=#666666 ctermfg=242
 
 " remap 0 in normal mode to go to the beginning of the text line
 nmap 0 ^
