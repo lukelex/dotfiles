@@ -103,7 +103,7 @@ set clipboard+=unnamed
 set autoread
 
 set number
-" set relativenumber " has become SUPER slow
+set relativenumber " has become SUPER slow
 
 set ttyfast
 set ttyscroll=3
