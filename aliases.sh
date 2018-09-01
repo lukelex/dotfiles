@@ -62,3 +62,6 @@ function clean_docker() {
     docker rmi $(docker images -qf "dangling=true") &
     docker volume rm $(docker volume ls -qf "dangling=true")
 }
+
+# Linux terminal
+alias cls="printf '\033c'"

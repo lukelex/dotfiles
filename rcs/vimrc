@@ -70,7 +70,7 @@ set hlsearch " highlight search results
 set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
-" set cursorline " show cursor line (for whatever reason this has become SUPER slow)
+set cursorline " show cursor line (for whatever reason this has become SUPER slow)
 
 " Tweaks for file browsing
 let g:netrw_banner=0        " disable annoying banner
@@ -119,7 +119,17 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-set guifont=Hack:h17
+if has('gui_running') && !has('gui_macvim')
+  " GVim options
+  :set guioptions-=m " remove menu bar
+  :set guioptions-=T " remove toolbar
+  :set guioptions-=r " remove right-hand scroll bar
+  :set guioptions-=L " remove left-hand scroll bar
+
+  set guifont=Hack\ 12
+else
+  set guifont=Hack:H17
+endif
 
 " Make it obvious where 65 characters is on text files
 autocmd BufRead,BufNewFile *.md set textwidth=65
