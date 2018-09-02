@@ -2,7 +2,7 @@
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
 
 export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
-
+export LD_LIBRARY_PATH=/usr/oracle/instantclient_11_2/
 export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # You may need to manually set your language environment
