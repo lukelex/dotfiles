@@ -55,7 +55,7 @@ alias rs="rails server"
 
 # Docker
 alias dc="docker"
-alias dcsa="docker stop $(docker ps -aq)"
+alias dcp="docker-compose"
 
 function clean_docker() {
   docker rm -v $(docker ps -q --filter status=dead --filter status=exited) &
