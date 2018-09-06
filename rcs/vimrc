@@ -121,10 +121,11 @@ set splitright
 
 if has('gui_running') && !has('gui_macvim')
   " GVim options
-  :set guioptions-=m " remove menu bar
-  :set guioptions-=T " remove toolbar
-  :set guioptions-=r " remove right-hand scroll bar
-  :set guioptions-=L " remove left-hand scroll bar
+  set guioptions-=m " remove menu bar
+  set guioptions-=T " remove toolbar
+  set guioptions-=r " remove right-hand scroll bar
+  set guioptions-=L " remove left-hand scroll bar
+  set guicursor+=n-v-c-i:blinkon0
 
   set guifont=Hack\ 12
 else
