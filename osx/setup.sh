@@ -21,5 +21,5 @@ curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | 
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 rm ~/.vimrc ~/.zshrc
-ln -s ../rcs/vimrc ~/vimrc
-ln -s ../rcs/zshrc ~/zshrc
+ln -s ~/dotfiles/rcs/vimrc ~/.vimrc
+ln -s ~/dotfiles/rcs/zshrc ~/.zshrc
