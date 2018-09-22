@@ -3,6 +3,12 @@ ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
 ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 
+if [[ $(sudo dmidecode --string chassis-type) -eq "Desktop" ]]; then
+  ln -fvs ~/dotfiles/linux/i3/deskjaro-status ~/.i3status.conf
+else
+  ln -fvs ~/dotfiles/linux/i3/blade-status ~/.i3status.conf
+fi
+
 mkdir ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
