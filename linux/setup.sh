@@ -15,5 +15,3 @@ pamac install \
 
 # Set refresh rate down to 60hz to save battery
 xrandr -s 1920x1080 -r 60~
-
-git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
