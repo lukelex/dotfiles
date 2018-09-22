@@ -6,5 +6,14 @@ ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 mkdir ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
+pamac install \
+  gvim \
+  ctags \
+  redis \
+  diff-so-fancy \
+  the_silver_searcher
+
 # Set refresh rate down to 60hz to save battery
 xrandr -s 1920x1080 -r 60~
+
+git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
