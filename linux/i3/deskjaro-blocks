@@ -1,0 +1,19 @@
+# i3blocks config
+
+command=~/.i3/i3scripts/$BLOCK_NAME
+align=center
+separator=false
+separator_block_width=20
+markup=pango
+
+# Time
+[time]
+command=printf "\\uf017 " && date '+%I:%M'
+interval=5
+color=#21b089
+
+# Date
+[date]
+command=printf "\\uf073 " && date '+%A%e '
+interval=60
+color=#f9555f

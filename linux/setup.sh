@@ -4,9 +4,9 @@ ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 
 if [[ $(sudo dmidecode --string chassis-type) -eq "Desktop" ]]; then
-  ln -fvs ~/dotfiles/linux/i3/deskjaro-status ~/.i3status.conf
+  ln -fvs ~/dotfiles/linux/i3/deskjaro-blocks ~/.i3blocks.conf
 else
-  ln -fvs ~/dotfiles/linux/i3/blade-status ~/.i3status.conf
+  ln -fvs ~/dotfiles/linux/i3/blade-blocks ~/.i3blocks.conf
 fi
 
 mkdir ~/.i3
