@@ -27,7 +27,7 @@ font xft:URWGothic-Book 11
 bindsym $mod+Return exec terminal
 
 # kill focused window
-bindsym $mod+Shift+q kill
+bindsym $mod+q kill
 
 # start program launcher
 bindsym $mod+d exec --no-startup-id dmenu_recency
@@ -79,6 +79,7 @@ bindsym $mod+f fullscreen toggle
 bindsym $mod+s layout stacking
 bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
+bindsym $mod+t split toggle
 
 # Floating windows
 # Use Mouse+$mod to drag floating windows
@@ -104,8 +105,6 @@ bindsym $mod+Ctrl+Left workspace prev
 
 # bindsym $mod+h split h;exec notify-send 'tile horizontally'
 # bindsym $mod+v split v;exec notify-send 'tile vertically'
-# toggle orientation
-bindsym $mod+q split toggle
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
