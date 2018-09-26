@@ -1,3 +1,6 @@
+# Editor
+alias v="gvim"
+
 # GIT
 alias g="git"
 alias gs="git status"
