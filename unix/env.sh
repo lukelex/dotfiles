@@ -10,7 +10,5 @@ test -s "$HOME/.kiex/scripts/kiex" && source "$HOME/.kiex/scripts/kiex"
 # This loads nvm bash_completion
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# Add RVM to PATH for scripting
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
-
-source /usr/share/nvm/init-nvm.sh

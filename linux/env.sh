@@ -17,3 +17,5 @@ rvm_silence_path_mismatch_check_flag=1
 
 # Remember to enable any locales that you might need
 # sudo vim /etc/locale.gen && locale-gen
+
+source /usr/share/nvm/init-nvm.sh
