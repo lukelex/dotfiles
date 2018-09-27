@@ -120,8 +120,9 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-if has('gui_running') && !has('gui_macvim')
-  " GVim options
+if has('gui_macvim') " MacVim options
+  set guifont=Hack:h17
+elseif has('gui_running') " GVim options
   set guioptions-=m " remove menu bar
   set guioptions-=T " remove toolbar
   set guioptions-=r " remove right-hand scroll bar
