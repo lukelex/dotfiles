@@ -29,7 +29,7 @@ Plugin 'ap/vim-css-color'
 
 " Editor improvements
 Plugin 'oguzbilgic/sexy-railscasts-theme'
-Plugin 'kien/ctrlp.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tomtom/tlib_vim'
 Plugin 'MarcWeber/vim-addon-mw-utils'
