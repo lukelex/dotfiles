@@ -262,42 +262,36 @@ set_from_resource $term_color13    color13
 set_from_resource $term_color14    color14
 set_from_resource $term_color15    color15
 
-# RGB
-set $cyan0	 #4ec2f7
-set $silver0 #e4e4e4
-set $orange  #ff8700
+# variables de colores
+set $bg-color            #2f343f
+set $inactive-bg-color   #2f343f
+set $text-color          #f3f4f5
+set $inactive-text-color #676E7D
+set $urgent-bg-color     #E53935
 
-# RGBA
-set $cyan	   #4ec2f799
-set $acqua	 #00708999
-set $wine 	 #72003e99
-set $magenta #af005f99
-set $silver  #e4e4e499
-set $toxic   #8EC00099
-set $elegant #00002c00
+# # Set some nice colors      border	 background text	   indicator
+# client.focused              $cyan	   $cyan      $elegant $cyan
+# client.unfocused            $elegant $elegant   $cyan    $elegant
+# client.focused_inactive     $acqua   $acqua     $silver  $acqua
+# client.urgent               $magenta $magenta   $silver  $magenta
+# client.placeholder          $magenta $magenta   $silver  $magenta
 
-# Set some nice colors      border	 background text	   indicator
-client.focused              $cyan	   $cyan      $elegant $cyan
-client.unfocused            $elegant $elegant   $cyan    $elegant
-client.focused_inactive     $acqua   $acqua     $silver  $acqua
-client.urgent               $magenta $magenta   $silver  $magenta
-client.placeholder          $magenta $magenta   $silver  $magenta
-
-# Start i3bar to display a workspace bar (plus the system information i3status if available)
+# Start i3bar to display a workspace bar
 bar {
   i3bar_command i3bar -t
-  status_command i3blocks
+  status_command CONTRIB_DIR=~/i3blocks-contrib/ SCRIPT_DIR=~/dotfiles/linux/i3/scripts i3blocks
+  # status_command 2>/tmp/i3blocks.err /path/to/i3blocks -vvv -c /path/to/config | tee /tmp/i3blocks.out
   position top
 
   # strip_workspace_numbers yes
 
   colors {
-#                       border    backgr.   text
-    focused_workspace   $silver0  $silver0  $elegant
-    active_workspace    $elegant  $elegant  $orange
-		inactive_workspace  $elegant  $elegant 	$cyan0
-		urgent_workspace    $acqua    $acqua    $silver0
-		background          $elegant
+    background $bg-color
+    separator #757575
+#                      border             background         text
+    focused_workspace  $bg-color          $bg-color          $text-color
+    inactive_workspace $inactive-bg-color $inactive-bg-color $inactive-text-color
+    urgent_workspace   $urgent-bg-color   $urgent-bg-color   $text-color
   }
 }
 
