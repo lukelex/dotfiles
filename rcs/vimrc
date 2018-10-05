@@ -98,7 +98,7 @@ set undodir=~/.cache/undodir
 set undofile
 nnoremap <F5> :GundoToggle<CR>
 
-set clipboard+=unnamed
+set clipboard=unnamedplus
 
 " autoread files that were changed outside of vim
 set autoread

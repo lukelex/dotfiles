@@ -66,5 +66,5 @@ function clean_docker() {
     docker volume rm $(docker volume ls -qf "dangling=true")
 }
 
-# Linux terminal
+# Linux
 alias cls="printf '\033c'"
