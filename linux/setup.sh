@@ -14,11 +14,8 @@ ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
 pamac install \
   rofi \
-  gvim \
-  ctags \
   redis \
-  diff-so-fancy \
-  the_silver_searcher
+  gvim ctags diff-so-fancy the_silver_searcher
 
 # Set refresh rate down to 60hz to save battery
 xrandr -s 1920x1080 -r 60~
