@@ -13,6 +13,7 @@ mkdir ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
 pamac install \
+  rofi \
   gvim \
   ctags \
   redis \
