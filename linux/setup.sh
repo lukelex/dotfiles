@@ -14,9 +14,14 @@ mkdir ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
 pamac install \
-  rofi sysstat xdotool \
-  redis \
-  gvim ctags diff-so-fancy the_silver_searcher
+  i3blocks rofi sysstat xdotool xclip gconf \
+  redis docker \
+  gvim ctags zsh diff-so-fancy the_silver_searcher \
+  google-chrome firefox etcher viewnior \
+  telegram-desktop
 
-# Set refresh rate down to 60hz to save battery
-xrandr -s 1920x1080 -r 60~
+yaourt -S --noconfirm whatsapp-web-desktop vundle postgresql-9.6 dropbox woeusb
+
+git clone git@github.com:vivien/i3blocks-contrib.git ~/i3blocks-contrib
+
+curl -L http://install.ohmyz.sh | sh
