@@ -14,7 +14,7 @@ mkdir ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
 pamac install \
-  rofi \
+  rofi sysstat xdotool \
   redis \
   gvim ctags diff-so-fancy the_silver_searcher
 
