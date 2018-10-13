@@ -45,9 +45,9 @@ bindsym $mod+Shift+Print --release exec --no-startup-id i3-scrot -s
 bindsym $mod+Shift+Ctrl+h exec xdg-open /usr/share/doc/manjaro/i3_help.pdf
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
 
-focus_follows_mouse no
 
 # change focus
+focus_follows_mouse no
 bindsym $mod+h focus left
 bindsym $mod+j focus down
 bindsym $mod+k focus up
