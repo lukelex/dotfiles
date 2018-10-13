@@ -45,6 +45,8 @@ bindsym $mod+Shift+Print --release exec --no-startup-id i3-scrot -s
 bindsym $mod+Shift+Ctrl+h exec xdg-open /usr/share/doc/manjaro/i3_help.pdf
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
 
+# cycle through multi monitor settings
+bindsym $mod+Ctrl+m exec --no-startup-id ~/dotfiles/linux/scripts/monitor
 
 # change focus
 focus_follows_mouse no
