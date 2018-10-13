@@ -1,3 +1,6 @@
+. ../unix/setup
+
+rm ~/.bash_profile ~/.bashrc
 rm ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
