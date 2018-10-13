@@ -10,10 +10,14 @@ pamac install \
   firefox etcher viewnior \
   telegram-desktop
 
-~/dotfiles/linux/scripts/yaourt google-chrome-stable whatsapp-web-desktop vundle otf-font-awesome-5-free postgresql-9.6 dropbox woeusb
+yaourt_libs=( google-chrome-stable whatsapp-web-desktop otf-font-awesome-5-free postgresql-9.6 dropbox woeusb )
+for i in "${yaourt_libs[@]}"
+do
+  ~/dotfiles/linux/scripts/yaourt $i
+done
 
 git clone git@github.com:vivien/i3blocks-contrib.git ~/i3blocks-contrib
-
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 curl -L http://install.ohmyz.sh | sh
 
 ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
