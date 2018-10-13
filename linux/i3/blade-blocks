@@ -1,0 +1,56 @@
+command=$CONTRIB_DIR/$BLOCK_NAME/$BLOCK_NAME
+align=center
+separator=false
+separator_block_width=10
+markup=pango
+
+[focused window]
+command=xtitle -s
+interval=persist
+color=#9fbc00
+
+[cpu_usage]
+label=
+interval=20
+color=#7ea1a5
+
+[cpu]
+command=sensors coretemp-isa-0000 | awk '/Package/ { print $4 }'
+label=
+interval=20
+color=#7ea1a5
+
+[disk]
+command=df -h -P -l "$HOME" | awk '/\/.*/ { print $4; exit 0 }'
+label=
+interval=30
+color=#BDB76B
+
+[memory]
+label=
+interval=30
+color=#00FFFF
+
+[volume]
+label=
+interval=1
+signal=10
+
+[wifi]
+command=$SCRIPT_DIR/wifi
+label=
+interval=60
+
+[weather]
+command=$SCRIPT_DIR/weather CPH
+interval=1800
+color=#A4C2F4
+
+[calendar]
+command=date '+%I:%M %a %e'
+label=
+interval=5
+color=#
+
+[battery2]
+interval=30
