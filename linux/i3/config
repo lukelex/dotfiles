@@ -278,7 +278,7 @@ bar {
   # status_command 2>/tmp/i3blocks.err /path/to/i3blocks -vvv -c /path/to/config | tee /tmp/i3blocks.out
   position top
 
-  # strip_workspace_numbers yes
+  strip_workspace_numbers yes
 
   colors {
     background $bg-color
