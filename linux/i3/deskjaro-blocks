@@ -16,8 +16,8 @@ color=#7ea1a5
 
 [cpu]
 command=sensors coretemp-isa-0000 | awk '/Package/ { print $4 }'
-label=
-interval=10
+label=
+interval=5
 color=#7ea1a5
 
 [disk]
