@@ -21,7 +21,7 @@ ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 
-if [[ $(sudo dmidecode --string chassis-type) -eq "Desktop" ]]; then
+if [[ `hostname` -eq "deskjaro" ]]; then
   ln -fvs ~/dotfiles/linux/i3/deskjaro-blocks ~/.i3blocks.conf
 else
   ln -fvs ~/dotfiles/linux/i3/blade-blocks ~/.i3blocks.conf
