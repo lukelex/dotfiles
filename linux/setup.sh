@@ -1,7 +1,7 @@
 . ../unix/setup
 
-rm ~/.bash_profile ~/.bashrc
-rm ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
+rm -rf ~/.bash_profile ~/.bashrc
+rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
   i3blocks rofi sysstat xdotool xclip gconf \
