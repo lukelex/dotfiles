@@ -1,0 +1,9 @@
+#!/bin/bash
+
+_install="yaourt -S --noconfirm"
+
+if ! which $1 2>/dev/null 1>&2; then
+   echo "${$1} not installed, installing"
+   $_install $1
+   exit $?;
+fi

@@ -7,7 +7,7 @@ pamac install \
   google-chrome firefox etcher viewnior \
   telegram-desktop
 
-yaourt -S --noconfirm whatsapp-web-desktop vundle postgresql-9.6 dropbox woeusb
+./scripts/yaourt whatsapp-web-desktop vundle postgresql-9.6 dropbox woeusb
 
 git clone git@github.com:vivien/i3blocks-contrib.git ~/i3blocks-contrib
 
