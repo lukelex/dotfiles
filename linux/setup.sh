@@ -7,10 +7,10 @@ pamac install \
   i3blocks rofi sysstat xdotool xclip gconf \
   redis docker \
   gvim ctags zsh diff-so-fancy the_silver_searcher \
-  google-chrome firefox etcher viewnior \
+  firefox etcher viewnior \
   telegram-desktop
 
-./scripts/yaourt whatsapp-web-desktop vundle postgresql-9.6 dropbox woeusb
+~/dotfiles/linux/scripts/yaourt google-chrome-stable whatsapp-web-desktop vundle otf-font-awesome-5-free postgresql-9.6 dropbox woeusb
 
 git clone git@github.com:vivien/i3blocks-contrib.git ~/i3blocks-contrib
 
