@@ -24,5 +24,5 @@ else
   ln -fvs ~/dotfiles/linux/i3/blade-blocks ~/.i3blocks.conf
 fi
 
-mkdir ~/.i3
+mkdir -p ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
