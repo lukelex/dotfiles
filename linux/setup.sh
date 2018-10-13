@@ -4,7 +4,7 @@ rm -rf ~/.bash_profile ~/.bashrc
 rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
-  i3blocks rofi sysstat xdotool xclip gconf \
+  i3blocks rofi sysstat xdotool xclip gconf cmake \
   redis docker \
   gvim ctags zsh diff-so-fancy the_silver_searcher \
   firefox etcher viewnior \
