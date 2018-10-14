@@ -35,6 +35,10 @@ bindsym $mod+d exec rofi -show run -lines 20 -eh 1.5 -width 500 -opacity "85" -b
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
 
+# Compton
+exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
+exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
+
 ################################################################################################
 
 # Start Applications
