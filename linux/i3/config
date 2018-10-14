@@ -30,7 +30,7 @@ bindsym $mod+Return exec terminal
 bindsym $mod+q kill
 
 # start program launcher
-bindsym $mod+d exec rofi -show run -lines 20 -eh 1.5 -width 500 -opacity "85" -bw 0 -font "System San Francisco Display 10"
+bindsym $mod+d exec "rofi -combi-modi window,drun -show combi -modi combi -lines 20 -eh 1.5 -width 600 -opacity '85' -bw 0 -font 'hack 13'"
 
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
