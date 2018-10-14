@@ -4,8 +4,8 @@ rm -rf ~/.bash_profile ~/.bashrc ~/.config/rofi/config.rasi
 rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
-  i3blocks rofi sysstat xdotool xclip gconf cmake \
-  redis docker ttf-hack \
+  i3blocks rofi sysstat xdotool xclip gconf cmake autorandr \
+  redis docker ttf-hack jq \
   gvim ctags zsh diff-so-fancy the_silver_searcher \
   firefox etcher viewnior telegram-desktop playerctl
 
