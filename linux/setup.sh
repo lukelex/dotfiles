@@ -1,6 +1,6 @@
 . ../unix/setup
 
-rm -rf ~/.bash_profile ~/.bashrc
+rm -rf ~/.bash_profile ~/.bashrc ~/.config/rofi/config.rasi
 rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
@@ -33,3 +33,6 @@ fi
 
 mkdir -p ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
+
+mkdir -p ~/.config/rofi
+ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
