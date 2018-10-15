@@ -5,12 +5,12 @@ rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
   i3blocks rofi sysstat xdotool xclip gconf cmake autorandr \
-  redis docker ttf-hack jq \
+  redis docker docker-compose ttf-hack jq \
   gvim ctags zsh diff-so-fancy the_silver_searcher zeal \
   firefox etcher viewnior telegram-desktop playerctl \
-  flameshot
+  flameshot variety
 
-yaourt_libs=( google-chrome-stable whatsapp-web-desktop otf-font-awesome-5-free postgresql-9.6 dropbox woeusb spotify )
+yaourt_libs=( google-chrome-stable slack-desktop whatsapp-web-desktop otf-font-awesome-5-free postgresql-9.6 dropbox woeusb spotify )
 for i in "${yaourt_libs[@]}"
 do
   ~/dotfiles/linux/scripts/yaourt $i
