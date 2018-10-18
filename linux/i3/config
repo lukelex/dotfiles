@@ -182,7 +182,6 @@ for_window [class="Manjaro Settings Manager"] floating enable border normal
 for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Viewnior"] floating enable
 for_window [class="Pamac-manager"] floating enable
-for_window [class="Pavucontrol"] floating enable
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
@@ -237,6 +236,8 @@ exec --no-startup-id pamac-tray
 exec --no-startup-id clipit
 exec --no-startup-id variety
 exec --no-startup-id flameshot
+exec --no-startup-id spotify
+exec --no-startup-id zeal
 # exec --no-startup-id start_conky_maia
 exec --no-startup-id xautolock -time 10 -locker blurlock
 exec_always --no-startup-id ff-theme-util
