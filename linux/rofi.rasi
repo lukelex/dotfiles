@@ -1,12 +1,12 @@
 configuration {
-	combi-modi: "window,drun,run";
-	modi: "combi";
-	width: 600;
-	lines: 20;
-	font: "hack 13";
-	eh: 1;
-	bw: 0;
-	theme: "/usr/share/rofi/themes/Adapta-Nokto.rasi";
+  combi-modi: "window,drun,run";
+  modi: "combi";
+  width: 600;
+  lines: 20;
+  font: "hack 13";
+  eh: 1;
+  bw: 0;
+  theme: "/usr/share/rofi/themes/Adapta-Nokto.rasi";
 /*	location: 0;*/
 /*	padding: 5;*/
 /*	yoffset: 0;*/
