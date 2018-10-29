@@ -4,10 +4,10 @@ separator=false
 separator_block_width=10
 markup=pango
 
-[focused window]
-command=xtitle -s
-interval=persist
-color=#9fbc00
+# [focused window]
+# command=xtitle -s
+# interval=persist
+# color=#9fbc00
 
 [cpu_usage]
 label=
