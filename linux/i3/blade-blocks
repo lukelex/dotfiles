@@ -15,16 +15,16 @@ interval=20
 color=#7ea1a5
 
 [cpu]
-command=sensors coretemp-isa-0000 | awk '/Package/ { print $4 }'
 label=
 interval=20
 color=#7ea1a5
+command=sensors coretemp-isa-0000 | awk '/Package/ { print $4 }'
 
 [disk]
-command=df -h -P -l "$HOME" | awk '/\/.*/ { print $4; exit 0 }'
 label=
 interval=30
 color=#BDB76B
+command=df -h -P -l "$HOME" | awk '/\/.*/ { print $4; exit 0 }'
 
 [memory]
 label=
@@ -37,20 +37,20 @@ interval=1
 signal=10
 
 [wifi]
-command=$SCRIPT_DIR/wifi
 label=
 interval=60
+command=$SCRIPT_DIR/wifi
 
 [weather]
-command=$SCRIPT_DIR/weather CPH
 interval=1800
 color=#A4C2F4
+command=$SCRIPT_DIR/weather CPH
 
 [calendar]
-command=date '+%I:%M %a %e'
 label=
 interval=5
 color=#
+command=date '+%I:%M %a %e'
 
 [sleeper]
 label=
