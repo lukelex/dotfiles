@@ -52,5 +52,10 @@ label=
 interval=5
 color=#
 
+[sleeper]
+label=
+interval=5
+command=$SCRIPT_DIR/sleeper
+
 [battery2]
 interval=30

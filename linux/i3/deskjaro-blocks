@@ -51,3 +51,7 @@ command=date '+%I:%M %a %e'
 label=
 interval=5
 color=#
+
+[sleeper]
+interval=5
+command=$SCRIPT_DIR/sleeper
