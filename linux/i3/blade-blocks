@@ -4,11 +4,6 @@ separator=false
 separator_block_width=10
 markup=pango
 
-# [focused window]
-# command=xtitle -s
-# interval=persist
-# color=#9fbc00
-
 [cpu_usage]
 label=
 interval=20
@@ -53,7 +48,6 @@ color=#
 command=date '+%I:%M %a %e'
 
 [sleeper]
-label=
 interval=5
 command=$SCRIPT_DIR/sleeper
 
