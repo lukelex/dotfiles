@@ -8,9 +8,9 @@ pamac install \
   redis docker docker-compose ttf-hack jq \
   gvim ctags zsh diff-so-fancy the_silver_searcher zeal \
   firefox etcher viewnior telegram-desktop playerctl \
-  flameshot variety
+  flameshot variety vlc redshift timeshift
 
-yaourt_libs=( google-chrome-stable slack-desktop whatsapp-web-desktop otf-font-awesome-5-free postgresql-9.6 dropbox woeusb spotify )
+yaourt_libs=( google-chrome-stable slack-desktop whatsapp-web-desktop otf-font-awesome-5-free postgresql-9.6 dropbox woeusb spotify debtap )
 for i in "${yaourt_libs[@]}"
 do
   ~/dotfiles/linux/scripts/yaourt $i

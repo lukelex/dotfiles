@@ -238,8 +238,9 @@ exec --no-startup-id variety
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id zeal
-# exec --no-startup-id start_conky_maia
-exec --no-startup-id xautolock -time 10 -locker blurlock
+exec --no-startup-id blueman-manager
+exec --no-startup-id dropbox start -i
+exec --no-startup-id xautolock -time 5 -locker blurlock -detectsleep
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
