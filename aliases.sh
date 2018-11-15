@@ -1,5 +1,6 @@
 # Editor
 alias v="gvim"
+alias e="gvim"
 
 # GIT
 alias g="git"
