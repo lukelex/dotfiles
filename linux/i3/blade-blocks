@@ -41,15 +41,15 @@ interval=1800
 color=#A4C2F4
 command=$SCRIPT_DIR/weather CPH
 
-[calendar]
-label=
-interval=5
-color=#
-command=date '+%I:%M %a %e'
-
 [sleeper]
 interval=5
 command=$SCRIPT_DIR/sleeper
 
 [battery2]
 interval=30
+
+[calendar]
+label=
+interval=5
+color=#
+command=date '+%I:%M %a %e'
