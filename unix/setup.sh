@@ -1,3 +1,6 @@
+git config --global user.email "lukas@codelogic.me"
+git config --global user.name "Lukas Alexandre"
+
 git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
 git config --global color.ui true
 git config --global color.diff-highlight.oldNormal    "red bold"
