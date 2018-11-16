@@ -169,7 +169,10 @@ bindsym XF86AudioPrev exec --no-startup-id playerctl previous
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 
 # Open applications on specific workspaces
+for_window [class="zeal"] move to workspace $ws1
 assign [class="Mailspring"] $ws3
+for_window [class="Spotify"] move to workspace $ws4
+assign [class="telegram-desktop"] $ws4
 
 # Open specific applications in floating mode
 for_window [class="Galculator"] floating enable border pixel 1
