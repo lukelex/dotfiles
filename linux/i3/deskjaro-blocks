@@ -45,6 +45,10 @@ command=$SCRIPT_DIR/weather CPH
 interval=5
 command=$SCRIPT_DIR/sleeper
 
+[bluetooth]
+interval=1
+command=$SCRIPT_DIR/bluetooth
+
 [calendar]
 label=
 interval=5

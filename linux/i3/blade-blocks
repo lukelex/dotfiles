@@ -45,6 +45,10 @@ command=$SCRIPT_DIR/weather CPH
 interval=5
 command=$SCRIPT_DIR/sleeper
 
+[bluetooth]
+interval=5
+command=$SCRIPT_DIR/bluetooth
+
 [battery2]
 interval=30
 
