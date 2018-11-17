@@ -28,23 +28,6 @@ alias grl="git reflog"
 alias gbam="delete_local_merged_branches"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
-git config --global color.ui true
-git config --global color.diff-highlight.oldNormal "red bold"
-git config --global color.diff-highlight.oldHighlight "red bold 52"
-git config --global color.diff-highlight.newNormal "green bold"
-git config --global color.diff-highlight.newHighlight "green bold 22"
-
-git config --global color.diff.meta "227"
-git config --global color.diff.frag "magenta bold"
-git config --global color.diff.commit "227 bold"
-git config --global color.diff.old "red bold"
-git config --global color.diff.new "green bold"
-git config --global color.diff.whitespace "red reverse"
-
-git config --global pager.diff "diff-so-fancy | less --tabs=1,5 -RFX"
-git config --global pager.show "diff-so-fancy | less --tabs=1,5 -RFX"
-git config --global rebase.autosquash true
-
 function clean_branches() {
   git branch --merged master | grep -v master | xargs git branch -d
 }
