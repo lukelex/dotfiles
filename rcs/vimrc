@@ -24,8 +24,10 @@ Plugin 'elixir-lang/vim-elixir'
 " Html
 Plugin 'slim-template/vim-slim'
 
-" Editor improvements
+" Themes
 Plugin 'oguzbilgic/sexy-railscasts-theme'
+
+" Editor improvements
 Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tomtom/tlib_vim'
@@ -104,7 +106,7 @@ set number
 set relativenumber " has become SUPER slow
 
 set ttyfast
-set ttyscroll=3
+" set ttyscroll=3
 set lazyredraw
 
 " use 2 spaces instead of tabs
@@ -117,18 +119,12 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
+colorscheme sexy-railscasts
+
 if has('gui_macvim') " MacVim options
   set guifont=Hack:h17
-elseif has('gui_running') " GVim options
-  set guioptions-=m " remove menu bar
-  set guioptions-=T " remove toolbar
-  set guioptions-=r " remove right-hand scroll bar
-  set guioptions-=L " remove left-hand scroll bar
-  set guicursor+=n-v-c-i:blinkon0
-
+elseif has ('nvim')
   set guifont=Hack\ 12
-else
-  set guifont=Hack:H17
 endif
 
 " Make it obvious where 65 characters is on text files
@@ -149,9 +145,6 @@ set guioptions-=L
 " always horizontally center search results
 nmap n nzz
 nmap N Nzz
-
-colorscheme sexy-railscasts
-hi LineNr                    guifg=#666666 ctermfg=242
 
 " remap 0 in normal mode to go to the beginning of the text line
 nmap 0 ^

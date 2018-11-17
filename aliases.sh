@@ -1,6 +1,5 @@
 # Editor
-alias v="gvim"
-alias e="gvim"
+alias e="NVIM_GTK_NO_HEADERBAR=1 nvim-gtk ."
 
 # GIT
 alias g="git"

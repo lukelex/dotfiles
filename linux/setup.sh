@@ -6,7 +6,7 @@ rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 pamac install \
   i3blocks rofi sysstat xdotool xclip gconf cmake autorandr \
   redis docker docker-compose ttf-hack jq \
-  gvim ctags zsh zsh-completions diff-so-fancy \
+  nvim-gtk ctags zsh zsh-completions diff-so-fancy \
   rubygems the_silver_searcher zeal \
   firefox etcher viewnior telegram-desktop playerctl \
   flameshot variety vlc redshift timeshift
@@ -44,3 +44,6 @@ ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
 mkdir -p ~/.config/rofi
 ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
+
+mkdir -p ~/.config/nvim
+ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
