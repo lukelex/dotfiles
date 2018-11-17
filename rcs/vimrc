@@ -24,9 +24,6 @@ Plugin 'elixir-lang/vim-elixir'
 " Html
 Plugin 'slim-template/vim-slim'
 
-" CSS
-Plugin 'ap/vim-css-color'
-
 " Editor improvements
 Plugin 'oguzbilgic/sexy-railscasts-theme'
 Plugin 'ctrlpvim/ctrlp.vim'
