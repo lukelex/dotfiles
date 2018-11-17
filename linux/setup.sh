@@ -35,9 +35,11 @@ ln -fvs ~/dotfiles/linux/profile ~/.profile
 
 if [[ `hostname` -eq "deskjaro" ]]; then
   ln -fvs ~/dotfiles/linux/i3/deskjaro-blocks ~/.i3blocks.conf
+  ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
 else
   ln -fvs ~/dotfiles/linux/i3/blade-blocks ~/.i3blocks.conf
 fi
+sudo mhwd-gpu --setmod nvidia --setxorg /etc/X11/mhwd.d/nvidia.conf
 
 mkdir -p ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
