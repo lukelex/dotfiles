@@ -15,7 +15,7 @@ source $ZSH/oh-my-zsh.sh
 
 # source $(brew --prefix nvm)/nvm.sh
 
-source ~/dotfiles/aliases.sh
+source ~/dotfiles/unix/aliases.sh
 source ~/dotfiles/unix/env.sh
 if [[ "$(uname)" == 'Linux' ]]; then
   source ~/dotfiles/linux/env.sh
