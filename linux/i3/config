@@ -116,7 +116,7 @@ bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 bindsym $mod+Shift+r restart
 # Lock screen
-bindsym $mod+9 exec --no-startup-id blurlock
+bindsym $mod+9 exec --no-startup-id ~/dotfiles/linux/i3/scripts/lock
 # hide/unhide i3status bar
 bindsym $mod+m bar mode toggle
 
@@ -242,7 +242,7 @@ exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id zeal
 exec --no-startup-id dropbox start -i
-exec --no-startup-id xautolock -time 5 -locker blurlock -detectsleep
+exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/i3/scripts/lock -detectsleep
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
