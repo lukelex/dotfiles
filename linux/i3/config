@@ -97,7 +97,7 @@ bindsym $mod+space focus mode_toggle
 # toggle sticky
 bindsym $mod+Shift+s sticky toggle
 
-# focus the parent container
+# focus all containers
 bindsym $mod+a focus parent
 
 # move the focused window to the scratchpad
@@ -288,25 +288,6 @@ client.focused              #ff0000  #ff0000    #ffffff  #ffff00
 # client.focused_inactive     $acqua   $acqua     $silver  $acqua
 # client.urgent               $magenta $magenta   $silver  $magenta
 # client.placeholder          $magenta $magenta   $silver  $magenta
-
-# Start i3bar to display a workspace bar
-bar {
-  i3bar_command i3bar -t
-  status_command CONTRIB_DIR=~/i3blocks-contrib/ SCRIPT_DIR=~/dotfiles/linux/i3/scripts i3blocks
-  # status_command 2>/tmp/i3blocks.err /path/to/i3blocks -vvv -c /path/to/config | tee /tmp/i3blocks.out
-  position top
-
-  strip_workspace_numbers yes
-
-  colors {
-    background $bg-color
-    separator #757575
-#                      border             background         text
-    focused_workspace  $bg-color          $bg-color          $text-color
-    inactive_workspace $inactive-bg-color $inactive-bg-color $inactive-text-color
-    urgent_workspace   $urgent-bg-color   $urgent-bg-color   $text-color
-  }
-}
 
 client.background       #2B2C2B
 

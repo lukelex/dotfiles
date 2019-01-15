@@ -4,7 +4,7 @@ rm -rf ~/.bash_profile ~/.bashrc ~/.config/rofi/config.rasi
 rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
 pamac install \
-  i3blocks rofi sysstat xdotool xclip gconf cmake autorandr \
+  rofi sysstat xdotool xclip gconf cmake autorandr \
   redis docker docker-compose ttf-hack jq \
   nvim-gtk ctags zsh zsh-completions diff-so-fancy \
   rubygems the_silver_searcher zeal \
@@ -23,7 +23,6 @@ yaourt -S --noconfirm google-chrome-stable \
   spotify \
   debtap
 
-git clone git@github.com:vivien/i3blocks-contrib.git ~/i3blocks-contrib
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 curl -L get.rvm.io | bash -s stable
 curl -L http://install.ohmyz.sh | sh
@@ -34,10 +33,7 @@ ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 
 if [[ `hostname` -eq "deskjaro" ]]; then
-  ln -fvs ~/dotfiles/linux/i3/deskjaro-blocks ~/.i3blocks.conf
   ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
-else
-  ln -fvs ~/dotfiles/linux/i3/blade-blocks ~/.i3blocks.conf
 fi
 sudo mhwd-gpu --setmod nvidia --setxorg /etc/X11/mhwd.d/nvidia.conf
 
@@ -49,3 +45,6 @@ ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
 
 mkdir -p ~/.config/nvim
 ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
+
+mkdir -p ~/.config/polybar
+ln -fvs ~/dotfiles/linux/polybar/config ~/.config/polybar/config
