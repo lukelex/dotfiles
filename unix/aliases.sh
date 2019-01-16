@@ -1,6 +1,9 @@
 # Editor
 alias e="NVIM_GTK_NO_HEADERBAR=1 nvim-gtk ."
 
+# Bash
+alias t="tree"
+
 # GIT
 alias g="git"
 alias gs="git status"
