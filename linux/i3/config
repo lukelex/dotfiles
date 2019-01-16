@@ -170,7 +170,6 @@ bindsym XF86AudioNext exec --no-startup-id playerctl next
 
 # Open applications on specific workspaces
 for_window [class="zeal"] move to workspace $ws1
-assign [class="Mailspring"] $ws3
 for_window [class="Spotify"] move to workspace $ws4
 assign [class="telegram-desktop"] $ws4
 
@@ -186,6 +185,8 @@ for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Viewnior"] floating enable
 for_window [class="Pamac-manager"] floating enable
 for_window [class="blueman-manager"] floating enable
+for_window [class="Zeal"] floating enable
+for_window [class="Slack"] floating enable
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
