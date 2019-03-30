@@ -1,6 +1,6 @@
 #!/bin/bash
 
-terminal -e cmatrix -C red & sleep 0.2
+terminal -e cmatrix -C red & sleep 0.3
 
 i3-msg fullscreen
 
