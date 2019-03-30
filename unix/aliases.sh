@@ -42,6 +42,9 @@ alias be="bundle exec"
 alias rc="rails console"
 alias rs="rails server"
 
+# Python
+alias p="python3"
+
 # Docker
 alias dc="docker"
 alias dcp="docker-compose"
