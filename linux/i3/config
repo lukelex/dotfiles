@@ -169,7 +169,6 @@ bindsym XF86AudioPrev exec --no-startup-id playerctl previous
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 
 # Open applications on specific workspaces
-for_window [class="zeal"] move to workspace $ws1
 for_window [class="Spotify"] move to workspace $ws4
 assign [class="telegram-desktop"] $ws4
 
@@ -235,10 +234,6 @@ exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id clipit
-exec --no-startup-id variety
-exec --no-startup-id flameshot
-exec --no-startup-id spotify
-exec --no-startup-id zeal
 exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/i3/scripts/lock -detectsleep
 exec_always --no-startup-id ff-theme-util
