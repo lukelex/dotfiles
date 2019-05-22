@@ -3,8 +3,10 @@
 rm -rf ~/.bash_profile ~/.bashrc ~/.config/rofi/config.rasi
 rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
 
+pamac install polybar rofi autorandr xclip
+
 pamac install \
-  rofi sysstat xdotool xclip gconf cmake autorandr \
+  sysstat xdotool gconf cmake \
   redis docker docker-compose ttf-hack jq \
   nvim-gtk ctags zsh zsh-completions diff-so-fancy \
   rubygems the_silver_searcher zeal \
