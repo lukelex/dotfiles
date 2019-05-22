@@ -1,5 +1,5 @@
 # Editor
-alias e="NVIM_GTK_NO_HEADERBAR=1 nvim-gtk ."
+alias e="nvim-qt ."
 
 # Bash
 alias t="tree"

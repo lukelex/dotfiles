@@ -8,7 +8,7 @@ pamac install polybar rofi autorandr xclip
 pamac install \
   sysstat xdotool gconf cmake \
   redis docker docker-compose ttf-hack jq \
-  nvim-gtk ctags zsh zsh-completions diff-so-fancy \
+  neovim-qt ctags zsh zsh-completions diff-so-fancy \
   rubygems the_silver_searcher zeal \
   firefox etcher viewnior telegram-desktop playerctl \
   flameshot variety vlc redshift timeshift
