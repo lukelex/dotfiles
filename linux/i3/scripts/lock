@@ -1,7 +1,7 @@
 #!/bin/bash
 
-terminal -e cmatrix -C red & sleep 0.3
-
-i3-msg fullscreen
-
-i3lock -n ; i3-msg kill
+if [[ $(xrandr | grep \* | awk '{print $1}') == "3840x2160" ]]; then
+  i3lock -i ~/dotfiles/wallpapers/lockscreen-4k.png ;
+else
+  i3lock -i ~/dotfiles/wallpapers/lockscreen.png ;
+fi
