@@ -41,13 +41,10 @@ exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
 
 ################################################################################################
 
-# Start Applications
-bindsym $mod+Shift+d --release exec "killall dunst; exec notify-send 'restart dunst'"
-bindsym Print exec --no-startup-id i3-scrot
-bindsym $mod+Print --release exec --no-startup-id i3-scrot -w
-bindsym $mod+Shift+Print --release exec --no-startup-id i3-scrot -s
-bindsym $mod+Shift+Ctrl+h exec xdg-open /usr/share/doc/manjaro/i3_help.pdf
-bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
+# Applications shortcuts
+bindsym Print exec --no-startup-id flameshot full -c
+bindsym Shift+Print --release exec --no-startup-id flameshot gui
+bindsym $mod+Shift+q --release exec --no-startup-id xkill
 
 # cycle through multi monitor settings
 bindsym $mod+Ctrl+m exec --no-startup-id ~/dotfiles/linux/scripts/monitor
