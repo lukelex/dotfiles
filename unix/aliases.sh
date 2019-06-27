@@ -3,6 +3,8 @@ alias e="nvim-qt ."
 
 # Bash
 alias t="tree"
+alias open="xdg-open"
+alias o="xdg-open"
 
 # GIT
 alias g="git"
