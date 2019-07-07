@@ -11,19 +11,14 @@ pamac install \
   neovim-qt ctags zsh zsh-completions diff-so-fancy \
   rubygems the_silver_searcher zeal \
   firefox etcher viewnior telegram-desktop playerctl \
-  flameshot variety vlc redshift timeshift
+  flameshot variety vlc redshift timeshift \
+  nordvpn-bin avr-gcc dfu-programmer avrdude
 
 yaourt -S --noconfirm google-chrome-stable \
-  slack-desktop \
-  whatsapp-web-desktop \
-  otf-font-awesome-5-free \
-  postgresql-9.6 \
-  nvm \
-  phantomjs \
-  dropbox \
-  woeusb \
-  spotify \
-  debtap
+  slack-desktop whatsapp-web-desktop \
+  otf-font-awesome-5-free postgresql-9.6 \
+  nvm dropbox woeusb spotify debtap \
+  gcc-arm-none-eabi-bin
 
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 curl -L get.rvm.io | bash -s stable
