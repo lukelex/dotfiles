@@ -183,6 +183,7 @@ for_window [class="Pamac-manager"] floating enable
 for_window [class="blueman-manager"] floating enable
 for_window [class="Zeal"] floating enable
 for_window [class="Slack"] floating enable
+for_window [class="Pavucontrol"] floating enable center
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
