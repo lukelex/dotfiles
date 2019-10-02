@@ -1,0 +1,65 @@
+# open terminal, blazingly fast compared to iTerm/Hyper
+alt - return : /Applications/iTerm.app/Contents/MacOS/iTerm2 --single-instance -d ~
+
+# focus window
+alt - h : yabai -m window --focus west
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - l : yabai -m window --focus east
+
+# equalize size of windows
+shift + alt - 0 : chunkc tiling::desktop --equalize
+
+# swap window
+shift + alt - h : yabai -m window --swap west
+shift + alt - j : yabai -m window --swap south
+shift + alt - k : yabai -m window --swap north
+shift + alt - l : yabai -m window --swap east
+
+# move window
+shift + cmd - h : yabai -m window --warp west
+shift + cmd - j : yabai -m window --warp south
+shift + cmd - k : yabai -m window --warp north
+shift + cmd - l : yabai -m window --warp east
+
+# make floating window fill screen
+# shift + alt - up     : yabai -m window --grid-layout 1:1:0:0:1:1
+
+# focus monitor
+ctrl + alt - 1  : yabai -m display --focus 1
+ctrl + alt - 2  : yabai -m display --focus 2
+ctrl + alt - 3  : yabai -m display --focus 3
+
+# send window to monitor and follow focus
+shift + alt - 1 : yabai -m window --display 1; yabai -m display --focus 1
+shift + alt - 2 : yabai -m window --display 2; yabai -m display --focus 2
+shift + alt - 3 : yabai -m window --display 3; yabai -m display --focus 3
+
+# # increase region size
+# shift + alt - a : yabai -m window --use-temporary-ratio 0.1 --adjust-window-edge west
+# shift + alt - s : yabai -m window --use-temporary-ratio 0.1 --adjust-window-edge south
+# shift + alt - w : yabai -m window --use-temporary-ratio 0.1 --adjust-window-edge north
+# shift + alt - d : yabai -m window --use-temporary-ratio 0.1 --adjust-window-edge east
+
+# # decrease region size
+# shift + cmd - a : yabai -m window --use-temporary-ratio -0.1 --adjust-window-edge west
+# shift + cmd - s : yabai -m window --use-temporary-ratio -0.1 --adjust-window-edge south
+# shift + cmd - w : yabai -m window --use-temporary-ratio -0.1 --adjust-window-edge north
+# shift + cmd - d : yabai -m window --use-temporary-ratio -0.1 --adjust-window-edge east
+
+# toggle window fullscreen
+alt - f : yabai -m window --toggle zoom-fullscreen
+
+# toggle window native fullscreen
+shift + alt - f : yabai -m window --toggle native-fullscreen
+
+# toggle window split type
+alt - e : yabai -m window --toggle split
+
+# float / unfloat window and center on screen
+alt + shift - space : yabai -m window --toggle float;\
+                      yabai -m window --grid 4:4:1:1:2:2
+
+# change layout of desktop
+ctrl + alt - a : yabai -m space --layout bsp
+ctrl + alt - d : yabai -m space --layout float
