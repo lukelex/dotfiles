@@ -26,14 +26,14 @@ shift + cmd - l : yabai -m window --warp east
 # shift + alt - up     : yabai -m window --grid-layout 1:1:0:0:1:1
 
 # focus monitor
-ctrl + alt - 1  : yabai -m display --focus 1
-ctrl + alt - 2  : yabai -m display --focus 2
-ctrl + alt - 3  : yabai -m display --focus 3
+ctrl + cmd - 1  : yabai -m display --focus 1
+ctrl + cmd - 2  : yabai -m display --focus 2
+ctrl + cmd - 3  : yabai -m display --focus 3
 
 # send window to monitor and follow focus
-shift + alt - 1 : yabai -m window --display 1; yabai -m display --focus 1
-shift + alt - 2 : yabai -m window --display 2; yabai -m display --focus 2
-shift + alt - 3 : yabai -m window --display 3; yabai -m display --focus 3
+shift + cmd - 1 : yabai -m window --display 1; yabai -m display --focus 1
+shift + cmd - 2 : yabai -m window --display 2; yabai -m display --focus 2
+shift + cmd - 3 : yabai -m window --display 3; yabai -m display --focus 3
 
 # # increase region size
 # shift + alt - a : yabai -m window --use-temporary-ratio 0.1 --adjust-window-edge west
