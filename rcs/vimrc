@@ -38,7 +38,7 @@ Plugin 'itchyny/lightline.vim'
 Plugin 'majutsushi/tagbar'
 Plugin 'ervandew/supertab'
 Plugin 'benjifisher/matchit.zip'
-Plugin 'vim-scripts/Gundo'
+Plugin 'simnalamburt/vim-mundo'
 Plugin 'nathanaelkane/vim-indent-guides'
 " Plugin 'xolox/vim-misc' " dependency of vim-easytags
 " Plugin 'xolox/vim-easytags' " auto generate ctags on save
@@ -95,7 +95,7 @@ nmap <leader>h :nohlsearch<cr>
 " master fucking undo
 set undodir=~/.cache/undodir
 set undofile
-nnoremap <F5> :GundoToggle<CR>
+nnoremap <F5> :MundoToggle<CR>
 
 set clipboard=unnamedplus
 
