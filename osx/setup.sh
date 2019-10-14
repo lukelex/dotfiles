@@ -20,6 +20,18 @@ curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | 
 
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
+" QMK Stuff
+brew tap osx-cross/avr
+brew tap PX4/homebrew-px4
+brew update
+brew install avr-gcc@8
+brew link --force avr-gcc@8
+brew install dfu-programmer
+brew install dfu-util
+brew install gcc-arm-none-eabi
+brew install avrdude
+git clone --recurse-submodules https://github.com/qmk/qmk_firmware ~/projects/opensource/qmk_firmware
+
 rm ~/.vimrc ~/.zshrc
 ln -s ~/dotfiles/rcs/vimrc ~/.vimrc
 ln -s ~/dotfiles/rcs/zshrc ~/.zshrc
