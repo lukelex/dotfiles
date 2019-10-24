@@ -18,3 +18,5 @@ git config --global color.diff.whitespace "red reverse"
 
 git config --global rebase.autosquash true
 git config --global push.default current
+
+git config --global core.excludesfile ~/dotfiles/unix/gitignore
