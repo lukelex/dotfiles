@@ -92,11 +92,18 @@ nmap <leader>h :nohlsearch<cr>
 " :%s/:(\w+)(\s*)=>/\1:/g
 
 " master fucking undo
-set undodir=~/.cache/undodir
 set undofile
+set undodir=~/.cache/undodir
 nnoremap <F5> :MundoToggle<CR>
 
-set clipboard=unnamedplus
+" backup files
+" set nobackup
+" set nowb
+set noswapfile
+set backup
+set backupdir=~/backup_vim
+
+" set clipboard=unnamedplus
 
 " autoread files that were changed outside of vim
 set autoread
@@ -129,11 +136,6 @@ endif
 " Make it obvious where 65 characters is on text files
 autocmd BufRead,BufNewFile *.md set textwidth=65
 set colorcolumn=+1
-
-" disable backup files
-set nobackup
-set nowb
-set noswapfile
 
 " disable scrollbars
 set guioptions-=r
