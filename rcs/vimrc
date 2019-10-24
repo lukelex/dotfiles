@@ -45,7 +45,6 @@ Plugin 'nathanaelkane/vim-indent-guides'
 Plugin 'DataWraith/auto_mkdir'
 Plugin 'danro/rename.vim'
 Plugin 'henrik/vim-indexed-search' " show results count for '/?' searches
-Plugin 'junegunn/goyo.vim' " zen mode
 
 " Generic code
 Plugin 'tpope/vim-commentary'
