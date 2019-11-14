@@ -43,7 +43,7 @@ Plug 'DataWraith/auto_mkdir'
 Plug 'danro/rename.vim'
 Plug 'henrik/vim-indexed-search' " show results count for '/?' searches
 Plug 'ngmy/vim-rubocop'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 " Generic code
 Plug 'tpope/vim-commentary'
