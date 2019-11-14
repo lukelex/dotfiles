@@ -1,3 +1,17 @@
+rm -rf ~/.bash_profile ~/.bashrc ~/.config/rofi/config.rasi
+rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
+
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+curl -L get.rvm.io | bash -s stable
+curl -L http://install.ohmyz.sh | sh
+
+ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
+ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
+ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
+ln -fvs ~/dotfiles/linux/profile ~/.profile
+
 git config --global user.email "lukas@codelogic.me"
 git config --global user.name "Lukas Alexandre"
 

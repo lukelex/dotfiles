@@ -1,8 +1,5 @@
 . ../unix/setup
 
-rm -rf ~/.bash_profile ~/.bashrc ~/.config/rofi/config.rasi
-rm -rf ~/.profile ~/.vimrc ~/.zshrc ~/.Xmodmap ~/.i3/config
-
 pamac install polybar rofi autorandr xclip
 
 pamac install \
@@ -19,15 +16,6 @@ yaourt -S --noconfirm google-chrome-stable \
   otf-font-awesome-5-free postgresql-9.6 \
   nvm dropbox woeusb spotify debtap \
   gcc-arm-none-eabi-bin
-
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-curl -L get.rvm.io | bash -s stable
-curl -L http://install.ohmyz.sh | sh
-
-ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
-ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
-ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
-ln -fvs ~/dotfiles/linux/profile ~/.profile
 
 if [[ `hostname` -eq "deskjaro" ]]; then
   ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
