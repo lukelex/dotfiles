@@ -43,6 +43,8 @@ Plug 'simnalamburt/vim-mundo'
 Plug 'DataWraith/auto_mkdir'
 Plug 'danro/rename.vim'
 Plug 'henrik/vim-indexed-search' " show results count for '/?' searches
+Plug 'ngmy/vim-rubocop'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 " Generic code
 Plug 'tpope/vim-commentary'
@@ -83,6 +85,8 @@ let mapleader = "\<Space>"
 
 " clean the current search
 nmap <leader>h :nohlsearch<cr>
+
+nmap <leader>r :RuboCop<cr>
 
 " adopt new ruby hash syntax
 " :%s/:\([^ ]*\)\(\s*\)=>/\1:/g
