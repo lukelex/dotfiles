@@ -3,61 +3,58 @@ filetype off
 
 set shell=bash
 
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
+call plug#begin('~/.vim/plugged')
 
-Plugin 'VundleVim/Vundle.vim'
+Plug 'VundleVim/Vundle.vim'
 
 " Ruby
-Plugin 'vim-ruby/vim-ruby'
-Plugin 'tpope/vim-endwise'
-Plugin 'nelstrom/vim-textobj-rubyblock'
+Plug 'vim-ruby/vim-ruby'
+Plug 'tpope/vim-endwise'
+Plug 'nelstrom/vim-textobj-rubyblock'
 
 " Javascript
-Plugin 'jelera/vim-javascript-syntax'
-Plugin 'mxw/vim-jsx'
-Plugin 'pangloss/vim-javascript'
+Plug 'jelera/vim-javascript-syntax'
+Plug 'mxw/vim-jsx'
+Plug 'pangloss/vim-javascript'
 
 " Elixir
-Plugin 'elixir-lang/vim-elixir'
+Plug 'elixir-lang/vim-elixir'
 
 " Html
-Plugin 'slim-template/vim-slim'
+Plug 'slim-template/vim-slim'
 
 " Themes
-Plugin 'oguzbilgic/sexy-railscasts-theme'
+Plug 'oguzbilgic/sexy-railscasts-theme'
 
 " Editor improvements
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'tpope/vim-fugitive'
-Plugin 'tomtom/tlib_vim'
-Plugin 'MarcWeber/vim-addon-mw-utils'
-Plugin 'airblade/vim-gitgutter'
-Plugin 'mileszs/ack.vim'
-Plugin 'itchyny/lightline.vim'
-Plugin 'majutsushi/tagbar'
-Plugin 'ervandew/supertab'
-Plugin 'benjifisher/matchit.zip'
-Plugin 'simnalamburt/vim-mundo'
-Plugin 'nathanaelkane/vim-indent-guides'
-" Plugin 'xolox/vim-misc' " dependency of vim-easytags
-" Plugin 'xolox/vim-easytags' " auto generate ctags on save
-Plugin 'DataWraith/auto_mkdir'
-Plugin 'danro/rename.vim'
-Plugin 'henrik/vim-indexed-search' " show results count for '/?' searches
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'tpope/vim-fugitive'
+Plug 'tomtom/tlib_vim'
+Plug 'MarcWeber/vim-addon-mw-utils'
+Plug 'airblade/vim-gitgutter'
+Plug 'mileszs/ack.vim'
+Plug 'itchyny/lightline.vim'
+Plug 'majutsushi/tagbar'
+Plug 'ervandew/supertab'
+Plug 'benjifisher/matchit.zip'
+Plug 'simnalamburt/vim-mundo'
+" Plug 'xolox/vim-misc' " dependency of vim-easytags
+" Plug 'xolox/vim-easytags' " auto generate ctags on save
+Plug 'DataWraith/auto_mkdir'
+Plug 'danro/rename.vim'
+Plug 'henrik/vim-indexed-search' " show results count for '/?' searches
 
 " Generic code
-Plugin 'tpope/vim-commentary'
-Plugin 'garbas/vim-snipmate'
-Plugin 'honza/vim-snippets'
-Plugin 'kana/vim-textobj-user'
-Plugin 'tpope/vim-surround'
-Plugin 'tpope/vim-repeat'
-Plugin 'Raimondi/delimitMate'
-Plugin 'scrooloose/syntastic'
+Plug 'tpope/vim-commentary'
+Plug 'garbas/vim-snipmate'
+Plug 'honza/vim-snippets'
+Plug 'kana/vim-textobj-user'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-repeat'
+Plug 'Raimondi/delimitMate'
+Plug 'scrooloose/syntastic'
 
-call vundle#end()
-filetype plugin indent on
+call plug#end()
 
 syntax on
 set backspace=2
@@ -69,7 +66,7 @@ set hlsearch " highlight search results
 set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
-set cursorline " show cursor line (for whatever reason this has become SUPER slow)
+set cursorline " show cursor line (causes repaint, which will make terminal vim slower)
 
 " Tweaks for file browsing
 let g:netrw_banner=0        " disable annoying banner
