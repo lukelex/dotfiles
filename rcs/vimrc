@@ -5,8 +5,6 @@ set shell=bash
 
 call plug#begin('~/.vim/plugged')
 
-Plug 'VundleVim/Vundle.vim'
-
 " Ruby
 Plug 'vim-ruby/vim-ruby'
 Plug 'tpope/vim-endwise'
