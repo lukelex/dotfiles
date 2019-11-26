@@ -1,5 +1,8 @@
 . ../unix/setup
 
+rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
+rm -rf ~/.i3/config ~/.profile
+
 pamac install polybar rofi autorandr xclip
 
 pamac install \
@@ -33,3 +36,6 @@ ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
 
 mkdir -p ~/.config/polybar
 ln -fvs ~/dotfiles/linux/polybar/config ~/.config/polybar/config
+
+ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
+ln -fvs ~/dotfiles/linux/profile ~/.profile
