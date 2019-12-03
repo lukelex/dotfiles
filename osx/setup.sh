@@ -1,6 +1,6 @@
 . ../unix/setup
 
-rm -rf ~/.yabai ~/.skhdrc
+rm -rf ~/.yabairc ~/.skhdrc
 
 if ! [ -x "$(command -v brew)" ]; then
   ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -12,7 +12,7 @@ fi
 
 brew install ctags postgres redis the_silver_searcher \
              vim macvim zsh zsh-completions tree diff-so-fancy \
-             docker docker-compose neovim jq
+             docker docker-compose neovim jq yabai skhd
 
 brew cask install etcher vlc nordvpn google-chrome slack \
                   nvm spotify telegram
@@ -28,5 +28,5 @@ brew link --force avr-gcc@8
 brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude
 git clone --recurse-submodules https://github.com/qmk/qmk_firmware ~/projects/opensource/qmk_firmware
 
-ln -fvs ~/dotfiles/rcs/yabai ~/.yabai
+ln -fvs ~/dotfiles/rcs/yabairc ~/.yabairc
 ln -fvs ~/dotfiles/rcs/skhdrc ~/.skhdrc
