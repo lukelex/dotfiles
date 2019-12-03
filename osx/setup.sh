@@ -12,10 +12,10 @@ fi
 
 brew install ctags postgres redis the_silver_searcher \
              vim macvim zsh zsh-completions tree diff-so-fancy \
-             docker docker-compose neovim
+             docker docker-compose neovim jq
 
 brew cask install etcher vlc nordvpn google-chrome slack \
-                  nvm spotify
+                  nvm spotify telegram
 
 curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
 
