@@ -12,7 +12,8 @@ fi
 
 brew install ctags postgres redis the_silver_searcher \
              vim macvim zsh zsh-completions tree diff-so-fancy \
-             docker docker-compose neovim jq yabai skhd
+             docker docker-compose neovim jq yabai skhd \
+             imagemagik
 
 brew cask install etcher vlc nordvpn google-chrome slack \
                   nvm spotify telegram

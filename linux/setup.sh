@@ -12,7 +12,8 @@ pamac install \
   rubygems the_silver_searcher zeal \
   firefox etcher viewnior telegram-desktop playerctl \
   flameshot variety vlc redshift timeshift \
-  nordvpn-bin avr-gcc dfu-programmer avrdude
+  nordvpn-bin avr-gcc dfu-programmer avrdude \
+  imagemagik
 
 yaourt -S --noconfirm google-chrome-stable \
   slack-desktop whatsapp-web-desktop \
