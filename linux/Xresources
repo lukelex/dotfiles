@@ -1,0 +1,64 @@
+Xft.dpi:	96
+Xft.antialias:	1
+Xft.rgba:	rgb
+Xft.autohint:	0
+Xft.lcdfilter:	lcddefault
+Xft.hinting:	1
+Xft.hintstyle:	hintfull
+
+URxvt.font: xft:DejaVu Sans Mono-18
+Emacs.font: DejaVu Sans Mono-18
+
+*scrollBar:                      false
+URxvt*scrollTtyOutput:           true
+*transparent:                    false
+*shading:                        1
+URxvt*background:                     #0e0e0e
+URxvt*foreground:                     #c0b18b
+
+URxvt.keysym.Control-Up: \033[1;5A
+URxvt.keysym.Control-Down: \033[1;5B
+URxvt.keysym.Control-Left: \033[1;5D
+URxvt.keysym.Control-Right: \033[1;5C
+
+!black
+*color0:                         #2E3436
+*color8:                         #555753
+
+!red
+*color1:                         #C83F09
+*color9:                         #DE6839
+
+!green
+*color2:                         #4E9A06
+*color10:                        #77B739
+
+!yellow
+*color3:                         #C4A000
+*color11:                        #E0CF91
+
+!blue
+*color4:                         #3465A4
+*color12:                        #729FCF
+
+!magenta
+*color5:                         #75507B
+*color13:                        #AD7FA8
+
+!cyan
+*color6:                         #06989A
+*color14:                        #7CB8BB
+
+!white
+*color7:                         #BABDB9
+*color15:                        #EEEEEC
+
+URxvt*depth:                         32
+URxvt*perl-lib:                       /usr/lib/urxvt/perl/
+URxvt*perl-ext-common:               default,selection-to-clipboard,font-size
+URxvt*url-launcher:                   /usr/bin/x-www-browser
+
+! Turn on/off ISO 14755 (default enabled).
+URxvt*iso14755: false
+! Turn on/off ISO 14755 5.2 mode (default enabled).
+URxvt*iso14755_52: false
