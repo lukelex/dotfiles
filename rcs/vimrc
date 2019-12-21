@@ -134,7 +134,7 @@ colorscheme sexy-railscasts
 if has('gui_macvim') " MacVim options
   set guifont=Hack:h17
 elseif has ('nvim')
-  set guifont=Hack\ 12
+  set guifont=Hack:h18
 endif
 
 " Make it obvious where 65 characters is on text files
