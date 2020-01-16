@@ -9,6 +9,8 @@ curl -L http://install.ohmyz.sh | sh
 ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
 ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
 
+mkdir ~/backup_vim
+
 git config --global user.email "lukas@codelogic.me"
 git config --global user.name "Lukas Alexandre"
 

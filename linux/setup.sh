@@ -1,25 +1,18 @@
-. ../unix/setup
-
 rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
 rm -rf ~/.i3/config ~/.profile ~/.Xresources
 
-pamac install polybar rofi autorandr xclip
-
-pamac install \
-  sysstat xdotool gconf cmake \
-  redis docker docker-compose ttf-hack jq \
-  neovim-qt ctags zsh zsh-completions diff-so-fancy \
-  rubygems the_silver_searcher zeal \
-  firefox etcher viewnior telegram-desktop playerctl \
-  flameshot variety vlc redshift timeshift \
-  nordvpn-bin avr-gcc dfu-programmer avrdude \
-  imagemagik
-
-yaourt -S --noconfirm google-chrome-stable \
-  slack-desktop whatsapp-web-desktop \
-  otf-font-awesome-5-free postgresql-9.6 \
-  nvm dropbox woeusb spotify debtap \
-  gcc-arm-none-eabi-bin
+pamac install rofi autorandr xclip
+pamac install sysstat xdotool gconf cmake
+pamac install redis docker docker-compose ttf-hack jq
+pamac install neovim-qt ctags zsh zsh-completions diff-so-fancy
+pamac install rubygems the_silver_searcher zeal
+pamac install firefox etcher viewnior telegram-desktop playerctl
+pamac install flameshot variety vlc redshift timeshift
+pamac install nordvpn-bin imagemagick-full google-chrome
+pamac install slack-desktop whatsapp-nativefier
+pamac install otf-font-awesome-5-free postgresql-10
+pamac install nvm dropbox woeusb spotify debtap
+pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
 
 if [[ `hostname` -eq "deskjaro" ]]; then
   ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
