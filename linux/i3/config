@@ -226,7 +226,7 @@ mode "resize" {
 }
 
 # Autostart applications
-exec_always --no-startup-id ~/dotfiles/linux/polybar/launch.sh &
+#exec_always --no-startup-id ~/dotfiles/linux/polybar/launch.sh &
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
@@ -304,6 +304,13 @@ set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)
 set $mode_gaps_inner Inner Gaps: +|-|0 (local), Shift + +|-|0 (global)
 bindsym $mod+Shift+g mode "$mode_gaps"
+
+bar {
+  position top
+  output primary
+  status_command i3status
+  workspace_buttons yes
+}
 
 mode "$mode_gaps" {
   bindsym o      mode "$mode_gaps_outer"

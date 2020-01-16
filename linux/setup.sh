@@ -29,9 +29,6 @@ ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
 mkdir -p ~/.config/nvim
 ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
 
-mkdir -p ~/.config/polybar
-ln -fvs ~/dotfiles/linux/polybar/config ~/.config/polybar/config
-
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/profile ~/.profile
