@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [[ $(xrandr | grep \* | awk '{print $1}') == "3840x2160" ]]; then
-  i3lock -i ~/dotfiles/wallpapers/lockscreen-4k.png ;
-else
-  i3lock -i ~/dotfiles/wallpapers/lockscreen.png ;
-fi
+# sleep 0.1
+scrot /tmp/screenshot.png
+convert /tmp/screenshot.png -blur 0x8 /tmp/screenshotblur.png
+i3lock -i /tmp/screenshotblur.png
