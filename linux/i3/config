@@ -290,8 +290,8 @@ client.background       #2B2C2B
 #############################
 
 # Set inner/outer gaps
-gaps inner 6
-gaps outer 0
+gaps inner 16
+gaps outer 10
 
 # Smart gaps (gaps used if only more than one container on the workspace)
 smart_gaps on
