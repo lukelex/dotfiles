@@ -99,7 +99,7 @@ set noswapfile
 set backup
 set backupdir=~/backup_vim
 
-" set clipboard=unnamedplus
+set clipboard=unnamedplus
 
 " autoread files that were changed outside of vim
 set autoread
