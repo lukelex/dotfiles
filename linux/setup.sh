@@ -8,7 +8,7 @@ pamac install flameshot variety vlc redshift timeshift
 pamac install etcher viewnior feh playerctl
 pamac install nvm neovim-qt ctags diff-so-fancy
 pamac install rubygems the_silver_searcher zeal
-pamac install nordvpn-bin google-chrome firefox
+pamac install nordvpn-bin firefox
 pamac install postgresql-10 redis docker docker-compose
 pamac install slack-desktop whatsapp-nativefier telegram-desktop
 pamac install dropbox woeusb spotify debtap

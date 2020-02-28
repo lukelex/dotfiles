@@ -15,7 +15,7 @@ brew install ctags postgres redis the_silver_searcher \
              docker docker-compose neovim jq yabai skhd \
              imagemagik
 
-brew cask install etcher vlc nordvpn google-chrome slack \
+brew cask install etcher vlc nordvpn firefox slack \
                   nvm spotify telegram
 
 curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
