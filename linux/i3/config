@@ -237,6 +237,7 @@ exec --no-startup-id flameshot
 exec --no-startup-id blueman-tray
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
+exec_always --no-startup-id feh --randomize --bg-fill ~/dotfiles/wallpapers/
 
 # Color palette used for the terminal ( ~/.Xresources file )
 # Colors are gathered based on the documentation:
