@@ -235,9 +235,10 @@ exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/i3/scripts/lock -detectsleep
 exec --no-startup-id flameshot
 exec --no-startup-id blueman-tray
+exec --no-startup-id autorandr --change
+exec --no-startup-id feh --randomize --bg-fill ~/dotfiles/wallpapers/
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
-exec_always --no-startup-id feh --randomize --bg-fill ~/dotfiles/wallpapers/
 
 # Color palette used for the terminal ( ~/.Xresources file )
 # Colors are gathered based on the documentation:
