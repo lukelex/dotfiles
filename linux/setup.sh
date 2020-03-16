@@ -2,7 +2,7 @@ rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
 rm -rf ~/.i3/config ~/.profile ~/.Xresources
 
 pamac install zsh zsh-completions rofi
-pamac install autorandr xclip ttf-hack
+pamac install autorandr xclip ttf-hack yabar
 pamac install sysstat xdotool gconf cmake jq
 pamac install flameshot variety vlc redshift timeshift
 pamac install etcher viewnior feh playerctl

@@ -114,7 +114,7 @@ bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 # Lock screen
 bindsym $mod+9 exec --no-startup-id ~/dotfiles/linux/i3/scripts/lock
-# hide/unhide i3status bar
+# hide/unhide status bars
 bindsym $mod+m bar mode toggle
 
 # Workspace names
@@ -235,6 +235,7 @@ exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/i3/scripts/lock -detectsleep
 exec --no-startup-id flameshot
 exec --no-startup-id blueman-tray
+exec --no-startup-id yabar -c ~/dotfiles/linux/i3/yabar.conf
 exec --no-startup-id feh --randomize --bg-fill ~/dotfiles/wallpapers/
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
@@ -308,10 +309,10 @@ set $mode_gaps_inner Inner Gaps: +|-|0 (local), Shift + +|-|0 (global)
 bindsym $mod+Shift+g mode "$mode_gaps"
 
 bar {
-  position top
+  position bottom
   output primary
-  status_command i3status
   workspace_buttons yes
+  tray_output primary
 }
 
 mode "$mode_gaps" {
