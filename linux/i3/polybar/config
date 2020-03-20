@@ -8,13 +8,13 @@ modules-left = i3
 modules-right = time date
 modules-center = title
 
-[bar/system-info]
+[bar/deskjaro-secundary]
 inherit = bar/style
 
 bottom = true
 monitor = HDMI-0
 
-modules-left = powermenu backlight pulseaudio filesystem memory cpu temperature battery usb-tracking
+modules-left = powermenu pulseaudio filesystem memory cpu temperature usb-tracking
 modules-center = media
 
 tray-position = right

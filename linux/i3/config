@@ -232,13 +232,17 @@ exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id clipit
 exec --no-startup-id dropbox start -i
-exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/i3/scripts/lock -detectsleep
+exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/linux/i3/scripts/lock -detectsleep
 exec --no-startup-id flameshot
 exec --no-startup-id blueman-tray
 exec_always --no-startup-id . ~/dotfiles/linux/i3/polybar/launch.sh
-exec --no-startup-id feh --randomize --bg-fill ~/dotfiles/wallpapers/
+exec --no-startup-id feh --bg-fill ~/dotfiles/wallpapers/digital-circuit.jpg
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
+
+# Compton
+exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
+exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
 
 # Color palette used for the terminal ( ~/.Xresources file )
 # Colors are gathered based on the documentation:

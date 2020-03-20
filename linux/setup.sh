@@ -4,7 +4,7 @@ rm -rf ~/.i3/config ~/.profile ~/.Xresources
 pamac install zsh zsh-completions rofi
 pamac install autorandr xclip ttf-hack yabar
 pamac install sysstat xdotool gconf cmake jq
-pamac install flameshot variety vlc redshift timeshift
+pamac install flameshot variety vlc timeshift
 pamac install etcher viewnior feh playerctl
 pamac install nvm neovim-qt ctags diff-so-fancy
 pamac install rubygems the_silver_searcher zeal
