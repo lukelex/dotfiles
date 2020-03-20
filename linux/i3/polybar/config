@@ -1,0 +1,230 @@
+[bar/deskjaro-primary]
+inherit = bar/style
+
+bottom = false
+monitor = HDMI-0
+
+modules-left = i3
+modules-right = time date
+modules-center = title
+
+[bar/system-info]
+inherit = bar/style
+
+bottom = true
+monitor = HDMI-0
+
+modules-left = powermenu backlight pulseaudio filesystem memory cpu temperature battery usb-tracking
+modules-center = media
+
+tray-position = right
+tray-detached = true
+
+
+
+
+
+
+
+
+;---------;
+; MODULES ;
+;---------;
+
+[module/i3]
+type = internal/i3
+
+pin-workspaces = false
+strip-wsnumbers = true
+enable-scroll = false
+
+label-unfocused-foreground = #666666
+label-focused-foreground = #FFFFFF
+label-urgent-foreground = #FF0000
+
+[module/title]
+type = internal/xwindow
+
+format-foreground = #FFFFFF
+
+[module/time]
+type = internal/date
+
+interval = 1.0
+
+date =  %H:%M
+
+[module/date]
+type = internal/date
+date =  %e %B - %A
+label = %date%
+
+[module/battery]
+type = internal/battery
+
+battery = BAT1
+
+poll-interval = 1
+
+full-at = 95
+
+label-discharging = %percentage%%
+label-charging = %percentage%%
+label-full = %percentage%%
+
+format-discharging = <ramp-capacity> <label-discharging>
+format-full = <ramp-capacity> <label-full>
+format-charging =  <label-charging>
+
+ramp-capacity-0 = 
+ramp-capacity-1 = 
+ramp-capacity-2 = 
+ramp-capacity-3 = 
+ramp-capacity-4 = 
+
+[module/pulseaudio]
+type = internal/pulseaudio
+interval = 5
+format-volume = <ramp-volume>
+format-muted =  0%
+
+ramp-volume-0 = 
+ramp-volume-1 = 
+ramp-volume-2 = 
+
+[module/media]
+type = custom/script
+exec = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/player-mpris-tail/player-mpris-tail.py -f '{icon} {artist} - {title}'
+tail = true
+
+[module/cpu]
+type = internal/cpu
+label =  %percentage%%
+
+[module/memory]
+type = internal/memory
+label =  %gb_used%
+interval = 2
+
+[module/temperature]
+type = internal/temperature
+
+thermal-zone = 2
+hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input
+warn-temperature = 82
+
+format = <ramp> <label>
+label = %temperature-c%
+
+ramp-0 = 
+ramp-1 = 
+ramp-2 = 
+
+[module/backlight]
+type = internal/xbacklight
+output = eDP1
+enable-scroll = false
+format = <ramp>
+ramp-0 = 
+ramp-1 = 
+ramp-2 = 
+
+[module/usb-tracking]
+type = custom/script
+exec = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh
+tail = true
+click-left = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --mount &
+click-right = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --unmount &
+
+[module/filesystem]
+type = internal/fs
+
+mount-0 = /
+
+format-mounted = <label-mounted>
+label-mounted = %free%/%total%
+
+[module/powermenu]
+type = custom/menu
+
+label-open = 
+label-open-foreground = #FFFFFF
+label-close = x cancel
+label-close-foreground = #FFFFFF
+label-separator = |
+label-separator-foreground = #FFFFFF
+
+menu-0-0 = reboot
+menu-0-0-exec = menu-open-1
+menu-0-1 = power off
+menu-0-1-exec = menu-open-2
+menu-0-2 = suspend
+menu-0-2-exec = menu-open-3
+
+menu-1-0 = cancel
+menu-1-0-exec = menu-open-0
+menu-1-1 = back
+menu-1-1-exec = sudo reboot
+
+menu-2-0 = power off
+menu-2-0-exec = sudo poweroff
+menu-2-1 = back
+menu-2-1-exec = menu-open-0
+
+menu-3-0 = suspend
+menu-3-0-exec = sudo pm-suspend
+menu-3-1 = back
+
+
+
+
+
+
+
+
+
+
+[bar/style]
+
+;------------;
+; DIMENSIONS ;
+;------------;
+
+width = 100%
+height = 25
+offset-y = 0
+offset-x = 0
+
+border-top-size = 10
+border-bottom-size = 0
+border-right-size = 10
+border-left-size = 10
+
+;-------;
+; FONTS ;
+;-------;
+
+font-0 = Fantasque Sans Mono:size=18;3
+font-1 = "Font Awesome 5 Free:style=Solid:pixelsize=18;3"
+font-2 = "Font Awesome 5 Free:style=Regular:pixelsize=18;3"
+font-3 = "Font Awesome 5 Brands:pixelsize=18;3"
+
+;--------;
+; COLORS ;
+;--------;
+
+background = 0
+foreground =  #FFFFFF
+border-color = 0
+
+; FDFDFD 6C3EC9  A17DBF #8A0CD2 9200E3  A20AF7  C154CD 8C4C93 A3589A  E462D4;
+
+;---------------;
+; MISCELLANEOUS ;
+;---------------;
+
+fixed-center = true
+padding-left = 2
+padding-right = 2
+module-margin = 1
+tray-padding = 2

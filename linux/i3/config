@@ -235,7 +235,7 @@ exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/i3/scripts/lock -detectsleep
 exec --no-startup-id flameshot
 exec --no-startup-id blueman-tray
-exec --no-startup-id yabar -c ~/dotfiles/linux/i3/yabar.conf
+exec_always --no-startup-id . ~/dotfiles/linux/i3/polybar/launch.sh
 exec --no-startup-id feh --randomize --bg-fill ~/dotfiles/wallpapers/
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
@@ -307,13 +307,6 @@ set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)
 set $mode_gaps_inner Inner Gaps: +|-|0 (local), Shift + +|-|0 (global)
 bindsym $mod+Shift+g mode "$mode_gaps"
-
-bar {
-  position bottom
-  output primary
-  workspace_buttons yes
-  tray_output primary
-}
 
 mode "$mode_gaps" {
   bindsym o      mode "$mode_gaps_outer"
