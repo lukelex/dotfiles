@@ -9,8 +9,8 @@ killall -q polybar
 while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
 
 if [[ "$HOSTNAME" == "deskjaro" ]]; then
-  polybar deskjaro-primary -c ~/dotfiles/linux/i3/polybar/config &
-  polybar deskjaro-secundary -c ~/dotfiles/linux/i3/polybar/config &
+  polybar primary -c ~/dotfiles/linux/i3/polybar/deskjaro &
+  polybar secundary -c ~/dotfiles/linux/i3/polybar/deskjaro &
 fi
 
 echo "Polybar launched..."

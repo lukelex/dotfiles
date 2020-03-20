@@ -1,35 +1,4 @@
-[bar/deskjaro-primary]
-inherit = bar/style
-
-bottom = false
-monitor = HDMI-0
-
-modules-left = i3
-modules-right = time date
-modules-center = title
-
-[bar/deskjaro-secundary]
-inherit = bar/style
-
-bottom = true
-monitor = HDMI-0
-
-modules-left = powermenu pulseaudio bluetooth filesystem memory cpu temperature usb-tracking
-modules-center = media
-
-tray-position = right
-tray-detached = true
-
-
-
-
-
-
-
-
-;---------;
-; MODULES ;
-;---------;
+include-file = ~/dotfiles/linux/i3/polybar/styles
 
 [module/i3]
 type = internal/i3
@@ -44,6 +13,7 @@ label-urgent-foreground = ${colors.urgent}
 
 [module/title]
 type = internal/xwindow
+label = %{T2}%title:0:40:...%%{T-}
 
 format-foreground = ${colors.foreground}
 
@@ -86,7 +56,7 @@ ramp-capacity-4 = 
 type = internal/pulseaudio
 interval = 5
 format-volume = <ramp-volume>
-format-muted =  0%
+label-muted = 
 
 ramp-volume-0 = 
 ramp-volume-1 = 
@@ -102,6 +72,7 @@ click-left = rofi-bluetooth &
 type = custom/script
 exec = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/player-mpris-tail/player-mpris-tail.py -f '{icon} {artist} - {title}'
 tail = true
+icon-playing = )
 
 [module/cpu]
 type = internal/cpu
@@ -142,9 +113,15 @@ tail = true
 click-left = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --mount &
 click-right = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --unmount &
 
+[module/kernel]
+type = custom/script
+exec = uname -r | cut -f1 -d"-"
+label =  %output%
+interval = 1024
+
 [module/filesystem]
 type = custom/script
-exec = df -h /dev/nvme0n1p1 | awk '{print $3"/"$2}' | tail -n 1
+exec = df -h /dev/nvme0n1p1 | awk '{print $3}' | tail -n 1
 label =  %output%
 interval = 30
 
@@ -178,61 +155,3 @@ menu-2-1-exec = menu-open-0
 menu-3-0 = suspend
 menu-3-0-exec = sudo pm-suspend
 menu-3-1 = back
-
-
-
-
-
-
-
-
-
-
-[bar/style]
-
-;------------;
-; DIMENSIONS ;
-;------------;
-
-width = 100%
-height = 25
-offset-y = 0
-offset-x = 0
-
-border-top-size = 10
-border-bottom-size = 0
-border-right-size = 10
-border-left-size = 10
-
-;-------;
-; FONTS ;
-;-------;
-
-font-0 = Fantasque Sans Mono:size=18;3
-font-1 = "Font Awesome 5 Free:style=Solid:pixelsize=18;3"
-font-2 = "Font Awesome 5 Free:style=Regular:pixelsize=18;3"
-font-3 = "Font Awesome 5 Brands:pixelsize=18;3"
-
-;--------;
-; COLORS ;
-;--------;
-
-background = ${colors.background}
-foreground =  ${colors.foreground}
-border-color = ${colors.background}
-
-;---------------;
-; MISCELLANEOUS ;
-;---------------;
-
-fixed-center = true
-padding-left = 2
-padding-right = 2
-module-margin = 1
-tray-padding = 2
-
-[colors]
-foreground = #FFFFFF
-foreground-secundary = #666666
-background = 0
-urgent = #FF0000
