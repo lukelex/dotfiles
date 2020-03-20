@@ -1,7 +1,7 @@
 rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
 rm -rf ~/.i3/config ~/.profile ~/.Xresources
 
-pamac install zsh zsh-completions rofi
+pamac install zsh zsh-completions rofi rofi-bluetooth
 pamac install autorandr xclip ttf-hack yabar
 pamac install sysstat xdotool gconf cmake jq
 pamac install flameshot variety vlc timeshift
