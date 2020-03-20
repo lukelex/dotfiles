@@ -143,12 +143,10 @@ click-left = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-
 click-right = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --unmount &
 
 [module/filesystem]
-type = internal/fs
-
-mount-0 = /
-
-format-mounted = <label-mounted>
-label-mounted = %free%/%total%
+type = custom/script
+exec = df -h /dev/nvme0n1p1 | awk '{print $3"/"$2}' | tail -n 1
+label =  %output%
+interval = 30
 
 [module/powermenu]
 type = custom/menu
