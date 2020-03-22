@@ -106,13 +106,6 @@ ramp-0 = 
 ramp-1 = 
 ramp-2 = 
 
-[module/usb-tracking]
-type = custom/script
-exec = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh
-tail = true
-click-left = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --mount &
-click-right = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/system-usb-udev/system-usb-udev.sh --unmount &
-
 [module/kernel]
 type = custom/script
 exec = uname -r | cut -f1 -d"-"

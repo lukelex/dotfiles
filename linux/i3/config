@@ -45,6 +45,7 @@ exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
 bindsym Print exec --no-startup-id flameshot full -c
 bindsym Shift+Print --release exec --no-startup-id flameshot gui
 bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
+bindsym $mod+Ctrl+u --release exec --no-startup-id ~/dotfiles/linux/scripts/usb-mounter.sh
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
 
 # cycle through multi monitor settings
