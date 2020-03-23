@@ -1,3 +1,9 @@
 [submodule "linux/i3/polybar/polybar-scripts"]
 	path = linux/i3/polybar/polybar-scripts
 	url = git@github.com:polybar/polybar-scripts.git
+[submodule "vendor/automount-usb"]
+	path = vendor/automount-usb
+	url = git@github.com:raamsri/automount-usb.git
+[submodule "vendor/polybar-scripts"]
+	path = vendor/polybar-scripts
+	url = git@github.com:polybar/polybar-scripts.git
