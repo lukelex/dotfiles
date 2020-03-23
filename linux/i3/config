@@ -1,11 +1,7 @@
-# i3 config file (v4)
-# Please see http://i3wm.org/docs/userguide.html for a complete reference!
-
 # Set mod key (Mod1=<Alt>, Mod4=<Super>)
 set $mod Mod4
 
-# set default desktop layout (default is tiling)
-# workspace_layout tabbed <stacking|tabbed>
+workspace_layout default #<default|stacking|tabbed>
 
 # Configure border style <normal|1pixel|pixel xx|none|pixel>
 new_window pixel 3
@@ -19,8 +15,7 @@ bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
 
-# Font for window titles. Will also be used by the bar unless a different font
-# is used in the bar {} block below.
+# Font for window titles
 font xft:URWGothic-Book 11
 
 # start a terminal
@@ -87,7 +82,6 @@ bindsym $mod+e layout toggle split
 bindsym $mod+t split toggle
 
 # Floating windows
-# Use Mouse+$mod to drag floating windows
 floating_modifier $mod
 # toggle tiling / floating
 bindsym $mod+Shift+space floating toggle
@@ -108,8 +102,6 @@ bindsym $mod+minus scratchpad show
 bindsym $mod+Ctrl+Right workspace next
 bindsym $mod+Ctrl+Left workspace prev
 
-# bindsym $mod+h split h;exec notify-send 'tile horizontally'
-# bindsym $mod+v split v;exec notify-send 'tile vertically'
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -245,18 +237,6 @@ exec_always --no-startup-id fix_xcursor
 exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
 exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
 
-# Color palette used for the terminal ( ~/.Xresources file )
-# Colors are gathered based on the documentation:
-# https://i3wm.org/docs/userguide.html#xresources
-# Change the variable name at the place you want to match the color
-# of your terminal like this:
-# [example]
-# If you want your bar to have the same background color as your
-# terminal background change the line 362 from:
-# background #14191D
-# to:
-# background $term_background
-# Same logic applied to everything else.
 set_from_resource $term_background background
 set_from_resource $term_foreground foreground
 set_from_resource $term_color0     color0
@@ -285,12 +265,7 @@ set $urgent-bg-color     #E53935
 
 # Set some nice colors      border	 background text	   indicator
 client.focused              #ff0000  #ff0000    #ffffff  #ffff00
-# client.unfocused            $elegant $elegant   $cyan    $elegant
-# client.focused_inactive     $acqua   $acqua     $silver  $acqua
-# client.urgent               $magenta $magenta   $silver  $magenta
-# client.placeholder          $magenta $magenta   $silver  $magenta
-
-client.background       #2B2C2B
+client.background           #2B2C2B
 
 #############################
 ### settings for i3-gaps: ###
@@ -302,10 +277,7 @@ gaps outer 10
 
 # Smart gaps (gaps used if only more than one container on the workspace)
 smart_gaps on
-
-# Smart borders (draw borders around container only if it is not the only container on this workspace)
-# on|no_gaps (on=always activate and no_gaps=only activate if the gap size to the edge of the screen is 0)
-smart_borders on
+smart_borders on # on|no_gaps
 
 # Press $mod+Shift+g to enter the gap mode. Choose o or i for modifying outer/inner gaps. Press one of + / - (in-/decrement for current workspace) or 0 (remove gaps for current workspace). If you also press Shift with these keys, the change will be global for all workspaces.
 set $mode_gaps Gaps: (o) outer, (i) inner
