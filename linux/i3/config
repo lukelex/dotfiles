@@ -30,15 +30,11 @@ bindsym $mod+d exec rofi -show combi
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
 
-# Compton
-exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
-exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
-
 ################################################################################################
 
 # Applications shortcuts
-bindsym Print exec --no-startup-id flameshot full -c
-bindsym Shift+Print --release exec --no-startup-id flameshot gui
+bindsym Print --release exec --no-startup-id scrot '%Y-%m-%d_$wx$h.png' -e 'mv $f ~/screenshots/'
+bindsym Shift+Print --release exec --no-startup-id scrot -s '%Y-%m-%d_$wx$h.png' -e 'mv $f ~/screenshots/'
 bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
 bindsym $mod+Ctrl+u --release exec --no-startup-id ~/dotfiles/linux/scripts/usb-mounter.sh
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
@@ -160,7 +156,9 @@ bindsym XF86AudioPrev exec --no-startup-id playerctl previous
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 
 # Open applications on specific workspaces
+assign [class="(?i)discord"] $ws4
 assign [class="telegram-desktop"] $ws4
+for_window [class="Spotify"] move to workspace $ws8
 
 # Open specific applications in floating mode
 for_window [class="Galculator"] floating enable border pixel 1
