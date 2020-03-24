@@ -217,24 +217,6 @@ mode "resize" {
   bindsym Escape mode "default"
 }
 
-# Autostart applications
-exec --no-startup-id autorandr --change
-exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec --no-startup-id nm-applet
-exec --no-startup-id xfce4-power-manager
-exec --no-startup-id clipit
-exec --no-startup-id dropbox start -i
-exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/linux/i3/scripts/lock -detectsleep
-exec --no-startup-id flameshot
-exec_always --no-startup-id . ~/dotfiles/linux/i3/polybar/launch.sh
-exec --no-startup-id feh --bg-fill ~/dotfiles/wallpapers/digital-circuit.jpg
-exec_always --no-startup-id ff-theme-util
-exec_always --no-startup-id fix_xcursor
-
-# Compton
-exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
-exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
-
 set_from_resource $term_background background
 set_from_resource $term_foreground foreground
 set_from_resource $term_color0     color0
@@ -313,3 +295,20 @@ mode "$mode_gaps_outer" {
   bindsym Return mode "default"
   bindsym Escape mode "default"
 }
+
+# Autostart applications
+exec --no-startup-id autorandr --change; feh --bg-fill ~/dotfiles/wallpapers/digital-circuit.jpg
+exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec --no-startup-id nm-applet
+exec --no-startup-id xfce4-power-manager
+exec --no-startup-id clipit
+exec --no-startup-id dropbox start -i
+exec --no-startup-id xautolock -time 5 -locker ~/dotfiles/linux/i3/scripts/lock -detectsleep -corners ----
+exec --no-startup-id flameshot
+exec_always --no-startup-id . ~/dotfiles/linux/i3/polybar/launch.sh
+exec_always --no-startup-id ff-theme-util
+exec_always --no-startup-id fix_xcursor
+
+# Compton
+exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
+exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
