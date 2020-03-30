@@ -175,6 +175,9 @@ for_window [class="blueman-manager"] floating enable
 for_window [class="Zeal"] floating enable
 for_window [class="Slack"] floating enable
 for_window [class="Pavucontrol"] floating enable center
+for_window [class="SimpleScreenRecorder"] floating enable center
+for_window [class="Nvidia-settings"] floating enable center
+for_window [class="Deathing"] floating enable center
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
