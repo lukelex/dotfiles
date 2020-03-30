@@ -117,6 +117,9 @@ set $ws6 6
 set $ws7 7
 set $ws8 8
 
+workspace 1 output DP-0
+workspace 2 output HDMI-0
+
 # switch to workspace
 bindsym $mod+1 workspace $ws1
 bindsym $mod+2 workspace $ws2
