@@ -77,13 +77,9 @@ bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 bindsym $mod+t split toggle
 
-# Floating windows
 floating_modifier $mod
-# toggle tiling / floating
 bindsym $mod+Shift+space floating toggle
-# change focus between tiling / floating windows
 bindsym $mod+space focus mode_toggle
-# toggle sticky
 bindsym $mod+Shift+s sticky toggle
 
 # focus all containers
@@ -100,12 +96,8 @@ bindsym $mod+Ctrl+Left workspace prev
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
-# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 bindsym $mod+Shift+r restart
-# Lock screen
 bindsym $mod+9 exec --no-startup-id ~/dotfiles/linux/i3/scripts/lock
-# hide/unhide status bars
-bindsym $mod+m bar mode toggle
 
 # Workspace names
 set $ws1 1
@@ -180,6 +172,7 @@ for_window [class="Slack"] floating enable
 for_window [class="Pavucontrol"] floating enable center
 for_window [class="SimpleScreenRecorder"] floating enable center
 for_window [class="Nvidia-settings"] floating enable center
+for_window [class="VIA"] floating enable center
 for_window [class="Deathing"] floating enable center
 
 # switch to workspace with urgent window automatically
