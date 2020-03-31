@@ -11,12 +11,6 @@ label-unfocused-foreground = ${colors.foreground-secundary}
 label-focused-foreground = ${colors.foreground}
 label-urgent-foreground = ${colors.urgent}
 
-[module/title]
-type = internal/xwindow
-label = %{T2}%title:0:40:...%%{T-}
-
-format-foreground = ${colors.foreground}
-
 [module/time]
 type = internal/date
 
@@ -68,11 +62,27 @@ exec = rofi-bluetooth --status
 interval = 1
 click-left = rofi-bluetooth &
 
-[module/media]
+[module/spotify]
 type = custom/script
-exec = ~/dotfiles/linux/i3/polybar/polybar-scripts/polybar-scripts/player-mpris-tail/player-mpris-tail.py -f '{icon} {artist} - {title}'
-tail = true
-icon-playing = )
+exec = playerctl -p spotify metadata --format '{{ artist }} - {{ title }}' | awk '{print $0}'
+exec-if = playerctl -l | grep spotify
+label =  %output%
+interval = 1
+click-left = playerctl -p spotify play-pause
+
+[module/spotify-prev]
+type = custom/script
+exec = echo "a"
+exec-if = playerctl -l | grep spotify
+label = 
+click-left = playerctl -p spotify previous
+
+[module/spotify-next]
+type = custom/script
+exec = echo "a"
+exec-if = playerctl -l | grep spotify
+label = 
+click-left = playerctl -p spotify next
 
 [module/cpu]
 type = internal/cpu

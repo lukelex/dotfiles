@@ -8,7 +8,6 @@ monitor = HDMI-0
 
 modules-left = i3
 modules-right = time date
-modules-center = title
 
 
 [bar/secundary]
@@ -18,7 +17,7 @@ bottom = true
 monitor = HDMI-0
 
 modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature
-modules-center = media
+modules-center = spotify-prev spotify spotify-next
 
 tray-position = right
 tray-detached = true
