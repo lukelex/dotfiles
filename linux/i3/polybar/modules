@@ -25,11 +25,8 @@ label = %date%
 
 [module/battery]
 type = internal/battery
-
 battery = BAT1
-
 poll-interval = 1
-
 full-at = 95
 
 label-discharging = %percentage%%
@@ -127,6 +124,14 @@ type = custom/script
 exec = df -h /dev/nvme0n1p1 | awk '{print $4}' | tail -n 1
 label =  %output%
 interval = 30
+
+[module/vpn]
+type = custom/script
+exec = nordvpn status | grep City | cut -d ":" -f2 | xargs
+exec-if = nordvpn status | grep Uptime
+label =  %output%
+interval = 1
+click-left = nordvpn disconnect
 
 [module/powermenu]
 type = custom/menu

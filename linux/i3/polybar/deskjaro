@@ -16,7 +16,7 @@ inherit = styles
 bottom = true
 monitor = HDMI-0
 
-modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature
+modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature vpn
 modules-center = spotify-prev spotify spotify-next
 
 tray-position = right
