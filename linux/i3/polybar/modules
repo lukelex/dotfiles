@@ -46,8 +46,7 @@ ramp-capacity-4 = 
 [module/pulseaudio]
 type = internal/pulseaudio
 interval = 5
-format-volume = <ramp-volume>
-label-muted = 
+format-volume = <ramp-volume> <label-volume>
 
 ramp-volume-0 = 
 ramp-volume-1 = 
