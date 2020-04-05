@@ -3,6 +3,17 @@ include-file = ~/dotfiles/linux/i3/polybar/styles
 [module/i3]
 type = internal/i3
 
+ws-icon-0 = 1;いち
+ws-icon-1 = 2;に
+ws-icon-2 = 3;さん
+ws-icon-3 = 4;し、よん
+ws-icon-4 = 5;ご
+ws-icon-5 = 6;ろく
+ws-icon-6 = 7;しち、なな
+ws-icon-7 = 8;はち
+ws-icon-8 = 9;く、きゅう
+ws-icon-9 = 0;じゅう
+
 pin-workspaces = false
 strip-wsnumbers = true
 enable-scroll = false

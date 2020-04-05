@@ -13,7 +13,8 @@ pamac install postgresql-10 redis docker docker-compose
 pamac install slack-desktop whatsapp-nativefier telegram-desktop
 pamac install dropbox woeusb spotify debtap
 pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
-pamac install otf-font-awesome-5-free imagemagick-full
+pamac install imagemagick-full neofetch
+pamac install nerd-fonts-complete noto-fonts-cjk
 
 if [[ `hostname` -eq "deskjaro" ]]; then
   ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
