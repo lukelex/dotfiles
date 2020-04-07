@@ -111,6 +111,8 @@ set $ws8 8
 
 workspace 1 output DP-0
 workspace 2 output HDMI-0
+workspace 3 output DP-0
+workspace 4 output HDMI-0
 
 # switch to workspace
 bindsym $mod+1 workspace $ws1
@@ -293,6 +295,7 @@ assign [class="telegram-desktop"] $ws4
 for_window [class="Spotify"] move to workspace $ws8
 
 # Open specific applications in floating mode
+for_window [class="Pcmanfm"] floating enable center border pixel 1
 for_window [class="Galculator"] floating enable border pixel 1
 for_window [class="GParted"] floating enable border normal
 for_window [title="i3_help"] floating enable center sticky enable border normal

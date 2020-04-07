@@ -157,19 +157,29 @@ menu-0-0 = reboot
 menu-0-0-exec = menu-open-1
 menu-0-1 = power off
 menu-0-1-exec = menu-open-2
-menu-0-2 = suspend
+menu-0-2 = hibernate
 menu-0-2-exec = menu-open-3
+menu-0-3 = logout
+menu-0-3-exec = menu-open-4
+menu-0-4 = lock
+menu-0-4-exec = i3exit lock
 
-menu-1-0 = cancel
-menu-1-0-exec = menu-open-0
+menu-1-0 = reboot
+menu-1-0-exec = i3exit reboot
 menu-1-1 = back
-menu-1-1-exec = sudo reboot
+menu-1-1-exec = menu-open-0
 
 menu-2-0 = power off
-menu-2-0-exec = sudo poweroff
+menu-2-0-exec = i3exit shutdown
 menu-2-1 = back
 menu-2-1-exec = menu-open-0
 
-menu-3-0 = suspend
-menu-3-0-exec = sudo pm-suspend
+menu-3-0 = hibernate
+menu-3-0-exec = i3exit hibernate
 menu-3-1 = back
+menu-3-1-exec = menu-open-0
+
+menu-4-0 = logout
+menu-4-0-exec = i3exit logout
+menu-4-1 = back
+menu-4-1-exec = menu-open-0
