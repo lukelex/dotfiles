@@ -2,19 +2,19 @@ rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
 rm -rf ~/.i3/config ~/.profile ~/.Xresources
 
 pamac install zsh zsh-completions rofi rofi-bluetooth
-pamac install autorandr xclip ttf-hack yabar
+pamac install autorandr xclip yabar
 pamac install sysstat xdotool gconf cmake jq
 pamac install flameshot variety vlc timeshift
 pamac install etcher viewnior feh playerctl
 pamac install nvm neovim-qt ctags diff-so-fancy
 pamac install rubygems the_silver_searcher zeal
-pamac install nordvpn-bin google-chrome
+pamac install nordvpn-bin google-chrome godot aseprite
 pamac install postgresql-10 redis docker docker-compose
 pamac install slack-desktop whatsapp-nativefier telegram-desktop
-pamac install dropbox woeusb spotify debtap
+pamac install dropbox woeusb spotify via-git stress
 pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
 pamac install imagemagick-full neofetch
-pamac install nerd-fonts-complete noto-fonts-cjk
+pamac install ttf-hack nerd-fonts-complete noto-fonts-cjk
 
 if [[ `hostname` -eq "deskjaro" ]]; then
   ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
