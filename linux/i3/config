@@ -37,6 +37,7 @@ bindsym Print --release exec --no-startup-id scrot '%Y-%m-%d_$wx$h.png' -e 'mv $
 bindsym Shift+Print --release exec --no-startup-id scrot -s '%Y-%m-%d_$wx$h.png' -e 'mv $f ~/screenshots/'
 bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
 bindsym $mod+Ctrl+u --release exec --no-startup-id ~/dotfiles/linux/scripts/usb-mounter.sh
+bindsym $mod+Ctrl+e --release exec --no-startup-id ~/dotfiles/linux/scripts/emoji
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
 
 # cycle through multi monitor settings
