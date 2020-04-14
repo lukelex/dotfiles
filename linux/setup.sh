@@ -27,5 +27,6 @@ ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
 
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
+ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 sudo ln -fvs ~/dotfiles/linux/peripherals/$(hostname).conf /etc/X11/xorg.conf 
