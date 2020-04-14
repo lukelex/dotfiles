@@ -16,10 +16,6 @@ pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
 pamac install imagemagick-full neofetch
 pamac install ttf-hack nerd-fonts-complete noto-fonts-cjk
 
-if [[ `hostname` -eq "deskjaro" ]]; then
-  ln -fvs ~/dotfiles/linux/deskjaro/nvidia.conf /etc/X11/mhwd.d/nvidia.conf
-fi
-
 mkdir -p ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
@@ -30,5 +26,6 @@ mkdir -p ~/.config/nvim
 ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
 
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
-ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/profile ~/.profile
+ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
+sudo ln -fvs ~/dotfiles/linux/peripherals/$(hostname).conf /etc/X11/xorg.conf 
