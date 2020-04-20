@@ -1,0 +1,11 @@
+include-file = ~/dotfiles/linux/i3/polybar/modules
+
+[bar/primary]
+inherit = styles
+
+bottom = true
+monitor = eDP1
+
+modules-left = media backlight pulseaudio bluetooth memory battery powermenu
+modules-right = time date
+modules-center = i3
