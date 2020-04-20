@@ -19,7 +19,9 @@ pin-workspaces = false
 strip-wsnumbers = true
 enable-scroll = false
 
-format = <label-state>
+format = <label-state> <label-mode>
+label-mode-padding = 2
+label-mode-background = #e60053
 
 label-separator = " "
 label-focused = %icon%

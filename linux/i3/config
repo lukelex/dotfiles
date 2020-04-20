@@ -265,7 +265,7 @@ mode "$mode_gaps_outer" {
 }
 
 # Autostart applications
-exec --no-startup-id autorandr --change; feh --bg-fill ~/dotfiles/wallpapers/pixel-forest.png
+exec --no-startup-id autorandr --change; feh --bg-fill ~/dotfiles/wallpapers/zelda-horse-walk.jpg
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
@@ -274,6 +274,7 @@ exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 15 -locker ~/dotfiles/linux/i3/scripts/lock -detectsleep -corners ----
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
+exec --no-startup-id ibus
 exec_always --no-startup-id . ~/dotfiles/linux/i3/polybar/launch.sh
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
