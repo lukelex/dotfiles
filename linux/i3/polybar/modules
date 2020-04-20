@@ -128,11 +128,9 @@ ramp-2 = 
 [module/backlight]
 type = internal/xbacklight
 output = eDP1
-enable-scroll = false
-format = <ramp>
-ramp-0 = 
-ramp-1 = 
-ramp-2 = 
+enable-scroll = true
+label =  %percentage%%
+format = <label>
 
 [module/kernel]
 type = custom/script
@@ -142,7 +140,7 @@ interval = 1024
 
 [module/filesystem]
 type = custom/script
-exec = df -h /dev/nvme0n1p1 | awk '{print $4}' | tail -n 1
+exec = df -h | awk '$6 == "/"' | awk '{print $4}' | tail -n 1
 label =  %output%
 interval = 30
 
