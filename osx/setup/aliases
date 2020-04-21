@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+# Editor
+alias e="mvim ."
+
+# Bash
+alias o="open"

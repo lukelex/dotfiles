@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+rm -rf ~/.yabairc ~/.skhdrc
+
+ln -fvs ~/dotfiles/rcs/yabairc ~/.yabairc
+ln -fvs ~/dotfiles/rcs/skhdrc ~/.skhdrc
