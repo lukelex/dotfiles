@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
+rm -rf ~/.i3/config ~/.profile ~/.Xresources
+
+mkdir -p ~/.i3
+ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
+
+mkdir -p ~/.config/rofi
+ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
+
+mkdir -p ~/.config/nvim
+ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
+
+ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
+ln -fvs ~/dotfiles/linux/profile ~/.profile
+ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
+ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
+sudo ln -fvs ~/dotfiles/linux/peripherals/$(hostname).conf /etc/X11/xorg.conf
+sudo ln -fvs ~/dotfiles/linux/scripts/exit /usr/bin/i3exit
+
+betterlockscreen -u ~/dotfiles/wallpapers/zelda-horse-walk.jpg

@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# Editor
+alias e="nvim-qt ."
+
+# Bash
+alias open="xdg-open"
+alias o="xdg-open"

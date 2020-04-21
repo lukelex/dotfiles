@@ -1,15 +1,4 @@
-rm -rf ~/.bash_profile ~/.bashrc ~/.vimrc ~/.zshrc
-
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-
-curl -L get.rvm.io | bash -s stable
-curl -L http://install.ohmyz.sh | sh
-
-ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
-ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
-
-mkdir -v ~/backup_vim
+#!/usr/bin/env sh
 
 git config --global user.email "the.lukelex@gmail.com"
 git config --global user.name "Lukas Alexandre"

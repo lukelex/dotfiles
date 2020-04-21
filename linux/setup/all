@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+. ~/dotfiles/unix/setup/aliases
+. ~/dotfiles/unix/setup/configs
+. ~/dotfiles/unix/setup/git-config
+
+. ~/dotfiles/linux/setup/aliases
+. ~/dotfiles/linux/setup/configs
+. ~/dotfiles/linux/setup/dependencies

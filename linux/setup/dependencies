@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+pamac install zsh zsh-completions rofi rofi-bluetooth
+pamac install autorandr xclip polybar
+pamac install sysstat xdotool gconf cmake jq
+pamac install flameshot vlc timeshift
+pamac install etcher feh playerctl godot aseprite
+pamac install nvm neovim-qt ctags diff-so-fancy
+pamac install rubygems the_silver_searcher zeal
+pamac install nordvpn-bin google-chrome firefox
+pamac install postgresql-10 redis docker docker-compose
+pamac install slack-desktop whatsapp-nativefier telegram-desktop
+pamac install dropbox woeusb spotify via-bin stress
+pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
+pamac install imagemagick-full neofetch betterlockscreen
+pamac install ttf-hack nerd-fonts-complete ttf-font-awesome noto-fonts-cjk
+
+pamac remove palemoon
