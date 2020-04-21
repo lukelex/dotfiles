@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OPTION=$(echo -e "Lock\nLogout\nHibernate\nReboot\nShutdown" | dmenu -i -l 5 -fn Monospace-18 -p "Power:")
+OPTION=$(echo -e "Lock\nLogout\nHibernate\nReboot\nShutdown" | dmenu -i -l 5 -fn Monospace-28 -p "Power:")
 
 case $OPTION in
   Shutdown) exec i3exit shutdown;;

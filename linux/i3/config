@@ -159,6 +159,9 @@ bindsym XF86AudioPlay exec --no-startup-id playerctl -p spotify play-pause
 bindsym XF86AudioPrev exec --no-startup-id playerctl -p spotify previous
 bindsym XF86AudioNext exec --no-startup-id playerctl -p spotify next
 
+# Power button
+bindsym XF86PowerOff --release exec --no-startup-id ~/dotfiles/linux/scripts/powermenu
+
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
 
