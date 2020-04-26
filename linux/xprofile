@@ -1,3 +1,11 @@
 #!/bin/sh
 
+# keyboard configs
 setxkbmap -layout us -variant mac
+xset r rate 200 35
+
+# identify and set monitor profiles
+autorandr --change
+
+# set wallpaper
+feh --bg-fill ~/dotfiles/wallpapers/trixel.jpg

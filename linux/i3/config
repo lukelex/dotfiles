@@ -268,7 +268,6 @@ mode "$mode_gaps_outer" {
 }
 
 # Autostart applications
-exec --no-startup-id autorandr --change; feh --bg-fill ~/dotfiles/wallpapers/trixel.jpg
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
