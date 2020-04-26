@@ -1,11 +1,12 @@
 #!/bin/sh
 
-OPTION=$(echo -e "Lock\nLogout\nHibernate\nReboot\nShutdown" | dmenu -i -l 5 -fn Monospace-28 -p "Power:")
+OPTION=$(echo -e "Lock\nLogout\nSuspend\nHibernate\nReboot\nShutdown" | dmenu -i -l 6 -fn Monospace-28 -p "Power:")
 
 case $OPTION in
   Shutdown) exec i3exit shutdown;;
   Reboot) exec i3exit reboot;;
   Logout) exec i3exit logout;;
+  Suspend) exec i3exit suspend;;
   Hibernate) exec i3exit hibernate;;
   Lock) exec i3exit lock;;
 esac

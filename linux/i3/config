@@ -274,7 +274,7 @@ exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id clipit
 exec --no-startup-id dropbox start -i
-exec --no-startup-id xautolock -time 15 -locker ~/dotfiles/linux/i3/scripts/lock -detectsleep -corners ----
+exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corners ----
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id ibus
