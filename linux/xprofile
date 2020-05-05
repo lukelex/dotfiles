@@ -8,4 +8,4 @@ xset r rate 200 35
 autorandr --change
 
 # set wallpaper
-feh --bg-fill ~/dotfiles/wallpapers/trixel.jpg
+xwallpaper --stretch ~/dotfiles/wallpapers/pixel-tree.png

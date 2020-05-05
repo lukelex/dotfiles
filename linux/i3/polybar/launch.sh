@@ -9,8 +9,7 @@ killall -q polybar
 while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
 
 if [[ "$HOSTNAME" == "deskjaro" ]]; then
-  polybar primary -c ~/dotfiles/linux/i3/polybar/deskjaro &
-  polybar secundary -c ~/dotfiles/linux/i3/polybar/deskjaro &
+  polybar primary -c ~/dotfiles/linux/i3/polybar/deskjaro
 elif [[ "$HOSTNAME" == "surfjaro" ]]; then
   polybar primary -c ~/dotfiles/linux/i3/polybar/surfjaro &
 fi

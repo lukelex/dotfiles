@@ -311,3 +311,4 @@ for_window [class="Nvidia-settings"] floating enable center
 for_window [class="VIA"] floating enable center
 for_window [title="Steam - News*"] floating enable center
 for_window [class="Deathing"] floating enable center
+for_window [title="Polychromatic Controller"] floating enable center
