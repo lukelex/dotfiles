@@ -7,18 +7,5 @@ bottom = false
 monitor = HDMI-0
 
 modules-center = i3 xset
-modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature vpn
+modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature vpn wifi
 modules-right = spotify-prev spotify spotify-next time date
-
-
-[bar/secundary]
-inherit = styles
-
-bottom = true
-monitor = HDMI-0
-
-modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature vpn
-modules-center = spotify-prev spotify spotify-next
-
-tray-position = right
-tray-detached = true

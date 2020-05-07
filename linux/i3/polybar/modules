@@ -163,3 +163,17 @@ click-left = ~/dotfiles/linux/scripts/powermenu
 type = custom/script
 exec = xset r rate 300 35
 interval = 5
+
+[module/wifi]
+type = internal/network
+interface = wlp3s0
+
+format-connected = <ramp-signal> <label-connected>
+format-disconnected = <label-disconnected>
+
+ramp-signal-0 = 😱
+ramp-signal-1 = 😠
+ramp-signal-2 = 😒
+ramp-signal-3 = 😊
+ramp-signal-4 = 😃
+ramp-signal-5 = 😈
