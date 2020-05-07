@@ -158,3 +158,8 @@ type = custom/script
 exec = echo "a"
 label = 
 click-left = ~/dotfiles/linux/scripts/powermenu
+
+[module/xset]
+type = custom/script
+exec = xset r rate 300 35
+interval = 5
