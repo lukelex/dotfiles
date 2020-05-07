@@ -139,6 +139,9 @@ set guioptions-=L
 nmap n nzz
 nmap N Nzz
 
+" adds minimum offset to cursor
+set scrolloff=6
+
 " remap 0 in normal mode to go to the beginning of the text line
 nmap 0 ^
 nmap - ^
