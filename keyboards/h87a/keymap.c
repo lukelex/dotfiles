@@ -68,15 +68,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,               XXXXXXX,      KC_UP,   XXXXXXX,      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,      KC_PSCR, XXXXXXX,       XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX,
     MOD_LCTL,             KC_LEFT,      KC_DOWN, KC_RIGHT,     XXXXXXX, XXXXXXX,    KC_LEFT,    KC_DOWN, KC_UP,   KC_RIGHT,     XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,
     KC_LSFT, XXXXXXX,     KC_MPRV,      KC_MNXT, KC_MPLY,      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX, KC_MPRV, KC_MNXT,      KC_MPLY, XXXXXXX,                XXXXXXX,                          KC_UP,
-    KC_LCTL,              XXXXXXX,      KC_LGUI,                        KC_TRNS,                                                XXXXXXX, KC_RALT,       XXXXXXX, XXXXXXX,                 KC_LEFT, KC_DOWN, KC_RGHT),
+    KC_LALT,              XXXXXXX,      KC_LGUI,                        KC_TRNS,                                                XXXXXXX, KC_RALT,       XXXXXXX, XXXXXXX,                 KC_LEFT, KC_DOWN, KC_RGHT),
 
   [3] = LAYOUT_all(
     XXXXXXX,                            XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX,
-    RALT(KC_N),           WOT,          XXXXXXX, XXXXXXX,      MONEY,   XXXXXXX,    RALT(KC_I), XXXXXXX, XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,   XXXXXXX,      XXXXXXX, XXXXXXX, XXXXXXX,
+    RALT(KC_N),           WOT,          XXXXXXX, XXXXXXX,      MONEY,   XXXXXXX,    RALT(KC_I), XXXXXXX, XXXXXXX, XXXXXXX,      XXXXXXX, LGUI(KC_MINS), XXXXXXX, XXXXXXX,   XXXXXXX,      XXXXXXX, XXXXXXX, XXXXXXX,
     XXXXXXX,              XXXXXXX,      WOW,     XP(lae, uae), XXXXXXX, TABLE_FLIP, XXXXXXX,    XXXXXXX, XXXXXXX, XP(loe, uoe), XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX,
-    XXXXXXX,              XP(laa, uaa), XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX, XXXXXXX, LOVE,         XXXXXXX, RALT(KC_E), XXXXXXX, XXXXXXX,
+    MOD_LCTL,             XP(laa, uaa), XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX, XXXXXXX, LOVE,         XXXXXXX, RALT(KC_E),    XXXXXXX, XXXXXXX,
     KC_LSFT, XXXXXXX,     SLEEPING,     XXXXXXX, RALT(KC_C),   XXXXXXX, XXXXXXX,    XXXXXXX,    MEH,     XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,                XXXXXXX,                          XXXXXXX,
-    XXXXXXX,              XXXXXXX,      XXXXXXX,                        XXXXXXX,                                                XXXXXXX, KC_TRNS,       XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX),
+    KC_LALT,              XXXXXXX,      XXXXXXX,                        XXXXXXX,                                                XXXXXXX, KC_TRNS,       XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX),
 
   [4] = LAYOUT_all(
     RESET,                              XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX,
