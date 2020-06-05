@@ -153,6 +153,13 @@ label =  %output%
 interval = 1
 click-left = nordvpn disconnect
 
+[module/flameshot]
+type = custom/script
+exec = echo "a"
+label = 
+click-left = flameshot gui -p ~/screenshots
+click-right = flameshot screen -c
+
 [module/powermenu]
 type = custom/script
 exec = echo "a"

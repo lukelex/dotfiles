@@ -7,5 +7,5 @@ bottom = false
 monitor = HDMI-0
 
 modules-center = i3 xset
-modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature vpn wifi
+modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu temperature vpn wifi flameshot
 modules-right = spotify-prev spotify spotify-next time date

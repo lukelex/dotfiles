@@ -6,6 +6,6 @@ inherit = styles
 bottom = false
 monitor = eDP1
 
-modules-left = powermenu battery pulseaudio kernel filesystem memory cpu temperature backlight xset vpn
+modules-left = powermenu battery pulseaudio kernel filesystem memory cpu temperature backlight xset vpn flameshot
 modules-right = spotify-prev spotify spotify-next time date
 modules-center = i3 xset
