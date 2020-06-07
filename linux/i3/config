@@ -33,8 +33,8 @@ bindsym $mod+z exec --no-startup-id morc_menu
 ################################################################################################
 
 # Applications shortcuts
-bindsym Print --release exec --no-startup-id scrot '%Y-%m-%d_$wx$h.png' -e 'mv $f ~/screenshots/'
-bindsym Shift+Print --release exec --no-startup-id scrot -s '%Y-%m-%d_$wx$h.png' -e 'mv $f ~/screenshots/'
+bindsym Print --release exec --no-startup-id flameshot gui -p ~/screenshots
+bindsym Shift+Print --release exec --no-startup-id flameshot screen -c
 bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
 bindsym $mod+Ctrl+u --release exec --no-startup-id ~/dotfiles/linux/scripts/usb-mounter.sh
 bindsym $mod+Ctrl+e --release exec --no-startup-id ~/dotfiles/linux/scripts/emoji
