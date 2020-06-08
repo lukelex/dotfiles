@@ -4,8 +4,9 @@ include-file = ~/dotfiles/linux/i3/polybar/modules
 inherit = styles
 
 bottom = false
-monitor = eDP1
+monitor = DP1-8
+monitor-fallback = eDP1
 
+modules-center = i3 xset
 modules-left = powermenu battery pulseaudio kernel filesystem memory cpu temperature backlight xset vpn flameshot
 modules-right = spotify-prev spotify spotify-next time date
-modules-center = i3 xset
