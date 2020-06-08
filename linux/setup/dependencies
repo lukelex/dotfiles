@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 pamac install zsh zsh-completions rofi rofi-bluetooth
-pamac install autorandr xclip polybar
+pamac install autorandr xclip polybar dialog
 pamac install sysstat xdotool gconf cmake jq
 pamac install flameshot vlc timeshift etcher
 pamac install xwallpaper sxiv playerctl godot aseprite
