@@ -226,8 +226,6 @@ client.background           #2B2C2B
 gaps inner 16
 gaps outer 10
 
-# Smart gaps (gaps used if only more than one container on the workspace)
-smart_gaps on
 smart_borders on # on|no_gaps
 
 # Press $mod+Shift+g to enter the gap mode. Choose o or i for modifying outer/inner gaps. Press one of + / - (in-/decrement for current workspace) or 0 (remove gaps for current workspace). If you also press Shift with these keys, the change will be global for all workspaces.
