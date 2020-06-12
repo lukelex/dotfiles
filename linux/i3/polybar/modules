@@ -35,15 +35,12 @@ label-urgent-foreground = ${colors.urgent}
 
 [module/time]
 type = internal/date
-
 interval = 1.0
-
 date =  %H:%M
 
 [module/date]
 type = internal/date
 date =  %e %B - %A
-label = %date%
 
 [module/battery]
 type = internal/battery
@@ -83,9 +80,9 @@ click-left = rofi-bluetooth &
 
 [module/spotify]
 type = custom/script
-exec = playerctl -p spotify metadata --format '{{ artist }} - {{ title }}' | awk '{print $0}'
+exec = playerctl -p spotify metadata --format '{{ artist }} - {{ title }}'
 exec-if = playerctl -l | grep spotify
-label =  %output%
+label =  %output:0:20:...%
 interval = 1
 click-left = playerctl -p spotify play-pause
 
