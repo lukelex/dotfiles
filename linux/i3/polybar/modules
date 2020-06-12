@@ -112,19 +112,23 @@ type = internal/memory
 label =  %gb_used%
 interval = 2
 
-[module/temperature]
+[module/core-temp]
 type = internal/temperature
-
 thermal-zone = 2
-hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input
 warn-temperature = 82
-
 format = <ramp> <label>
 label = %temperature-c%
-
 ramp-0 = 
 ramp-1 = 
 ramp-2 = 
+
+[module/core-deskjaro]
+inherit = module/core-temp
+hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input
+
+[module/core-surfjaro]
+inherit = module/core-temp
+hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon4/temp1_input
 
 [module/backlight]
 type = internal/xbacklight
