@@ -4,6 +4,7 @@ include-file = ~/dotfiles/linux/i3/polybar/modules
 inherit = styles
 bottom = false
 modules-center = i3 xset
+enable-ipc = true
 
 [bar/deskjaro]
 inherit = bar/base
