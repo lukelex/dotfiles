@@ -3,6 +3,8 @@
 rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
 rm -rf ~/.i3/config ~/.profile ~/.Xresources
 
+mkdir ~/screenshots
+
 mkdir -p ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
