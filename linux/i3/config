@@ -25,7 +25,7 @@ bindsym $mod+Return exec terminal
 bindsym $mod+q kill
 
 # start program launcher
-bindsym $mod+d exec rofi -show combi
+bindsym $mod+d exec rofi -show drun
 
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
