@@ -24,3 +24,13 @@ monitor-fallback = eDP1
 
 modules-left = powermenu battery pulseaudio kernel filesystem memory cpu core-surfjaro backlight wifi vpn flameshot
 modules-right = spotify-prev spotify spotify-next time date
+
+[bar/monsijaro]
+inherit = bar/base
+
+bottom = false
+monitor = DP1-8
+monitor-fallback = eDP1
+
+modules-left = powermenu battery pulseaudio kernel filesystem memory cpu core-surfjaro backlight wifi vpn flameshot
+modules-right = spotify-prev spotify spotify-next time date
