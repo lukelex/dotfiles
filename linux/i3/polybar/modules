@@ -102,7 +102,7 @@ click-left = playerctl -p spotify next
 
 [module/cpu]
 type = internal/cpu
-label =  %percentage%%
+label =  %percentage:02%%
 
 [module/memory]
 type = internal/memory
