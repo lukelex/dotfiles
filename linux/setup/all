@@ -2,6 +2,7 @@
 
 . ~/dotfiles/unix/setup/aliases
 . ~/dotfiles/unix/setup/configs
+. ~/dotfiles/unix/setup/dependencies
 . ~/dotfiles/unix/setup/git-config
 
 . ~/dotfiles/linux/setup/aliases
