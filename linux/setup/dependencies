@@ -13,6 +13,6 @@ pamac install slack-desktop whatsapp-nativefier telegram-desktop
 pamac install dropbox woeusb spotify via-bin stress
 pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
 pamac install imagemagick-full neofetch betterlockscreen
-pamac install ttf-hack nerd-fonts-complete ttf-font-awesome noto-fonts-cjk
+pamac install ttf-hack nerd-fonts-complete ttf-font-awesome-5-free noto-fonts-cjk
 
-pamac remove palemoon
+pamac remove palemoon-bin
