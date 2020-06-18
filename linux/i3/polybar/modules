@@ -80,7 +80,7 @@ click-left = rofi-bluetooth &
 
 [module/spotify]
 type = custom/script
-exec = playerctl -p spotify metadata --format '{{ artist }} - {{ title }}'
+exec = playerctl -p spotify metadata --format '{{ title }}'
 exec-if = playerctl -l | grep spotify
 label =  %output:0:20:...%
 interval = 1
