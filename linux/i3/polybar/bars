@@ -29,4 +29,4 @@ inherit = bar/base
 monitor = DP2-8
 monitor-fallback = eDP1
 
-modules-left = powermenu battery pulseaudio kernel filesystem memory cpu core-surfjaro backlight wifi vpn flameshot wifi
+modules-left = powermenu battery pulseaudio kernel filesystem memory cpu core-monsijaro backlight wifi vpn flameshot wifi
