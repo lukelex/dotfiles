@@ -127,6 +127,10 @@ hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input
 inherit = module/core-temp
 hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon4/temp1_input
 
+[module/core-monsijaro]
+inherit = module/core-temp
+hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon6/temp1_input
+
 [module/backlight]
 type = internal/xbacklight
 output = eDP1
