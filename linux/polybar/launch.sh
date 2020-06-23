@@ -8,6 +8,6 @@ killall -q polybar
 
 while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
 
-polybar $HOSTNAME -c ~/dotfiles/linux/i3/polybar/bars
+polybar $HOSTNAME -c ~/dotfiles/linux/polybar/bars
 
 echo "Polybar launched..."

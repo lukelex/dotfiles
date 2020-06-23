@@ -1,4 +1,4 @@
-include-file = ~/dotfiles/linux/i3/polybar/modules
+include-file = ~/dotfiles/linux/polybar/modules
 
 [bar/base]
 inherit = styles
