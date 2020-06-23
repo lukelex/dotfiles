@@ -1,4 +1,4 @@
-include-file = ~/dotfiles/linux/i3/polybar/styles
+include-file = ~/dotfiles/linux/polybar/styles
 
 [module/i3]
 type = internal/i3

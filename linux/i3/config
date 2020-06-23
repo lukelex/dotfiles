@@ -278,7 +278,7 @@ exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corner
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id ibus
-exec_always --no-startup-id . ~/dotfiles/linux/i3/polybar/launch.sh
+exec_always --no-startup-id . ~/dotfiles/linux/polybar/launch.sh
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
