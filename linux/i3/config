@@ -102,6 +102,7 @@ bindsym $mod+Shift+r restart
 
 # toggle polybar's visibility
 bindsym $mod+m --release exec polybar-msg cmd toggle
+bindsym $mod+Shift+p --release exec polybar-msg cmd restart
 
 # Workspace names
 set $ws1 1
