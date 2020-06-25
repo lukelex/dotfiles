@@ -29,35 +29,36 @@ label-unfocused = %icon%
 label-urgent = %icon%
 label-visible = %icon%
 
-label-unfocused-foreground = ${colors.foreground-secundary}
-label-focused-foreground = ${colors.foreground}
+label-unfocused-foreground = ${colors.foreground}
+label-focused-foreground = ${colors.foreground-active}
 label-urgent-foreground = ${colors.urgent}
 
 [module/time]
 type = internal/date
-interval = 1.0
+interval = 10
 date =  %H:%M
 
 [module/date]
 type = internal/date
 date =  %e %B - %A
+interval = 60
 
 [module/battery]
 type = internal/battery
 battery = BAT0
 adapter = ADP0
-poll-interval = 5
+poll-interval = 10
 full-at = 99
+
+format-discharging = <ramp-capacity> <label-discharging>
+format-full = <ramp-capacity> <label-full>
+format-charging =  <label-charging>
 
 label-discharging = %percentage%%
 label-charging = %percentage%%
 label-full = %percentage%%
 
-format-discharging = <ramp-capacity> <label-discharging>
-format-full = <ramp-capacity> <label-full>
-format-charging =  <label-charging>
-
-ramp-capacity-0 = 
+ramp-capacity-0 = 
 ramp-capacity-1 = 
 ramp-capacity-2 = 
 ramp-capacity-3 = 
@@ -65,8 +66,10 @@ ramp-capacity-4 = 
 
 [module/pulseaudio]
 type = internal/pulseaudio
-interval = 5
+interval = 2
+use-ui-max = false
 format-volume = <ramp-volume> <label-volume>
+format-muted = 
 
 ramp-volume-0 = 
 ramp-volume-1 = 
@@ -75,14 +78,15 @@ ramp-volume-2 = 
 [module/bluetooth]
 type = custom/script
 exec = rofi-bluetooth --status
-interval = 1
+label = 
+interval = 2
 click-left = rofi-bluetooth &
 
 [module/spotify]
 type = custom/script
 exec = playerctl -p spotify metadata --format '{{ title }}'
 exec-if = playerctl -l | grep spotify
-label =  %output:0:20:...%
+label = %output:0:20:...%
 interval = 1
 click-left = playerctl -p spotify play-pause
 
@@ -113,11 +117,12 @@ interval = 2
 type = internal/temperature
 thermal-zone = 2
 warn-temperature = 82
-format = <ramp> <label>
+format = <ramp>
 label = %temperature-c%
 ramp-0 = 
 ramp-1 = 
 ramp-2 = 
+interval = 2
 
 [module/core-deskjaro]
 inherit = module/core-temp
@@ -129,7 +134,7 @@ hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon4/temp1_input
 
 [module/core-monsijaro]
 inherit = module/core-temp
-hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon6/temp1_input
+hwmon-path = /sys/devices/platform/coretemp.0/hwmon/hwmon7/temp1_input
 
 [module/backlight]
 type = internal/xbacklight
@@ -149,12 +154,13 @@ type = custom/script
 exec = df -h | awk '$6 == "/"' | awk '{print $4}' | tail -n 1
 label =  %output%
 interval = 30
+click-left = pcmanfm
 
 [module/vpn]
 type = custom/script
 exec = nordvpn status | grep City | cut -d ":" -f2 | xargs
 exec-if = nordvpn status | grep Uptime
-label =  %output%
+label =  %output%
 interval = 1
 click-left = nordvpn disconnect
 
@@ -178,14 +184,15 @@ interval = 5
 
 [module/wifi]
 type = internal/network
-interface = wlp3s0
+interface = wlp0s20f3
 
 format-connected = <ramp-signal> <label-connected>
-format-disconnected = <label-disconnected>
+format-disconnected = 
 
-ramp-signal-0 = 😱
-ramp-signal-1 = 😠
-ramp-signal-2 = 😒
-ramp-signal-3 = 😊
-ramp-signal-4 = 😃
-ramp-signal-5 = 😈
+label-connected = %essid:0:10%
+ramp-signal-0 = 
+ramp-signal-1 = 
+ramp-signal-2 = 
+ramp-signal-3 = 
+ramp-signal-4 = 
+ramp-signal-5 = 

@@ -100,7 +100,7 @@ bindsym $mod+Ctrl+Left workspace prev
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 
-# toggle polybar's visibility
+# customer polybar's shortcuts
 bindsym $mod+m --release exec polybar-msg cmd toggle
 bindsym $mod+Shift+p --release exec polybar-msg cmd restart
 
@@ -154,6 +154,7 @@ bindsym $mod+Shift+5 move container to workspace $ws5; workspace $ws5
 bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6
 bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9; workspace $ws9
 
 # Media keys
 bindsym XF86AudioMute exec --no-startup-id amixer -q -D default sset Master toggle
@@ -228,9 +229,9 @@ client.background           #2B2C2B
 
 # Set inner/outer gaps
 gaps inner 16
-gaps outer 10
+gaps outer 0
 
-smart_borders on # on|no_gaps
+smart_borders no_gaps # on|no_gaps
 
 # Press $mod+Shift+g to enter the gap mode. Choose o or i for modifying outer/inner gaps. Press one of + / - (in-/decrement for current workspace) or 0 (remove gaps for current workspace). If you also press Shift with these keys, the change will be global for all workspaces.
 set $mode_gaps Gaps: (o) outer, (i) inner
@@ -279,7 +280,7 @@ exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corner
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id ibus
-exec_always --no-startup-id . ~/dotfiles/linux/polybar/launch.sh
+exec_always --no-startup-id ~/dotfiles/linux/polybar/launch
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 

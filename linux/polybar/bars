@@ -3,17 +3,17 @@ include-file = ~/dotfiles/linux/polybar/modules
 [bar/base]
 inherit = styles
 bottom = false
-modules-center = i3 xset
 enable-ipc = true
 
-modules-right = spotify-prev spotify spotify-next time date
+modules-left = powermenu i3 xset spotify-prev spotify spotify-next
+modules-center = time date
 
 [bar/deskjaro]
 inherit = bar/base
 
 monitor = HDMI-0
 
-modules-left = powermenu pulseaudio kernel bluetooth filesystem memory cpu core-deskjaro vpn flameshot
+modules-right = vpn flameshot bluetooth pulseaudio filesystem backlight wifi memory cpu core-deskjaro
 
 [bar/surfjaro]
 inherit = bar/base
@@ -21,12 +21,11 @@ inherit = bar/base
 monitor = DP1-8
 monitor-fallback = eDP1
 
-modules-left = powermenu battery pulseaudio kernel filesystem memory cpu core-surfjaro backlight wifi vpn flameshot
+modules-right = vpn flameshot bluetooth pulseaudio filesystem backlight wifi battery
 
 [bar/monsijaro]
 inherit = bar/base
 
-monitor = DP2-8
-monitor-fallback = eDP1
+monitor = DP2
 
-modules-left = powermenu battery pulseaudio kernel filesystem memory cpu core-monsijaro backlight wifi vpn flameshot wifi
+modules-right = vpn flameshot bluetooth pulseaudio filesystem backlight wifi battery

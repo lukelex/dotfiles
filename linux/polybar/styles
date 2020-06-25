@@ -9,19 +9,20 @@ height = 25
 offset-y = 0
 offset-x = 0
 
-border-top-size = 10
+border-top-size = 20
 border-bottom-size = 0
-border-right-size = 10
-border-left-size = 10
+border-right-size = 12
+border-left-size = 12
 
 ;-------;
 ; FONTS ;
 ;-------;
 
 font-0 = "Hack:style=Italic:size=18;3"
-font-1 = "Font Awesome 5 Free:style=Solid:pixelsize=18;3"
-font-2 = "Font Awesome 5 Brands:pixelsize=18;3"
-font-3 = "Noto Sans CJK JP:size=18:antialias=true;0"
+font-1 = "Noto Sans CJK JP:size=18:antialias=true;0"
+font-2 = "Font Awesome 5 Pro-Light:style=Regular:size=18;3"
+font-3 = "Font Awesome 5 Free:style=Solid:pixelsize=18;3"
+font-4 = "Font Awesome 5 Brands:style=Solid:pixelsize=18;3"
 
 ;--------;
 ; COLORS ;
@@ -36,13 +37,13 @@ border-color = ${colors.background}
 ;---------------;
 
 fixed-center = true
-padding-left = 2
-padding-right = 2
-module-margin = 1
+padding-left = 1
+padding-right = 1
+module-margin-right = 1
 tray-padding = 2
 
 [colors]
 foreground = #FFFFFF
-foreground-secundary = #666666
+foreground-active = #F7E074
 background = 0
 urgent = #FF0000
