@@ -182,6 +182,12 @@ type = custom/script
 exec = xset r rate 300 35
 interval = 5
 
+[module/webcam]
+type = custom/script
+exec = lsmod | grep uvcvideo | head -n 1 | awk '{print $3}' | grep 1
+label = 
+interval = 2
+
 [module/wifi]
 type = internal/network
 interface = wlp0s20f3
