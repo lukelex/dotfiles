@@ -139,28 +139,28 @@ type = custom/script
 exec = df -h | awk '$6 == "/"' | awk '{print $4}' | tail -n 1
 label =  %output%
 interval = 30
-click-left = pcmanfm
+click-left = pcmanfm ~ &
 
 [module/vpn]
 type = custom/script
 exec = nordvpn status | grep City | cut -d ":" -f2 | xargs
 exec-if = nordvpn status | grep Uptime
 label =  %output%
-interval = 1
-click-left = nordvpn disconnect
+interval = 2
+click-left = nordvpn disconnect &
 
 [module/flameshot]
 type = custom/script
 exec = echo "a"
 label = 
-click-left = flameshot gui -p ~/screenshots
+click-left = flameshot gui -p ~/screenshots &
 click-right = flameshot screen -c
 
 [module/powermenu]
 type = custom/script
 exec = echo "a"
 label = 
-click-left = ~/dotfiles/linux/scripts/powermenu
+click-left = ~/dotfiles/linux/scripts/powermenu &
 
 [module/xset]
 type = custom/script
