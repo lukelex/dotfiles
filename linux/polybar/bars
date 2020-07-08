@@ -13,7 +13,7 @@ inherit = bar/base
 
 monitor = HDMI-0
 
-modules-right = webcam capslock vpn flameshot bluetooth pulseaudio filesystem backlight wifi memory cpu core-deskjaro
+modules-right = webcam capslock vpn flameshot fingerprint dropbox bluetooth pulseaudio filesystem backlight wired-network memory cpu core-deskjaro
 
 [bar/surfjaro]
 inherit = bar/base
