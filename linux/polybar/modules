@@ -178,6 +178,13 @@ type = custom/script
 exec = xset q | grep 'Caps Lock' | awk '{print $4}' | grep on
 label = 
 
+[module/wired-network]
+type = internal/network
+interface = enp0s31f6
+interval = 2
+format-connected = "%{A1:nm-connection-editor &:}%{A}"
+format-disconnected = "%{A1:nm-connection-editor &:}%{A}"
+
 [module/wifi]
 type = internal/network
 interface = wlp0s20f3
