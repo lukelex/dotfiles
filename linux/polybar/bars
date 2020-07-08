@@ -5,7 +5,7 @@ inherit = styles
 bottom = false
 enable-ipc = true
 
-modules-left = powermenu i3 xset spotify-prev spotify spotify-next
+modules-left = powermenu i3 xset spotify
 modules-center = time date
 
 [bar/deskjaro]

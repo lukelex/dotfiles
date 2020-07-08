@@ -86,23 +86,8 @@ click-left = rofi-bluetooth &
 type = custom/script
 exec = playerctl -p spotify metadata --format '{{ title }}'
 exec-if = playerctl -l | grep spotify
-label = %output:0:20:...%
+label = "%{A1:playerctl -p spotify previous &:} %{A}%{A1:playerctl -p spotify play-pause &:}%output:0:20:...%%{A}%{A1:playerctl -p spotify next &:} %{A}"
 interval = 1
-click-left = playerctl -p spotify play-pause
-
-[module/spotify-prev]
-type = custom/script
-exec = echo "a"
-exec-if = playerctl -l | grep spotify
-label = 
-click-left = playerctl -p spotify previous
-
-[module/spotify-next]
-type = custom/script
-exec = echo "a"
-exec-if = playerctl -l | grep spotify
-label = 
-click-left = playerctl -p spotify next
 
 [module/cpu]
 type = internal/cpu
