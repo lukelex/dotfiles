@@ -1,0 +1,5 @@
+#!/bin/bash
+
+info=$(acpi -abit)
+
+notify-send "Battery" "$info"
