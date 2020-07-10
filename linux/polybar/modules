@@ -50,13 +50,9 @@ adapter = ADP0
 poll-interval = 10
 full-at = 99
 
-format-discharging = <ramp-capacity> <label-discharging>
-format-full = <ramp-capacity> <label-full>
-format-charging =  <label-charging>
-
-label-discharging = %percentage%%
-label-charging = %percentage%%
-label-full = %percentage%%
+format-discharging = %{A1:~/dotfiles/linux/scripts/battery-status:}<ramp-capacity>%{A}
+format-full = %{A1:~/dotfiles/linux/scripts/battery-status:}%{A}
+format-charging = %{A1:~/dotfiles/linux/scripts/battery-status:}%{A}
 
 ramp-capacity-0 = 
 ramp-capacity-1 = 
