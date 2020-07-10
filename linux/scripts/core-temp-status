@@ -1,0 +1,5 @@
+#!/bin/bash
+
+core_temps=$(sensors | awk '/coretemp/' RS='\n\n' ORS='\n\n')
+
+notify-send "CPU Temperature" "$core_temps"

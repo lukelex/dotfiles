@@ -21,11 +21,11 @@ inherit = bar/base
 monitor = DP1-8
 monitor-fallback = eDP1
 
-modules-right = webcam capslock vpn flameshot bluetooth pulseaudio filesystem backlight wifi battery
+modules-right = webcam capslock vpn flameshot bluetooth pulseaudio filesystem backlight wifi core-surfjaro battery
 
 [bar/monsijaro]
 inherit = bar/base
 
 monitor = DP2
 
-modules-right = webcam capslock vpn flameshot bluetooth pulseaudio filesystem backlight wifi battery
+modules-right = webcam capslock vpn flameshot bluetooth pulseaudio filesystem backlight wifi core-monsijaro battery
