@@ -142,11 +142,11 @@ click-left = pcmanfm ~ &
 
 [module/vpn]
 type = custom/script
-exec = nordvpn status | grep City | cut -d ":" -f2 | xargs
-exec-if = nordvpn status | grep Uptime
-label =  %output%
+exec = nordvpn status | grep Uptime
+label = 
 interval = 2
-click-left = nordvpn disconnect &
+click-left = ~/dotfiles/linux/scripts/vpn-status &
+click-right = nordvpn disconnect
 
 [module/flameshot]
 type = custom/script
