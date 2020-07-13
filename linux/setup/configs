@@ -14,6 +14,9 @@ ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
 mkdir -p ~/.config/nvim
 ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
 
+mkdir -o ~/config/gsimplecal
+ln -fvs ~/dotfiles/linux/config/gsimplecal ~/.config/gsimplecal/config
+
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile

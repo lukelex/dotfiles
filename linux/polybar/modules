@@ -43,6 +43,7 @@ date =  %H:%M
 [module/date]
 type = internal/date
 date =  %d %B - %A
+format = %{A1:gsimplecal &:}<label>%{A}
 interval = 60
 
 [module/battery]
