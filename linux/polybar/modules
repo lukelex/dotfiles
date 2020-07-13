@@ -131,7 +131,7 @@ interval = 1024
 [module/filesystem]
 type = custom/script
 exec = df -h | awk '$6 == "/"' | awk '{print $4}' | tail -n 1
-label =  %output%
+label = 
 interval = 30
 click-left = pcmanfm ~ &
 
