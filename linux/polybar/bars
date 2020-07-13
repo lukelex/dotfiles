@@ -4,6 +4,7 @@ include-file = ~/dotfiles/linux/polybar/modules
 inherit = styles
 bottom = false
 enable-ipc = true
+line-size = 2
 
 modules-left = powermenu i3 xset spotify
 modules-center = time date

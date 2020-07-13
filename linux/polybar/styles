@@ -44,6 +44,5 @@ tray-padding = 2
 
 [colors]
 foreground = #FFFFFF
-foreground-active = #F7E074
 background = 0
 urgent = #FF0000

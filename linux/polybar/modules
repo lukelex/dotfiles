@@ -19,8 +19,8 @@ pin-workspaces = false
 strip-wsnumbers = true
 enable-scroll = false
 
-format = <label-state> <label-mode>
-label-mode-padding = 2
+format = <label-mode> <label-state>
+label-mode-padding = 1
 label-mode-background = #e60053
 
 label-separator = " "
@@ -30,8 +30,10 @@ label-urgent = %icon%
 label-visible = %icon%
 
 label-unfocused-foreground = ${colors.foreground}
-label-focused-foreground = ${colors.foreground-active}
+label-focused-foreground = ${colors.foreground}
 label-urgent-foreground = ${colors.urgent}
+
+label-focused-underline = ${colors.foreground}
 
 [module/time]
 type = internal/date
