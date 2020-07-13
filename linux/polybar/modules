@@ -42,7 +42,7 @@ date =  %H:%M
 
 [module/date]
 type = internal/date
-date =  %e %B - %A
+date =  %d %B - %A
 interval = 60
 
 [module/battery]
