@@ -66,7 +66,6 @@ interval = 2
 use-ui-max = false
 format-volume = <ramp-volume> <label-volume>
 format-muted = 
-
 ramp-volume-0 = 
 ramp-volume-1 = 
 ramp-volume-2 = 
@@ -193,3 +192,23 @@ ramp-signal-2 = 
 ramp-signal-3 = 
 ramp-signal-4 = 
 ramp-signal-5 = 
+
+[module/fingerprint]
+type = custom/script
+exec = echo "a"
+interval = 2
+label = 
+
+[module/usb-drive]
+type = custom/script
+exec = echo "a"
+interval = 2
+label = 
+click-left = ~/dotfiles/linux/scripts/usb-mounter.sh
+
+[module/hardware-stats]
+type = custom/script
+exec = echo "a"
+label = 
+interval = 10
+click-left = ~/dotfiles/linux/script/hardware-stats
