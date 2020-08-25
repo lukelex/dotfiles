@@ -7,7 +7,6 @@ Xft.hinting:	1
 Xft.hintstyle:	hintfull
 
 URxvt.font: xft:DejaVu Sans Mono-18
-Emacs.font: DejaVu Sans Mono-18
 
 *scrollBar:                      false
 URxvt*scrollTtyOutput:           true

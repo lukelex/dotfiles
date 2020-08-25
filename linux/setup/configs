@@ -14,10 +14,10 @@ ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
 mkdir -p ~/.config/nvim
 ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim
 
-mkdir -o ~/.config/gsimplecal
+mkdir -p ~/.config/gsimplecal
 ln -fvs ~/dotfiles/linux/config/gsimplecal ~/.config/gsimplecal/config
 
-mkdir -o ~/.config/dunst
+mkdir -p ~/.config/dunst
 ln -fvs ~/dotfiles/linux/config/dunst ~/.config/dunst/dunstrc
 
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
