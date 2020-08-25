@@ -1,0 +1,10 @@
+#!/bin/bash
+
+case $1 in
+  "inc")
+    xbacklight -inc 5% && $($0 show);;
+  "dec")
+    xbacklight -dec 5% && $($0 show);;
+  "show")
+    notify-send -t 1000 "Backlight" $(xbacklight -get | cut -f1 -d".");;
+esac
