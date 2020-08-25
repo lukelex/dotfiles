@@ -38,6 +38,7 @@ bindsym Shift+Print --release exec --no-startup-id flameshot screen -c
 bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
 bindsym $mod+Ctrl+u --release exec --no-startup-id ~/dotfiles/linux/scripts/usb-mounter.sh
 bindsym $mod+Ctrl+e --release exec --no-startup-id ~/dotfiles/linux/scripts/emoji
+bindsym $mod+Ctrl+d --release exec --no-startup-id pkill dunst && dunstify -r 0 "Dunst" "Reloaded"
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
 bindsym $mod+Escape --release exec --no-startup-id ~/dotfiles/linux/scripts/powermenu
 
@@ -158,8 +159,8 @@ bindsym $mod+Shift+9 move container to workspace $ws9; workspace $ws9
 
 # Media keys
 bindsym XF86AudioMute exec --no-startup-id amixer -q -D default sset Master toggle
-bindsym XF86AudioRaiseVolume exec --no-startup-id amixer sset Master 5%+
-bindsym XF86AudioLowerVolume exec --no-startup-id amixer sset Master 5%-
+bindsym XF86AudioRaiseVolume exec --no-startup-id ~/dotfiles/linux/scripts/volume up
+bindsym XF86AudioLowerVolume exec --no-startup-id ~/dotfiles/linux/scripts/volume down
 bindsym XF86AudioPlay exec --no-startup-id playerctl -p spotify play-pause
 bindsym XF86AudioPrev exec --no-startup-id playerctl -p spotify previous
 bindsym XF86AudioNext exec --no-startup-id playerctl -p spotify next
