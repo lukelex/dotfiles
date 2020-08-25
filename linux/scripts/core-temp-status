@@ -2,4 +2,4 @@
 
 core_temps=$(sensors | awk '/coretemp/' RS='\n\n' ORS='\n\n')
 
-notify-send "CPU Temperature" "$core_temps"
+dunstify -r 3 -i thermal-monitor "CPU Temperature" "$core_temps"

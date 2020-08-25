@@ -2,4 +2,4 @@
 
 status=$(nordvpn status | awk '/Status/' RS='\n\n')
 
-notify-send "NordVPN" "$status"
+dusntify -r 22 "NordVPN" "$status"
