@@ -40,6 +40,7 @@ Plug 'DataWraith/auto_mkdir'
 Plug 'danro/rename.vim'
 Plug 'henrik/vim-indexed-search'
 Plug 'ngmy/vim-rubocop'
+Plug 'schickling/vim-bufonly'
 
 " Generic code
 Plug 'tpope/vim-commentary'
