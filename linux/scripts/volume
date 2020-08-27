@@ -1,6 +1,10 @@
 #!/bin/bash
 
-function get_volume {
+function turn_on {
+  amixer -D pulse set Master on > /dev/null
+}
+
+function get {
   amixer get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
 }
 
@@ -8,33 +12,37 @@ function is_mute {
   amixer get Master | grep '%' | grep -oE '[^ ]+$' | grep off > /dev/null
 }
 
-function show_volume {
-  volume=`get_volume`
+function show {
+  volume=`get`
   bar=$(seq -s "─" $(($volume / 5)) | sed 's/[0-9]//g')
 
-  dunstify -i notification-audio-volume-high -t 1000 -r 24 "Volume" "$volume% $bar"
+  notify-send.py -i notification-audio-volume-high \
+                 --replaces-process volume \
+                 -t 1000 \
+                 "Volume" "$volume% $bar"
 }
 
 case $1 in
   up)
-    amixer -D pulse set Master on > /dev/null
+    turn_on
     amixer -D pulse sset Master 2%+ > /dev/null
-    show_volume
+    show
     ;;
   down)
-    amixer -D pulse set Master on > /dev/null
+    turn_on
     amixer -D pulse sset Master 2%- > /dev/null
-    show_volume
+    show
     ;;
-  show)
-    show_volume
-    ;;
+  show) show ;;
   toggle)
     amixer -D pulse set Master 1+ toggle > /dev/null
     if is_mute ; then
-      dunstify -i notification-audio-volume-muted -t 1000 -r 24 "Volume" "Mute"
+      notify-send.py -i notification-audio-volume-muted \
+                     --replaces-process volume \
+                     -t 1000 \
+                     "Volume" "Mute"
     else
-      show_volume
+      show
     fi
     ;;
 esac

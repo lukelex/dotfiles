@@ -38,9 +38,9 @@ bindsym Shift+Print --release exec --no-startup-id flameshot screen -c
 bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
 bindsym $mod+Ctrl+u --release exec --no-startup-id ~/dotfiles/linux/scripts/usb-mounter.sh
 bindsym $mod+Ctrl+e --release exec --no-startup-id ~/dotfiles/linux/scripts/emoji
-bindsym $mod+Ctrl+d --release exec --no-startup-id pkill dunst && dunstify -r 0 "Dunst" "Reloaded"
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
 bindsym $mod+Escape --release exec --no-startup-id ~/dotfiles/linux/scripts/powermenu
+bindsym $mod+Ctrl+n --release exec --no-startup-id kill -s USR1 $(pidof deadd-notification-center)
 
 # cycle through multi monitor settings
 bindsym $mod+Ctrl+m exec --no-startup-id ~/dotfiles/linux/scripts/monitor
@@ -281,6 +281,7 @@ exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corner
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id ibus
+exec --no-startup-id deadd-notification-center
 exec_always --no-startup-id ~/dotfiles/linux/polybar/launch
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
