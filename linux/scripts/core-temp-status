@@ -2,4 +2,7 @@
 
 core_temps=$(sensors | awk '/coretemp/' RS='\n\n' ORS='\n\n')
 
-dunstify -r 3 -i thermal-monitor "CPU Temperature" "$core_temps"
+notify-send.py -i thermal-monitor \
+               --replaces-process thermals \
+               -t 3000 \
+               "CPU Temperature" "$core_temps"

@@ -10,6 +10,12 @@ case $1 in
     $($0 show)
     ;;
   show)
-    dunstify -r 2 -t 1000 -i sunflower "Backlight" $(xbacklight -get | cut -f1 -d".")%
+    brightness=$(xbacklight -get | cut -f1 -d".")
+    bar=$(seq -s "─" $(($brightness / 5)) | sed 's/[0-9]//g')
+
+    notify-send.py -i sunflower \
+             -t 1000 \
+             --replaces-process backlight \
+             "Backlight" "$brightness% $bar"
     ;;
 esac

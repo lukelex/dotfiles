@@ -1,7 +1,7 @@
 ACTION=="bind", SUBSYSTEM=="hid", \
   ENV{DBUS_SESSION_BUS_ADDRESS}="unix:path=/run/user/1000/bus", \
-  RUN+="/usr/bin/su lukas -c 'dunstify -r 21 -t 3000 -i usb \"$env{HID_NAME}\" \"Connected\"'"
+  RUN+="/usr/bin/su lukas -c 'notify-send.py replaces-process usb-connection -t 3000 -i usb \"$env{HID_NAME}\" \"Connected\"'"
 
 ACTION=="unbind", SUBSYSTEM=="hid", \
   ENV{DBUS_SESSION_BUS_ADDRESS}="unix:path=/run/user/1000/bus", \
-  RUN+="/usr/bin/su lukas -c 'dunstify -r 21 -t 3000 -i usb \" $env{HID_NAME}\" \"Disconnected\"'"
+  RUN+="/usr/bin/su lukas -c 'notify-send.py replaces-process usb-connection -t 3000 -i usb \" $env{HID_NAME}\" \"Disconnected\"'"

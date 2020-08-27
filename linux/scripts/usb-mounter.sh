@@ -15,7 +15,9 @@ drive=$(echo $selected | awk '{print $2}')
 result=$(udisksctl $action --block-device $drive)
 
 if [[ "$action" = "mount" ]]; then
-  dunstify -r 21 'USB drive' 'Successfully mounted'
+  notify-send.py --replaces-process usb-mount \
+                 'USB drive' 'Successfully mounted'
 else
-  dunstify -r 21 'USB drive' 'Successfully unmounted'
+  notify-send.py --replaces-process usb-mount \
+                 'USB drive' 'Successfully unmounted'
 fi
