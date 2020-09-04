@@ -1,0 +1,41 @@
+#!/bin/bash
+
+function get {
+  echo $(cat /sys/class/leds/tpacpi::kbd_backlight/brightness)
+}
+
+function show {
+  value=`get`
+  percentage=$(echo $((50 * $value)))
+  bar=$(seq -s "─" $(echo $((percentage / 4))) | sed 's/[0-9]//g')
+
+  notify-send.py -i notification-keyboard-brightness \
+                 -t 2000 \
+                 --replaces-process keeb-backlight \
+                 "Keyboard" "$percentage% $bar"
+}
+
+function increase_by {
+  echo $((`get` + $1)) | sudo tee /sys/class/leds/tpacpi::kbd_backlight/brightness
+  `show`
+}
+
+function decrease_by {
+  echo $((`get` - $1)) | sudo tee /sys/class/leds/tpacpi::kbd_backlight/brightness
+  `show`
+}
+
+case $1 in
+  inc)
+    increase_by 1
+    ;;
+  dec)
+    decrease_by 1
+    ;;
+  show)
+    show
+    ;;
+  toggle)
+    show
+    ;;
+esac
