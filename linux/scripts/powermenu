@@ -18,7 +18,7 @@ options="$shutdown\n$reboot\n$lock\n$suspend\n$hibernate\n$logout"
 chosen="$(echo -e "$options" | $rofi_command -p "$uptime" -dmenu -selected-row 2)"
 case $chosen in
     $shutdown)
-        i3exit poweroff
+        i3exit shutdown
         ;;
     $reboot)
         i3exit reboot

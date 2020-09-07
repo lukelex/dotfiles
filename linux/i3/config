@@ -101,7 +101,7 @@ bindsym $mod+Ctrl+Left workspace prev
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 
-# customer polybar's shortcuts
+# custom polybar's shortcuts
 bindsym $mod+m --release exec polybar-msg cmd toggle
 bindsym $mod+Shift+p --release exec polybar-msg cmd restart
 
