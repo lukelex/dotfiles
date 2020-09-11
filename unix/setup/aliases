@@ -4,7 +4,7 @@
 alias e="nvim-qt ."
 
 # Bash
-alias t="tree"
+alias t="tree | less"
 alias open="xdg-open"
 alias o="xdg-open"
 
