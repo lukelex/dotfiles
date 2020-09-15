@@ -26,7 +26,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                       KC_LALT,    KC_LGUI, KC_SPC,                 XXXXXXX,    XXXXXXX,       XXXXXXX, XXXXXXX),
 
   [4] = LAYOUT(
-      RALT(KC_N),     XXXXXXX,    XXXXXXX, RALT(KC_QUOT), XXXXXXX, RALT(KC_I), XXXXXXX,       XXXXXXX, XXXXXXX,  RALT(KC_O),  KC_PSCR,       XXXXXXX,
+      RALT(KC_N),     XXXXXXX,    XXXXXXX, RALT(KC_QUOT), XXXXXXX, RALT(KC_I), XXXXXXX,       XXXXXXX, XXXXXXX,  RALT(KC_O),  KC_PSCR,       LGUI(KC_MINS),
       KC_LCTL,        RALT(KC_A), XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,    XXXXXXX,       XXXXXXX, XXXXXXX,  XXXXXXX,     RALT(KC_E),
       KC_LSFT,        XXXXXXX,    XXXXXXX, RALT(KC_C),    XXXXXXX, XXXXXXX,    XXXXXXX,       XXXXXXX, XXXXXXX,  XXXXXXX,     _______,
                       KC_LALT,    KC_LGUI, KC_SPC,                 XXXXXXX,    XXXXXXX,       _______, XXXXXXX),
