@@ -1,0 +1,19 @@
+#!/bin/bash
+
+case $1 in
+  previous)
+    playerctl -p spotify previous &
+    ;;
+  next)
+    playerctl -p spotify next &
+    ;;
+  pause)
+    playerctl -p spotify pause &
+    ;;
+  play)
+    playerctl -p spotify play &
+    ;;
+  toggle)
+    playerctl -p spotify play-pause &
+    ;;
+esac

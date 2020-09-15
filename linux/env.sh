@@ -20,4 +20,7 @@ rvm_silence_path_mismatch_check_flag=1
 
 source /usr/share/nvm/init-nvm.sh
 
+# Custom executables
+export PATH="/home/lukas/dotfiles/linux/bin:$PATH"
+
 source ~/dotfiles/linux/setup/aliases
