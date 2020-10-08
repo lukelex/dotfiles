@@ -1,7 +1,7 @@
 #include QMK_KEYBOARD_H
 
 enum kaomojies {
-  MEH = SAFE_RANGE,,
+  MEH = SAFE_RANGE,
   TABLE_FLIP,
   HUE,
 };
