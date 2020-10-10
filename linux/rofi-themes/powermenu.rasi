@@ -4,7 +4,7 @@
 
 * {
   /* General */
-  text-font:                            "Comfortaa 14";
+  text-font:                            "Comfortaa 28";
   icon-font:                            "Hurmit Nerd Font Mono 78";
   icon-font-small:                      "Hurmit Nerd Font Mono 24";
 
@@ -15,7 +15,7 @@
   menu-prompt-padding:                  10px 20px 10px 20px;
   menu-prompt-margin:                   0px 0px 0px -2px;
   menu-element-border:                  10px;
-  menu-element-padding:                 25px 35px 20px -80px;
+  menu-element-padding:                 25px 35px 20px 0px;
 }
 
 /* ########### */
@@ -116,4 +116,3 @@ element.selected.active {
 element.selected.active {
   border-color: @accent;
 }
-

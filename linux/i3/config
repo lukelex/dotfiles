@@ -294,8 +294,8 @@ assign [class="telegram-desktop"] $ws4
 for_window [class="Spotify"] move to workspace $ws10
 
 # Open specific applications in floating mode
-for_window [class="Pcmanfm"] floating enable center border pixel 1
-for_window [class="Galculator"] floating enable border pixel 1
+for_window [class="Pcmanfm"] floating enable center border pixel 3
+for_window [class="Galculator"] floating enable border pixel 3
 for_window [class="GParted"] floating enable border normal
 for_window [title="i3_help"] floating enable center sticky enable border normal
 for_window [class="Lightdm-settings"] floating enable
@@ -304,7 +304,7 @@ for_window [class="Manjaro-hello"] floating enable
 for_window [class="Manjaro Settings Manager"] floating enable border normal
 for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Viewnior"] floating enable
-for_window [class="Pamac-manager"] floating enable
+for_window [class="Pamac-manager"] floating enable border pixel 3
 for_window [class="blueman-manager"] floating enable
 for_window [class="Zeal"] floating enable
 for_window [class="Slack"] floating enable
