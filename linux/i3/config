@@ -4,7 +4,7 @@ set $mod Mod4
 workspace_layout default #<default|stacking|tabbed>
 
 # Configure border style <normal|1pixel|pixel xx|none|pixel>
-new_window pixel 3
+new_window pixel 6
 new_float normal
 
 # Hide borders
@@ -12,7 +12,7 @@ hide_edge_borders none
 
 # change borders
 bindsym $mod+u border none
-bindsym $mod+y border pixel 3
+bindsym $mod+y border pixel 6
 bindsym $mod+n border normal
 
 # Font for window titles
@@ -228,8 +228,8 @@ client.background           #2B2C2B
 #############################
 
 # Set inner/outer gaps
-gaps inner 16
-gaps outer 0
+gaps inner 32
+gaps outer -12
 
 smart_borders no_gaps # on|no_gaps
 
@@ -294,8 +294,8 @@ assign [class="telegram-desktop"] $ws4
 for_window [class="Spotify"] move to workspace $ws10
 
 # Open specific applications in floating mode
-for_window [class="Pcmanfm"] floating enable center border pixel 3
-for_window [class="Galculator"] floating enable border pixel 3
+for_window [class="Pcmanfm"] floating enable center border pixel 6
+for_window [class="Galculator"] floating enable border pixel 6
 for_window [class="GParted"] floating enable border normal
 for_window [title="i3_help"] floating enable center sticky enable border normal
 for_window [class="Lightdm-settings"] floating enable
@@ -304,7 +304,7 @@ for_window [class="Manjaro-hello"] floating enable
 for_window [class="Manjaro Settings Manager"] floating enable border normal
 for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Viewnior"] floating enable
-for_window [class="Pamac-manager"] floating enable border pixel 3
+for_window [class="Pamac-manager"] floating enable border pixel 6
 for_window [class="blueman-manager"] floating enable
 for_window [class="Zeal"] floating enable
 for_window [class="Slack"] floating enable
@@ -316,4 +316,4 @@ for_window [title="Steam - News*"] floating enable center
 for_window [class="Deathing"] floating enable center
 for_window [title="Polychromatic Controller"] floating enable center
 for_window [title="Network Connections"] floating enable center
-for_window [title="Telegram"] border pixel 3
+for_window [title="Telegram"] border pixel 6
