@@ -32,6 +32,8 @@ sudo ln -fvs ~/dotfiles/linux/scripts/exit /usr/bin/i3exit
 sudo ln -fvs ~/dotfiles/linux/udev/usb-watcher.rules /usr/lib/udev/rules.d/5-usb-watcher.rules
 sudo cp -f ~/dotfiles/linux/config/sudoers.d/20-custom-rules /etc/sudoers.d/20-custom-rules
 
+ln -fvs ~/dotfiles/linux/config/default-apps.list ~/.local/share/applications/defaults.list
+
 multilockscreen -u ~/dotfiles/wallpapers/abstract.jpg
 
 sudo rmmod pcspkr
