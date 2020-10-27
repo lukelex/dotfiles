@@ -284,9 +284,9 @@ exec_always --no-startup-id ~/dotfiles/linux/polybar/launch
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
-# Compton
-exec_always --no-startup-id "killall -q compton; compton --config ~/.config/compton.conf"
-exec --no-startup-id "sh -c 'sleep 1; compton --config ~/.config/compton.conf'"
+# Picom
+exec_always --no-startup-id "killall -q picom; picom --config ~/.config/picom.conf"
+exec --no-startup-id "sh -c 'sleep 1; picom --config ~/.config/picom.conf'"
 
 # Open applications on specific workspaces
 assign [class="(?i)discord"] $ws4
