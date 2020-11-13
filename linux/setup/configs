@@ -24,7 +24,7 @@ ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
-ln -fvs ~/dotfiles/linux/compton.conf ~/.config/compton.conf
+ln -fvs ~/dotfiles/linux/config/picom.conf ~/.config/picom.conf
 sudo ln -fvs ~/dotfiles/linux/devices/30-touchpad.conf /etc/X11/xorg.conf.d/30-touchpad.conf
 sudo ln -fvs ~/dotfiles/linux/peripherals/$(hostname).conf /etc/X11/xorg.conf
 sudo ln -fvs ~/dotfiles/linux/scripts/exit /usr/bin/i3exit

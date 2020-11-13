@@ -285,8 +285,8 @@ exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
 # Picom
-exec_always --no-startup-id "killall -q picom; picom --config ~/.config/picom.conf"
-exec --no-startup-id "sh -c 'sleep 1; picom --config ~/.config/picom.conf'"
+exec_always --no-startup-id "killall -q picom; picom --config ~/dotfiles/linux/config/picom.conf"
+exec --no-startup-id "sh -c 'sleep 1; picom --config ~/dotfiles/linux/config/picom.conf'"
 
 # Open applications on specific workspaces
 assign [class="(?i)discord"] $ws4
