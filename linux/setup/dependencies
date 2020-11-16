@@ -14,7 +14,7 @@ pamac install postgresql-10 redis docker docker-compose
 pamac install slack-desktop whatsapp-nativefier telegram-desktop
 pamac install dropbox woeusb spotify via-bin stress
 pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
-pamac install bootloadhid imagemagick-full neofetch multilockscreen
+pamac install bootloadhid imagemagick-full neofetch
 pamac install ttf-hack ttf-font-awesome-5-free noto-fonts-cjk
 
 pip install notify-send.py

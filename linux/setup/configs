@@ -34,6 +34,4 @@ sudo cp -f ~/dotfiles/linux/config/sudoers.d/20-custom-rules /etc/sudoers.d/20-c
 
 ln -fvs ~/dotfiles/linux/config/default-apps.list ~/.local/share/applications/defaults.list
 
-multilockscreen -u ~/dotfiles/wallpapers/abstract.jpg
-
 sudo rmmod pcspkr

@@ -6,7 +6,7 @@
 
 case "$1" in
     lock)
-        multilockscreen -l dim
+        i3lock -B 8
         ;;
     logout)
         i3-msg exit
