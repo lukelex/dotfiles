@@ -11,11 +11,12 @@ case $1 in
     ;;
   show)
     brightness=$(xbacklight -get | cut -f1 -d".")
-    bar=$(seq -s "─" $(($brightness / 5)) | sed 's/[0-9]//g')
+    bar=$(seq -s "─" $(($brightness / 4)) | sed 's/[0-9]//g')
 
-    notify-send.py -i sunflower \
-             -t 1000 \
-             --replaces-process backlight \
-             "Backlight" "$brightness% $bar"
+    dunstify -i sunflower \
+             -r 6 \
+             -u low \
+             -a Backlight \
+             "$brightness%" "$bar"
     ;;
 esac

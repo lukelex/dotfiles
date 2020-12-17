@@ -1,0 +1,10 @@
+#!/bin/bash
+
+version=$(uname -r)
+node=$(uname -n)
+
+dunstify -i tux \
+         -r 13 \
+         -u low \
+         -a Kernel \
+         "$node" "Version $version"

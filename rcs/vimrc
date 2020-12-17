@@ -126,8 +126,8 @@ colorscheme sexy-railscasts
 
 set guifont=Hack:h17
 
-" Make it obvious where 65 characters is on text files
-autocmd BufRead,BufNewFile *.md set textwidth=65
+" Make it obvious where 70 characters is on text files
+autocmd BufRead,BufNewFile *.md set textwidth=70
 set colorcolumn=+1
 
 " disable scrollbars

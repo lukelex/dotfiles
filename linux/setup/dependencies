@@ -17,6 +17,4 @@ pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
 pamac install bootloadhid imagemagick-full neofetch
 pamac install ttf-hack ttf-font-awesome-5-free noto-fonts-cjk
 
-pip install notify-send.py
-
 pamac remove palemoon-bin

@@ -14,12 +14,13 @@ function is_mute {
 
 function show {
   volume=`get`
-  bar=$(seq -s "─" $(($volume / 5)) | sed 's/[0-9]//g')
+  bar=$(seq -s "─" $(($volume / 4)) | sed 's/[0-9]//g')
 
-  notify-send.py -i notification-audio-volume-high \
-                 --replaces-process volume \
-                 -t 1000 \
-                 "Volume" "$volume% $bar"
+  dunstify -i notification-audio-volume-high \
+           -r 12 \
+           -u low \
+           -a Volume \
+           "$volume%" "$bar"
 }
 
 case $1 in
@@ -37,10 +38,11 @@ case $1 in
   toggle)
     amixer -D pulse set Master 1+ toggle > /dev/null
     if is_mute ; then
-      notify-send.py -i notification-audio-volume-muted \
-                     --replaces-process volume \
-                     -t 1000 \
-                     "Volume" "Mute"
+      dunstify -i notification-audio-volume-muted \
+               -r 12 \
+               -u low \
+               -a Volume \
+               "0%" "Mute"
     else
       show
     fi
