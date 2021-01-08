@@ -1,5 +1,11 @@
 #!/bin/bash
 
-status=$(nordvpn status | awk '/Status/' RS='\n\n')
+info=$(sudo nordvpn status)
+tatus=$(echo "$info" | grep Status | awk '{print $4}')
+summary=$(echo "$info" | grep -vE "(Status|server|tech|protocol)")
 
-dusntify -r 22 "NordVPN" "$status"
+dunstify -i globe \
+         -r 22 \
+         -u normal \
+         -a NordVPN \
+         "$tatus" "$summary"
