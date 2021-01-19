@@ -5,7 +5,7 @@ install_pulse
 pamac install zsh zsh-completions rofi rofi-bluetooth-git
 pamac install autorandr xclip polybar dialog gsimplecal
 pamac install sysstat xdotool gconf cmake jq xbacklight
-pamac install flameshot vlc timeshift etcher
+pamac install flameshot vlc timeshift etcher xdo
 pamac install xwallpaper sxiv playerctl godot aseprite
 pamac install nvm neovim-qt ctags diff-so-fancy pantheon-calculator
 pamac install rubygems the_silver_searcher zeal

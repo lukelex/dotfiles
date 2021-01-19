@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+for bar in $(xdo id -N 'Polybar'); do
+  if xprop -id $bar | grep "polybar-tray"; then
+    if xprop -id $bar | grep "Normal"; then
+      xdo hide $bar
+    elif xprop -id $bar | grep "Withdrawn"; then
+      xdo show $bar
+    fi
+  fi
+done

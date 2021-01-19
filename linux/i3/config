@@ -101,7 +101,8 @@ bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 
 # custom polybar's shortcuts
-bindsym $mod+m --release exec polybar-msg cmd toggle
+bindsym $mod+Shift+m --release exec polybar-msg cmd toggle
+bindsym $mod+Shift+t --release exec ~/dotfiles/linux/scripts/toggle-tray
 bindsym $mod+Shift+p --release exec polybar-msg cmd restart
 
 # Workspace names
@@ -280,7 +281,7 @@ exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corner
 exec --no-startup-id flameshot
 exec --no-startup-id spotify
 exec --no-startup-id ibus
-exec_always --no-startup-id ~/dotfiles/linux/polybar/launch
+exec_always --no-startup-id ~/dotfiles/linux/scripts/launch_polybar
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
