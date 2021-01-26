@@ -79,6 +79,8 @@ let g:easytags_auto_highlight = 0
 
 let mapleader = "\<Space>"
 
+let g:snipMate = { 'snippet_version' : 1 }
+
 " clean the current search
 nmap <leader>h :nohlsearch<cr>
 
