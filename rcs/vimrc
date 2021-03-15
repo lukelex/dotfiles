@@ -21,9 +21,6 @@ Plug 'elixir-lang/vim-elixir'
 " Html
 Plug 'slim-template/vim-slim'
 
-" Themes
-Plug 'oguzbilgic/sexy-railscasts-theme'
-
 " Editor improvements
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'tpope/vim-fugitive'
@@ -124,7 +121,7 @@ set shiftwidth=2
 set splitbelow
 set splitright
 
-colorscheme sexy-railscasts
+colorscheme railscasts
 
 set guifont=Hack:h17
 

@@ -5,4 +5,7 @@ rm -rf ~/.bash_profile ~/.bashrc ~/.vimrc ~/.zshrc
 ln -fvs ~/dotfiles/rcs/vimrc ~/.vimrc
 ln -fvs ~/dotfiles/rcs/zshrc ~/.zshrc
 
+mkdir -pv ~/.vim/colors
+ln -fvs ~/dotfiles/vim/colors/railscasts.vim ~/.vim/colors/railscasts.vim
+
 mkdir -v ~/backup_vim
