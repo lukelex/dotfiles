@@ -2,11 +2,11 @@
 
 case $1 in
   inc)
-    xbacklight -inc 5%
+    xbacklight -inc 1%
     $($0 show)
     ;;
   dec)
-    xbacklight -dec 5%
+    xbacklight -dec 1%
     $($0 show)
     ;;
   show)

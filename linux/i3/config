@@ -164,6 +164,8 @@ bindsym XF86AudioLowerVolume exec --no-startup-id ~/dotfiles/linux/scripts/volum
 bindsym XF86AudioPlay exec --no-startup-id playerctl -p spotify play-pause
 bindsym XF86AudioPrev exec --no-startup-id playerctl -p spotify previous
 bindsym XF86AudioNext exec --no-startup-id playerctl -p spotify next
+bindsym XF86MonBrightnessUp exec --no-startup-id ~/dotfiles/linux/scripts/backlight inc
+bindsym XF86MonBrightnessDown exec --no-startup-id ~/dotfiles/linux/scripts/backlight dec
 
 # Power button
 bindsym XF86PowerOff --release exec --no-startup-id ~/dotfiles/linux/scripts/powermenu
