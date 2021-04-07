@@ -292,8 +292,6 @@ exec_always --no-startup-id "killall -q picom; picom --config ~/dotfiles/linux/c
 exec --no-startup-id "sh -c 'sleep 1; picom --config ~/dotfiles/linux/config/picom.conf'"
 
 # Open applications on specific workspaces
-assign [class="(?i)discord"] $ws4
-assign [class="telegram-desktop"] $ws4
 for_window [class="Spotify"] move to workspace $ws10
 
 # Open specific applications in floating mode
