@@ -8,4 +8,4 @@ xset r rate 200 35
 autorandr --change
 
 # set wallpaper
-xwallpaper --stretch ~/dotfiles/wallpapers/abstract.jpg
+xwallpaper --zoom ~/dotfiles/wallpapers/abstract.jpg
