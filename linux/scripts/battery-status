@@ -10,4 +10,5 @@ dunstify -i battery-full \
          -r 11 \
          -u low \
          -a Battery \
-         "$charge" "$state. $time left" &
+         -h int:value:"$charge" \
+         "blank" "$state. $time left"

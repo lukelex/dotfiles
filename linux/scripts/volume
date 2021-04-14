@@ -14,13 +14,13 @@ function is_mute {
 
 function show {
   volume=`get`
-  bar=$(seq -s "─" $(($volume / 4)) | sed 's/[0-9]//g')
 
   dunstify -i notification-audio-volume-high \
            -r 12 \
            -u low \
            -a Volume \
-           "$volume%" "$bar"
+           -h int:value:"$volume" \
+           "$volume%"
 }
 
 case $1 in

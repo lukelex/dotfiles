@@ -2,21 +2,21 @@
 
 case $1 in
   inc)
-    xbacklight -inc 1%
+    xbacklight -inc 2%
     $($0 show)
     ;;
   dec)
-    xbacklight -dec 1%
+    xbacklight -dec 2%
     $($0 show)
     ;;
   show)
     brightness=$(xbacklight -get | cut -f1 -d".")
-    bar=$(seq -s "─" $(($brightness / 4)) | sed 's/[0-9]//g')
 
     dunstify -i sunflower \
              -r 6 \
              -u low \
              -a Backlight \
-             "$brightness%" "$bar"
+             -h int:value:"$brightness" \
+             "changed"
     ;;
 esac
