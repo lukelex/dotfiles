@@ -13,7 +13,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,           KC_Q,       KC_W,    KC_E,       KC_R,    KC_T,          KC_Y,       KC_U,    KC_I,    KC_O,       KC_P,    KC_LBRC,       KC_RBRC, KC_BSPC,           KC_DEL,  KC_END,  KC_PGDN,
     LCTL_T(KC_ESC),   KC_A,       KC_S,    KC_D,       KC_F,    KC_G,          KC_H,       KC_J,    KC_K,    KC_L,       KC_SCLN, KC_QUOT,       KC_NUHS, KC_ENT,
     KC_LSFT, XXXXXXX, KC_Z,       KC_X,    KC_C,       KC_V,    KC_B,          KC_N,       KC_M,    KC_COMM, KC_DOT,     KC_SLSH, KC_RSFT,                XXXXXXX,                    KC_UP,
-    KC_LALT,          XXXXXXX,    KC_LGUI,                      LT(2, KC_SPC),                                           XXXXXXX, MO(3),         XXXXXXX, MO(4),             KC_LEFT, KC_DOWN, KC_RGHT),
+    KC_LALT,          KC_LALT,    KC_LGUI,                      LT(2, KC_SPC),                                           XXXXXXX, MO(3),         KC_RALT, MO(4),             KC_LEFT, KC_DOWN, KC_RGHT),
 
   [1] = LAYOUT_all(
     KC_ESC,                       KC_F1,   KC_F2,      KC_F3,   KC_F4,         KC_F5,      KC_F6,   KC_F7,   KC_F8,      KC_F9,   KC_F10,        KC_F11,  KC_F12,            KC_MPRV, KC_MPLY, KC_MNXT,
@@ -21,23 +21,23 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,           KC_Q,       KC_W,    KC_E,       KC_R,    KC_T,          KC_Y,       KC_U,    KC_I,    KC_O,       KC_P,    KC_LBRC,       KC_RBRC, KC_BSPC,           KC_DEL,  KC_END,  KC_PGDN,
     KC_LCTL,          KC_A,       KC_S,    KC_D,       KC_F,    KC_G,          KC_H,       KC_J,    KC_K,    KC_L,       KC_SCLN, KC_QUOT,       KC_NUHS, KC_ENT,
     KC_LSFT, XXXXXXX, KC_Z,       KC_X,    KC_C,       KC_V,    KC_B,          KC_N,       KC_M,    KC_COMM, KC_DOT,     KC_SLSH, KC_RSFT,                XXXXXXX,                    KC_UP,
-    KC_LALT,          XXXXXXX,    KC_LGUI,                      KC_SPC,                                                  XXXXXXX, MO(3),         XXXXXXX, MO(4),             KC_LEFT, KC_DOWN, KC_RGHT),
+    KC_LALT,          _______,    KC_LGUI,                      KC_SPC,                                                  _______, MO(3),         _______, MO(4),             KC_LEFT, KC_DOWN, KC_RGHT),
 
   [2] = LAYOUT_all(
-    KC_ESC,                       XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX,
-    KC_GRV,           XXXXXXX,    XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    KC_MUTE, KC_VOLD,       KC_VOLU, XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-    KC_TAB,           XXXXXXX,    KC_UP,   XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    KC_PSCR, XXXXXXX,       XXXXXXX, KC_DEL,            XXXXXXX, XXXXXXX, XXXXXXX,
-    MOD_LCTL,         KC_LEFT,    KC_DOWN, KC_RIGHT,   XXXXXXX, XXXXXXX,       KC_LEFT,    KC_DOWN, KC_UP,   KC_RIGHT,   XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,
-    KC_LSFT, XXXXXXX, KC_MPRV,    KC_MNXT, KC_MPLY,    XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, KC_MPRV, KC_MNXT,    KC_MPLY, XXXXXXX,                XXXXXXX,                    KC_UP,
-    KC_LALT,          XXXXXXX,    KC_LGUI,                      _______,                                                 XXXXXXX, KC_RALT,       XXXXXXX, XXXXXXX,           KC_LEFT, KC_DOWN, KC_RGHT),
+    _______,                      _______, _______,    _______, _______,       _______,    _______, _______, _______,    _______, _______,       _______, _______,           _______, _______, _______,
+    _______,           _______,   _______, _______,    _______, _______,       _______,    _______, _______, _______,    KC_MUTE, KC_VOLD,       KC_VOLU, _______,  _______, _______, _______, _______,
+    _______,           _______,   KC_UP,   _______,    _______, _______,       _______,    _______, _______, _______,    KC_PSCR, _______,       _______, KC_DEL,            _______, _______, _______,
+    KC_LCTL,          KC_LEFT,    KC_DOWN, KC_RIGHT,   _______, _______,       KC_LEFT,    KC_DOWN, KC_UP,   KC_RIGHT,   _______, _______,       _______, _______,
+    _______, _______, _______,    _______, _______,    _______, _______,       _______,    _______, KC_MPRV, KC_MNXT,    KC_MPLY, _______,                _______,                    KC_UP,
+    _______,          _______,    _______,                      _______,                                                 _______, _______,       _______, _______,           KC_LEFT, KC_DOWN, KC_RGHT),
 
   [3] = LAYOUT_all(
-    XXXXXXX,                      XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX,
-    RALT(KC_N),       XXXXXXX,    XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       RALT(KC_I), XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, LGUI(KC_MINS), XXXXXXX, XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-    KC_TAB,           XXXXXXX,    XXXXXXX, RALT(KC_E), XXXXXXX, TABLE_FLIP,    XXXXXXX,    XXXXXXX, XXXXXXX, RALT(KC_O), XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,            XXXXXXX, XXXXXXX, XXXXXXX,
-    KC_LCTL,          RALT(KC_A), XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       HUE,        XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, RALT(KC_E),    XXXXXXX, XXXXXXX,
-    KC_LSFT, XXXXXXX, XXXXXXX,    XXXXXXX, RALT(KC_C), XXXXXXX, XXXXXXX,       XXXXXXX,    MEH,     XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,                XXXXXXX,                    XXXXXXX,
-    KC_LALT,          XXXXXXX,    XXXXXXX,                      XXXXXXX,                                                 XXXXXXX, _______,       XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX),
+    _______,                      _______, _______,    _______, _______,       _______,    _______, _______, _______,    _______, _______,       _______, _______,           _______, _______, _______,
+    RALT(KC_N),       _______,    _______, _______,    _______, _______,       RALT(KC_I), _______, _______, _______,    _______, LGUI(KC_MINS), _______, _______,  _______, _______, _______, _______,
+    _______,           _______,    _______, RALT(KC_E), _______, TABLE_FLIP,    _______,    _______, _______, RALT(KC_O), _______, _______,       _______, _______,           _______, _______, _______,
+    _______,          RALT(KC_A), _______, _______,    _______, _______,       HUE,        _______, _______, _______,    _______, RALT(KC_E),    _______, _______,
+    _______, _______, _______,    _______, RALT(KC_C), _______, _______,       _______,    MEH,     _______, _______,    _______, _______,                _______,                    _______,
+    _______,          _______,    _______,                      _______,                                                 _______, _______,       _______, _______,           _______, _______, _______),
 
   [4] = LAYOUT_all(
     RESET,                        XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX,
