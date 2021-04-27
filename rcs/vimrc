@@ -48,6 +48,7 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'Raimondi/delimitMate'
 Plug 'scrooloose/syntastic'
+Plug 'jparise/vim-graphql'
 
 call plug#end()
 
