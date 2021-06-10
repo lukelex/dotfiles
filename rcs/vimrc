@@ -38,6 +38,7 @@ Plug 'danro/rename.vim'
 Plug 'henrik/vim-indexed-search'
 Plug 'ngmy/vim-rubocop'
 Plug 'schickling/vim-bufonly'
+Plug 'chrisbra/csv.vim'
 
 " Generic code
 Plug 'tpope/vim-commentary'
@@ -149,7 +150,7 @@ nmap <leader>u :CtrlPBuffer<cr>
 let g:fuzzy_ignore = "*.png;*.PNG;*.JPG;*.jpg;*.GIF;*.gif;;coverage/**;tmp/**;rdoc/**"
 let g:ctrlp_custom_ignore = 'node_modules\|bower_components\|DS_Store\|git\|doc\|tags'
 let g:ctrlp_working_path_mode = 'ra'
-let g:ctrlp_max_height = 15
+let g:ctrlp_max_height = 25
 
 if executable('ag')
   " Use ag over grep
