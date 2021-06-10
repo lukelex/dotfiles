@@ -320,3 +320,4 @@ for_window [title="Microsoft Teams"] border pixel 6
 for_window [title="Calculator"] border pixel 6
 # for_window [class="Zeal" title="scratch"] floating enable,move scratchpad
 for_window [class="Zeal"] floating enable
+for_window [class="1Password"] floating enable
