@@ -6,7 +6,7 @@
 
 case "$1" in
     lock)
-        i3lock -b 8
+        i3lock-fancy
         ;;
     logout)
         i3-msg exit
