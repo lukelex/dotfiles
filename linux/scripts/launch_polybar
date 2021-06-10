@@ -11,6 +11,6 @@ while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
 primary=$(polybar -m | grep primary | sed -e 's/:.*$//g')
 
 MONITOR=$monitor polybar $HOSTNAME -c ~/dotfiles/linux/polybar/bars.ini &
-MONITOR=$monitor polybar tray -c ~/dotfiles/linux/polybar/bars.ini
+MONITOR=$monitor polybar stats -c ~/dotfiles/linux/polybar/bars.ini
 
 echo "Polybar launched..."
