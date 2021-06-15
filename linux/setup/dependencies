@@ -12,7 +12,7 @@ pamac install rubygems the_silver_searcher zeal i3lock-fancy-git
 pamac install nordvpn-bin google-chrome firefox pulseaudio-bluetooth
 pamac install postgresql-10 redis docker docker-compose
 pamac install slack-desktop whatsapp-nativefier telegram-desktop
-pamac install dropbox woeusb spotify via-bin stress
+pamac install dropbox woeusb spotify via-bin stress librecad
 pamac install avr-gcc dfu-programmer avrdude gcc-arm-none-eabi-bin
 pamac install bootloadhid imagemagick-full neofetch
 pamac install ttf-hack otf-font-awesome-5-free noto-fonts-cjk
