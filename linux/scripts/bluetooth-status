@@ -2,11 +2,11 @@
 
 info=$(bluetoothctl show)
 
-powered=$(echo "$info" | grep 'Powered: yes' | awk '{print $2}')
+powered=$(echo "$info" | grep 'Powered: yes' | xargs)
 summary=$(bluetoothctl paired-devices | awk '{print $3 " (paired)"}')
 
 dunstify -i bluetooth \
          -r 29 \
-         -u low \
+         -u normal \
          -a Bluetooth \
          "$powered" "$summary"

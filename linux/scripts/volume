@@ -20,7 +20,7 @@ function show {
            -u low \
            -a Volume \
            -h int:value:"$volume" \
-           "$volume%"
+           "unused"
 }
 
 case $1 in
