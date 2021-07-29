@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 declare -A ICON_LIST=(
   ["01d"]="" # Clear sky day
@@ -42,7 +42,6 @@ Humidity: $(echo $FORECAST | jq -r '.main.humidity')%
 Location: $(echo $FORECAST | jq -r '"\(.name) - \(.sys.country)"')
 EOM
 )
-
   dunstify -i weather \
            -r 250 \
            -u normal \

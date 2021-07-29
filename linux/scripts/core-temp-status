@@ -4,6 +4,6 @@ core_temps=$(sensors | awk '/coretemp/' RS='\n\n' ORS='\n\n')
 
 dunstify -i thermal-monitor \
          -r 5 \
-         -u low \
+         -u normal \
          -a CPU \
          "Temperature" "$core_temps"
