@@ -1,0 +1,7 @@
+#!/bin/bash
+
+IP=$(avahi-browse -t -d local -c -a --resolve | sed -n '/^=.*Printer/,/txt =/p' | head -n 5 | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}')
+
+lpadmin -p epson -E -v ipp://$IP/ipp/print -m everywhere
+
+dunstify $IP
