@@ -6,7 +6,7 @@ pamac install zsh zsh-completions rofi rofi-bluetooth-git
 pamac install autorandr xclip polybar dialog gsimplecal
 pamac install sysstat xdotool gconf cmake jq xorg-xbacklight
 pamac install flameshot vlc timeshift etcher xdo 1password
-pamac install xwallpaper sxiv playerctl godot aseprite
+pamac install xwallpaper sxiv playerctl godot aseprite unzip unrar
 pamac install nvm neovim-qt ctags diff-so-fancy pantheon-calculator
 pamac install rubygems the_silver_searcher zeal i3lock-fancy-git
 pamac install nordvpn-bin google-chrome firefox pulseaudio-bluetooth
