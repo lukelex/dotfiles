@@ -316,7 +316,6 @@ for_window [title="Polychromatic Controller"] floating enable center
 for_window [title="Network Connections"] floating enable center
 for_window [title="Telegram"] border pixel 6
 for_window [title="Microsoft Teams"] border pixel 6
-for_window [title="Calculator"] border pixel 6
-# for_window [class="Zeal" title="scratch"] floating enable,move scratchpad
+for_window [title="io.elementary.calculator"] border pixel 6
 for_window [class="Zeal"] floating enable
 for_window [class="1Password"] floating enable
