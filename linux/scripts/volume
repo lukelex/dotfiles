@@ -26,12 +26,12 @@ function show {
 case $1 in
   up)
     turn_on
-    amixer -D pulse sset Master 2%+ > /dev/null
+    amixer -D pulse sset Master 1%+ > /dev/null
     show
     ;;
   down)
     turn_on
-    amixer -D pulse sset Master 2%- > /dev/null
+    amixer -D pulse sset Master 1%- > /dev/null
     show
     ;;
   show) show ;;
