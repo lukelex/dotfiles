@@ -2,21 +2,21 @@
 
 case $1 in
   inc)
-    xbacklight -inc 2%
+    sudo light -A 2
     $($0 show)
     ;;
   dec)
-    xbacklight -dec 2%
+    sudo light -U 2
     $($0 show)
     ;;
   show)
-    brightness=$(xbacklight -get | cut -f1 -d".")
+    brightness=$(light -G | cut -f1 -d".")
 
     dunstify -i sunflower \
              -r 6 \
              -u low \
              -a Backlight \
              -h int:value:"$brightness" \
-             "changed"
+             "unused"
     ;;
 esac
