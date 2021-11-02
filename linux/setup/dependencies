@@ -7,7 +7,7 @@ pamac install polybar neovim neovide thefuck bat tldr dunst-git
 pamac install zsh zsh-completions rofi rofi-bluetooth-git xdo
 pamac install autorandr xclip i3lock-fancy-dualmonitor-git
 pamac install dropbox flameshot timeshift etcher 1password
-pamac install sysstat xdotool gconf cmake jq light vlc
+pamac install sysstat xdotool gconf cmake jq light vlc birdfont
 pamac install xwallpaper sxiv playerctl unzip unrar ctags
 pamac install rubygems nvm the_silver_searcher diff-so-fancy
 pamac install pantheon-calculator gsimplecal zeal spotify
