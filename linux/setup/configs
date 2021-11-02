@@ -33,10 +33,12 @@ sudo cp -f ~/dotfiles/linux/config/sudoers.d/20-custom-rules /etc/sudoers.d/20-c
 
 ln -fvs ~/dotfiles/linux/config/default-apps.list ~/.local/share/applications/defaults.list
 
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 5\ Duotone-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 5\ Duotone-Solid-900.otf
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 5\ Pro-Light-300.otf /usr/share/fonts/OTF/Font\ Awesome\ 5\ Pro-Light-300.ot
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 5\ Pro-Regular-400.otf /usr/share/fonts/OTF/Font\ Awesome\ 5\ Pro-Regular-400.ot
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 5\ Pro-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 5\ Pro-Solid-900.otf
+sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Brands-Regular-400.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Brands-Regular-400.otf
+sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Duotone-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Duotone-Solid-900.otf
+sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Light-300.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Light-300.otf
+sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Regular-400.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Regular-400.otf
+sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Solid-900.otf
+sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Thin-100.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Thin-100.otf
 fc-cache -f
 
 sudo rmmod pcspkr
