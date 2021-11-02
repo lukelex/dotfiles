@@ -12,3 +12,5 @@ if [[ "$(uname)" == 'Linux' ]]; then
 else
   source ~/dotfiles/osx/env.sh
 fi
+
+eval $(thefuck --alias)

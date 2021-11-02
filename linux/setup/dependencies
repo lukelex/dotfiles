@@ -2,14 +2,15 @@
 
 install_pulse
 
+pamac install neovim neovide thefuck bat tldr
 pamac install zsh zsh-completions rofi rofi-bluetooth-git
-pamac install autorandr xclip polybar dialog gsimplecal bat
+pamac install autorandr xclip polybar dialog gsimplecal
 pamac install sysstat xdotool gconf cmake jq light
 pamac install flameshot vlc timeshift etcher xdo 1password
-pamac install xwallpaper sxiv playerctl godot aseprite unzip unrar
-pamac install nvm neovide ctags diff-so-fancy pantheon-calculator
+pamac install xwallpaper sxiv playerctl godot unzip unrar
+pamac install nvm ctags diff-so-fancy pantheon-calculator
 pamac install rubygems the_silver_searcher zeal i3lock-fancy-dualmonitor-git
-pamac install nordvpn-bin google-chrome firefox pulseaudio-bluetooth
+pamac install nordvpn-bin google-chrome pulseaudio-bluetooth
 pamac install postgresql-10 redis docker docker-compose
 pamac install slack-desktop whatsapp-nativefier telegram-desktop
 pamac install dropbox woeusb spotify via-bin stress librecad
