@@ -52,10 +52,16 @@ URxvt.keysym.Control-Right: \033[1;5C
 *color7:                         #BABDB9
 *color15:                        #EEEEEC
 
-URxvt*depth:                         32
-URxvt*perl-lib:                       /usr/lib/urxvt/perl/
-URxvt*perl-ext-common:               default,selection-to-clipboard,font-size
-URxvt*url-launcher:                   /usr/bin/x-www-browser
+URxvt*depth: 32
+URxvt*perl-lib: /usr/lib/urxvt/perl/
+URxvt*perl-ext-common: default,selection-to-clipboard,matcher,resize-font
+URxvt*url-launcher: /usr/bin/xdg-open
+URxvt.matcher.button: 1
+
+URxvt.keysym.C-minus:     resize-font:smaller
+URxvt.keysym.C-plus:      resize-font:reset
+URxvt.keysym.C-equal:     resize-font:bigger
+URxvt.keysym.C-question:  resize-font:show
 
 ! Turn on/off ISO 14755 (default enabled).
 URxvt*iso14755: false
