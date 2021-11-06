@@ -6,19 +6,9 @@ Xft.lcdfilter:	lcddefault
 Xft.hinting:	1
 Xft.hintstyle:	hintfull
 
-URxvt.font: xft:DejaVu Sans Mono-18
-
 *scrollBar:                      false
-URxvt*scrollTtyOutput:           true
 *transparent:                    false
 *shading:                        1
-URxvt*background:                     #0e0e0e
-URxvt*foreground:                     #c0b18b
-
-URxvt.keysym.Control-Up: \033[1;5A
-URxvt.keysym.Control-Down: \033[1;5B
-URxvt.keysym.Control-Left: \033[1;5D
-URxvt.keysym.Control-Right: \033[1;5C
 
 !black
 *color0:                         #2E3436
@@ -51,19 +41,3 @@ URxvt.keysym.Control-Right: \033[1;5C
 !white
 *color7:                         #BABDB9
 *color15:                        #EEEEEC
-
-URxvt*depth: 32
-URxvt*perl-lib: /usr/lib/urxvt/perl/
-URxvt*perl-ext-common: default,selection-to-clipboard,matcher,resize-font
-URxvt*url-launcher: /usr/bin/xdg-open
-URxvt.matcher.button: 1
-
-URxvt.keysym.C-minus:     resize-font:smaller
-URxvt.keysym.C-plus:      resize-font:reset
-URxvt.keysym.C-equal:     resize-font:bigger
-URxvt.keysym.C-question:  resize-font:show
-
-! Turn on/off ISO 14755 (default enabled).
-URxvt*iso14755: false
-! Turn on/off ISO 14755 5.2 mode (default enabled).
-URxvt*iso14755_52: false
