@@ -6,7 +6,7 @@
 
 case "$1" in
     lock)
-        i3lock-fancy-dualmonitor
+        dm-tool lock
         ;;
     logout)
         i3-msg exit
