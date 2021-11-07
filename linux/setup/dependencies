@@ -5,7 +5,7 @@ install_pulse
 pamac install ttf-hack noto-fonts-cjk
 pamac install polybar neovim neovide thefuck bat tldr dunst-git
 pamac install zsh zsh-completions rofi rofi-bluetooth-git xdo
-pamac install autorandr xclip
+pamac install autorandr xclip lightdm-webkit2-greeter
 pamac install dropbox flameshot timeshift etcher 1password
 pamac install sysstat xdotool gconf cmake jq light vlc birdfont
 pamac install xwallpaper sxiv playerctl unzip unrar ctags
@@ -17,4 +17,4 @@ pamac install slack-desktop whatsapp-nativefier telegram-desktop
 pamac install via-bin stress librecad avr-gcc dfu-programmer avrdude
 pamac install gcc-arm-none-eabi-bin bootloadhid imagemagick-full neofetch
 
-pamac remove palemoon-bin rxvt-unicode i3exit
+pamac remove palemoon-bin rxvt-unicode i3exit lightdm-slick-greeter
