@@ -9,7 +9,7 @@ mkdir -p ~/.i3
 ln -fvs ~/dotfiles/linux/i3/config ~/.i3/config
 
 mkdir -p ~/.config/rofi
-ln -fvs ~/dotfiles/linux/rofi.rasi ~/.config/rofi/config.rasi
+ln -fvs ~/dotfiles/linux/config/rofi/main.rasi ~/.config/rofi/config.rasi
 
 mkdir -p ~/.config/nvim
 ln -fvs ~/dotfiles/linux/neo.vim ~/.config/nvim/init.vim

@@ -1,12 +1,8 @@
 configuration {
   show-icons: true;
   icon-theme: "Papirus";
-  font: "roboto 20";
-  width: 600;
-  lines: 20;
-  eh: 1;
-  bw: 0;
-  theme: "/usr/share/rofi/themes/Adapta-Nokto.rasi";
+  font: "roboto 28";
+  theme: "~/dotfiles/linux/config/rofi/theme.rasi";
 
   kb-remove-to-eol: "";
   kb-accept-entry: "Return,KP_Enter";
