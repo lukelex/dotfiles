@@ -26,6 +26,7 @@ ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
 ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/config/picom.conf ~/.config/picom.conf
 ln -fvs ~/dotfiles/linux/config/konsolerc ~/.config/konsolerc
+ln -fvs ~/dotfiles/linux/config/greenclip.toml ~/.config/greenclip.toml
 sudo ln -fvs ~/dotfiles/linux/devices/30-touchpad.conf /etc/X11/xorg.conf.d/30-touchpad.conf
 sudo ln -fvs ~/dotfiles/linux/config/lightdm.conf /etc/lightdm/lightdm.conf
 sudo ln -fvs ~/dotfiles/linux/scripts/exit /usr/bin/i3exit

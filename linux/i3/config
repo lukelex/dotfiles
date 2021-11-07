@@ -41,6 +41,7 @@ bindsym $mod+Ctrl+e --release exec --no-startup-id ~/dotfiles/linux/scripts/emoj
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
 bindsym $mod+Escape --release exec --no-startup-id ~/dotfiles/linux/scripts/powermenu
 bindsym $mod+Ctrl+L --release exec --no-startup-id i3exit lock
+bindsym $mod+Ctrl+C --release exec --no-startup-id ~/dotfiles/linux/scripts/clipboard
 
 # cycle through multi monitor settings
 bindsym $mod+Ctrl+m exec --no-startup-id ~/dotfiles/linux/scripts/monitor
@@ -278,11 +279,11 @@ mode "$mode_gaps_outer" {
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
-exec --no-startup-id clipit
 exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corners ----
 exec --no-startup-id flameshot
 exec --no-startup-id ibus
+exec --no-startup-id greenclip daemon &
 exec_always --no-startup-id ~/dotfiles/linux/scripts/launch_polybar
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
