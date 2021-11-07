@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # Editor
-alias e="neovide ."
+alias e="nvim ."
 
 # Bash
 alias open="xdg-open"
