@@ -42,6 +42,8 @@ sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Light-300.otf /usr/share/fon
 sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Regular-400.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Regular-400.otf
 sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Solid-900.otf
 sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Thin-100.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Thin-100.otf
-fc-cache -f
+mkdir -p ~/.config/fontconfig/
+ln -fvs ~/dotfiles/linux/config/fonts.conf ~/.config/fontconfig/fonts.conf
+fc-cache -r
 
 sudo rmmod pcspkr
