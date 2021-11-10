@@ -51,6 +51,7 @@ Plug 'tpope/vim-repeat'
 Plug 'Raimondi/delimitMate'
 Plug 'scrooloose/syntastic'
 Plug 'jparise/vim-graphql'
+Plug 'fladson/vim-kitty'
 
 call plug#end()
 

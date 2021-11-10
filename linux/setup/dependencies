@@ -2,7 +2,7 @@
 
 install_pulse
 
-pamac install ttf-hack noto-fonts-cjk
+pamac install ttf-hack noto-fonts-cjk kitty
 pamac install polybar neovim neovide thefuck bat tldr dunst-git
 pamac install zsh zsh-completions rofi rofi-bluetooth-git xdo
 pamac install autorandr xclip lightdm-webkit2-greeter rofi-greenclip
