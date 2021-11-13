@@ -9,3 +9,5 @@ autorandr --change
 
 # set wallpaper
 xwallpaper --zoom ~/dotfiles/wallpapers/no-man-sky.jpg
+
+export PATH="$HOME/dotfiles/linux/bin:$PATH"
