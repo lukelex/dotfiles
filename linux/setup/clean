@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+pamac remove --unneeded --no-confirm palemoon-bin rxvt-unicode i3exit \
+             lightdm-slick-greeter clipit
+
+pamac clean --uninstalled --build-files --no-confirm

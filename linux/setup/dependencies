@@ -1,20 +1,19 @@
 #!/usr/bin/env sh
 
+
+pamac install --no-confirm ttf-hack noto-fonts-cjk kitty fd \
+              install polybar neovim neovide thefuck bat tldr dunst-git \
+              zsh zsh-completions rofi rofi-bluetooth-git xdo \
+              autorandr xclip lightdm-webkit2-greeter rofi-greenclip \
+              dropbox flameshot timeshift etcher 1password \
+              sysstat xdotool gconf cmake jq light vlc birdfont \
+              xwallpaper sxiv playerctl unzip unrar ctags \
+              rubygems nvm the_silver_searcher diff-so-fancy \
+              pantheon-calculator gsimplecal zeal spotify \
+              nordvpn-bin google-chrome pulseaudio pulseaudio-bluetooth \
+              postgresql-10 redis docker docker-compose woeusb \
+              slack-desktop whatsapp-nativefier telegram-desktop \
+              via-bin stress librecad avr-gcc dfu-programmer avrdude \
+              gcc-arm-none-eabi-bin bootloadhid imagemagick-full neofetch
+
 install_pulse
-
-pamac install ttf-hack noto-fonts-cjk kitty
-pamac install polybar neovim neovide thefuck bat tldr dunst-git
-pamac install zsh zsh-completions rofi rofi-bluetooth-git xdo
-pamac install autorandr xclip lightdm-webkit2-greeter rofi-greenclip
-pamac install dropbox flameshot timeshift etcher 1password
-pamac install sysstat xdotool gconf cmake jq light vlc birdfont
-pamac install xwallpaper sxiv playerctl unzip unrar ctags
-pamac install rubygems nvm the_silver_searcher diff-so-fancy
-pamac install pantheon-calculator gsimplecal zeal spotify
-pamac install nordvpn-bin google-chrome pulseaudio-bluetooth
-pamac install postgresql-10 redis docker docker-compose woeusb
-pamac install slack-desktop whatsapp-nativefier telegram-desktop
-pamac install via-bin stress librecad avr-gcc dfu-programmer avrdude
-pamac install gcc-arm-none-eabi-bin bootloadhid imagemagick-full neofetch
-
-pamac remove palemoon-bin rxvt-unicode i3exit lightdm-slick-greeter clipit
