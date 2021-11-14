@@ -23,7 +23,7 @@ ln -fvs ~/dotfiles/linux/config/dunst.ini ~/.config/dunst/dunstrc
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
-ln -fvs ~/dotfiles/linux/keys.map ~/.Xmodmap
+ln -fvs ~/dotfiles/linux/config/keyboard.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/config/picom.conf ~/.config/picom.conf
 ln -fvs ~/dotfiles/linux/config/greenclip.toml ~/.config/greenclip.toml
 sudo ln -fvs ~/dotfiles/linux/devices/30-touchpad.conf /etc/X11/xorg.conf.d/30-touchpad.conf
