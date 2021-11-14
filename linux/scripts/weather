@@ -21,7 +21,7 @@ declare -A ICON_LIST=(
   ["50n"]="" # Mist night.
 )
 
-API_KEY=""
+API_KEY=$OPEN_WEATHER_API_KEY
 UNITS="metric" # Unit system {imperial or metric}
 UNIT="°C" # Units of measurement. That will be showed in UI. Does not affect on API.
 

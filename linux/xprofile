@@ -11,3 +11,5 @@ autorandr --change
 xwallpaper --zoom ~/dotfiles/wallpapers/no-man-sky.jpg
 
 export PATH="$HOME/dotfiles/linux/bin:$PATH"
+
+. ~/Dropbox/secrets
