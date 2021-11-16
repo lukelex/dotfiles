@@ -2,10 +2,11 @@ configuration {
   show-icons: true;
   icon-theme: "Papirus";
   font: "roboto 28";
-  theme: "~/dotfiles/linux/config/rofi/theme.rasi";
 
   kb-remove-to-eol: "";
   kb-accept-entry: "Return,KP_Enter";
   kb-row-up: "Up,Control+k,ISO_Left_Tab";
   kb-row-down: "Down,Control+j";
 }
+
+@theme "~/dotfiles/linux/config/rofi/theme.rasi"
