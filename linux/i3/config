@@ -283,6 +283,7 @@ exec --no-startup-id dropbox start -i
 exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corners ----
 exec --no-startup-id flameshot
 exec --no-startup-id ibus
+exec --no-startup-id 1password --silent
 exec --no-startup-id greenclip daemon &
 exec_always --no-startup-id u_launch_polybar
 exec_always --no-startup-id ff-theme-util
