@@ -104,7 +104,6 @@ bindsym $mod+Shift+r restart
 
 # custom polybar's shortcuts
 bindsym $mod+Shift+m --release exec polybar-msg cmd toggle
-bindsym $mod+Shift+t --release exec ~/dotfiles/linux/scripts/toggle-tray
 bindsym $mod+Shift+p --release exec polybar-msg cmd restart
 
 # Workspace names
