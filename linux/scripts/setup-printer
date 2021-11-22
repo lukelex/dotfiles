@@ -1,16 +1,23 @@
 #!/bin/bash
 
-dunstify -a Printer -i printer1 "Printer" "Searching on the network..."
+show() {
+  notify-send -a Printer \
+              -i '/usr/share/icons/FontAwesome-6/light/512x512/all/print.png' \
+              -h string:wired-tag:printer \
+              "Printer" "$1"
+}
+
+show "Searching network..."
 
 IP=$(avahi-browse -t -d local -c -a --resolve | sed -n '/^=.*Printer/,/txt =/p' | head -n 5 | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}')
 
 if [[ -z $IP ]]; then
-  dunstify -a Printer -i printer1 "Printer" "Not found"
+  show "Not found"
   exit 1
 fi
 
-dunstify -a Printer -i printer1 "Printer" "Found on $IP"
+show "Found on $IP"
 
 lpadmin -p epson -E -v ipp://$IP/ipp/print -m everywhere
 
-dunstify -a Printer -i printer1 "Printer" "Register as 'epson'"
+show "Register as 'epson'"

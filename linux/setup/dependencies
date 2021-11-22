@@ -2,7 +2,7 @@
 
 
 pamac install --no-confirm ttf-hack noto-fonts-cjk kitty simplescreenrecorder \
-              install polybar neovim neovide thefuck bat tldr dunst-git \
+              install polybar neovim neovide thefuck bat tldr wired \
               zsh zsh-completions rofi rofi-bluetooth-git xdo ddcutil \
               autorandr xclip lightdm-webkit2-greeter rofi-greenclip \
               dropbox flameshot timeshift etcher 1password \

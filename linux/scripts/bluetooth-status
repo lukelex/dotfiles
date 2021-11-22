@@ -5,8 +5,7 @@ info=$(bluetoothctl show)
 powered=$(echo "$info" | grep 'Powered: yes' | xargs)
 summary=$(bluetoothctl paired-devices | awk '{print $3 " (paired)"}')
 
-dunstify -i bluetooth \
-         -r 29 \
-         -u normal \
-         -a Bluetooth \
-         "$powered" "$summary"
+notify-send -a Bluetooth \
+            -i /usr/share/icons/FontAwesome-6/brands/512x512/all/bluetooth.png \
+            -h string:wired-tag:bluetooth \
+            "$powered" "$summary"

@@ -36,12 +36,19 @@ function is_mute {
 function show {
   volume=`get`
 
-  dunstify -i notification-audio-volume-high \
-           -r 12 \
-           -u low \
-           -a Volume \
-           -h int:value:"$volume" \
-           "unused"
+  if is_mute ; then
+    notify-send -a Volume \
+                -i /usr/share/icons/FontAwesome-6/light/512x512/all/volume-slash.png \
+                -h int:value:0\
+                -h string:wired-tag:volume \
+                "0%"
+  else
+    notify-send -a Volume \
+                -i /usr/share/icons/FontAwesome-6/light/512x512/all/volume.png \
+                -h int:value:"$volume" \
+                -h string:wired-tag:volume \
+                "$volume%"
+  fi
 }
 
 case $1 in
@@ -68,15 +75,7 @@ case $1 in
       show) show ;;
       toggle)
         amixer -D pulse set Master 1+ toggle > /dev/null
-        if is_mute ; then
-          dunstify -i notification-audio-volume-muted \
-                   -r 12 \
-                   -u low \
-                   -a Volume \
-                   "0%" "Mute"
-        else
-          show
-        fi
+        show
         ;;
     esac
 esac

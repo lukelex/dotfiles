@@ -30,11 +30,12 @@ case $1 in
     $($0 show)
     ;;
   show)
-    dunstify -i sunflower \
-             -r 6 \
-             -u low \
-             -a Backlight \
-             -h int:value:"$VALUE" \
-             "unused"
+    brightness=$(light -G | cut -f1 -d".")
+
+    notify-send -a Backlight \
+                -i /usr/share/icons/FontAwesome-6/light/512x512/all/brightness.png \
+                -h string:wired-tag:backlight \
+                -h int:value:"$VALUE" \
+                "unused"
     ;;
 esac

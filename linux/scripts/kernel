@@ -3,8 +3,7 @@
 version=$(uname -r)
 node=$(uname -n)
 
-dunstify -i tux \
-         -r 13 \
-         -u low \
-         -a Kernel \
-         "$node" "Version $version"
+notify-send -a Kernel \
+            -i /usr/share/icons/FontAwesome-6/brands/512x512/all/linux.png \
+            -h string:wired-tag:kernel \
+            "$node" "$version"

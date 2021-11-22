@@ -54,6 +54,7 @@ Plug 'jparise/vim-graphql'
 Plug 'fladson/vim-kitty'
 Plug 'leafgarland/typescript-vim'
 Plug 'peitalin/vim-jsx-typescript'
+Plug 'ron-rs/ron.vim'
 
 call plug#end()
 

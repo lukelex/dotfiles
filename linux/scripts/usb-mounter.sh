@@ -15,15 +15,13 @@ drive=$(echo $selected | awk '{print $2}')
 result=$(udisksctl $action --block-device $drive)
 
 if [[ "$action" = "mount" ]]; then
-  dunstify -i usb \
-           -r 7 \
-           -u normal \
-           -a USB \
-           'Drive' 'Successfully mounted'
+  notify-send -a USB \
+              -i /usr/share/icons/FontAwesome-6/light/512x512/all/usb-drive.png \
+              -h string:wired-tag:usb \
+              'Drive' 'Successfully mounted'
 else
-  dunstify -i usb \
-           -r 7 \
-           -u normal \
-           -a USB \
-           'Drive' 'Successfully unmounted'
+  notify-send -a USB \
+              -i /usr/share/icons/FontAwesome-6/light/512x512/all/usb-drive.png \
+              -h string:wired-tag:usb \
+              'Drive' 'Successfully unmounted'
 fi

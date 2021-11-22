@@ -2,5 +2,6 @@
 
 grep -v "#" ~/dotfiles/unix/emoji | dmenu -i -l 20 -fn Monospace-18 | awk '{print $1}' | tr -d '\n' | xclip -selection clipboard
 
-pgrep -x dunst >/dev/null &&
-  dunstify -r 25 "$(xclip -o -selection clipboard) copied to clipboard"
+notify-send -a Emoji \
+            -u low \
+            "$(xclip -o -selection clipboard) copied to clipboard"
