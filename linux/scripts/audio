@@ -1,23 +1,44 @@
 #!/bin/bash
 
-HIGH=
-MEDIUM=
-LOW=
-MUTE=
+VOL_HIGH=
+VOL_MEDIUM=
+VOL_LOW=
+VOL_MUTE=
 
-function icon {
-  value=`get`
+MIC_HIGH=
+MIC_MEDIUM=
+MIC_LOW=
+MIC_MUTE=
+
+function icon_mic {
+  value=`get_volume`
 
   if [[ `is_mute` ]]; then
-    echo $MUTE
+    echo $MIC_MUTE
   elif [[ 1 -eq $(echo "$value > 75" | bc -l) ]]; then
-    echo "%{F#FF0000}$HIGH%{F-}"
+    echo "%{F#FF0000}$MIC_HIGH%{F-}"
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
-    echo $HIGH
+    echo $MIC_HIGH
   elif [[ 1 -eq $(echo "$value > 25" | bc -l) ]]; then
-    echo $MEDIUM
+    echo $MIC_MEDIUM
   else
-    echo $LOW
+    echo $MIC_LOW
+  fi
+}
+
+function icon_volume {
+  value=`get_volume`
+
+  if [[ `vol_is_mute` ]]; then
+    echo $VOL_MUTE
+  elif [[ 1 -eq $(echo "$value > 75" | bc -l) ]]; then
+    echo "%{F#FF0000}$VOL_HIGH%{F-}"
+  elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
+    echo $VOL_HIGH
+  elif [[ 1 -eq $(echo "$value > 25" | bc -l) ]]; then
+    echo $VOL_MEDIUM
+  else
+    echo $VOL_LOW
   fi
 }
 
@@ -25,18 +46,26 @@ function turn_on {
   amixer -D pulse set Master on > /dev/null
 }
 
-function get {
+function get_volume {
   amixer get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
 }
 
-function is_mute {
+function get_mic {
+  amixer get Capture | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+}
+
+function vol_is_mute {
   amixer get Master | grep '%' | grep -oE '[^ ]+$' | grep off
 }
 
-function show {
-  volume=`get`
+function mic_is_mute {
+  amixer get Capture | grep '%' | grep -oE '[^ ]+$' | grep off
+}
 
-  if is_mute ; then
+function show_volume {
+  volume=`get_volume`
+
+  if vol_is_mute ; then
     notify-send -a Volume \
                 -i ~/dotfiles/fonts/fa6/pngs/light/volume-slash.png \
                 -h int:value:0\
@@ -51,35 +80,61 @@ function show {
   fi
 }
 
+function show_mic {
+  volume=`get_mic`
+
+  if mic_is_mute ; then
+    notify-send -a Volume \
+                -i ~/dotfiles/fonts/fa6/pngs/light/microphone-lines-slash.png \
+                -h int:value:0\
+                -h string:wired-tag:volume \
+                "0%"
+  else
+    notify-send -a Volume \
+                -i ~/dotfiles/fonts/fa6/pngs/light/microphone-lines.png \
+                -h int:value:"$volume" \
+                -h string:wired-tag:volume \
+                "$volume%"
+  fi
+}
 case $1 in
   mic)
     case $2 in
+      get) get_mic;;
+      icon) icon_mic ;;
+      set)
+        amixer -D pulse sset Capture $3% > /dev/null
+        # show_mic
+        ;;
+      show) show_mic ;;
       toggle)
-        echo 'toggling mic'
+        amixer -D pulse set Capture 1+ toggle > /dev/null
+        show_mic
         ;;
     esac
     ;;
   vol)
     case $2 in
-      icon) icon ;;
+      get) get_volume;;
+      icon) icon_volume ;;
       inc)
         turn_on
         amixer -D pulse sset Master 1%+ > /dev/null
-        show
+        show_volume
         ;;
       dec)
         turn_on
         amixer -D pulse sset Master 1%- > /dev/null
-        show
+        show_volume
         ;;
       set)
         amixer -D pulse sset Master $3% > /dev/null
-        show
+        # show_volume
         ;;
-      show) show ;;
+      show) show_volume ;;
       toggle)
         amixer -D pulse set Master 1+ toggle > /dev/null
-        show
+        show_volume
         ;;
     esac
 esac

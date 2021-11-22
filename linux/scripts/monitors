@@ -49,6 +49,10 @@ case $2 in
   get)
     echo $current
     ;;
+  set)
+    set $3
+    show $3
+    ;;
   inc)
     new_value=$(($current + $step))
     set $new_value

@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+
+## Run eww daemon if not running already
+if [[ ! `pidof eww` ]]; then
+	eww daemon
+	sleep 1
+fi
+
+toggle() {
+  window=$1
+  closed=$(eww windows | grep -v '^*')
+  eww close-all
+
+  if [[ $(echo $closed | grep $window) ]]; then
+    eww open $1
+  fi
+}
+
+case $1 in
+  toggle) toggle $2 ;;
+  close) eww close-all ;;
+esac

@@ -39,7 +39,7 @@ bindsym $mod+Ctrl+b --release exec --no-startup-id rofi-bluetooth
 bindsym $mod+Ctrl+u --release exec --no-startup-id u_usb-mounter.sh
 bindsym $mod+Ctrl+e --release exec --no-startup-id u_emoji
 bindsym $mod+Shift+q --release exec --no-startup-id xkill
-bindsym $mod+Escape --release exec --no-startup-id u_powermenu
+bindsym $mod+Escape --release exec --no-startup-id u_eww toggle quick
 bindsym $mod+Ctrl+L --release exec --no-startup-id i3exit lock
 bindsym $mod+Ctrl+C --release exec --no-startup-id u_clipboard
 bindsym $mod+grave --release exec --no-startup-id wired -s 1
@@ -171,7 +171,7 @@ bindsym XF86MonBrightnessUp exec --no-startup-id u_backlight inc
 bindsym XF86MonBrightnessDown exec --no-startup-id u_backlight dec
 
 # Power button
-bindsym XF86PowerOff --release exec --no-startup-id u_powermenu
+bindsym XF86PowerOff --release exec --no-startup-id u_eww toggle power
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
@@ -287,6 +287,7 @@ exec --no-startup-id flameshot
 exec --no-startup-id ibus
 exec --no-startup-id 1password --silent
 exec --no-startup-id greenclip daemon &
+exec --no-startup-id u_eww start
 exec_always --no-startup-id u_launch_polybar
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor

@@ -1,0 +1,57 @@
+(defvar SPACING 10)
+(defvar ICON_SIZE 32)
+(defvar ICON_SIZE_SMALL 24)
+(defvar ICON_SIZE_LARGE 64)
+(defvar ICONS_PATH "/usr/share/icons/FontAwesome-6/solid/512x512/all")
+(defvar BRANDS_ICONS_PATH "/usr/share/icons/FontAwesome-6/brands/512x512/all")
+
+(defwidget v-window []
+  (box :class "window" :orientation "vertical" :halign "center" :valign "center"
+       :space-evenly false :vexpand false :hexpand false :spacing SPACING
+    (children)
+  )
+)
+
+(defwidget h-window []
+  (box :class "window" :orientation "vertical" :halign "center" :valign "center"
+       :space-evenly false :vexpand false :hexpand false :spacing SPACING
+    (children)
+  )
+)
+
+(defwidget column [?class]
+  (box :class class :orientation "vertical" :halign "start" :valign "center"
+       :space-evenly true :vexpand false :hexpand false :spacing SPACING
+    (children)
+  )
+)
+
+(defwidget line [?class]
+  (box :class class :orientation "horizontal" :halign "start" :valign "center"
+       :space-evenly false :vexpand false :hexpand false :spacing SPACING
+    (children)
+  )
+)
+
+(defwidget pointer [?active]
+  (eventbox :class "pointer" :cursor { active ? "pointer" : "default" } (children))
+)
+
+(defwidget icon [name]
+  (image :path "${ICONS_PATH}/${name}.svg" :image-width ICON_SIZE :image-height ICON_SIZE)
+)
+
+(defwidget icon-small [name]
+  (image :path "${ICONS_PATH}/${name}.svg" :image-width ICON_SIZE_SMALL :image-height ICON_SIZE_SMALL)
+)
+
+(defwidget icon-large [name]
+  (image :path "${ICONS_PATH}/${name}.svg" :image-width ICON_SIZE_LARGE :image-height ICON_SIZE_LARGE)
+)
+
+(defwidget brands-icon [name]
+  (image :path "${BRANDS_ICONS_PATH}/${name}.svg" :image-width ICON_SIZE :image-height ICON_SIZE)
+)
+
+(include "./quick.yuck")
+(include "./power.yuck")

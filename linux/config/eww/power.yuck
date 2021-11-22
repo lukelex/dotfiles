@@ -1,0 +1,27 @@
+(defwindow power :monitor 0 :stacking "fg" :wm-ignore true
+                 :geometry (geometry :anchor "center")
+  (h-window
+    (box :orientation "horizontal" :space-evenly true :spacing SPACING
+      (pointer :active true
+        (button :class "button" :onclick "u_exit lock" :tooltip "Lock"
+          (icon-large :name "lock")
+        )
+      )
+      (pointer :active true
+        (button :class "button" :onclick "u_exit suspend" :tooltip "Suspend"
+          (icon-large :name "snooze")
+        )
+      )
+      (pointer :active true
+        (button :class "button" :onclick "u_exit reboot" :tooltip "Reboot"
+          (icon-large :name "arrows-rotate")
+        )
+      )
+      (pointer :active true
+        (button :class "button" :onclick "u_exit shutdown" :tooltip "Shutdown"
+          (icon-large :name "power-off")
+        )
+      )
+    )
+  )
+)

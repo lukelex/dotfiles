@@ -1,0 +1,239 @@
+(defvar USER_IMG "images/me-drawing.jpg")
+(defpoll username :interval "60m" `whoami`)
+(defpoll kernel :interval "60m" `uname -r`)
+(defpoll ext_monitor_brightness :interval "60s" `u_monitors brightness get`)
+(defpoll volume :interval "5s" `u_audio vol get`)
+(defpoll mic_volume :interval "5s" `u_audio mic get`)
+(defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
+(defpoll wifi_ssid :interval "3s" `iwgetid -r`)
+(defpoll wifi_active :interval "3s" `bluetooth | grep on`)
+(defpoll bt_active :interval "3s" ` bluetooth | awk '{ print $3 }'`)
+(defvar keyboard_brightness_active false)
+(defvar has_battery false)
+
+(defwindow quick :monitor 0 :stacking "fg" :wm-ignore true
+                 :geometry (geometry :x "-20px" :y "-3px" :anchor "top right")
+  (v-window
+    (box :spacing SPACING :orientation "horizontal" :space-evenly false
+      (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
+        (user)
+      )
+      (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+        (airplane)
+      )
+    )
+    (box :spacing SPACING :orientation "horizontal" :space-evenly false
+      (connections)
+    )
+    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :visible has_battery
+      (battery)
+    )
+    (controls
+      (volume)
+      (microphone)
+      (ext_monitor_brightness)
+      (laptop_brightness)
+      (keyboard_brightness :active keyboard_brightness_active)
+    )
+    (shortcuts)
+    (box :spacing SPACING :orientation "horizontal" :hexpand true
+         :valign "center" :halign "start" ;:space-evenly true
+      (time-tracking)
+      (time-tracking)
+    )
+  )
+)
+
+(defwidget controls []
+  (box :class "panel" :spacing SPACING :orientation "vertical" :space-evenly true
+    (children)
+  )
+)
+
+(defwidget user []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (box :class "button"
+      (image :class "user-img" :path USER_IMG :image-width 32 :image-height 32)
+    )
+    (box :orientation "vertical" :valign "center"
+      (label :class "black" :text username :halign "start")
+      (label :class "black" :text kernel :halign "start")
+      (label :class "black" :text uptime :halign "start")
+    )
+  )
+)
+
+(defwidget connections []
+  (box :orientation "horizontal" :space-evenly true :spacing SPACING :hexpand true
+    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+      (pointer :active true
+        (button :class "button ${ "active" }" :onclick "u_wifi toggle" :tooltip "Toggle wifi On & Off"
+          (icon :name "wifi")
+        )
+      )
+      (box :orientation "vertical" :valign "center"
+        (label :class "black" :text wifi_ssid :halign "start")
+      )
+    )
+    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+      (pointer :active true
+        (button :class "button ${ (bt_active == "on") ? "active" : "" }" :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
+          (brands-icon :name "bluetooth")
+        )
+      )
+      (box :orientation "vertical" :valign "center"
+        (label :class "black" :text bt_active :halign "start")
+      )
+    )
+  )
+)
+
+(defwidget volume []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (pointer :active true
+      (button :class "button" :onclick "u_audio vol toggle" :tooltip "Toggle Master volume On & Off"
+        (icon :name "volume")
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value volume :min 0 :max 100 :onchange "u_audio vol set {}"
+             :tooltip "Change the Master volume")
+    )
+    (pointer :active true
+      (button :onclick "pavucontrol -t 3 &"
+        (icon-small :name "sliders")
+      )
+    )
+  )
+)
+
+(defwidget microphone []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (pointer :active true
+      (button :class "button" :onclick "u_audio mic toggle" :tooltip "Toggle Master Microphone volume On & Off"
+        (icon :name "microphone-lines")
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value mic_volume :min 0 :max 100 :onchange "u_audio mic set {}"
+             :tooltip "Change the Master microphone volume")
+    )
+    (pointer :active true
+      (button :onclick "pavucontrol -t 4 &"
+        (icon-small :name "sliders")
+      )
+    )
+  )
+)
+
+(defwidget ext_monitor_brightness []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (pointer :active true
+      (button :class "button" :onclick "u_monitors brightness reset" :tooltip "Resets brightness to 0" :timeout "5s"
+        (icon :name "display")
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value ext_monitor_brightness :min 0 :max 100 :onchange "u_monitors brightness set {} &"
+             :tooltip "Change brightness on all detected monitors" :timeout "5")
+    )
+  )
+)
+
+(defwidget laptop_brightness []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (pointer :active true
+      (button :class "button" :onclick "u_backlight get" :tooltip "Toggle autobrightness"
+        (icon :name "laptop")
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value 15 :min 0 :max 100 :onchange "u_backlight set {}"
+             :tooltip "Change the Laptop brightness")
+    )
+  )
+)
+
+(defwidget keyboard_brightness [?active]
+  (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
+    (button :class "button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
+      (icon :name "keyboard-brightness")
+    )
+    (eventbox :cursor { active ? "grab" : "default" } :hexpand true
+      (scale :active {active} :hexpand true :value 2 :min 1 :max 3 :onchange "u_keeb_backlight set {}"
+             :tooltip "Change laptop keyboard brightness")
+    )
+  )
+)
+
+(defwidget airplane []
+  (pointer :active true
+    (button :class "button" :onclick "u_airplane toggle" :tooltip "Toggle airplane mode"
+      (icon :name "plane-up")
+    )
+  )
+)
+
+(defwidget battery []
+  (box :spacing SPACING :orientation "horizontal" :halign "start" :space-evenly false
+    (circular-progress :class "battery charging" :value 37 :thickness 5 :clockwise true :start-angle 0
+      (button :class "button" :tooltip "${EWW_BATTERY}%"
+        (icon :name "battery-bolt")
+      )
+    )
+    (box :orientation "vertical" :valign "center"
+      (label :text "${EWW_BATTERY['BAT0'].capacity}")
+      (label :class "black" :text "Charging" :halign "start")
+      (label :class "black" :text "1h 39min until full" :halign "start")
+      (label :class "black" :text "${EWW_BATTERY['BAT0']}" :halign "start")
+    )
+  )
+)
+
+(defwidget shortcuts []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly true :hexpand true
+    (box :space-evenly false :halign "center"
+      (pointer :active true
+        (button :class "button" :onclick "u_setup-printer & u_eww close" :tooltip "Find and setup IP printer"
+          (icon :name "print")
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (pointer :active true
+        (button :class "button" :onclick "u_nightmode & u_eww close" :tooltip "Toggle nightmode On & Off"
+          (icon :name "moon")
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (pointer :active true
+        (button :class "button" :onclick "u_emoji & u_eww close" :tooltip "Open Emoji selector"
+          (icon :name "face-smile-beam")
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (pointer :active true
+        (button :class "button" :onclick "flameshot gui -p ~/screenshots & u_eww close" :tooltip "Opens screenshot tool"
+          (icon :name "camera")
+        )
+      )
+    )
+  )
+)
+
+(defwidget time-tracking []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :hexpand true :space-evenly false
+    (pointer :active true
+      (button :class "button" :onclick "u_timetracker toggle" :tooltip "Keeps track of daily work hours"
+        (icon :name "timer")
+      )
+    )
+    (box :spacing SPACING :orientation "vertical" :valign "center"
+      (label :class "black" :text "27h this week")
+      (label :class "black" :text "1h 37min")
+      (label :class "black" :text "1h 37min")
+    )
+  )
+)
