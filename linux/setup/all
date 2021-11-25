@@ -8,3 +8,4 @@
 . ~/dotfiles/linux/setup/aliases
 . ~/dotfiles/linux/setup/configs
 . ~/dotfiles/linux/setup/dependencies
+. ~/dotfiles/linux/setup/clean

@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 # Editor
+alias vim="nvim"
 alias e="nvim ."
 
 # Bash
