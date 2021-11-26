@@ -8,7 +8,7 @@ xset r rate 200 35
 autorandr --change
 
 # set wallpaper
-xwallpaper --zoom ~/dotfiles/wallpapers/no-man-sky.jpg
+xwallpaper --zoom ~/Dropbox/wallpapers/Wall268k.png
 
 export PATH="$HOME/dotfiles/linux/bin:$PATH"
 
