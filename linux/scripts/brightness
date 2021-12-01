@@ -1,0 +1,47 @@
+#!/usr/bin/bash
+
+get() {
+  sudo ddcutil --bus=$monitor getvcp $brightness | grep -oP 'current\svalue\s*=\s*\K\d+'
+}
+
+set() {
+  new_value="$1"
+
+  if [ "$new_value" -le -1 ] || [ "$new_value" -ge 101 ]; then
+    return 0
+  fi
+
+  sudo ddcutil --bus=$monitor setvcp $brightness $new_value
+}
+
+show() {
+  value=$1
+
+  dunstify -a Brightness \
+           -i brightnesssettings \
+           -r 99 \
+           -u low \
+           -h int:value:$value \
+           "unused"
+}
+
+monitor=4
+step=5
+brightness=10
+current=`get`
+
+case $1 in
+  get)
+    echo $current
+    ;;
+  inc)
+    new_value=$(($current + $step))
+    set $new_value #&> /dev/null
+    show $new_value
+    ;;
+  dec)
+    new_value=$(($current - $step))
+    set $new_value #&> /dev/null
+    show $new_value
+    ;;
+esac

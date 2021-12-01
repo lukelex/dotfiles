@@ -20,6 +20,8 @@ ln -fvs ~/dotfiles/linux/config/gsimplecal ~/.config/gsimplecal/config
 mkdir -p ~/.config/dunst
 ln -fvs ~/dotfiles/linux/config/dunst.ini ~/.config/dunst/dunstrc
 
+sudo ln -fvs ~/dotfiles/linux/config/kernel_modules.conf /etc/modules-load.d/modules.conf
+
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
