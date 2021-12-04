@@ -1,7 +1,16 @@
 #!/bin/bash
 
+dunstify -a Printer -i printer1 "Printer" "Searching on the network..."
+
 IP=$(avahi-browse -t -d local -c -a --resolve | sed -n '/^=.*Printer/,/txt =/p' | head -n 5 | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}')
+
+if [[ -z $IP ]]; then
+  dunstify -a Printer -i printer1 "Printer" "Not found"
+  exit 1
+fi
+
+dunstify -a Printer -i printer1 "Printer" "Found on $IP"
 
 lpadmin -p epson -E -v ipp://$IP/ipp/print -m everywhere
 
-dunstify $IP
+dunstify -a Printer -i printer1 "Printer" "Register as 'epson'"
