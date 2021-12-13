@@ -1,6 +1,9 @@
 #!/bin/bash
 
 case $1 in
+  show)
+    playerctl -p spotify metadata --format '{{ title }}'
+    ;;
   previous)
     playerctl -p spotify previous &
     ;;
