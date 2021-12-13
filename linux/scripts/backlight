@@ -1,22 +1,36 @@
 #!/bin/bash
 
+HIGH=
+LOW=
+VALUE=$(light -G | cut -f1 -d".")
+
 case $1 in
+  if)
+    light -L 2>&- | grep monitor
+    ;;
+  icon)
+    if [[ 1 -eq $(echo "$VALUE > 75" | bc -l) ]]; then
+      echo "%{F#FF0000}$HIGH%{F-}"
+    elif [[ 1 -eq $(echo "$VALUE > 25" | bc -l) ]]; then
+      echo $HIGH
+    else
+      echo $LOW
+    fi
+    ;;
   inc)
-    sudo light -A 2
+    light -A 2 2>&-
     $($0 show)
     ;;
   dec)
-    sudo light -U 2
+    light -U 2 2>&-
     $($0 show)
     ;;
   show)
-    brightness=$(light -G | cut -f1 -d".")
-
     dunstify -i sunflower \
              -r 6 \
              -u low \
              -a Backlight \
-             -h int:value:"$brightness" \
+             -h int:value:"$VALUE" \
              "unused"
     ;;
 esac
