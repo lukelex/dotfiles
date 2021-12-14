@@ -1,5 +1,26 @@
 #!/bin/bash
 
+HIGH=
+MEDIUM=
+LOW=
+MUTE=
+
+function icon {
+  value=`get`
+
+  if [[ `is_mute` ]]; then
+    echo $MUTE
+  elif [[ 1 -eq $(echo "$value > 75" | bc -l) ]]; then
+    echo "%{F#FF0000}$HIGH%{F-}"
+  elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
+    echo $HIGH
+  elif [[ 1 -eq $(echo "$value > 25" | bc -l) ]]; then
+    echo $MEDIUM
+  else
+    echo $LOW
+  fi
+}
+
 function turn_on {
   amixer -D pulse set Master on > /dev/null
 }
@@ -9,7 +30,7 @@ function get {
 }
 
 function is_mute {
-  amixer get Master | grep '%' | grep -oE '[^ ]+$' | grep off > /dev/null
+  amixer get Master | grep '%' | grep -oE '[^ ]+$' | grep off
 }
 
 function show {
@@ -33,6 +54,7 @@ case $1 in
     ;;
   vol)
     case $2 in
+      icon) icon ;;
       inc)
         turn_on
         amixer -D pulse sset Master 1%+ > /dev/null
