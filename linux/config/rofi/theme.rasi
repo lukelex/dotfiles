@@ -28,7 +28,7 @@ textbox {
 }
 
 entry {
-  padding: 16px;
+  padding: 15px;
 }
 
 listview {
