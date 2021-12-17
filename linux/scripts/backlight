@@ -4,18 +4,22 @@ HIGH=
 LOW=
 VALUE=$(light -G | cut -f1 -d".")
 
+icon() {
+  if [[ 1 -eq $(echo "$VALUE > 75" | bc -l) ]]; then
+    echo "%{F#FF0000}$HIGH%{F-}"
+  elif [[ 1 -eq $(echo "$VALUE > 25" | bc -l) ]]; then
+    echo $HIGH
+  else
+    echo $LOW
+  fi
+}
+
 case $1 in
   if)
     light -L 2>&- | grep monitor
     ;;
   icon)
-    if [[ 1 -eq $(echo "$VALUE > 75" | bc -l) ]]; then
-      echo "%{F#FF0000}$HIGH%{F-}"
-    elif [[ 1 -eq $(echo "$VALUE > 25" | bc -l) ]]; then
-      echo $HIGH
-    else
-      echo $LOW
-    fi
+    icon
     ;;
   inc)
     light -A 2 2>&-
