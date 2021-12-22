@@ -1,8 +1,10 @@
 #!/bin/bash
 
+ICON=~/dotfiles/fonts/fa6/pngs/light/print.png
+
 show() {
   notify-send -a Printer \
-              -i '/usr/share/icons/FontAwesome-6/light/512x512/all/print.png' \
+              -i $ICON \
               -h string:wired-tag:printer \
               "Printer" "$1"
 }

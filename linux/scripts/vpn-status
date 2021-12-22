@@ -5,6 +5,6 @@ tatus=$(echo "$info" | grep Status | awk '{print $4}')
 summary=$(echo "$info" | grep -vE "(Status|server|tech|protocol)")
 
 notify-send -a NordVPN \
-            -i /usr/share/icons/FontAwesome-6/light/512x512/all/globe.png \
+            -i ~/dotfiles/fonts/fa6/pngs/light/globe.png \
             -h string:wired-tag:usb \
             "$tatus" "$summary"
