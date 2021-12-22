@@ -7,3 +7,4 @@ alias e="nvim ."
 # Bash
 alias open="xdg-open"
 alias o="xdg-open"
+alias v="viewnior"
