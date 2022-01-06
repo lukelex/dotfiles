@@ -51,4 +51,3 @@ sudo rmmod pcspkr
 sudo usermod -a -G rvm $USER
 sudo usermod -a -G video $USER
 sudo usermod -a -G docker $USER
-

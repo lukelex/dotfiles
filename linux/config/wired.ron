@@ -1,6 +1,6 @@
 (
     max_notifications: 5,
-    timeout: 5000,
+    timeout: 4000,
     poll_interval: 16, // 16ms ~= 60hz / 7ms ~= 144hz.
     history_length: 20,
     replacing_enabled: true,
@@ -14,10 +14,11 @@
 
     layout_blocks: [
         (
-            name: "root",
+            name: "app_root",
             parent: "",
-            hook: Hook(parent_anchor: TM, self_anchor: TM),
-            offset: Vec2(x: 0.0, y: 60),
+            hook: Hook(parent_anchor: MM, self_anchor: MM),
+            offset: Vec2(x: 0, y: 0),
+            render_criteria: [AppImage],
             params: NotificationBlock((
                     monitor: 0,
                     border_width: 0,
@@ -34,13 +35,12 @@
 
         (
             name: "app_notification",
-            parent: "root",
+            parent: "app_root",
             hook: Hook(parent_anchor: TM, self_anchor: TM),
             offset: Vec2(x: 0, y: 0),
-            render_criteria: [AppImage],
             params: ImageBlock((
                     image_type: App,
-                    padding: Padding(left: 40, right: 40, top: 8, bottom: 8),
+                    padding: Padding(left: 40, right: 40, top: 40, bottom: 8),
                     rounding: 4.0,
                     scale_width: 152,
                     scale_height: 152,
@@ -53,7 +53,6 @@
             parent: "app_notification",
             hook: Hook(parent_anchor: BM, self_anchor: TM),
             offset: Vec2(x: 0, y: 12),
-            render_criteria: [AppImage],
             params: TextBlock((
                     text: "%s",
                     font: "Arial Bold 16",
@@ -69,7 +68,6 @@
             parent: "app_summary",
             hook: Hook(parent_anchor: BM, self_anchor: TM),
             offset: Vec2(x: 0, y: 0),
-            render_criteria: [AppImage],
             params: TextBlock((
                     text: "%b",
                     font: "Arial Bold 16",
@@ -85,7 +83,7 @@
             parent: "app_notification",
             hook: Hook(parent_anchor: BM, self_anchor: TM),
             offset: Vec2(x: 0, y: 50),
-            render_criteria: [AppImage, Progress],
+            render_criteria: [Progress],
             params: ProgressBlock((
                     padding: Padding(left: 0, right: 0, top: 0, bottom: 32),
                     border_width: 2,
@@ -100,11 +98,31 @@
         ),
 
         (
+            name: "status_root",
+            parent: "",
+            hook: Hook(parent_anchor: TM, self_anchor: TM),
+            offset: Vec2(x: 0.0, y: 60),
+            // render_anti_criteria: [AppImage],
+            render_criteria: [HintImage],
+            params: NotificationBlock((
+                    monitor: 0,
+                    border_width: 0,
+                    border_rounding: 8,
+                    background_color: Color(hex: "#F5F5F5"),
+                    border_color: Color(hex: "#00000000"),
+                    border_color_low: Color(hex: "#00000000"),
+                    border_color_critical: Color(hex: "#FF0000"),
+                    border_color_paused: Color(hex: "#00000000"),
+                    gap: Vec2(x: 0.0, y: 8.0),
+                    notification_hook: Hook(parent_anchor: BM, self_anchor: TM),
+            )),
+        ),
+
+        (
             name: "status_notification",
-            parent: "root",
+            parent: "status_root",
             hook: Hook(parent_anchor: TL, self_anchor: TL),
             offset: Vec2(x: 0, y: 0),
-            render_criteria: [HintImage],
             params: TextBlock((
                     text: "%s",
                     font: "Arial Bold 16",
@@ -119,8 +137,7 @@
             name: "status_body",
             parent: "status_notification",
             hook: Hook(parent_anchor: ML, self_anchor: TL),
-            offset: Vec2(x: 0, y: -26),
-            render_criteria: [HintImage],
+            offset: Vec2(x: 0, y: -24),
             params: TextBlock((
                     text: "%b",
                     font: "Arial 14",
@@ -136,7 +153,6 @@
             parent: "status_notification",
             hook: Hook(parent_anchor: TL, self_anchor: TR),
             offset: Vec2(x: 0, y: 0),
-            render_criteria: [HintImage],
             params: ImageBlock((
                     image_type: Hint,
                     padding: Padding(left: 8, right: 0, top: 8, bottom: 8),

@@ -7,8 +7,14 @@ time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
 
 echo "$stats"
 
+if [ -z $time ]; then
+  message="Fully charged!"
+else
+  message="$time left"
+fi
+
 notify-send -a Battery \
             -i ~/dotfiles/fonts/fa6/pngs/light/battery-full.png \
-            -h string:wired-tag:battery \
+            -h string:wired-tag:app \
             -h int:value:"$charge" \
-            "blank" "$state. $time left"
+            "$message"

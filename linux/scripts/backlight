@@ -37,8 +37,8 @@ case $1 in
 
     notify-send -a Backlight \
                 -i ~/dotfiles/fonts/fa6/pngs/light/brightness.png \
-                -h string:wired-tag:backlight \
+                -h string:wired-tag:app \
                 -h int:value:"$VALUE" \
-                "unused"
+                "$VALUE%"
     ;;
 esac
