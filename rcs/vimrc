@@ -71,6 +71,8 @@ setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
 set cursorline " show cursor line (causes repaint, which will make terminal vim slower)
 
+hi Search cterm=NONE ctermfg=grey ctermbg=blue
+
 " Tweaks for file browsing
 let g:netrw_banner=0        " disable annoying banner
 let g:netrw_browse_split=4  " open in prior window
