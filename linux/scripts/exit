@@ -3,6 +3,8 @@
 # with openrc use loginctl
 [ "$(cat /proc/1/comm)" = "systemd" ] && logind=systemctl || logind=loginctl
 
+u_music pause
+
 case "$1" in
     lock)
         dm-tool lock
