@@ -25,15 +25,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [2] = LAYOUT_all(
     _______,                      _______, _______,       _______, _______,       _______,    _______, _______, _______,    _______, _______,       _______, _______,           _______, _______, _______,
-    _______,          _______,    _______, _______,       _______, _______,       _______,    _______, _______, _______,    KC_MUTE, KC_VOLD,       KC_VOLU, _______,  _______, _______, _______, _______,
-    _______,          _______,    KC_UP,   _______,       _______, _______,       _______,    _______, _______, _______,    KC_PSCR, _______,       _______, KC_DEL,            _______, _______, _______,
+    _______,          _______,    _______, _______,       _______, _______,       _______,    _______, _______, _______,    _______, _______,       _______, _______, _______,  _______, _______, _______,
+    _______,          _______,    KC_UP,   _______,       _______, _______,       _______,    _______, _______, _______,    KC_PSCR, KC_VOLD,       KC_VOLU, KC_DEL,            _______, _______, _______,
     KC_LCTL,          KC_LEFT,    KC_DOWN, KC_RIGHT,      _______, _______,       KC_LEFT,    KC_DOWN, KC_UP,   KC_RIGHT,   _______, _______,       _______, _______,
     _______, _______, _______,    _______, _______,       _______, _______,       _______,    _______, KC_MPRV, KC_MNXT,    KC_MPLY, _______,                _______,                    _______,
     _______,          _______,    _______,                         _______,                                                 _______, _______,       _______, _______,           _______, _______, _______),
 
   [3] = LAYOUT_all(
     _______,                      _______, _______,       _______, _______,       _______,    _______, _______, _______,    _______, _______,       _______, _______,           _______, _______, _______,
-    RALT(KC_N),       _______,    _______, _______,       _______, _______,       RALT(KC_I), _______, _______, _______,    _______, LGUI(KC_MINS), _______, _______,  _______, _______, _______, _______,
+    RALT(KC_N),       _______,    _______, _______,       _______, _______,       RALT(KC_I), _______, _______, _______,    _______, LGUI(KC_MINS), _______, _______, _______,  _______, _______, _______,
     _______,          _______,    _______, RALT(KC_QUOT), _______, TABLE_FLIP,    _______,    _______, _______, RALT(KC_O), _______, _______,       _______, _______,           _______, _______, _______,
     _______,          RALT(KC_A), _______, _______,       _______, _______,       HUE,        _______, _______, _______,    _______, RALT(KC_E),    _______, _______,
     _______, _______, _______,    _______, RALT(KC_C),    _______, _______,       _______,    MEH,     _______, _______,    _______, _______,                _______,                    _______,
@@ -41,7 +41,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [4] = LAYOUT_all(
     RESET,                        XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX,
-    XXXXXXX,          XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,  TG(1),   XXXXXXX, XXXXXXX, XXXXXXX,
+    XXXXXXX,          XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX, TG(1),    XXXXXXX, XXXXXXX, XXXXXXX,
     RGB_TOG,          RGB_HUI,    RGB_SAI, RGB_VAI,       XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX,
     RGB_MOD,          RGB_HUD,    RGB_SAD, RGB_VAD,       XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,
     XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,       XXXXXXX, XXXXXXX,       XXXXXXX,    XXXXXXX, XXXXXXX, XXXXXXX,    XXXXXXX, XXXXXXX,                XXXXXXX,                    KC_MS_U,
