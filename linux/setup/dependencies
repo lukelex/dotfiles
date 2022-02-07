@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
-
 pamac install --no-confirm ttf-hack noto-fonts-cjk kitty simplescreenrecorder \
               install polybar neovim neovide thefuck bat tldr wired \
               zsh zsh-completions rofi rofi-bluetooth-git xdo ddcutil \
@@ -11,7 +10,7 @@ pamac install --no-confirm ttf-hack noto-fonts-cjk kitty simplescreenrecorder \
               rubygems nvm the_silver_searcher diff-so-fancy \
               pantheon-calculator gsimplecal zeal spotify \
               nordvpn-bin google-chrome pulseaudio paprefs pulseaudio-bluetooth \
-              docker docker-compose woeusb \
+              docker docker-compose woeusb eww-git blueman \
               slack-desktop whatsapp-nativefier telegram-desktop \
               via-bin stress librecad avr-gcc dfu-programmer avrdude \
               gcc-arm-none-eabi-bin bootloadhid imagemagick-full neofetch
