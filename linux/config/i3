@@ -225,9 +225,9 @@ set $text-color          #f3f4f5
 set $inactive-text-color #676E7D
 set $urgent-bg-color     #E53935
 
-# Set some nice colors      border	 background text	   indicator
-client.focused              #ff0000  #ff0000    #ffffff  #ffff00
-client.background           #2B2C2B
+# Set some nice colors   border	  background text	    indicator
+client.focused           #ffffff  #ffffff    #ff0000  #ffff00
+client.background        #2B2C2B
 
 #############################
 ### settings for i3-gaps: ###
