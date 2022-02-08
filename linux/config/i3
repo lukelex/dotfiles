@@ -282,7 +282,7 @@ exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id wired --run
 exec --no-startup-id dropbox start -i
-exec --no-startup-id xautolock -time 15 -locker i3exit lock -detectsleep -corners ----
+exec --no-startup-id xautolock -time 15 -locker u_exit lock -detectsleep -corners ----
 exec --no-startup-id flameshot
 exec --no-startup-id ibus
 exec --no-startup-id 1password --silent
