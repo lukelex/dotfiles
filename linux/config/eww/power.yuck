@@ -13,6 +13,11 @@
         )
       )
       (pointer :active true
+        (button :class "button" :onclick "u_exit logout" :tooltip "Logout"
+          (icon-large :name "right-from-bracket")
+        )
+      )
+      (pointer :active true
         (button :class "button" :onclick "u_exit reboot" :tooltip "Reboot"
           (icon-large :name "arrows-rotate")
         )
