@@ -1,7 +1,7 @@
-(defvar SPACING 10)
-(defvar ICON_SIZE 32)
-(defvar ICON_SIZE_SMALL 24)
-(defvar ICON_SIZE_LARGE 64)
+(defvar SPACING 7)
+(defvar ICON_SIZE 35)
+(defvar ICON_SIZE_SMALL 21)
+(defvar ICON_SIZE_LARGE 70)
 (defvar ICONS_PATH "/usr/share/icons/FontAwesome-6/solid/512x512/all")
 (defvar BRANDS_ICONS_PATH "/usr/share/icons/FontAwesome-6/brands/512x512/all")
 
