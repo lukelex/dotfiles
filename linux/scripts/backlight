@@ -35,9 +35,9 @@ case $1 in
   show)
     brightness=$(light -G | cut -f1 -d".")
 
-    notify-send -a Backlight \
+    notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/pngs/light/brightness.png \
-                -h string:wired-tag:app \
+                -h string:wired-tag:system \
                 -h int:value:"$VALUE" \
                 "$VALUE%"
     ;;

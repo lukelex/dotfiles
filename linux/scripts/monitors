@@ -23,10 +23,10 @@ set() {
 show() {
   value=$1
 
-  notify-send -a "External Monitors" \
+  notify-send -a System \
               -i ~/dotfiles/fonts/fa6/pngs/light/display.png \
               -h int:value:$value \
-              -h string:wired-tag:monitors \
+              -h string:wired-tag:system \
               "$feature_name ($value%)"
 }
 

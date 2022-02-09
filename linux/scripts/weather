@@ -42,9 +42,9 @@ Humidity: $(echo $FORECAST | jq -r '.main.humidity')%
 Location: $(echo $FORECAST | jq -r '"\(.name) - \(.sys.country)"')
 EOM
 )
-  notify-send -a Weather \
+  notify-send -a System \
               -i ~/dotfiles/fonts/fa6/pngs/light/sun.png \
-              -h string:wired-tag:weather \
+              -h string:wired-tag:system \
               "$SUMMARY $TEMP$UNIT" "$DESCRIPTION"
 }
 

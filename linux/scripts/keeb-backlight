@@ -9,8 +9,9 @@ function show {
   percentage=$(echo $((50 * $value)))
   bar=$(seq -s "─" $(echo $((percentage / 4))) | sed 's/[0-9]//g')
 
-  notify-send -a Keyboard \
+  notify-send -a System \
               -i notification-keyboard-brightness \
+              -h string:wired-tag:system \
               -u low \
               "$percentage%" "$bar"
 }

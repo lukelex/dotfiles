@@ -1,9 +1,0 @@
-#!/bin/bash
-
-version=$(uname -r)
-node=$(uname -n)
-
-notify-send -a Kernel \
-            -i ~/dotfiles/fonts/fa6/pngs/brands/linux.png \
-            -h string:wired-tag:kernel \
-            "$node" "$version"

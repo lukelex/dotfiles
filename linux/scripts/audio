@@ -66,15 +66,15 @@ function show_volume {
   volume=`get_volume`
 
   if vol_is_mute ; then
-    notify-send -a Volume \
+    notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/pngs/light/volume-slash.png \
-                -h string:wired-tag:app \
+                -h string:wired-tag:system \
                 -h int:value:0\
                 "0%"
   else
-    notify-send -a Volume \
+    notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/pngs/light/volume.png \
-                -h string:wired-tag:app \
+                -h string:wired-tag:system \
                 -h int:value:"$volume" \
                 "$volume%"
   fi
@@ -84,15 +84,15 @@ function show_mic {
   volume=`get_mic`
 
   if mic_is_mute ; then
-    notify-send -a Volume \
+    notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/pngs/light/microphone-lines-slash.png \
-                -h string:wired-tag:app \
+                -h string:wired-tag:system \
                 -h int:value:0\
                 "0%"
   else
-    notify-send -a Volume \
+    notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/pngs/light/microphone-lines.png \
-                -h string:wired-tag:app \
+                -h string:wired-tag:system \
                 -h int:value:"$volume" \
                 "$volume%"
   fi

@@ -13,8 +13,8 @@ else
   message="$time left"
 fi
 
-notify-send -a Battery \
+notify-send -a System \
             -i ~/dotfiles/fonts/fa6/pngs/light/battery-full.png \
-            -h string:wired-tag:app \
+            -h string:wired-tag:system \
             -h int:value:"$charge" \
             "$message"

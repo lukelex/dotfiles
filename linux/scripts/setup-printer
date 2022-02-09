@@ -3,9 +3,9 @@
 ICON=~/dotfiles/fonts/fa6/pngs/light/print.png
 
 show() {
-  notify-send -a Printer \
+  notify-send -a System \
               -i $ICON \
-              -h string:wired-tag:printer \
+              -h string:wired-tag:system \
               "Printer" "$1"
 }
 

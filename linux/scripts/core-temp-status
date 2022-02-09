@@ -2,7 +2,7 @@
 
 core_temps=$(sensors | awk '/coretemp/' RS='\n\n' ORS='\n\n')
 
-notify-send -a CPU \
+notify-send -a System \
             -i ~/dotfiles/fonts/fa6/pngs/light/temperature-list.png \
-            -h string:wired-tag:cpu \
+            -h string:wired-tag:system \
             "Temperature" "$core_temps"
