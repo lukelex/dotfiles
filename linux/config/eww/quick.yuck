@@ -36,11 +36,6 @@
       (keyboard_brightness :active keyboard_brightness_active)
     )
     (shortcuts)
-    (box :spacing SPACING :orientation "horizontal" :hexpand true
-         :valign "center" :halign "start" ;:space-evenly true
-      (time-tracking)
-      (time-tracking)
-    )
   )
 )
 
@@ -219,21 +214,6 @@
           (icon :name "camera")
         )
       )
-    )
-  )
-)
-
-(defwidget time-tracking []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :hexpand true :space-evenly false
-    (pointer :active true
-      (button :class "button" :onclick "u_timetracker toggle" :tooltip "Keeps track of daily work hours"
-        (icon :name "timer")
-      )
-    )
-    (box :spacing SPACING :orientation "vertical" :valign "center"
-      (label :class "black" :text "27h this week")
-      (label :class "black" :text "1h 37min")
-      (label :class "black" :text "1h 37min")
     )
   )
 )
