@@ -3,10 +3,6 @@
 # Editor
 alias e="nvim-qt ."
 
-# Bash
-alias open="xdg-open"
-alias o="xdg-open"
-
 # GIT
 alias g="git"
 alias gs="git status"
