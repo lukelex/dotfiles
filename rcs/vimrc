@@ -71,9 +71,6 @@ set hlsearch " highlight search results
 set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
-set cursorline " show cursor line (causes repaint, which will make terminal vim slower)
-
-hi Search cterm=NONE ctermfg=grey ctermbg=blue
 
 " Tweaks for file browsing
 let g:netrw_banner=0        " disable annoying banner
@@ -134,6 +131,8 @@ set splitbelow
 set splitright
 
 colorscheme railscasts
+set cursorline " show cursor line (causes repaint, which will make terminal vim slower)
+hi Search cterm=NONE ctermfg=NONE ctermbg=blue
 
 set guifont=Hack:h17
 
