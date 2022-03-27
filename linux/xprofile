@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # keyboard configs
+xmodmap ~/dotfiles/linux/config/keyboard.map
 setxkbmap -layout us -variant mac
 xset r rate 200 35
 
