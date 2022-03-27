@@ -185,22 +185,6 @@ gaps inner 32
 gaps outer -12
 smart_borders no_gaps # on|no_gaps
 
-# Autostart applications
-exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec --no-startup-id nm-applet
-exec --no-startup-id xfce4-power-manager
-exec --no-startup-id wired --run
-exec --no-startup-id dropbox start -i
-exec --no-startup-id xautolock -time 15 -locker u_exit lock -detectsleep -corners ----
-exec --no-startup-id flameshot
-exec --no-startup-id ibus
-exec --no-startup-id 1password --silent
-exec --no-startup-id greenclip daemon &
-exec --no-startup-id u_eww start
-exec_always --no-startup-id u_launch_polybar
-exec_always --no-startup-id ff-theme-util
-exec_always --no-startup-id fix_xcursor
-
 # Picom
 exec_always --no-startup-id "killall -q picom; picom --experimental-backends --config ~/dotfiles/linux/config/picom.conf"
 exec --no-startup-id "sh -c 'sleep 1; picom --experimental-backends --config ~/dotfiles/linux/config/picom.conf'"

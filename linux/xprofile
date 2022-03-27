@@ -14,3 +14,4 @@ xwallpaper --zoom ~/Dropbox/wallpapers/Wall268k.png
 export PATH="$HOME/dotfiles/linux/bin:$PATH"
 
 . ~/Dropbox/secrets
+. ~/dotfiles/linux/config/autostart

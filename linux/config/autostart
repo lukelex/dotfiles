@@ -1,0 +1,17 @@
+#!/bin/sh
+
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+nm-applet &
+xfce4-power-manager &
+wired --run &
+dropbox start -i &
+xautolock -time 15 -locker 'u_exit lock' -detectsleep -corners ---- &
+flameshot &
+ibus &
+1password --silent &
+greenclip daemon &
+u_eww start &
+u_launch_polybar &
+ff-theme-util &
+fix_xcursor &
+sxhkd -c ~/dotfiles/linux/config/sxhkdrc &

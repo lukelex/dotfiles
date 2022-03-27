@@ -7,31 +7,31 @@ u_music pause
 u_eww close
 
 case "$1" in
-    lock)
-        dm-tool lock
-        ;;
-    logout)
-        i3-msg exit
-        ;;
-    switch_user)
-        dm-tool switch-to-greeter
-        ;;
-    suspend)
-        u_exit lock && $logind suspend
-        ;;
-    hibernate)
-        u_exit lock && $logind hibernate
-        ;;
-    reboot)
-        $logind reboot
-        ;;
-    shutdown)
-        $logind poweroff
-        ;;
-    *)
-        echo "== ! exit: missing or invalid argument ! =="
-        echo "Try again with: lock | logout | switch_user | suspend | hibernate | reboot | shutdown"
-        exit 2
+  lock)
+    dm-tool lock
+    ;;
+  logout)
+    i3-msg exit
+    ;;
+  switch_user)
+    dm-tool switch-to-greeter
+    ;;
+  suspend)
+    u_exit lock && $logind suspend
+    ;;
+  hibernate)
+    u_exit lock && $logind hibernate
+    ;;
+  reboot)
+    $logind reboot
+    ;;
+  shutdown)
+    $logind poweroff
+    ;;
+  *)
+    echo "== ! exit: missing or invalid argument ! =="
+    echo "Try again with: lock | logout | switch_user | suspend | hibernate | reboot | shutdown"
+    exit 2
 esac
 
 exit 0
