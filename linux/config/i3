@@ -16,7 +16,7 @@ bindsym $mod+y border pixel 6
 bindsym $mod+n border normal
 
 # Font for window titles
-font xft:URWGothic-Book 11
+font xft:Hack 11
 
 # start a terminal
 bindsym $mod+Return exec kitty
