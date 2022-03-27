@@ -44,9 +44,6 @@ bindsym $mod+Ctrl+L --release exec --no-startup-id i3exit lock
 bindsym $mod+Ctrl+C --release exec --no-startup-id u_clipboard
 bindsym $mod+grave --release exec --no-startup-id wired -s 1
 
-# cycle through multi monitor settings
-bindsym $mod+Ctrl+m exec --no-startup-id u_monitor
-
 # change focus
 focus_follows_mouse no
 bindsym $mod+h focus left
