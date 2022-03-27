@@ -1,0 +1,62 @@
+XF86PowerOff
+  u_eww toggle power
+super + Escape
+  u_eww toggle power
+
+XF86AudioPrev
+  u_music previous
+XF86AudioNext
+  u_music next
+
+XF86AudioMicMute
+  u_audio mic toggle
+XF86AudioMute
+  u_audio vol toggle
+XF86AudioRaiseVolume
+  u_audio vol inc
+XF86AudioLowerVolume
+  u_audio vol dec
+XF86AudioPlay
+  u_music toggle
+
+XF86MonBrightnessUp
+  u_backlight inc
+XF86MonBrightnessDown
+  u_backlight dec
+
+super + shift + q
+  xkill
+
+super + ctrl + l
+  i3exit lock
+
+super + d
+  rofi -show drun
+
+super + Return
+  exec kitty
+
+super + shift + m
+  polybar-msg cmd toggle
+super + shift + p
+  polybar-msg cmd restart
+
+Print
+  flameshot gui -p ~/screenshots
+shift + Print
+  flameshot screen -c
+
+super + ctrl+ b
+  rofi-bluetooth
+super + ctrl + u
+  u_usb-mounter.sh
+super + ctrl + e
+  u_emoji
+super + ctrl + c
+  u_clipboard
+super + grave
+  wired -s 1
+
+# Reload sxhkdrc
+super + shift + k
+  pkill -usr1 -x sxhkd
