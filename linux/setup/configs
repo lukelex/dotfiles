@@ -23,6 +23,7 @@ ln -fvs ~/dotfiles/linux/config/wired.ron ~/.config/wired/wired.ron
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
+ln -fvs ~/dotfiles/linux/xinitrc ~/.xinitrc
 ln -fvs ~/dotfiles/linux/config/eww ~/.config/eww
 ln -fvs ~/dotfiles/linux/config/keyboard.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/config/picom.conf ~/.config/picom.conf
