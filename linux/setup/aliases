@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
 # Editor
 alias vim="nvim"
@@ -8,3 +8,4 @@ alias e="nvim ."
 alias open="xdg-open"
 alias o="xdg-open"
 alias v="viewnior"
+alias b="bat"
