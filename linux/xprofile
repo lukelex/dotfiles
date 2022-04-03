@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # keyboard configs
-xmodmap ~/dotfiles/linux/config/keyboard.map
-setxkbmap -layout us -variant mac
 xset r rate 200 35
+setxkbmap -layout us -variant mac
+xmodmap ~/dotfiles/linux/config/keyboard.map && touch ~/xmodmap-ran
 
 # identify and set monitor profiles
 autorandr --change
