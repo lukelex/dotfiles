@@ -20,6 +20,9 @@ ln -fvs ~/dotfiles/linux/config/gsimplecal ~/.config/gsimplecal/config
 mkdir -p ~/.config/wired
 ln -fvs ~/dotfiles/linux/config/wired.ron ~/.config/wired/wired.ron
 
+mkdir -p ~/.config/kitty
+ln -fvs ~/dotfiles/linux/config/kitty.conf ~/.config/kitty/kitty.conf
+
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
