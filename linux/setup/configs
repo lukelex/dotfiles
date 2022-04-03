@@ -47,6 +47,9 @@ mkdir -p ~/.config/fontconfig/
 ln -fvs ~/dotfiles/linux/config/fonts.conf ~/.config/fontconfig/fonts.conf
 fc-cache -r
 
+sudo mkdir -p /usr/share/icons/FontAwesome-6/solid/512x512/
+sudo ln -fvs ~/dotfiles/fonts/fa6/pngs/solid/ /usr/share/icons/FontAwesome-6/solid/512x512/all
+
 sudo rmmod pcspkr
 
 sudo usermod -a -G rvm $USER
