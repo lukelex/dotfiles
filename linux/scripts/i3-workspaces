@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+
+i3-msg --type subscribe --monitor '[ "workspace" ]' | while read line
+do
+  is_focus=$(echo $line | jq 'select( .change == "focus")')
+
+  [ -z "$is_focus" ] && continue
+
+  workspace=$(echo $line | jq '.current.name')
+  output=$(echo $line | jq '.current.output')
+
+  echo $workspace
+  notify-send -a System \
+              -i ~/dotfiles/fonts/fa6/pngs/light/display.png \
+              -t 650 \
+              -h string:wired-tag:system \
+              "$workspace on $output"
+done
