@@ -1,6 +1,6 @@
 (
     max_notifications: 5,
-    timeout: 4000,
+    timeout: 3000,
     poll_interval: 16, // 16ms ~= 60hz / 7ms ~= 144hz.
     history_length: 20,
     replacing_enabled: true,
