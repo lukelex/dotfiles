@@ -58,5 +58,5 @@ super + grave
   wired -s 1
 
 # Reload sxhkdrc
-super + shift + k
+super + shift + s
   pkill -usr1 -x sxhkd
