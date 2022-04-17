@@ -177,7 +177,7 @@ set $inactive-text-color #676E7D
 set $urgent-bg-color     #E53935
 
 # Set some nice colors   border	  background text	    indicator
-client.focused           #ffffff  #ffffff    #ff0000  #ffff00
+client.focused           #F5CA7B  #F5CA7B    #ff0000  #ffff00
 client.background        #2B2C2B
 
 # Set inner/outer gaps
