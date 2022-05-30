@@ -21,7 +21,7 @@ if [ -f "$userresources" ]; then
 fi
 
 if [ -f $xprofile ]; then
-  source $xprofile
+  . $xprofile
 fi
 
 # auto start programs

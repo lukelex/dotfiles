@@ -17,7 +17,7 @@ pamac install --no-confirm \
 
   # Coding
   neovim neovide kitty ctags bat tldr zeal docker docker-compose \
-  rubygems nvm the_silver_searcher diff-so-fancy \
+  rubygems the_silver_searcher diff-so-fancy \
 
   # Communication
   slack-desktop whatsapp-nativefier telegram-desktop \

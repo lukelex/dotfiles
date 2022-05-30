@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 
 # Editor
-alias e="nvim-qt ."
+alias e="nvim ."
+alias vim="nvim"
 
 # GIT
 alias g="git"
@@ -27,32 +28,15 @@ alias grhh="git reset --hard HEAD"
 alias gl="git log"
 alias gls="git log --oneline --decorate"
 alias grl="git reflog"
-alias gbam="delete_local_merged_branches"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
 function clean_branches() {
   git branch --merged master | grep -v master | xargs git branch -d
 }
 
-# Bundler
-alias be="bundle exec"
-
-# Rails
-alias rc="rails console"
-alias rs="rails server"
-
-# Python
-alias p="python3"
-
 # Docker
 alias dc="docker"
 alias dcp="docker-compose"
-
-function clean_docker() {
-  docker rm -v $(docker ps -q --filter status=dead --filter status=exited) &
-    docker rmi $(docker images -qf "dangling=true") &
-    docker volume rm $(docker volume ls -qf "dangling=true")
-}
 
 # Linux
 alias cls="printf '\033c'"

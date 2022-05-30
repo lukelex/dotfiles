@@ -2,5 +2,5 @@
 
 rm -rf ~/.yabairc ~/.skhdrc
 
-ln -fvs ~/dotfiles/rcs/yabairc ~/.yabairc
-ln -fvs ~/dotfiles/rcs/skhdrc ~/.skhdrc
+ln -fvs ~/dotfiles/osx/config/yabairc ~/.yabairc
+ln -fvs ~/dotfiles/osx/config/skhdrc ~/.skhdrc
