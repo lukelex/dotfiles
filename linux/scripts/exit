@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # with openrc use loginctl
 [ "$(cat /proc/1/comm)" = "systemd" ] && logind=systemctl || logind=loginctl
@@ -8,7 +8,7 @@ u_eww close
 
 case "$1" in
   lock)
-    dm-tool lock
+    blurlock -e
     ;;
   logout)
     i3-msg exit

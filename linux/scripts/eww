@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env sh
 
 ## Run eww daemon if not running already
 if [[ ! `pidof eww` ]]; then

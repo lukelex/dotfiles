@@ -22,4 +22,4 @@ show "Found on $IP"
 
 lpadmin -p epson -E -v ipp://$IP/ipp/print -m everywhere
 
-show "Register as 'epson'"
+show "Registered as 'epson'"

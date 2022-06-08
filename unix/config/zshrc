@@ -4,9 +4,9 @@ export ZSH=$HOME/.oh-my-zsh
 # Look in ~/.oh-my-zsh/themes/
 ZSH_THEME="robbyrussell"
 
-. $ZSH/oh-my-zsh.sh
+source $ZSH/oh-my-zsh.sh
 
-. ~/dotfiles/unix/env.sh
+source ~/dotfiles/unix/env.sh
 if [[ "$(uname)" == 'Linux' ]]; then
-  . ~/dotfiles/linux/env.sh
+  source ~/dotfiles/linux/env.sh
 fi

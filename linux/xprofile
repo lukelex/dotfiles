@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # keyboard configs
 xset r rate 200 35
 setxkbmap -layout us -variant mac
-xmodmap ~/dotfiles/linux/config/keyboard.map && touch ~/xmodmap-ran
+xmodmap ~/dotfiles/linux/config/keyboard.map
 
 # identify and set monitor profiles
 autorandr --change
@@ -13,5 +13,5 @@ xwallpaper --zoom ~/wallpaper.png &
 
 export PATH="$HOME/dotfiles/linux/bin:$PATH"
 
-. ~/Dropbox/secrets
-. ~/dotfiles/linux/config/autostart
+source ~/Dropbox/secrets
+source ~/dotfiles/linux/config/autostart
