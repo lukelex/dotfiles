@@ -43,7 +43,7 @@ Location: $(echo $FORECAST | jq -r '"\(.name) - \(.sys.country)"')
 EOM
 )
   notify-send -a System \
-              -i ~/dotfiles/fonts/fa6/pngs/light/sun.png \
+              -i ~/dotfiles/fonts/fa6/svgs/light/sun.svg \
               -h string:wired-tag:system \
               "$SUMMARY $TEMP$UNIT" "$DESCRIPTION"
 }

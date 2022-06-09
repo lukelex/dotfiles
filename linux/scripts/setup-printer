@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ICON=~/dotfiles/fonts/fa6/pngs/light/print.png
+ICON=~/dotfiles/fonts/fa6/svgs/light/print.svg
 
 show() {
   notify-send -a System \

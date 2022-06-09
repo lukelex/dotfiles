@@ -24,7 +24,7 @@ show() {
   value=$1
 
   notify-send -a System \
-              -i ~/dotfiles/fonts/fa6/pngs/light/display.png \
+              -i ~/dotfiles/fonts/fa6/svgs/light/display.svg \
               -h int:value:$value \
               -h string:wired-tag:system \
               "$feature_name ($value%)"
