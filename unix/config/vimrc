@@ -236,7 +236,7 @@ function! LightlineFiletype()
 endfunction
 
 function! LightlineBranchStatus()
-  return fugitive#head(6)
+  return FugitiveHead(6)
 endfunction
 
 function! MyGitGutter()
