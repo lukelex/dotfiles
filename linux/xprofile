@@ -11,7 +11,5 @@ autorandr --change
 # set wallpaper
 xwallpaper --zoom ~/wallpaper.png &
 
-export PATH="$HOME/dotfiles/linux/bin:$PATH"
-
 source ~/Dropbox/secrets
 source ~/dotfiles/linux/config/autostart

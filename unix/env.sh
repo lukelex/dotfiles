@@ -1,9 +1,6 @@
 #!/usr/bin/env sh
 
-# Preferred editor for local and remote sessions
-export EDITOR='vim'
-
-# Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
+export EDITOR='nvim'
+export FZF_DEFAULT_COMMAND="ag -l '.*' --ignore=qa"
 
 . ~/dotfiles/unix/setup/aliases
