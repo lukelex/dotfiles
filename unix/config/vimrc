@@ -33,7 +33,7 @@ Plug 'itchyny/lightline.vim'
 Plug 'majutsushi/tagbar'
 Plug 'ervandew/supertab'
 Plug 'benjifisher/matchit.zip'
-Plug 'simnalamburt/vim-mundo'
+Plug 'mbbill/undotree'
 Plug 'DataWraith/auto_mkdir'
 Plug 'danro/rename.vim'
 Plug 'henrik/vim-indexed-search'
@@ -99,7 +99,7 @@ nmap <leader>r :RuboCop<cr>
 " master fucking undo
 set undofile
 set undodir=~/.cache/undodir
-nnoremap <F5> :MundoToggle<CR>
+nnoremap <F5> :UndotreeToggle<CR>
 
 " backup files
 " set nobackup
