@@ -11,8 +11,8 @@ ibus &
 1password --silent &
 greenclip daemon &
 u_eww start &
-u_launch_polybar &
 ff-theme-util &
 fix_xcursor &
-u_i3-workspaces &
 sxhkd -c ~/dotfiles/linux/config/sxhkdrc &
+u_launch-polybar &
+u_i3-workspaces &
