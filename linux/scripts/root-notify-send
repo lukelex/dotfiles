@@ -1,0 +1,33 @@
+#!/bin/bash
+# This script allows calling notify-send as root for it to appear on specific user's desktop
+# Kept separate from the other script because it has explicit first parameter handling.
+
+set -euo pipefail
+
+USERNAME=${1:-}
+
+if [ -z "${USERNAME}" ]; then
+  >&2 echo "No username passed. Exiting."
+  exit 1
+else
+  shift
+fi
+
+MY_UID=$(id -u "${USERNAME}") || exit 1
+
+readarray -t KNOWN_WMS < <(grep "^Exec" /usr/share/xsessions/* | sed 's/^.*Exec=//' | grep -v Xsession)
+
+if [ ${#KNOWN_WMS[@]} -eq 0 ]; then
+  >&2 echo "Could not locate any window managers in /usr/share/xsessions/. Exiting."
+  exit 1
+fi
+
+for WM in "${KNOWN_WMS[@]}"; do
+  WM_PID=$(pgrep --exact "${WM}" --uid "${MY_UID}") || continue
+  ENV_FILE="/proc/${WM_PID}/environ"
+  DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS "${ENV_FILE}"|cut -d= -f2- | tr -d '\0')
+  DISPLAY=$(grep -z DISPLAY "${ENV_FILE}"|cut -d= -f2- | tr -d '\0')
+  USERNAME=$(stat -c '%U' "${ENV_FILE}")
+
+  sudo -u "${USERNAME}" DISPLAY="${DISPLAY}" DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS}" notify-send "$@"
+done
