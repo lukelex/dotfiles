@@ -1,5 +1,13 @@
 #!/usr/bin/bash
 
+set -e
+
+function no-weather() {
+  echo ""
+}
+
+trap no-weather 0
+
 declare -A ICON_LIST=(
   ["01d"]="" # Clear sky day
   ["01n"]="" # Clear sky night.
@@ -21,14 +29,16 @@ declare -A ICON_LIST=(
   ["50n"]="" # Mist night.
 )
 
-API_KEY=$OPEN_WEATHER_API_KEY
-UNITS="metric" # Unit system {imperial or metric}
-UNIT="°C" # Units of measurement. That will be showed in UI. Does not affect on API.
+IB_API_KEY=$IPBASE_API_KEY
+OW_API_KEY=$OPEN_WEATHER_API_KEY
+SYSTEM="metric" # Unit system {imperial or metric}
+UNIT="°C" # Units of measurement.
 
-IP=$(curl -s https://ipinfo.io/ip)
-CITY=$(curl -s https://freegeoip.app/json/$IP | jq -r .city)
+IP=$(curl -Ls https://ipinfo.io/ip)
+LOCATION_DATA=$(curl -Ls https://api.ipbase.com/v2/info?apikey=$IB_API_KEY&ip=$IP)
+CITY=$(echo $LOCATION_DATA | jq -r .data.location.city.name)
 
-FORECAST=$(curl -s "http://api.openweathermap.org/data/2.5/weather?q=$CITY&units=$UNITS&appid=$API_KEY")
+FORECAST=$(curl -Ls "http://api.openweathermap.org/data/2.5/weather?q=$CITY&units=$SYSTEM&appid=$OW_API_KEY")
 ICON=${ICON_LIST[$(echo $FORECAST | jq -r '.weather[0].icon')]}
 
 function show {
