@@ -49,6 +49,9 @@ fc-cache -r
 sudo mkdir -p /usr/share/icons/FontAwesome-6/solid/512x512/
 sudo ln -fvs ~/dotfiles/fonts/fa6/pngs/solid/ /usr/share/icons/FontAwesome-6/solid/512x512/all
 
+mkdir -p ~/.config/autorandr/
+ln -fvs ~/dotfiles/linux/config/autorandr/postswitch ~/.config/autorandr/postswitch
+
 sudo rmmod pcspkr
 
 sudo usermod -a -G video $USER

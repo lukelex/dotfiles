@@ -1,0 +1,2 @@
+xwallpaper --zoom ~/wallpaper.png
+polybar-msg cmd restart
