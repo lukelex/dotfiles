@@ -15,7 +15,7 @@ function icon_mic {
 
   if [[ `is_mute` ]]; then
     echo $MIC_MUTE
-  elif [[ 1 -eq $(echo "$value > 75" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value > 85" | bc -l) ]]; then
     echo "%{F#FF0000}$MIC_HIGH%{F-}"
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
     echo $MIC_HIGH
@@ -31,7 +31,7 @@ function icon_volume {
 
   if [[ `vol_is_mute` ]]; then
     echo $VOL_MUTE
-  elif [[ 1 -eq $(echo "$value > 75" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value > 85" | bc -l) ]]; then
     echo "%{F#FF0000}$VOL_HIGH%{F-}"
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
     echo $VOL_HIGH
@@ -70,13 +70,13 @@ function show_volume {
                 -i ~/dotfiles/fonts/fa6/svgs/light/volume-slash.svg \
                 -h string:wired-tag:system \
                 -h int:value:0\
-                "0%"
+                "Volume"
   else
     notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/svgs/light/volume.svg \
                 -h string:wired-tag:system \
                 -h int:value:"$volume" \
-                "$volume%"
+                "Volume"
   fi
 }
 
@@ -88,13 +88,13 @@ function show_mic {
                 -i ~/dotfiles/fonts/fa6/svgs/light/microphone-lines-slash.svg \
                 -h string:wired-tag:system \
                 -h int:value:0\
-                "0%"
+                "Microphone"
   else
     notify-send -a System \
                 -i ~/dotfiles/fonts/fa6/svgs/light/microphone-lines.svg \
                 -h string:wired-tag:system \
                 -h int:value:"$volume" \
-                "$volume%"
+                "Microphone"
   fi
 }
 case $1 in

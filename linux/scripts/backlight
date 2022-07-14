@@ -39,6 +39,6 @@ case $1 in
                 -i ~/dotfiles/fonts/fa6/svgs/light/brightness.svg \
                 -h string:wired-tag:system \
                 -h int:value:"$VALUE" \
-                "$VALUE%"
+                "Brigthness"
     ;;
 esac

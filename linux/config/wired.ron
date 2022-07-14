@@ -3,10 +3,12 @@
     timeout: 3000,
     poll_interval: 16, // 16ms ~= 60hz / 7ms ~= 144hz.
     history_length: 20,
+    closing_enabled: true,
     replacing_enabled: true,
     replacing_resets_timeout: true,
     min_window_width: 300,
     min_window_height: 100,
+    idle_threshold: 60,
 
     debug: false,
     debug_color: Color(r: 0.0, g: 1.0, b: 0.0, a: 1.0),
@@ -51,7 +53,7 @@
         (
             name: "app_summary",
             parent: "app_notification",
-            hook: Hook(parent_anchor: BM, self_anchor: TM),
+            hook: Hook(parent_anchor: BL, self_anchor: TL),
             offset: Vec2(x: 0, y: 12),
             params: TextBlock((
                     text: "%s",
@@ -65,9 +67,10 @@
 
         (
             name: "app_body",
-            parent: "app_summary",
-            hook: Hook(parent_anchor: BM, self_anchor: TM),
-            offset: Vec2(x: 0, y: 0),
+            parent: "app_notification",
+            hook: Hook(parent_anchor: BR, self_anchor: TR),
+            offset: Vec2(x: 0, y: 12),
+            render_anti_criteria: [Progress],
             params: TextBlock((
                     text: "%b",
                     font: "Arial Bold 16",
@@ -82,7 +85,7 @@
             name: "app_progress",
             parent: "app_notification",
             hook: Hook(parent_anchor: BM, self_anchor: TM),
-            offset: Vec2(x: 0, y: 50),
+            offset: Vec2(x: 0, y: 48),
             render_criteria: [Progress],
             params: ProgressBlock((
                     padding: Padding(left: 0, right: 0, top: 0, bottom: 32),
@@ -94,6 +97,21 @@
                     fill_color: Color(hex: "#000000"),
                     width: -1.0,
                     height: 30.0,
+            )),
+        ),
+
+        (
+            name: "app_progress_value",
+            parent: "app_progress",
+            hook: Hook(parent_anchor: TR, self_anchor: BR),
+            offset: Vec2(x: 0, y: -12),
+            params: TextBlock((
+                    text: "%p%",
+                    font: "Arial Bold 16",
+                    ellipsize: End,
+                    color: Color(hex: "#000000"),
+                    padding: Padding(left: 0, right: 0, top: 0, bottom: 0),
+                    dimensions: (width: (min: -1, max: 250), height: (min: 0, max: 0)),
             )),
         ),
 
