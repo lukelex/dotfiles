@@ -1,0 +1,85 @@
+#!/bin/bash
+
+CHARGING=
+CRITICAL=
+LOW=
+QUARTER=
+HALF=
+THREE_QUARTERS=
+FULL=
+
+stats=$(upower -i /org/freedesktop/UPower/devices/battery_$2 | grep -E "state|to\ full|percentage|time\ to\ empty")
+
+get_percentage() {
+  echo $(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')
+}
+
+function is_charging {
+  echo $(echo "$stats" | grep charging)
+}
+
+icon() {
+  value=`get_percentage`
+
+  if [[ `is_charging` ]]; then
+    echo $CHARGING
+  elif [[ 1 -eq $(echo "$value < 6" | bc -l) ]]; then
+    echo "%{F#FF0000}$CRITICAL%{F-}"
+  elif [[ 1 -eq $(echo "$value < 16" | bc -l) ]]; then
+    echo $LOW
+  elif [[ 1 -eq $(echo "$value < 41" | bc -l) ]]; then
+    echo $QUARTER
+  elif [[ 1 -eq $(echo "$value < 66" | bc -l) ]]; then
+    echo $HALF
+  elif [[ 1 -eq $(echo "$value < 91" | bc -l) ]]; then
+    echo $THREE_QUARTERS
+  else
+    echo $FULL
+  fi
+}
+
+get() {
+  state=$(echo "$stats" | grep state | awk '{print $2}')
+  charge=$(echo "$stats" | grep percentage | awk '{print $2}')
+  time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
+
+  echo "$state | $charge | $time"
+}
+
+show_battery() {
+  local state=$(echo "$stats" | grep state | awk '{print $2}')
+  local charge=$(echo "$stats" | grep percentage | awk '{print $2}')
+  local time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
+
+  if [[ -z $time ]]; then
+    message="Fully charged!"
+  else
+    message="$time left"
+  fi
+
+  notify-send -a System \
+              -i ~/dotfiles/fonts/fa6/svgs/light/battery-full.svg \
+              -h string:wired-tag:system \
+              -h int:value:"$charge" \
+              "$message"
+}
+
+warn() {
+  if [[ `icon` == $CRITICAL ]]; then
+    show_battery
+  fi
+}
+
+case $1 in
+  icon) echo `icon`
+    ;;
+  show)
+    show_battery
+    ;;
+  icon_and_warn)
+    warn
+    echo `icon`
+    ;;
+  get) echo -e `get`
+    ;;
+esac
