@@ -15,4 +15,4 @@ ff-theme-util &
 fix_xcursor &
 sxhkd -c ~/dotfiles/linux/config/sxhkdrc &
 u_launch-polybar &
-u_i3-workspaces &
+u_i3_workspaces &
