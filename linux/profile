@@ -1,7 +1,5 @@
 #!/bin/bash
 
-eval `ssh-agent -s` && ssh-add
-
 export TZ='Europe/Copenhagen'
 export TERM=kitty
 export XDG_CONFIG_HOME="$HOME/.config"

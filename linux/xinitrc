@@ -1,8 +1,4 @@
 #!/bin/bash
-#
-# ~/.xinitrc
-#
-# Executed by startx (run your window manager from here)
 
 userresources=$HOME/.Xresources
 xprofile=$HOME/dotfiles/linux/xprofile
@@ -11,7 +7,6 @@ sysresources=/etc/X11/xinit/.Xresources
 DEFAULT_SESSION='i3 --shmlog-size 0'
 
 # merge in defaults and keymaps
-
 if [ -f $sysresources ]; then
   xrdb -merge $sysresources
 fi
@@ -31,6 +26,11 @@ if [ -d /etc/X11/xinit/xinitrc.d ] ; then
     [ -x "$f" ] && . "$f"
   done
   unset f
+fi
+
+if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
+  eval `ssh-agent -s` > /dev/null
+  ssh-add ~/.ssh/id_ed25519 2> /dev/null
 fi
 
 get_session(){
