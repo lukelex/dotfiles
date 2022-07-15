@@ -12,7 +12,7 @@
 (defpoll battery_label :interval "3s" `acpi | sed 's/.*\, //'`)
 
 (defwindow quick :monitor 0 :stacking "fg" :wm-ignore true
-                 :geometry (geometry :x "-20px" :y "-3px" :anchor "top right")
+                 :geometry (geometry :x "-20px" :y "66px" :anchor "top right")
   (v-window
     (box :spacing SPACING :orientation "horizontal" :space-evenly false
       (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
