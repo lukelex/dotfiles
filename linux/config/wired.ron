@@ -61,7 +61,7 @@
                     font: "Arial Bold 16",
                     ellipsize: End,
                     color: Color(hex: "#000000"),
-                    padding: Padding(left: 0, right: 0, top: 0, bottom: 0),
+                    padding: Padding(left: 0, right: 0, top: 18, bottom: 24),
                     dimensions: (width: (min: -1, max: 250), height: (min: 0, max: 0)),
             )),
         ),
