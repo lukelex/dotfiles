@@ -5,6 +5,6 @@ tatus=$(echo "$info" | grep Status | awk '{print $4}')
 summary=$(echo "$info" | grep -vE "(Status|server|tech|protocol)")
 
 notify-send -a System \
-            -i ~/dotfiles/fonts/fa6/svgs/light/globe.svg \
+            -i "$FONT_AWESOME_PATH/light/globe.svg" \
             -h string:wired-tag:system \
             "$tatus" "$summary"

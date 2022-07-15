@@ -67,13 +67,13 @@ function show_volume {
 
   if vol_is_mute ; then
     notify-send -a System \
-                -i ~/dotfiles/fonts/fa6/svgs/light/volume-slash.svg \
+                -i "$FONT_AWESOME_PATH/light/volume-slash.svg" \
                 -h string:wired-tag:system \
                 -h int:value:0\
                 "Volume"
   else
     notify-send -a System \
-                -i ~/dotfiles/fonts/fa6/svgs/light/volume.svg \
+                -i "$FONT_AWESOME_PATH/light/volume.svg" \
                 -h string:wired-tag:system \
                 -h int:value:"$volume" \
                 "Volume"
@@ -85,13 +85,13 @@ function show_mic {
 
   if mic_is_mute ; then
     notify-send -a System \
-                -i ~/dotfiles/fonts/fa6/svgs/light/microphone-lines-slash.svg \
+                -i "$FONT_AWESOME_PATH/light/microphone-lines-slash.svg" \
                 -h string:wired-tag:system \
                 -h int:value:0\
                 "Microphone"
   else
     notify-send -a System \
-                -i ~/dotfiles/fonts/fa6/svgs/light/microphone-lines.svg \
+                -i "$FONT_AWESOME_PATH/light/microphone-lines.svg" \
                 -h string:wired-tag:system \
                 -h int:value:"$volume" \
                 "Microphone"

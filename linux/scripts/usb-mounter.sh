@@ -16,12 +16,12 @@ result=$(udisksctl $action --block-device $drive)
 
 if [[ "$action" = "mount" ]]; then
   notify-send -a System \
-              -i ~/dotfiles/fonts/fa6/svgs/light/usb-drive.svg \
+              -i "$FONT_AWESOME_PATH/light/usb-drive.svg" \
               -h string:wired-tag:system \
               'Drive' 'Successfully mounted'
 else
   notify-send -a System \
-              -i ~/dotfiles/fonts/fa6/svgs/light/usb-drive.svg \
+              -i "$FONT_AWESOME_PATH/light/usb-drive.svg" \
               -h string:wired-tag:system \
               'Drive' 'Successfully unmounted'
 fi

@@ -3,6 +3,6 @@
 core_temps=$(sensors | awk '/coretemp/' RS='\n\n' ORS='\n\n')
 
 notify-send -a System \
-            -i ~/dotfiles/fonts/fa6/svgs/light/temperature-list.svg \
+            -i "$FONT_AWESOME_PATH/light/temperature-list.svg" \
             -h string:wired-tag:system \
             "Temperature" "$core_temps"

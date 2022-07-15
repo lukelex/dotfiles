@@ -6,6 +6,6 @@ powered=$(echo "$info" | grep 'Powered: yes' | xargs)
 summary=$(bluetoothctl paired-devices | awk '{print $3 " (paired)"}')
 
 notify-send -a System \
-            -i ~/dotfiles/fonts/fa6/svgs/brands/bluetooth.svg \
+            -i "$FONT_AWESOME_PATH/brands/bluetooth.svg" \
             -h string:wired-tag:system \
             "$powered" "$summary"

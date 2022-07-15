@@ -13,6 +13,7 @@ xwallpaper --zoom ~/wallpaper.png &
 
 export QT_QPA_PLATFORMTHEME="qt5ct"
 export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
+export FONT_AWESOME_PATH="$HOME/dotfiles/fonts/fa6/svgs"
 
 source ~/Dropbox/secrets
 source ~/dotfiles/linux/config/autostart

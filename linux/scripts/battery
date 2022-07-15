@@ -58,7 +58,7 @@ show_battery() {
   fi
 
   notify-send -a System \
-              -i ~/dotfiles/fonts/fa6/svgs/light/battery-full.svg \
+              -i "$FONT_AWESOME_PATH/light/battery-full.svg" \
               -h string:wired-tag:system \
               -h int:value:"$charge" \
               "$message"

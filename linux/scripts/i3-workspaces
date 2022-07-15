@@ -11,7 +11,7 @@ do
 
   echo $workspace
   notify-send -a System \
-              -i ~/dotfiles/fonts/fa6/svgs/light/display.svg \
+              -i "$FONT_AWESOME_PATH/light/display.svg" \
               -t 650 \
               -h string:wired-tag:system \
               "$workspace on $output"

@@ -36,7 +36,7 @@ case $1 in
     brightness=$(light -G | cut -f1 -d".")
 
     notify-send -a System \
-                -i ~/dotfiles/fonts/fa6/svgs/light/brightness.svg \
+                -i "$FONT_AWESOME_PATH/light/brightness.svg" \
                 -h string:wired-tag:system \
                 -h int:value:"$VALUE" \
                 "Brigthness"

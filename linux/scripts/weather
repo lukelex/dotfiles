@@ -46,7 +46,7 @@ Location: $(echo $FORECAST | jq -r '"\(.name) - \(.sys.country)"')
 EOM
 )
   notify-send -a Info \
-              -i ~/dotfiles/fonts/fa6/svgs/light/cloud-bolt-sun.svg \
+              -i "$FONT_AWESOME_PATH/light/cloud-bolt-sun.svg" \
               -h string:wired-tag:info \
               -t 10000 \
               "$SUMMARY $TEMP$UNIT" "$DESCRIPTION"
