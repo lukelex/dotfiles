@@ -105,25 +105,6 @@
   )
 )
 
-(defwidget microphone []
-  (box :orientation "horizontal" :space-evenly false :spacing SPACING
-    (pointer :active true
-      (button :class "button" :onclick "u_audio mic toggle" :tooltip "Toggle Master Microphone volume On & Off"
-        (icon :name "microphone-lines")
-      )
-    )
-    (eventbox :cursor "grab" :hexpand true
-      (scale :value mic_volume :min 0 :max 100 :onchange "u_audio mic set {}"
-             :tooltip "Change the Master microphone volume")
-    )
-    (pointer :active true
-      (button :onclick "pavucontrol -t 4 &"
-        (icon-small :name "sliders")
-      )
-    )
-  )
-)
-
 (defwidget ext_monitor_brightness []
   (box :orientation "horizontal" :space-evenly false :spacing SPACING
     (pointer :active true
