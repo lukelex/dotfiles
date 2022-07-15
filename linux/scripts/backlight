@@ -24,6 +24,9 @@ case $1 in
   get)
     echo $VALUE
     ;;
+  set)
+    light -S $2
+    ;;
   inc)
     light -A 2 2>&-
     $($0 show)

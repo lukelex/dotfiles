@@ -6,7 +6,9 @@
 (defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
 (defpoll wifi_ssid :interval "3s" `iwgetid -r`)
 (defpoll wifi_active :interval "3s" `bluetooth | grep on`)
-(defpoll bt_active :interval "3s" ` bluetooth | awk '{ print $3 }'`)
+(defpoll bt_active :interval "3s" `bluetooth | awk '{ print $3 }'`)
+
+(defpoll monitor_value :interval "3s" `u_backlight get`)
 
 (defpoll battery_name :interval "3s" `acpi | sed 's/:.*//'`)
 (defpoll battery_label :interval "3s" `acpi | sed 's/.*\, //'`)
@@ -139,12 +141,12 @@
 (defwidget laptop_brightness []
   (box :orientation "horizontal" :space-evenly false :spacing SPACING
     (pointer :active true
-      (button :class "button" :onclick "u_backlight get" :tooltip "Toggle autobrightness"
+      (button :class "button" :tooltip "Toggle autobrightness"
         (icon :name "laptop")
       )
     )
     (eventbox :cursor "grab" :hexpand true
-      (scale :value 15 :min 0 :max 100 :onchange "u_backlight set {}"
+      (scale :value "${monitor_value}" :min 0 :max 100 :onchange "u_backlight set {}"
              :tooltip "Change the Laptop brightness")
     )
   )
