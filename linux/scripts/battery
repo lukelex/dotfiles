@@ -15,7 +15,7 @@ get_percentage() {
 }
 
 function is_charging {
-  echo $(echo "$stats" | grep charging)
+  echo $(echo "$stats" | grep -E 'state.+?\bcharging\b')
 }
 
 icon() {

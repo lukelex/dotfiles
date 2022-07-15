@@ -8,7 +8,7 @@ $image-size: $magic-number * 3;
 $opacity: 1;
 
 * {
-	all: unset;
+  all: unset;
   font-family: Hack;
   font-family: Noto Sans CJK JP;
   font-weight: bold;
@@ -116,7 +116,7 @@ circular-progress {
       color: red;
     }
 
-    &.charging {
+    &.Charging {
       color: green;
     }
   }

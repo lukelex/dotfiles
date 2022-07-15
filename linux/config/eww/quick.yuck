@@ -1,15 +1,15 @@
 (defvar USER_IMG "images/me-drawing.jpg")
 (defpoll username :interval "60m" `whoami`)
 (defpoll kernel :interval "60m" `uname -r`)
-(defpoll ext_monitor_brightness :interval "60s" `u_monitors brightness get`)
-(defpoll volume :interval "5s" `u_audio vol get`)
+(defpoll speaker_volume :interval "5s" `u_audio vol get`)
 (defpoll mic_volume :interval "5s" `u_audio mic get`)
 (defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
 (defpoll wifi_ssid :interval "3s" `iwgetid -r`)
 (defpoll wifi_active :interval "3s" `bluetooth | grep on`)
 (defpoll bt_active :interval "3s" ` bluetooth | awk '{ print $3 }'`)
-(defvar keyboard_brightness_active false)
-(defvar has_battery false)
+
+(defpoll battery_name :interval "3s" `acpi | sed 's/:.*//'`)
+(defpoll battery_label :interval "3s" `acpi | sed 's/.*\, //'`)
 
 (defwindow quick :monitor 0 :stacking "fg" :wm-ignore true
                  :geometry (geometry :x "-20px" :y "-3px" :anchor "top right")
@@ -25,12 +25,10 @@
     (box :spacing SPACING :orientation "horizontal" :space-evenly false
       (connections)
     )
-    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :visible has_battery
       (battery)
-    )
+    (system-stats)
     (controls
       (volume)
-      (microphone)
       (ext_monitor_brightness)
       (laptop_brightness)
       (keyboard_brightness :active keyboard_brightness_active)
@@ -62,7 +60,8 @@
   (box :orientation "horizontal" :space-evenly true :spacing SPACING :hexpand true
     (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
       (pointer :active true
-        (button :class "button ${ "active" }" :onclick "u_wifi toggle" :tooltip "Toggle wifi On & Off"
+        (button :class "button ${ "active" }" :onclick "u_wifi toggle"
+                :tooltip "Toggle wifi On & Off"
           (icon :name "wifi")
         )
       )
@@ -72,7 +71,8 @@
     )
     (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
       (pointer :active true
-        (button :class "button ${ (bt_active == "on") ? "active" : "" }" :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
+        (button :class "button ${ (bt_active == "on") ? "active" : "" }"
+                :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
           (brands-icon :name "bluetooth")
         )
       )
@@ -86,13 +86,14 @@
 (defwidget volume []
   (box :orientation "horizontal" :space-evenly false :spacing SPACING
     (pointer :active true
-      (button :class "button" :onclick "u_audio vol toggle" :tooltip "Toggle Master volume On & Off"
+      (button :class "button" :onclick "u_audio vol toggle"
+              :tooltip "Toggle Master volume On & Off"
         (icon :name "volume")
       )
     )
     (eventbox :cursor "grab" :hexpand true
-      (scale :value volume :min 0 :max 100 :onchange "u_audio vol set {}"
-             :tooltip "Change the Master volume")
+      (scale :value speaker_volume :min 0 :max 100 :onchange "u_audio vol set {}"
+             :tooltip "${speaker_volume}")
     )
     (pointer :active true
       (button :onclick "pavucontrol -t 3 &"
@@ -169,48 +170,91 @@
   )
 )
 
+(defwidget system-stats []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly true :hexpand true
+    (box :space-evenly false :halign "center"
+      (circular-progress :class "stats low" :value "${EWW_DISK['/']['used_perc']}"
+                         :thickness 5 :clockwise true
+        (button :class "button" :tooltip "${EWW_DISK['/']['used_perc']}%"
+          (icon :name "hard-drive")
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (circular-progress :class "stats low" :value "${round(EWW_CPU['avg'], 0)}"
+                         :thickness 5 :clockwise true
+        (button :class "button" :tooltip "${EWW_CPU}"
+          (icon :name "microchip")
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (circular-progress :class "stats low" :value "${round(EWW_RAM['used_mem_perc'], 0)}"
+                         :thickness 5 :clockwise true
+        (button :class "button" :tooltip "${EWW_RAM}"
+          (icon :name "memory")
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (circular-progress :class "stats low" :value "${EWW_TEMPS['COMPOSITE']}"
+                         :thickness 5 :clockwise true
+        (button :class "button" :tooltip "${EWW_TEMPS['COMPOSITE']}°C"
+          (icon :name "temperature-list")
+        )
+      )
+    )
+  )
+)
+
 (defwidget battery []
-  (box :spacing SPACING :orientation "horizontal" :halign "start" :space-evenly false
-    (circular-progress :class "battery charging" :value 37 :thickness 5 :clockwise true :start-angle 0
-      (button :class "button" :tooltip "${EWW_BATTERY}%"
-        (icon :name "battery-bolt")
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+    (circular-progress :class "battery low ${EWW_BATTERY.BAT0.status}"
+                       :value "${EWW_BATTERY.BAT0.capacity}"
+                       :thickness 5 :clockwise true
+      (button :class "button" :tooltip "${EWW_BATTERY.BAT0.status} (${EWW_BATTERY.BAT0.capacity}%)"
+        (icon :name { EWW_BATTERY.BAT0.status == "Charging" ? "battery-bolt" : "battery-half" })
       )
     )
     (box :orientation "vertical" :valign "center"
-      (label :text "${EWW_BATTERY['BAT0'].capacity}")
-      (label :class "black" :text "Charging" :halign "start")
-      (label :class "black" :text "1h 39min until full" :halign "start")
-      (label :class "black" :text "${EWW_BATTERY['BAT0']}" :halign "start")
+      (label :class "black" :text "${battery_name} at ${EWW_BATTERY.BAT0.capacity}%" :halign "start")
+      (label :class "black" :text "${EWW_BATTERY.BAT0.status}" :halign "start")
+      (label :class "black" :text "${battery_label}" :halign "start")
     )
   )
 )
 
 (defwidget shortcuts []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly true :hexpand true
+  (box :class "panel" :spacing SPACING :orientation "horizontal"
+       :space-evenly true :hexpand true
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "u_setup-printer & u_eww close" :tooltip "Find and setup IP printer"
+        (button :class "button" :onclick "u_setup-printer & u_eww close"
+                :tooltip "Find and setup IP printer"
           (icon :name "print")
         )
       )
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "u_nightmode & u_eww close" :tooltip "Toggle nightmode On & Off"
+        (button :class "button" :onclick "u_nightmode & u_eww close"
+                :tooltip "Toggle nightmode On & Off"
           (icon :name "moon")
         )
       )
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "u_emoji & u_eww close" :tooltip "Open Emoji selector"
+        (button :class "button" :onclick "u_emoji & u_eww close"
+                :tooltip "Open Emoji selector"
           (icon :name "face-smile-beam")
         )
       )
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "flameshot gui -p ~/screenshots & u_eww close" :tooltip "Opens screenshot tool"
+        (button :class "button" :onclick "flameshot gui -p ~/screenshots & u_eww close"
+                :tooltip "Opens screenshot tool"
           (icon :name "camera")
         )
       )
