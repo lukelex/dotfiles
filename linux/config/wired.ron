@@ -51,32 +51,17 @@
         ),
 
         (
-            name: "app_summary",
+            name: "app_solo_summary",
             parent: "app_notification",
-            hook: Hook(parent_anchor: BL, self_anchor: TL),
-            offset: Vec2(x: 0, y: 12),
+            hook: Hook(parent_anchor: BM, self_anchor: TM),
+            offset: Vec2(x: 0, y: 0),
+            render_anti_criteria: [Progress],
             params: TextBlock((
                     text: "%s",
                     font: "Arial Bold 16",
                     ellipsize: End,
                     color: Color(hex: "#000000"),
                     padding: Padding(left: 0, right: 0, top: 0, bottom: 0),
-                    dimensions: (width: (min: -1, max: 185), height: (min: 0, max: 0)),
-            )),
-        ),
-
-        (
-            name: "app_body",
-            parent: "app_notification",
-            hook: Hook(parent_anchor: BR, self_anchor: TR),
-            offset: Vec2(x: 0, y: 12),
-            render_anti_criteria: [Progress],
-            params: TextBlock((
-                    text: "%b",
-                    font: "Arial Bold 16",
-                    ellipsize: End,
-                    color: Color(hex: "#000000"),
-                    padding: Padding(left: 0, right: 0, top: 0, bottom: 24),
                     dimensions: (width: (min: -1, max: 250), height: (min: 0, max: 0)),
             )),
         ),
@@ -101,10 +86,27 @@
         ),
 
         (
-            name: "app_progress_value",
+            name: "app_progress_summary",
+            parent: "app_progress",
+            hook: Hook(parent_anchor: TL, self_anchor: BL),
+            offset: Vec2(x: 0, y: -12),
+            render_criteria: [Progress],
+            params: TextBlock((
+                    text: "%s",
+                    font: "Arial Bold 16",
+                    ellipsize: End,
+                    color: Color(hex: "#000000"),
+                    padding: Padding(left: 0, right: 0, top: 0, bottom: 0),
+                    dimensions: (width: (min: -1, max: 185), height: (min: 0, max: 0)),
+            )),
+        ),
+
+        (
+            name: "app_progress_body",
             parent: "app_progress",
             hook: Hook(parent_anchor: TR, self_anchor: BR),
             offset: Vec2(x: 0, y: -12),
+            render_criteria: [Progress],
             params: TextBlock((
                     text: "%p%",
                     font: "Arial Bold 16",

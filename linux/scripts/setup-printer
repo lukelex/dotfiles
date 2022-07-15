@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ICON=~/dotfiles/fonts/fa6/svgs/light/print.svg
+ICON=$FONT_AWESOME_PATH/light/print.svg
 
 show() {
   notify-send -a System \
               -i $ICON \
               -h string:wired-tag:system \
-              "Printer" "$1"
+              "$1"
 }
 
 show "Searching network..."
