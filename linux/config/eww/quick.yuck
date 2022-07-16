@@ -1,5 +1,6 @@
 (defvar USER_IMG "images/me-drawing.jpg")
 (defpoll username :interval "60m" `whoami`)
+(defpoll quote :interval "12h" :initial "loading..." `u_quotes get`)
 (defpoll kernel :interval "60m" `uname -r`)
 (defpoll speaker_volume :interval "5s" `u_audio vol get`)
 (defpoll mic_volume :interval "5s" `u_audio mic get`)
@@ -16,13 +17,8 @@
 (defwindow quick :monitor 0 :stacking "fg" :wm-ignore true
                  :geometry (geometry :x "-20px" :y "66px" :anchor "top right")
   (v-window
-    (box :spacing SPACING :orientation "horizontal" :space-evenly false
-      (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
-        (user)
-      )
-      (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
-        (airplane)
-      )
+    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
+      (user)
     )
     (box :spacing SPACING :orientation "horizontal" :space-evenly false
       (connections)
@@ -51,9 +47,8 @@
       (image :class "user-img" :path USER_IMG :image-width 32 :image-height 32)
     )
     (box :orientation "vertical" :valign "center"
-      (label :class "black" :text username :halign "start")
-      (label :class "black" :text kernel :halign "start")
-      (label :class "black" :text uptime :halign "start")
+      (label :class "black" :text "Hi ${username}!" :halign "start")
+      (label :class "black" :text quote :wrap true :halign "start")
     )
   )
 )
