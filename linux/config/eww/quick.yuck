@@ -1,35 +1,35 @@
 (defvar USER_IMG "images/me-drawing.jpg")
 (defpoll username :interval "60m" `whoami`)
-(defpoll quote :interval "12h" :initial "loading..." `u_quotes get`)
 (defpoll kernel :interval "60m" `uname -r`)
-(defpoll speaker_volume :interval "5s" `u_audio vol get`)
+(defpoll speaker_volume :interval "5s" :initial 0 `u_audio vol get`)
 (defpoll mic_volume :interval "5s" `u_audio mic get`)
 (defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
 (defpoll wifi_ssid :interval "3s" `iwgetid -r`)
-(defpoll wifi_active :interval "3s" `bluetooth | grep on`)
-(defpoll bt_active :interval "3s" `bluetooth | awk '{ print $3 }'`)
 
-(defpoll monitor_value :interval "3s" `u_backlight get`)
+(defpoll bluetooth_active :interval "5s" `bluetoothctl show | grep 'Powered: yes' | awk '{ print $2 }'`)
+(defpoll bluetooth_list :interval "5s" :initial "[]" `./scripts/bluetooth`)
+
+(defpoll brightness_value :interval "5s" :initial 0 `u_backlight get`)
 
 (defpoll battery_name :interval "3s" `acpi | sed 's/:.*//'`)
 (defpoll battery_label :interval "3s" `acpi | sed 's/.*\, //'`)
 
 (defwindow quick :monitor 0 :stacking "fg" :wm-ignore true
-                 :geometry (geometry :x "-20px" :y "66px" :anchor "top right")
+                 :geometry (geometry :x "-20px" :y "66px"
+                 :anchor "top right")
   (v-window
-    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
+    (box :spacing SPACING :orientation "horizontal" :space-evenly true
       (user)
-    )
-    (box :spacing SPACING :orientation "horizontal" :space-evenly false
-      (connections)
-    )
       (battery)
+    )
+    (box :spacing SPACING :orientation "horizontal" :space-evenly true
+      (wifi)
+      (bluetooth)
+    )
     (system-stats)
     (controls
       (volume)
-      (ext_monitor_brightness)
       (laptop_brightness)
-      (keyboard_brightness :active keyboard_brightness_active)
     )
     (shortcuts)
   )
@@ -42,40 +42,26 @@
 )
 
 (defwidget user []
-  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+  (box :class "panel" :orientation "horizontal" :space-evenly false :spacing SPACING
     (box :class "button"
       (image :class "user-img" :path USER_IMG :image-width 32 :image-height 32)
     )
     (box :orientation "vertical" :valign "center"
       (label :class "black" :text "Hi ${username}!" :halign "start")
-      (label :class "black" :text quote :wrap true :halign "start")
     )
   )
 )
 
-(defwidget connections []
-  (box :orientation "horizontal" :space-evenly true :spacing SPACING :hexpand true
-    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
-      (pointer :active true
-        (button :class "button ${ "active" }" :onclick "u_wifi toggle"
-                :tooltip "Toggle wifi On & Off"
-          (icon :name "wifi")
-        )
-      )
-      (box :orientation "vertical" :valign "center"
-        (label :class "black" :text wifi_ssid :halign "start")
+(defwidget wifi []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+    (pointer :active true
+      (button :class "button ${ "active" }" :onclick "u_wifi toggle"
+              :tooltip "Toggle wifi On & Off"
+        (icon :name "wifi")
       )
     )
-    (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
-      (pointer :active true
-        (button :class "button ${ (bt_active == "on") ? "active" : "" }"
-                :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
-          (brands-icon :name "bluetooth")
-        )
-      )
-      (box :orientation "vertical" :valign "center"
-        (label :class "black" :text bt_active :halign "start")
-      )
+    (box :orientation "vertical" :valign "center"
+      (label :class "black" :text wifi_ssid :halign "start")
     )
   )
 )
@@ -90,7 +76,7 @@
     )
     (eventbox :cursor "grab" :hexpand true
       (scale :value speaker_volume :min 0 :max 100 :onchange "u_audio vol set {}"
-             :tooltip "${speaker_volume}")
+             :tooltip "${speaker_volume}%")
     )
     (pointer :active true
       (button :onclick "pavucontrol -t 3 &"
@@ -118,12 +104,12 @@
   (box :orientation "horizontal" :space-evenly false :spacing SPACING
     (pointer :active true
       (button :class "button" :tooltip "Toggle autobrightness"
-        (icon :name "laptop")
+        (icon :name "brightness")
       )
     )
     (eventbox :cursor "grab" :hexpand true
-      (scale :value "${monitor_value}" :min 0 :max 100 :onchange "u_backlight set {}"
-             :tooltip "Change the Laptop brightness")
+      (scale :value brightness_value :min 0 :max 100 :onchange "u_backlight set {}"
+             :tooltip "${brightness_value}%")
     )
   )
 )
@@ -197,7 +183,7 @@
     (box :orientation "vertical" :valign "center"
       (label :class "black" :text "${battery_name} at ${EWW_BATTERY.BAT0.capacity}%" :halign "start")
       (label :class "black" :text "${EWW_BATTERY.BAT0.status}" :halign "start")
-      (label :class "black" :text "${battery_label}" :halign "start")
+      (label :class "black" :text "${battery_label}" :halign "start" :limit-width 20)
     )
   )
 )
@@ -235,6 +221,23 @@
                 :tooltip "Opens screenshot tool"
           (icon :name "camera")
         )
+      )
+    )
+  )
+)
+
+(defwidget bluetooth []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+    (pointer :active true
+      (button :class "button connection ${bluetooth_active} ${bluetooth_active == "yes" ? "" : "disabled" }"
+              :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
+        (brands-icon :name "bluetooth")
+      )
+    )
+    (box :orientation "vertical" :valign "center" :space-evenly true
+      (for device in bluetooth_list
+        (label :class "black bluetooth"
+               :text "${device.Name} (${device["Battery Percentage"]})" :halign "start")
       )
     )
   )

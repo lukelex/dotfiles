@@ -1,7 +1,7 @@
 XF86PowerOff
   u_eww toggle power
 super + Escape
-  u_eww toggle power
+  u_eww toggle quick
 
 XF86AudioPrev
   u_music previous
@@ -57,6 +57,5 @@ super + ctrl + c
 super + grave
   wired -s 1
 
-# Reload sxhkdrc
 super + shift + s
   pkill -usr1 -x sxhkd

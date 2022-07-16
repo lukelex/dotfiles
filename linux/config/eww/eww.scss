@@ -55,12 +55,18 @@ widget {
   // border-radius: 50%;
   // background-color: #FFF;
 
-  &:hover .button {
-    &:not(.disabled) {
-      background-color: #abddfc;
-    }
+  .button {
     &.disabled {
-      background-color: #64B5F6;
+      background-color: $button-disabled;
+    }
+
+    &:hover {
+      &:not(.disabled) {
+        background-color: #abddfc;
+      }
+      &.disabled {
+        background-color: #64B5F6;
+      }
     }
   }
 }

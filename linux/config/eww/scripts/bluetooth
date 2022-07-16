@@ -1,0 +1,25 @@
+#!/bin/env ruby
+
+require "json"
+
+def battery(info)
+  return "~" if info["Connected"] == "no"
+
+  info["Battery Percentage"].to_s.match(/(?<=\().+?(?=\))/).to_s + "%"
+end
+
+devices = `bluetoothctl paired-devices | awk '{ print $2 }'`.split("\n").map do |uid|
+  info = `bluetoothctl info #{uid} | grep -Ev '^Device|UUID|Modalias'`
+    .split("\n")
+    .map { |device| device.split(/:/).map(&:strip) }
+    .to_h
+
+  info.merge(
+    {
+      "uid" => uid,
+      "Battery Percentage" => battery(info)
+    }
+  )
+end
+
+puts devices.to_json
