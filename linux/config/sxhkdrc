@@ -42,7 +42,7 @@ super + shift + p
   polybar-msg cmd restart
 
 Print
-  flameshot gui -p ~/screenshots
+  flameshot gui -c -p ~/screenshots
 shift + Print
   flameshot screen -c
 

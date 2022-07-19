@@ -20,6 +20,9 @@ ln -fvs ~/dotfiles/linux/config/wired.ron ~/.config/wired/wired.ron
 mkdir -p ~/.config/kitty
 ln -fvs ~/dotfiles/linux/config/kitty.conf ~/.config/kitty/kitty.conf
 
+mkdir -p ~/.config/flameshot
+ln -fvs ~/dotfiles/linux/config/flameshot.ini ~/.config/flameshot/flameshot.ini
+
 ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
