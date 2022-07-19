@@ -13,7 +13,7 @@ pamac install --no-confirm \
   vlc birdfont unzip unrar fragments sxiv playerctl woeusb \
   pantheon-calculator gsimplecal spotify google-chrome cozy \
   imagemagick-full simplescreenrecorder text-pieces curtail \
-  blanket xclip \
+  blanket xclip neofetch \
 
   # Coding
   neovim neovide kitty ctags bat tldr zeal docker docker-compose \
@@ -24,6 +24,6 @@ pamac install --no-confirm \
 
   # Keyboards
   via-bin stress librecad avr-gcc dfu-programmer avrdude \
-  gcc-arm-none-eabi-bin bootloadhid neofetch
+  gcc-arm-none-eabi-bin bootloadhid
 
 install_pulse
