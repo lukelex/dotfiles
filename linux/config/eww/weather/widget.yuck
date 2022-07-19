@@ -1,0 +1,28 @@
+(defpoll day             :interval "1s" `date "+%A"`)
+(defpoll weather-icon    :interval "1s"  "./scripts/weather --icon")
+(defpoll weather-city    :interval "1s"  "./scripts/weather --city")
+(defpoll weather-country :interval "1s"  "./scripts/weather --country")
+(defpoll weather-hex     :interval "1s"  "./scripts/weather --hex")
+(defpoll temperature     :interval "1s"  "./scripts/weather --temp")
+(defpoll weather-stat    :interval "1s"  "./scripts/weather --stat")
+
+(defwidget weather []
+  (box :class "weather panel black" :orientation "v"
+       :space-evenly false :halign "center"
+    (box :orientation "v" :space-evenly "false"
+      (label :class "weather-day" :text "${day}")
+      (box :class "weather-icon" :style "color: ${weather-hex}" :hexpand true
+        {weather-icon}
+      )
+    )
+    (box :orientation "v" :space-evenly "false"
+      (box :orientation "h" :class "weather-stat" :halign "center"
+        (label :wrap "true" :limit-width 15 :text "${weather-stat}")
+      )
+      (box :orientation "h" :halign "center"
+        (label :class "temp-region"
+               :text "${temperature} in ${weather-city}, ${weather-country}")
+      )
+    )
+  )
+)

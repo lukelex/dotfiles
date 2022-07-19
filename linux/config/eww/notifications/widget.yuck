@@ -1,0 +1,17 @@
+(defpoll wired :interval "10s" :initial "[]" `./scripts/notifications`)
+
+(defwidget notifications []
+  (box :class "panel" :spacing SPACING :orientation "vertical" :space-evenly false
+    ; (box :valign "top"
+    ;   (label :class "black title" :text "Recent Notifications" :halign "center")
+    ; )
+    (for entry in wired
+      (box :class "notification" :spacing SPACING :orientation "vertical" :space-evenly false
+        (label :class "black" :text "${entry.app_name}: ${entry.summary}" :limit-width 40 :halign "start")
+        (label :class "black" :text { entry.body } :limit-width 100 :halign "start")
+        ; (button :class "button ${ "active" }" :onclick "u_wifi toggle"
+        ;         :tooltip "Toggle wifi On & Off")
+      )
+    )
+  )
+)

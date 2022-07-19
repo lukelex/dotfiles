@@ -1,0 +1,15 @@
+(defpoll brightness_value :interval "5s" :initial 0 `u_backlight get`)
+
+(defwidget brightness []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (pointer :active true
+      (button :class "button" :tooltip "Toggle autobrightness"
+        (icon :name "brightness")
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value brightness_value :min 0 :max 100 :onchange "u_backlight set {}"
+             :tooltip "${brightness_value}%")
+    )
+  )
+)

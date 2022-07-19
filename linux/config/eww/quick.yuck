@@ -1,25 +1,23 @@
-(defvar USER_IMG "images/me-drawing.jpg")
-(defpoll username :interval "60m" `whoami`)
-(defpoll kernel :interval "60m" `uname -r`)
-(defpoll speaker_volume :interval "5s" :initial 0 `u_audio vol get`)
-(defpoll mic_volume :interval "5s" `u_audio mic get`)
-(defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
-(defpoll wifi_ssid :interval "3s" `iwgetid -r`)
-
-(defpoll bluetooth_active :interval "5s" `bluetoothctl show | grep 'Powered: yes' | awk '{ print $2 }'`)
-(defpoll bluetooth_list :interval "5s" :initial "[]" `./scripts/bluetooth`)
-
-(defpoll brightness_value :interval "5s" :initial 0 `u_backlight get`)
-
-(defpoll battery_name :interval "3s" `acpi | sed 's/:.*//'`)
-(defpoll battery_label :interval "3s" `acpi | sed 's/.*\, //'`)
+(include "./user/widget.yuck")
+(include "./wifi/widget.yuck")
+(include "./volume/widget.yuck")
+(include "./battery/widget.yuck")
+(include "./packages/widget.yuck")
+(include "./bluetooth/widget.yuck")
+(include "./shortcuts/widget.yuck")
+(include "./brightness/widget.yuck")
+(include "./system-stats/widget.yuck")
 
 (defwindow quick :monitor 0 :stacking "fg" :wm-ignore true
                  :geometry (geometry :x "-20px" :y "66px"
                  :anchor "top right")
   (v-window
-    (box :spacing SPACING :orientation "horizontal" :space-evenly true
+    (box :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
       (user)
+      (power-menu)
+    )
+    (box :spacing SPACING :orientation "horizontal" :space-evenly true
+      (packages)
       (battery)
     )
     (box :spacing SPACING :orientation "horizontal" :space-evenly true
@@ -27,218 +25,46 @@
       (bluetooth)
     )
     (system-stats)
-    (controls
+    (box :class "panel" :spacing SPACING :orientation "vertical" :space-evenly true
       (volume)
-      (laptop_brightness)
+      (brightness)
     )
     (shortcuts)
   )
 )
 
-(defwidget controls []
-  (box :class "panel" :spacing SPACING :orientation "vertical" :space-evenly true
-    (children)
-  )
-)
-
-(defwidget user []
-  (box :class "panel" :orientation "horizontal" :space-evenly false :spacing SPACING
-    (box :class "button"
-      (image :class "user-img" :path USER_IMG :image-width 32 :image-height 32)
-    )
-    (box :orientation "vertical" :valign "center"
-      (label :class "black" :text "Hi ${username}!" :halign "start")
-    )
-  )
-)
-
-(defwidget wifi []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+(defwidget power-menu []
+  (box :class "panel" :orientation "horizontal" :spacing SPACING
     (pointer :active true
-      (button :class "button ${ "active" }" :onclick "u_wifi toggle"
-              :tooltip "Toggle wifi On & Off"
-        (icon :name "wifi")
-      )
-    )
-    (box :orientation "vertical" :valign "center"
-      (label :class "black" :text wifi_ssid :halign "start")
-    )
-  )
-)
-
-(defwidget volume []
-  (box :orientation "horizontal" :space-evenly false :spacing SPACING
-    (pointer :active true
-      (button :class "button" :onclick "u_audio vol toggle"
-              :tooltip "Toggle Master volume On & Off"
-        (icon :name "volume")
-      )
-    )
-    (eventbox :cursor "grab" :hexpand true
-      (scale :value speaker_volume :min 0 :max 100 :onchange "u_audio vol set {}"
-             :tooltip "${speaker_volume}%")
-    )
-    (pointer :active true
-      (button :onclick "pavucontrol -t 3 &"
-        (icon-small :name "sliders")
+      (button :class "button" :onclick "u_eww toggle power"
+        (icon :name "power-off")
       )
     )
   )
 )
 
-(defwidget ext_monitor_brightness []
-  (box :orientation "horizontal" :space-evenly false :spacing SPACING
-    (pointer :active true
-      (button :class "button" :onclick "u_monitors brightness reset" :tooltip "Resets brightness to 0" :timeout "5s"
-        (icon :name "display")
-      )
-    )
-    (eventbox :cursor "grab" :hexpand true
-      (scale :value ext_monitor_brightness :min 0 :max 100 :onchange "u_monitors brightness set {} &"
-             :tooltip "Change brightness on all detected monitors" :timeout "5")
-    )
-  )
-)
+; (defwidget ext_monitor_brightness []
+;   (box :orientation "horizontal" :space-evenly false :spacing SPACING
+;     (pointer :active true
+;       (button :class "button" :onclick "u_monitors brightness reset" :tooltip "Resets brightness to 0" :timeout "5s"
+;         (icon :name "display")
+;       )
+;     )
+;     (eventbox :cursor "grab" :hexpand true
+;       (scale :value ext_monitor_brightness :min 0 :max 100 :onchange "u_monitors brightness set {} &"
+;              :tooltip "Change brightness on all detected monitors" :timeout "5")
+;     )
+;   )
+; )
 
-(defwidget laptop_brightness []
-  (box :orientation "horizontal" :space-evenly false :spacing SPACING
-    (pointer :active true
-      (button :class "button" :tooltip "Toggle autobrightness"
-        (icon :name "brightness")
-      )
-    )
-    (eventbox :cursor "grab" :hexpand true
-      (scale :value brightness_value :min 0 :max 100 :onchange "u_backlight set {}"
-             :tooltip "${brightness_value}%")
-    )
-  )
-)
-
-(defwidget keyboard_brightness [?active]
-  (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
-    (button :class "button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
-      (icon :name "keyboard-brightness")
-    )
-    (eventbox :cursor { active ? "grab" : "default" } :hexpand true
-      (scale :active {active} :hexpand true :value 2 :min 1 :max 3 :onchange "u_keeb_backlight set {}"
-             :tooltip "Change laptop keyboard brightness")
-    )
-  )
-)
-
-(defwidget airplane []
-  (pointer :active true
-    (button :class "button" :onclick "u_airplane toggle" :tooltip "Toggle airplane mode"
-      (icon :name "plane-up")
-    )
-  )
-)
-
-(defwidget system-stats []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly true :hexpand true
-    (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${EWW_DISK['/']['used_perc']}"
-                         :thickness 5 :clockwise true
-        (button :class "button" :tooltip "${EWW_DISK['/']['used_perc']}%"
-          (icon :name "hard-drive")
-        )
-      )
-    )
-    (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${round(EWW_CPU['avg'], 0)}"
-                         :thickness 5 :clockwise true
-        (button :class "button" :tooltip "${EWW_CPU}"
-          (icon :name "microchip")
-        )
-      )
-    )
-    (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${round(EWW_RAM['used_mem_perc'], 0)}"
-                         :thickness 5 :clockwise true
-        (button :class "button" :tooltip "${EWW_RAM}"
-          (icon :name "memory")
-        )
-      )
-    )
-    (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${EWW_TEMPS['COMPOSITE']}"
-                         :thickness 5 :clockwise true
-        (button :class "button" :tooltip "${EWW_TEMPS['COMPOSITE']}°C"
-          (icon :name "temperature-list")
-        )
-      )
-    )
-  )
-)
-
-(defwidget battery []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
-    (circular-progress :class "battery low ${EWW_BATTERY.BAT0.status}"
-                       :value "${EWW_BATTERY.BAT0.capacity}"
-                       :thickness 5 :clockwise true
-      (button :class "button" :tooltip "${EWW_BATTERY.BAT0.status} (${EWW_BATTERY.BAT0.capacity}%)"
-        (icon :name { EWW_BATTERY.BAT0.status == "Charging" ? "battery-bolt" : "battery-half" })
-      )
-    )
-    (box :orientation "vertical" :valign "center"
-      (label :class "black" :text "${battery_name} at ${EWW_BATTERY.BAT0.capacity}%" :halign "start")
-      (label :class "black" :text "${EWW_BATTERY.BAT0.status}" :halign "start")
-      (label :class "black" :text "${battery_label}" :halign "start" :limit-width 20)
-    )
-  )
-)
-
-(defwidget shortcuts []
-  (box :class "panel" :spacing SPACING :orientation "horizontal"
-       :space-evenly true :hexpand true
-    (box :space-evenly false :halign "center"
-      (pointer :active true
-        (button :class "button" :onclick "u_setup-printer & u_eww close"
-                :tooltip "Find and setup IP printer"
-          (icon :name "print")
-        )
-      )
-    )
-    (box :space-evenly false :halign "center"
-      (pointer :active true
-        (button :class "button" :onclick "u_nightmode & u_eww close"
-                :tooltip "Toggle nightmode On & Off"
-          (icon :name "moon")
-        )
-      )
-    )
-    (box :space-evenly false :halign "center"
-      (pointer :active true
-        (button :class "button" :onclick "u_emoji & u_eww close"
-                :tooltip "Open Emoji selector"
-          (icon :name "face-smile-beam")
-        )
-      )
-    )
-    (box :space-evenly false :halign "center"
-      (pointer :active true
-        (button :class "button" :onclick "flameshot gui -p ~/screenshots & u_eww close"
-                :tooltip "Opens screenshot tool"
-          (icon :name "camera")
-        )
-      )
-    )
-  )
-)
-
-(defwidget bluetooth []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
-    (pointer :active true
-      (button :class "button connection ${bluetooth_active} ${bluetooth_active == "yes" ? "" : "disabled" }"
-              :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
-        (brands-icon :name "bluetooth")
-      )
-    )
-    (box :orientation "vertical" :valign "center" :space-evenly true
-      (for device in bluetooth_list
-        (label :class "black bluetooth"
-               :text "${device.Name} (${device["Battery Percentage"]})" :halign "start")
-      )
-    )
-  )
-)
+; (defwidget keyboard_brightness [?active]
+;   (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
+;     (button :class "button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
+;       (icon :name "keyboard-brightness")
+;     )
+;     (eventbox :cursor { active ? "grab" : "default" } :hexpand true
+;       (scale :active {active} :hexpand true :value 2 :min 1 :max 3 :onchange "u_keeb_backlight set {}"
+;              :tooltip "Change laptop keyboard brightness")
+;     )
+;   )
+; )

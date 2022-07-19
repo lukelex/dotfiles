@@ -1,0 +1,22 @@
+(defpoll speaker_volume :interval "5s" :initial 0 `u_audio vol get`)
+
+(defwidget volume []
+  (box :orientation "horizontal" :space-evenly false :spacing SPACING
+    (pointer :active true
+      (button :class "button" :onclick "u_audio vol toggle"
+              :tooltip "Toggle Master volume On & Off"
+        (icon :name "volume")
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value speaker_volume :min 0 :max 100 :onchange "u_audio vol set {}"
+             :tooltip "${speaker_volume}%")
+    )
+    (pointer :active true
+      (button :class "settings" :onclick "pavucontrol -t 3 &"
+        (icon-small :name "sliders")
+      )
+    )
+  )
+)
+

@@ -1,0 +1,7 @@
+@import "../variables";
+
+.notification {
+  border-radius: $radius * 0.4;
+  background-color: $disabled-color;
+  padding: $magic-number;
+}

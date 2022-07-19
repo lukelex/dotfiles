@@ -1,0 +1,15 @@
+(defpoll wifi_ssid :interval "3s" `iwgetid -r`)
+
+(defwidget wifi []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+    (pointer :active true
+      (button :class "button ${ "active" }" :onclick "u_wifi toggle"
+              :tooltip "Toggle wifi On & Off"
+        (icon :name "wifi")
+      )
+    )
+    (box :orientation "vertical" :valign "center"
+      (label :class "black" :text wifi_ssid :halign "start")
+    )
+  )
+)

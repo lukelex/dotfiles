@@ -1,0 +1,14 @@
+(defpoll kernel :interval "60m" `uname -r`)
+(defpoll outdated_packages :interval "1h" `checkupdates | wc -l`)
+
+(defwidget packages []
+  (box :class "panel" :orientation "horizontal" :space-evenly false :spacing SPACING
+    (box :class "button"
+      (icon :name "cubes")
+    )
+    (box :orientation "vertical" :valign "center"
+      (label :class "black" :text kernel :halign "start")
+      (label :class "black" :text "${outdated_packages} pending updates" :halign "start")
+    )
+  )
+)

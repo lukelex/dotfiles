@@ -30,7 +30,7 @@ box.component {
 
 .panel {
   background-color: rgba(212, 212, 212, $opacity);
-  border-radius: $radius;
+  border-radius: $radius * 0.6;
   padding: $magic-number * 2;
 }
 
@@ -41,10 +41,6 @@ box.component {
   min-width: $magic-number * 4;
   min-height: $magic-number * 4;
 
-  &.disabled {
-    // background-color: $disabled-color;
-  }
-
   image {
     min-width: $image-size;
     min-height: $image-size;
@@ -52,21 +48,9 @@ box.component {
 }
 
 widget {
-  // border-radius: 50%;
-  // background-color: #FFF;
-
   .button {
-    &.disabled {
-      background-color: $button-disabled;
-    }
-
     &:hover {
-      &:not(.disabled) {
-        background-color: #abddfc;
-      }
-      &.disabled {
-        background-color: #64B5F6;
-      }
+      background-color: #abddfc;
     }
   }
 }
@@ -89,7 +73,7 @@ scale trough {
 
   highlight {
     all: unset;
-    border-radius: $radius;
+    border-radius: $radius * 0.75;
     background-color: black;
   }
 }
@@ -128,6 +112,6 @@ circular-progress {
   }
 }
 
-.user-img {
-  border-radius: 50%;
+.device.connected {
+  font-weight: bold;
 }

@@ -1,0 +1,20 @@
+(defpoll battery_name :interval "3s" `acpi | sed 's/:.*//'`)
+(defpoll battery_label :interval "3s" `acpi | sed 's/.*\, //'`)
+
+(defwidget battery []
+  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+    (circular-progress :class "battery low ${EWW_BATTERY.BAT0.status}"
+                       :value "${EWW_BATTERY.BAT0.capacity}"
+                       :thickness 5 :clockwise true
+      (button :class "button" :tooltip "${EWW_BATTERY.BAT0.status} (${EWW_BATTERY.BAT0.capacity}%)"
+        (icon :name { EWW_BATTERY.BAT0.status == "Charging" ? "battery-bolt" : "battery-half" })
+      )
+    )
+    (box :orientation "vertical" :valign "center"
+      (label :class "black" :text "${battery_name} at ${EWW_BATTERY.BAT0.capacity}%" :halign "start")
+      (label :class "black" :text "${EWW_BATTERY.BAT0.status}" :halign "start")
+      (label :class "black" :text "${battery_label}" :halign "start" :limit-width 20)
+    )
+  )
+)
+
