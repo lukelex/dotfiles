@@ -1,0 +1,19 @@
+#!/bin/env ruby
+
+require "json"
+
+HIDE_LIST = [
+  "info",
+  "spotify",
+  "volume",
+  "brightness",
+  "flameshot"
+]
+
+puts `cat /tmp/wired.log`
+  .split("\n")
+  .map { |entry| JSON.parse(entry) }
+  .reject { |entry| !(entry.values_at("app_name", "summary").map(&:downcase) & HIDE_LIST).empty? }
+  .sort { |entry| entry.fetch("time") }
+  .first(25)
+  .to_json

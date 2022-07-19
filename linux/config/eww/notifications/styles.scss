@@ -1,7 +1,19 @@
 @import "../variables";
 
-.notification {
-  border-radius: $radius * 0.4;
-  background-color: $disabled-color;
-  padding: $magic-number;
+.notification-panel {
+  .body {
+    .entry {
+      border-radius: $radius * 0.4;
+      background-color: $light-background-3;
+      padding: $magic-number;
+      margin-top: $magic-number/2;
+      margin-bottom: $magic-number/2;
+    }
+  }
+
+  .footer {
+    button {
+      margin-left: $magic-number;
+    }
+  }
 }

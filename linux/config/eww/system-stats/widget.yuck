@@ -1,32 +1,34 @@
 (defwidget system-stats []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly true :hexpand true
+  (box :class "system-stats-panel panel"
+       :spacing SPACING :orientation "horizontal"
+       :space-evenly true :hexpand true
     (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${EWW_DISK['/']['used_perc']}"
-                         :thickness 5 :clockwise true
+      (circular-progress :class "stat low" :thickness 5 :clockwise true
+                         :value "${EWW_DISK['/']['used_perc']}"
         (button :class "button" :tooltip "${EWW_DISK['/']['used_perc']}%"
           (icon :name "hard-drive")
         )
       )
     )
     (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${round(EWW_CPU['avg'], 0)}"
-                         :thickness 5 :clockwise true
+      (circular-progress :class "stat low" :thickness 5 :clockwise true
+                         :value "${round(EWW_CPU['avg'], 0)}"
         (button :class "button" :tooltip "${EWW_CPU}"
           (icon :name "microchip")
         )
       )
     )
     (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${round(EWW_RAM['used_mem_perc'], 0)}"
-                         :thickness 5 :clockwise true
+      (circular-progress :class "stat low" :thickness 5 :clockwise true
+                         :value "${round(EWW_RAM['used_mem_perc'], 0)}"
         (button :class "button" :tooltip "${EWW_RAM}"
           (icon :name "memory")
         )
       )
     )
     (box :space-evenly false :halign "center"
-      (circular-progress :class "stats low" :value "${EWW_TEMPS['COMPOSITE']}"
-                         :thickness 5 :clockwise true
+      (circular-progress :class "stat low" :thickness 5 :clockwise true
+                         :value "${EWW_TEMPS['COMPOSITE']}"
         (button :class "button" :tooltip "${EWW_TEMPS['COMPOSITE']}°C"
           (icon :name "temperature-list")
         )

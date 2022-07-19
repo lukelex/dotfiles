@@ -1,11 +1,9 @@
-$component-bg: #ECECEC;
-$component-fg: #BF616A;
-// $disabled-color: #B96666;
-$disabled-color: #808080;
-$magic-number: 7px;
-$radius: $magic-number * 2;
-$image-size: $magic-number * 3;
-$opacity: 1;
+@import "./battery/styles";
+@import "./weather/styles";
+@import "./system-stats/styles";
+@import "./notifications/styles";
+
+@import "./variables";
 
 * {
   all: unset;
@@ -15,7 +13,7 @@ $opacity: 1;
 }
 
 .window {
-  background-color: rgba(202, 202, 202, $opacity);
+  background-color: $light-background-1;
   border-radius: $radius;
   padding: $magic-number * 2;
 }
@@ -29,14 +27,14 @@ box.component {
 }
 
 .panel {
-  background-color: rgba(212, 212, 212, $opacity);
+  background-color: $light-background-2;
   border-radius: $radius * 0.6;
   padding: $magic-number * 2;
 }
 
 .button {
   border-radius: 50%;
-  background-color: rgba(222, 222, 222, $opacity);
+  background-color: $light-background-3;
   padding: $magic-number * 4;
   min-width: $magic-number * 4;
   min-height: $magic-number * 4;
@@ -65,7 +63,7 @@ scale trough {
   border-radius: $radius;
   min-height: 28px;
   min-width: 240px;
-  padding: 5;
+  padding: 5px;
 
   slider {
     color: #FF0000;
@@ -75,40 +73,6 @@ scale trough {
     all: unset;
     border-radius: $radius * 0.75;
     background-color: black;
-  }
-}
-
-circular-progress {
-  &.stats {
-    &.high {
-      color: orange;
-    }
-
-    &.low {
-      color: blue;
-    }
-
-    &.critical {
-      color: red;
-    }
-  }
-
-  &.battery {
-    &.high {
-      color: black;
-    }
-
-    &.low {
-      color: orange;
-    }
-
-    &.critical {
-      color: red;
-    }
-
-    &.Charging {
-      color: green;
-    }
   }
 }
 

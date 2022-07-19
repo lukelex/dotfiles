@@ -1,0 +1,31 @@
+(include "./quote/widget.yuck")
+(include "./weather/widget.yuck")
+(include "./notifications/widget.yuck")
+
+(defwindow calion :monitor 0 :stacking "fg" :wm-ignore true
+                 :geometry (geometry :y "66px" :anchor "top center")
+  (v-window
+    (quote)
+    (box :spacing SPACING :orientation "horizontal"
+         :space-evenly false :hexpand true
+      (notifications)
+
+      (box :spacing SPACING :orientation "vertical"
+           :space-evenly false :hexpand true
+        (weather)
+        (my-calendar)
+      )
+    )
+  )
+)
+
+(defwidget my-calendar []
+ (box :class "panel" :spacing SPACING
+      :space-evenly false
+   (calendar :class "black"
+             :show-details true
+             :show-heading true
+             :show-day-names true
+             :show-week-numbers true)
+   )
+)

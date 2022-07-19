@@ -1,16 +1,40 @@
 (defpoll wired :interval "10s" :initial "[]" `./scripts/notifications`)
 
 (defwidget notifications []
-  (box :class "panel" :spacing SPACING :orientation "vertical" :space-evenly false
-    ; (box :valign "top"
-    ;   (label :class "black title" :text "Recent Notifications" :halign "center")
-    ; )
-    (for entry in wired
-      (box :class "notification" :spacing SPACING :orientation "vertical" :space-evenly false
-        (label :class "black" :text "${entry.app_name}: ${entry.summary}" :limit-width 40 :halign "start")
-        (label :class "black" :text { entry.body } :limit-width 100 :halign "start")
-        ; (button :class "button ${ "active" }" :onclick "u_wifi toggle"
-        ;         :tooltip "Toggle wifi On & Off")
+  (box :class "panel notification-panel" :spacing SPACING
+       :orientation "vertical" :space-evenly false
+    (box :class "header" :orientation "horizontal"
+      (label :class "black" :text "Recent Notifications" :halign "start")
+      (box :orientation "horizontal" :halign "end"
+        (pointer :active true
+          (button :class "settings" :onclick "wired toggle &"
+            (icon-small :name "bell-slash")
+          )
+        )
+      )
+    )
+    (scroll :vscroll true :hscroll false :height 500
+      (box :class "body" :orientation "vertical" :space-evenly false
+        (for entry in wired
+          (box :class "entry" :spacing SPACING :width 400
+               :orientation "vertical" :space-evenly false
+            (label :class "black" :limit-width 40 :halign "start"
+                   :text "${entry.app_name}: ${entry.summary}")
+            (label :class "black" :wrap true :limit-width 100
+                   :halign "start" :text { entry.body })
+            ; (button :class "button ${ "active" }" :onclick "u_wifi toggle" :tooltip "Toggle wifi On & Off")
+          )
+        )
+      )
+    )
+    (box :class "footer" :orientation "horizontal"
+      (pointer :active true
+        (box :orientation "horizontal" :halign "end" :space-evenly false
+          (label :class "black" :text "View All")
+          (button :class "settings" :onclick "u_notification-center open &"
+            (icon-small :name "arrow-up-right-from-square")
+          )
+        )
       )
     )
   )

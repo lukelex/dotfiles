@@ -10,6 +10,8 @@
     min_window_height: 100,
     idle_threshold: 60,
 
+    print_to_file: "/tmp/wired.log",
+
     debug: false,
     debug_color: Color(r: 0.0, g: 1.0, b: 0.0, a: 1.0),
     debug_color_alt: Color(r: 1.0, g: 0.0, b: 0.0, a: 1.0),

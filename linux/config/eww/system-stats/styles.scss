@@ -1,0 +1,19 @@
+@import "../variables";
+
+.system-stats-panel {
+  circular-progress {
+    &.stat {
+      &.high {
+        color: orange;
+      }
+
+      &.low {
+        color: blue;
+      }
+
+      &.critical {
+        color: red;
+      }
+    }
+  }
+}

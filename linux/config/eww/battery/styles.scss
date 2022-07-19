@@ -1,0 +1,21 @@
+@import "../variables";
+
+.battery-panel {
+  circular-progress {
+    &.high {
+      color: black;
+    }
+
+    &.low {
+      color: orange;
+    }
+
+    &.critical {
+      color: red;
+    }
+
+    &.Charging {
+      color: green;
+    }
+  }
+}

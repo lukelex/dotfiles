@@ -42,6 +42,6 @@ case $1 in
                 -i "$FONT_AWESOME_PATH/light/brightness.svg" \
                 -h string:wired-tag:system \
                 -h int:value:"$VALUE" \
-                "Brigthness"
+                "Brightness"
     ;;
 esac

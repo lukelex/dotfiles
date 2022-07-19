@@ -1,9 +1,11 @@
 (defpoll quote :interval "1h" :initial "loading..." `u_quotes get`)
 
 (defwidget quote []
-  (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
+  (box :class "panel" :spacing SPACING
+       :orientation "horizontal" :space-evenly false
     (icon :name "comment-quote")
-    (label :class "black" :text quote :wrap true :halign "start")
+    (label :class "black" :wrap true :hexpand true
+           :halign "center" :text quote)
   )
 )
 
