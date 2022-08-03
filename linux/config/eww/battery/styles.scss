@@ -14,7 +14,7 @@
       color: red;
     }
 
-    &.Charging {
+    &.Charging, &.Full {
       color: green;
     }
   }

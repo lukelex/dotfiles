@@ -4,7 +4,7 @@
 (defwidget battery []
   (box :class "battery-panel panel" :spacing SPACING
        :orientation "horizontal" :space-evenly false
-    (circular-progress :class "low ${EWW_BATTERY.BAT0.status}"
+    (circular-progress :class "${EWW_BATTERY.BAT0.status}"
                        :value "${EWW_BATTERY.BAT0.capacity}"
                        :thickness 5 :clockwise true
       (button :class "button" :tooltip "${EWW_BATTERY.BAT0.status} (${EWW_BATTERY.BAT0.capacity}%)"
