@@ -72,7 +72,7 @@
          :image-height ICON_SIZE)
 )
 
-(include "./quick.yuck")
+(include "./dashboard.yuck")
 (include "./calion.yuck")
 (include "./notification-center.yuck")
 (include "./power.yuck")

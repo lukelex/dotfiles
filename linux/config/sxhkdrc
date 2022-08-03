@@ -1,7 +1,7 @@
 XF86PowerOff
   u_eww toggle power
 super + Escape
-  u_eww toggle quick
+  u_eww toggle dashboard
 super + grave
   u_eww toggle notification-center
 
