@@ -1,4 +1,4 @@
-(defpoll weather-data    :interval "10m" "./scripts/weather --getdata")
+(defpoll weather-data    :interval "600s" "./scripts/weather --getdata")
 (defpoll weather-icon    :interval "1s"  "./scripts/weather --icon")
 (defpoll weather-city    :interval "1s"  "./scripts/weather --city")
 (defpoll weather-country :interval "1s"  "./scripts/weather --country")
@@ -7,14 +7,14 @@
 
 (defwidget weather []
   (box :class "weather-panel panel black" :orientation "vertical"
-       :space-evenly false :halign "center" :hexpand true
+       :space-evenly false :halign "center"
     (box :orientation "horizontal" :class "weather-icon"
       {weather-icon}
     )
     (box :orientation "horizontal" :class "weather-stat" :halign "center"
       (label :limit-width 30 :wrap true
              :text "${weather-temp} with ${weather-stat}")
-      )
+    )
     (box :orientation "horizontal" :halign "center"
       (label :class "temp-region"
              :text "${weather-city}, ${weather-country}")

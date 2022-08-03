@@ -8,7 +8,7 @@
     replacing_resets_timeout: true,
     min_window_width: 300,
     min_window_height: 100,
-    idle_threshold: 60,
+    idle_threshold: 600, // 10 minutes
 
     print_to_file: "/tmp/wired.log",
 

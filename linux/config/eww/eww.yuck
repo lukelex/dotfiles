@@ -74,4 +74,5 @@
 
 (include "./quick.yuck")
 (include "./calion.yuck")
+(include "./notification-center.yuck")
 (include "./power.yuck")

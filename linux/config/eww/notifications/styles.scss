@@ -1,6 +1,10 @@
 @import "../variables";
 
 .notification-panel {
+  .header, .footer {
+    margin: $magic-number 0;
+  }
+
   .body {
     .entry {
       border-radius: $radius * 0.4;

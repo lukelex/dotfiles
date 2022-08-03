@@ -2,6 +2,8 @@ XF86PowerOff
   u_eww toggle power
 super + Escape
   u_eww toggle quick
+super + grave
+  u_eww toggle notification-center
 
 XF86AudioPrev
   u_music previous
@@ -54,8 +56,6 @@ super + ctrl + e
   u_emoji
 super + ctrl + c
   u_clipboard
-super + grave
-  wired -s 1
 
 super + shift + s
   pkill -usr1 -x sxhkd
