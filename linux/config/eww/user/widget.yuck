@@ -16,8 +16,8 @@
              :image-height 32)
     )
     (box :orientation "vertical" :valign "center"
-      (label :class "black" :text "Hi ${username}!" :halign "start")
-      (label :class "black" :text uptime :halign "start")
+      (label :class "text" :text "Hi ${username}!" :halign "start")
+      (label :class "text" :text uptime :halign "start")
     )
   )
 )

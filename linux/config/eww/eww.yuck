@@ -4,9 +4,10 @@
 (defvar ICON_SIZE_LARGE 70)
 (defvar ICONS_PATH "/usr/share/icons/FontAwesome-6/solid/512x512/all")
 (defvar BRANDS_ICONS_PATH "/usr/share/icons/FontAwesome-6/brands/512x512/all")
+(defvar THEME "light")
 
 (defwidget v-window []
-  (box :class "window" :orientation "vertical"
+  (box :class "window ${THEME}" :orientation "vertical"
        :halign "center" :valign "center"
        :space-evenly false :vexpand false
        :hexpand false :spacing SPACING

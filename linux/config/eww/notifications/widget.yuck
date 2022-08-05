@@ -6,7 +6,7 @@
   (box :class "panel notification-panel" :spacing SPACING
        :orientation "vertical" :space-evenly false
     (box :class "header" :orientation "horizontal"
-      (label :class "title black" :text "Notification Center" :halign "start")
+      (label :class "title text" :text "Notification Center" :halign "start")
       (box :orientation "horizontal" :halign "end"
         (pointer :active true
           (button :class "settings" :onclick "wired toggle &"
@@ -20,9 +20,9 @@
         (for entry in wired
           (box :class "entry" :spacing SPACING :width 400
                :orientation "vertical" :space-evenly false
-            (label :class "black" :limit-width 40 :halign "start"
+            (label :class "text" :limit-width 40 :halign "start"
                    :text "${entry.app_name}: ${entry.summary}")
-            (label :class "black" :wrap true :limit-width 100
+            (label :class "text" :wrap true :limit-width 100
                    :halign "start" :text { entry.body })
             ; (button :class "button ${ "active" }" :onclick "u_wifi toggle" :tooltip "Toggle wifi On & Off")
           )
@@ -32,7 +32,7 @@
     (box :class "footer" :orientation "horizontal"
       (pointer :active true
         (box :orientation "horizontal" :halign "end" :space-evenly false
-          (label :class "black" :text "Clear All")
+          (label :class "text" :text "Clear All")
           (button :class "settings" :onclick "u_notification-center open &"
             (icon-small :name "bars-sort")
           )

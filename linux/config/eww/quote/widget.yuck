@@ -4,7 +4,7 @@
   (box :class "panel" :spacing SPACING
        :orientation "horizontal" :space-evenly false
     (icon :name "comment-quote")
-    (label :class "black" :wrap true
+    (label :class "text" :wrap true
            :halign "center" :text quote)
   )
 )

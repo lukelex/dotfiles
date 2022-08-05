@@ -16,7 +16,7 @@
 
 (defwidget my-calendar []
  (box :class "panel" :spacing SPACING :hexpand true
-   (calendar :class "black"
+   (calendar :class "text"
              :show-details true
              :show-heading true
              :show-day-names true

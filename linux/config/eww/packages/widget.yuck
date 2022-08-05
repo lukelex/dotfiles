@@ -7,8 +7,8 @@
       (icon :name "cubes")
     )
     (box :orientation "vertical" :valign "center"
-      (label :class "black" :text kernel :halign "start")
-      (label :class "black" :text "${outdated_packages} pending updates" :halign "start")
+      (label :class "text" :text kernel :halign "start")
+      (label :class "text" :text "${outdated_packages} pending updates" :halign "start")
     )
   )
 )

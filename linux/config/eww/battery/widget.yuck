@@ -12,11 +12,11 @@
       )
     )
     (box :orientation "vertical" :valign "center"
-      (label :class "black" :halign "start"
+      (label :class "text" :halign "start"
              :text "${battery_name} at ${EWW_BATTERY.BAT0.capacity}%")
-      (label :class "black" :halign "start"
+      (label :class "text" :halign "start"
              :text "${EWW_BATTERY.BAT0.status}")
-      (label :class "black" :halign "start"
+      (label :class "text" :halign "start"
              :limit-width 20 :text "${battery_label}")
     )
   )

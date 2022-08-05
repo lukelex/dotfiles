@@ -12,8 +12,19 @@
   font-weight: bold;
 }
 
-.window {
+.window.light {
   background-color: $light-background-1;
+
+  .panel {
+    background-color: $light-background-2;
+  }
+
+  .button {
+    background-color: $light-background-3;
+  }
+}
+
+.window {
   border-radius: $radius;
   padding: $magic-number * 2;
 }
@@ -27,14 +38,12 @@ box.component {
 }
 
 .panel {
-  background-color: $light-background-2;
   border-radius: $radius * 0.6;
   padding: $magic-number * 2;
 }
 
 .button {
   border-radius: 50%;
-  background-color: $light-background-3;
   padding: $magic-number * 4;
   min-width: $magic-number * 4;
   min-height: $magic-number * 4;
@@ -53,7 +62,7 @@ widget {
   }
 }
 
-.black {
+.text {
   color: black;
 }
 
