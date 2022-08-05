@@ -6,16 +6,19 @@
 (defpoll weather-stat    :interval "1s"  "./scripts/weather --stat")
 
 (defwidget weather []
-  (box :class "weather-panel panel black" :orientation "vertical"
-       :space-evenly false :halign "center"
-    (box :orientation "horizontal" :class "weather-icon"
+  (box :class "weather-panel panel text"
+       :orientation "vertical"
+       :space-evenly false
+       :halign "center"
+
+    (box :class "weather-icon"
       {weather-icon}
     )
-    (box :orientation "horizontal" :class "weather-stat" :halign "center"
+    (box :class "weather-stat" :halign "center"
       (label :limit-width 30 :wrap true
              :text "${weather-temp} with ${weather-stat}")
     )
-    (box :orientation "horizontal" :halign "center"
+    (box :halign "center"
       (label :class "temp-region"
              :text "${weather-city}, ${weather-country}")
     )

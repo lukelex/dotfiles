@@ -27,7 +27,7 @@
                     monitor: 0,
                     border_width: 0,
                     border_rounding: 8,
-                    background_color: Color(hex: "#F5F5F5"),
+                    background_color: Color(hex: "#D4D4D4D9"),
                     border_color: Color(hex: "#00000000"),
                     border_color_low: Color(hex: "#00000000"),
                     border_color_critical: Color(hex: "#FF0000"),

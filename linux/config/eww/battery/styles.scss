@@ -2,7 +2,11 @@
 
 .battery-panel {
   circular-progress {
-    &.high {
+    &.Charging, &.Full {
+      color: green;
+    }
+
+    &.high, &.Discharging {
       color: black;
     }
 
@@ -12,10 +16,6 @@
 
     &.critical {
       color: red;
-    }
-
-    &.Charging, &.Full {
-      color: green;
     }
   }
 }

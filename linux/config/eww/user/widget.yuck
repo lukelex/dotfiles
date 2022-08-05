@@ -3,9 +3,17 @@
 (defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
 
 (defwidget user []
-  (box :class "panel" :orientation "horizontal" :space-evenly false :spacing SPACING :hexpand true
+  (box :class "panel"
+       :orientation "horizontal"
+       :space-evenly false
+       :spacing SPACING
+       :hexpand true
+
     (box :class "button"
-      (image :class "user-img" :path USER_IMG :image-width 32 :image-height 32)
+      (image :class "user-img"
+             :path USER_IMG
+             :image-width 32
+             :image-height 32)
     )
     (box :orientation "vertical" :valign "center"
       (label :class "black" :text "Hi ${username}!" :halign "start")
@@ -13,4 +21,3 @@
     )
   )
 )
-

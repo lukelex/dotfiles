@@ -4,13 +4,13 @@
 (defwindow calion :monitor 0 :stacking "fg" :wm-ignore true
                   :geometry (geometry :width "25%" :y "66px" :anchor "top center")
   (v-window
-    (quote)
     (box :spacing SPACING
          :orientation "horizontal"
          :space-evenly false
-      (my-calendar)
+      (quote)
       (weather)
     )
+    (my-calendar)
   )
 )
 

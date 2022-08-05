@@ -4,7 +4,6 @@
 cache_dir="$HOME/.cache/eww/weather"
 cache_weather_stat=${cache_dir}/weather-stat
 cache_weather_temperature=${cache_dir}/weather-temperature
-cache_weather_hex=${cache_dir}/weather-hex
 cache_weather_icon=${cache_dir}/weather-icon
 cache_weather_city=${cache_dir}/weather-city
 cache_weather_country=${cache_dir}/weather-country
@@ -97,7 +96,6 @@ get_weather_data() {
     echo "$weather_country" >${cache_weather_country}
     echo "$weather_description" >${cache_weather_stat}
     echo "$weather_temp""°C" >${cache_weather_temperature}
-    echo "$weather_hex" >${cache_weather_hex}
   else
     echo "Weather Unavailable" >${cache_weather_stat}
     echo "" >${cache_weather_icon}
