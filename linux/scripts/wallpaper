@@ -1,0 +1,13 @@
+#!/bin/sh
+
+WALLPAPER_PATH="$HOME/wallpaper.png"
+
+case $1 in
+  update)
+    ln -fvs "$2" "$WALLPAPER_PATH"
+    $0 load
+    ;;
+  load)
+    xwallpaper --zoom "$WALLPAPER_PATH"
+    ;;
+esac

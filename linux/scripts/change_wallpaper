@@ -1,5 +1,0 @@
-#!/bin/sh
-
-ln -fvs $1 ~/wallpaper.png
-
-xwallpaper --zoom ~/wallpaper.png
