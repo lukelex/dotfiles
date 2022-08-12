@@ -4,7 +4,7 @@ pamac install --no-confirm \
   # Desktop
   ttf-hack noto-fonts-cjk polybar xwallpaper wired ddcutil \
   zsh zsh-completions rofi rofi-bluetooth-git xdo light \
-  autorandr lightdm-webkit2-greeter rofi-greenclip \
+  autorandr rofi-greenclip \
   sysstat xdotool gconf cmake jq eww-git sxhkd xautolock\
   pulseaudio paprefs pulseaudio-bluetooth blueman \
 
@@ -17,7 +17,7 @@ pamac install --no-confirm \
 
   # Coding
   neovim neovide kitty ctags bat tldr zeal docker docker-compose \
-  rubygems the_silver_searcher diff-so-fancy \
+  the_silver_searcher diff-so-fancy \
 
   # Communication
   slack-desktop whatsapp-nativefier telegram-desktop \
