@@ -1,2 +1,6 @@
-xwallpaper --zoom ~/wallpaper.png
+#!/bin/env sh
+
+set -e
+
+u_wallpaper load
 polybar-msg cmd restart

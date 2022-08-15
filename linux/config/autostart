@@ -1,6 +1,5 @@
-#!/usr/bin/bash sh
+#!/usr/bin/bash
 
-/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 nm-applet &
 xfce4-power-manager &
 wired --run &
@@ -11,8 +10,6 @@ ibus &
 1password --silent &
 greenclip daemon &
 u_eww start &
-ff-theme-util &
-fix_xcursor &
 sxhkd -c ~/dotfiles/linux/config/sxhkdrc &
-u_launch-polybar &
+u_polybar &
 u_i3_workspaces &

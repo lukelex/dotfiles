@@ -30,7 +30,7 @@ super + shift + q
   xkill
 
 super + ctrl + l
-  i3exit lock
+  u_exit lock
 
 super + d
   rofi -show drun

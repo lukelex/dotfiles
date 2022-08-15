@@ -2,18 +2,19 @@
 
 pamac install --no-confirm \
   # Desktop
+  picom \
   ttf-hack noto-fonts-cjk polybar xwallpaper wired ddcutil \
   zsh zsh-completions rofi rofi-bluetooth-git xdo light \
   autorandr rofi-greenclip \
   sysstat xdotool gconf cmake jq eww-git sxhkd xautolock\
-  pulseaudio paprefs pulseaudio-bluetooth blueman \
+  pulseaudio pavucontrol paprefs pulseaudio-bluetooth blueman \
 
   # Utilities
   dropbox flameshot timeshift etcher 1password nordvpn-bin \
   vlc birdfont unzip unrar fragments sxiv playerctl woeusb \
   pantheon-calculator gsimplecal spotify google-chrome cozy \
   imagemagick-full simplescreenrecorder text-pieces curtail \
-  blanket xclip neofetch \
+  blanket xclip neofetch tree \
 
   # Coding
   neovim neovide kitty ctags bat tldr zeal docker docker-compose \

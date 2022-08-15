@@ -1,32 +1,29 @@
 #!/usr/bin/bash
 
-# with openrc use loginctl
-[ "$(cat /proc/1/comm)" = "systemd" ] && logind=systemctl || logind=loginctl
-
 u_music pause
-u_eww close
+u_eww close 2&> /dev/null
 
 case "$1" in
   lock)
-    blurlock -e
+    u_blurlock
     ;;
   logout)
     i3-msg exit
     ;;
   switch_user)
-    dm-tool switch-to-greeter
+    logout
     ;;
   suspend)
-    u_exit lock && $logind suspend
+    u_exit lock && systemctl suspend
     ;;
   hibernate)
-    u_exit lock && $logind hibernate
+    u_exit lock && systemctl hibernate
     ;;
   reboot)
-    $logind reboot
+    systemctl reboot
     ;;
   shutdown)
-    $logind poweroff
+    systemctl poweroff
     ;;
   *)
     echo "== ! exit: missing or invalid argument ! =="

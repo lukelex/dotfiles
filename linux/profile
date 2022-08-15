@@ -1,7 +1,8 @@
 #!/bin/bash
 
 export TZ='Europe/Copenhagen'
-export TERM=kitty
+export TERMINFO=̈́'/usr/share/terminfo'
+export TERM=xterm-kitty
 export XDG_CONFIG_HOME="$HOME/.config"
 export KITTY_CONFIG_DIRECTORY=~/dotfiles/linux/config/
 export BROWSER=/usr/bin/google-chrome-stable

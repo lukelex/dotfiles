@@ -30,10 +30,6 @@ alias gls="git log --oneline --decorate"
 alias grl="git reflog"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
-function clean_branches() {
-  git branch --merged master | grep -v master | xargs git branch -d
-}
-
 # Docker
 alias dc="docker"
 alias dcp="docker-compose"

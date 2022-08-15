@@ -47,19 +47,19 @@ function turn_on {
 }
 
 function get_volume {
-  amixer get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+  amixer -D pulse get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
 }
 
 function get_mic {
-  amixer get Capture | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+  amixer -D pulse get Capture | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
 }
 
 function vol_is_mute {
-  amixer get Master | grep '%' | grep -oE '[^ ]+$' | grep off
+  amixer -D pulse get Master | grep '%' | grep -oE '[^ ]+$' | grep off
 }
 
 function mic_is_mute {
-  amixer get Capture | grep '%' | grep -oE '[^ ]+$' | grep off
+  amixer -D pulse get Capture | grep '%' | grep -oE '[^ ]+$' | grep off
 }
 
 function show_volume {
