@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 info=$(sudo nordvpn status)
 tatus=$(echo "$info" | grep Status | awk '{print $4}')

@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/bash
 
 for bar in $(xdo id -N 'Polybar'); do
   if xprop -id $bar | grep "polybar-tray"; then

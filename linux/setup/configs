@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/bash
 
 rm -rf ~/.config/rofi/config.rasi ~/.Xmodmap
 rm -rf ~/.i3/config ~/.profile ~/.Xresources

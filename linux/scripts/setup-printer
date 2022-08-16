@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 ICON=$FONT_AWESOME_PATH/light/print.svg
 

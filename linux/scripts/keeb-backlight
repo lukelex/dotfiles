@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 function get {
   echo $(cat /sys/class/leds/tpacpi::kbd_backlight/brightness)
