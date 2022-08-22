@@ -36,7 +36,7 @@ super + d
   rofi -show drun
 
 super + Return
-  exec kitty
+  kitty
 
 super + shift + m
   polybar-msg cmd toggle
