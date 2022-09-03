@@ -7,4 +7,10 @@ alias vim="nvim"
 alias open="xdg-open"
 alias o="xdg-open"
 alias v="viewnior"
-alias b="bat"
+
+if command -v bat ; then
+  alias b="bat"
+elif [[ $(which batcat) ]]; then
+  alias b="batcat"
+  alias bat="batcat"
+fi
