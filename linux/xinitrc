@@ -3,6 +3,7 @@
 userresources=$HOME/.Xresources
 xprofile=$HOME/dotfiles/linux/xprofile
 sysresources=/etc/X11/xinit/.Xresources
+environment=$HOME/dotfiles/linux/env
 
 DEFAULT_SESSION='i3 --shmlog-size 0'
 
@@ -14,6 +15,8 @@ fi
 if [ -f "$userresources" ]; then
   xrdb -merge "$userresources"
 fi
+
+source $environment
 
 if [ -f $xprofile ]; then
   source $xprofile

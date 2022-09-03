@@ -5,17 +5,18 @@ xset r rate 200 35
 setxkbmap -layout us -variant mac
 xmodmap ~/dotfiles/linux/config/keyboard.map
 
-# identify and set monitor profiles
-autorandr --change
-
-# set wallpaper
-u_wallpaper load &
-
 export QT_QPA_PLATFORMTHEME="qt5ct"
 export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
 export FONT_AWESOME_PATH="$HOME/dotfiles/fonts/fa6/svgs"
 
 touch /tmp/wired.log
 
-source ~/Dropbox/secrets
+source ~/Dropbox/secrets 2&> /dev/null
 source ~/dotfiles/linux/config/autostart
+
+# identify and set monitor profiles
+autorandr --change > /dev/null
+
+# set wallpaper
+u_wallpaper load &
+

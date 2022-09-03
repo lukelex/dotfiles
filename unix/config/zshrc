@@ -6,7 +6,7 @@ ZSH_THEME="robbyrussell"
 
 source $ZSH/oh-my-zsh.sh
 
-source ~/dotfiles/unix/env.sh
+source ~/dotfiles/unix/env
 if [[ "$(uname)" == 'Linux' ]]; then
-  source ~/dotfiles/linux/env.sh
+  source ~/dotfiles/linux/env
 fi

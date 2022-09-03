@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 export TZ='Europe/Copenhagen'
 export TERMINFO='/usr/share/terminfo'

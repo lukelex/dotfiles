@@ -1,11 +1,10 @@
 #!/usr/bin/bash
 
-. ~/dotfiles/unix/setup/aliases
-. ~/dotfiles/unix/setup/configs
-. ~/dotfiles/unix/setup/dependencies
-. ~/dotfiles/unix/setup/git-config
+source ~/dotfiles/unix/setup/configs
+source ~/dotfiles/unix/setup/dependencies
+source ~/dotfiles/unix/setup/git-config
 
-. ~/dotfiles/linux/setup/aliases
-. ~/dotfiles/linux/setup/configs
-. ~/dotfiles/linux/setup/dependencies
-. ~/dotfiles/linux/setup/clean
+source ~/dotfiles/linux/setup/configs
+source ~/dotfiles/linux/setup/dependencies
+source ~/dotfiles/linux/setup/binaries
+source ~/dotfiles/linux/setup/clean

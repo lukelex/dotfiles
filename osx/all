@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/bash
 
 . ~/dotfiles/unix/setup/aliases
 . ~/dotfiles/unix/setup/configs
