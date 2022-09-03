@@ -6,7 +6,7 @@ rm -rf ~/.i3/config ~/.profile ~/.Xresources
 mkdir ~/screenshots
 
 mkdir -p ~/.config/i3
-ln -fvs ~/dotfiles/linux/config/i3 ~/.config/i3/config
+ln -fvs ~/dotfiles/linux/config/i3/main.conf ~/.config/i3/config
 
 mkdir -p ~/.config/rofi
 ln -fvs ~/dotfiles/linux/config/rofi/main.rasi ~/.config/rofi/config.rasi
