@@ -8,7 +8,7 @@ HALF=
 THREE_QUARTERS=
 FULL=
 
-stats=$(upower -i /org/freedesktop/UPower/devices/battery_$2 | grep -E "state|to\ full|percentage|time\ to\ empty")
+stats=$(upower -i /org/freedesktop/UPower/devices/battery_$2 | grep -E "state|to full|percentage|time to empty")
 
 get_percentage() {
   echo $(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')

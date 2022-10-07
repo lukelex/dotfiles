@@ -1,8 +1,12 @@
 (include "./quote/widget.yuck")
 (include "./weather/widget.yuck")
 
-(defwindow calion :monitor 0 :stacking "fg" :wm-ignore true
-                  :geometry (geometry :width "25%" :y "66px" :anchor "top center")
+(defwindow calion :monitor 0
+                  :stacking "fg"
+                  :wm-ignore true
+                  :geometry (geometry :width "25%"
+                                      :y "51px"
+                                      :anchor "top center")
   (v-window
     (box :spacing SPACING
          :orientation "horizontal"

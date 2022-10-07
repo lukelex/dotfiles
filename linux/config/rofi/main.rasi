@@ -5,7 +5,7 @@ configuration {
 
   kb-remove-to-eol: "";
   kb-accept-entry: "Return,KP_Enter";
-  kb-row-up: "Up,Control+k,ISO_Left_Tab";
+  kb-row-up: "Up,Control+k";
   kb-row-down: "Down,Control+j";
 }
 
