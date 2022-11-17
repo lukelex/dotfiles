@@ -7,6 +7,8 @@ alias vim="nvim"
 alias open="xdg-open"
 alias o="xdg-open"
 alias v="viewnior"
+alias t="tree"
+alias cls="printf '\033c'"
 
 if command -v bat ; then
   alias b="bat"

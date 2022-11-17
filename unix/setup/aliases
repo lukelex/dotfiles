@@ -33,6 +33,3 @@ alias gcap="git add . && git commit --amend --no-edit && git push --force-with-l
 # Docker
 alias dc="docker"
 alias dcp="docker-compose"
-
-# Linux
-alias cls="printf '\033c'"
