@@ -136,6 +136,8 @@ hi Search cterm=NONE ctermfg=NONE ctermbg=blue
 
 set guifont=Hack:h17
 
+au BufReadPost .env.* set syntax=sh
+
 " Make it obvious where 70 characters is on text files
 autocmd BufRead,BufNewFile *.md set textwidth=70
 set colorcolumn=+1
