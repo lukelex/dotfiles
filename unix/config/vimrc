@@ -41,6 +41,7 @@ Plug 'ngmy/vim-rubocop'
 Plug 'schickling/vim-bufonly'
 Plug 'chrisbra/csv.vim'
 Plug 'baskerville/vim-sxhkdrc'
+Plug 'editorconfig/editorconfig-vim'
 
 " Generic code
 Plug 'tpope/vim-commentary'
