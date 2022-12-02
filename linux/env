@@ -1,8 +1,5 @@
 #!/usr/bin/bash
 
-# Custom binaries
-export PATH="$HOME/dotfiles/linux/bin:$PATH"
-
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 # Remember to enable any locales that you might need
