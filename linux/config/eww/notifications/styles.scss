@@ -6,17 +6,40 @@
   }
 
   .body {
+    // margin: 0 $magic-number;
+
     .entry {
       border-radius: $radius * 0.4;
       padding: $magic-number;
-      margin-top: $magic-number/2;
-      margin-bottom: $magic-number/2;
+      margin-top: $magic-number;
+      margin-bottom: $magic-number;
+
+      .actions {
+        padding: $magic-number / 2;
+
+        &:hover {
+          color: green;
+        }
+      }
     }
   }
 
   .footer {
     button {
       margin-left: $magic-number;
+    }
+  }
+}
+
+checkbutton {
+  check {
+    background-color: orange;
+    border: 3px solid;
+
+    color: red;
+
+    &:checked {
+      background-color: green;
     }
   }
 }

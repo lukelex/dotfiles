@@ -1,0 +1,45 @@
+@import "../variables";
+
+$dark-background-1: rgba(0, 35, 44, $opacity);
+$dark-background-2: rgba(7, 54, 66, $opacity);
+$dark-background-3: rgba(88, 110, 117, $opacity);
+$dark-background-4: rgba(88, 110, 117, $opacity);
+
+$dark-accent-background: #53C3B9;
+$dark-accent-text: #00232c;
+
+.window.dark {
+  background-color: $dark-background-1;
+
+  .text {
+    color: #93a1a1;
+  }
+
+  .accented {
+    background-color: $dark-accent-background;
+
+    .text {
+      color: $dark-accent-text;
+    }
+  }
+
+  .panel {
+    background-color: $dark-background-2;
+  }
+
+  .button {
+    background-color: $dark-background-3;
+  }
+
+  .notification-panel {
+    .body {
+      .entry {
+        background-color: $dark-background-2;
+      }
+    }
+
+    .actions {
+      background-color: $dark-background-3;
+    }
+  }
+}

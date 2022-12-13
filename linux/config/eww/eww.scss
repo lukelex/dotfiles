@@ -2,10 +2,11 @@
 @import "./weather/styles";
 @import "./system-stats/styles";
 @import "./notifications/styles";
-@import "./user/styles.scss";
+@import "./user/styles";
 
 @import "./variables";
-@import "./themes/light.scss";
+@import "./themes/light";
+@import "./themes/dark";
 
 * {
   all: unset;
@@ -30,6 +31,7 @@ box.component {
 .panel {
   border-radius: $radius * 0.6;
   padding: $magic-number * 2;
+  // margin: $magic-number;
 }
 
 .button {
@@ -50,10 +52,6 @@ widget {
       background-color: #abddfc;
     }
   }
-}
-
-.text {
-  color: black;
 }
 
 scale trough {
