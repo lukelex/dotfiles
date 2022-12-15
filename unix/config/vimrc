@@ -42,6 +42,7 @@ Plug 'schickling/vim-bufonly'
 Plug 'chrisbra/csv.vim'
 Plug 'baskerville/vim-sxhkdrc'
 Plug 'editorconfig/editorconfig-vim'
+Plug 'terrastruct/d2-vim'
 
 " Generic code
 Plug 'tpope/vim-commentary'
