@@ -18,6 +18,7 @@ git config --global color.diff.old        "red bold"
 git config --global color.diff.new        "green bold"
 git config --global color.diff.whitespace "red reverse"
 
+git config --global init.defaultBranch main
 git config --global rebase.autosquash true
 git config --global push.default current
 git config --global pull.rebase true
