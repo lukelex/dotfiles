@@ -16,6 +16,7 @@ supporting my preferred workflows.
 * Window decoration and animations are from [Picom](https://github.com/yshui/picom);
 * Wallpapers are by the talented [Byrotek](https://www.patreon.com/byrotek).
 * Application Launcher is [rofi](https://github.com/davatorium/rofi)
+* Code editing using [NeoVim](https://neovim.io/)
 
 ## Setup
 
