@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+
+echo "########### Dropbox (installing...) ###########"
+
+set -e
+
+cd ~ && wget -O - "https://www.dropbox.com/download?plat=lnx.x86_64" | tar xzf -
+
+curl -LO https://www.dropbox.com/download?dl=packages/dropbox.py
+chmod +x ./dropbox.py
+
+sudo mv dropbox.py /usr/local/bin/dropbox
+
+echo "########### Dropbox (DONE!) ###########"
