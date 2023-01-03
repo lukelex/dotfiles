@@ -9,7 +9,7 @@ flameshot &
 ibus &
 1password --silent &
 greenclip daemon &
-u_eww start &
+u_eww &
 sxhkd -c ~/dotfiles/linux/config/sxhkdrc &
 u_polybar &
 u_i3_workspaces &
