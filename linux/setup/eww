@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+echo "########### Eww (installing...) ###########"
+
 set -e
 
 git clone https://github.com/elkowar/eww
@@ -13,3 +15,5 @@ cargo build --release
 cd target/release
 chmod +x ./eww
 sudo cp ./eww /usr/local/bin/
+
+echo "########### Eww (DONE!) ###########"

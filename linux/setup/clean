@@ -1,4 +1,4 @@
-#!/usr/bin/bash sh
+#!/usr/bin/bash
 
 sudo pamac remove --unneeded --no-confirm \
   palemoon-bin rxvt-unicode i3exit \

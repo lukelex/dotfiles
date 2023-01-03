@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+echo "########### Wired (installing...) ###########"
+
 set -e
 
 repo_location=~/wired-notify
@@ -15,3 +17,5 @@ sudo cp ./target/release/wired /usr/local/bin
 chmod +x /usr/local/bin/wired
 
 rm -rf $repo_location
+
+echo "########### Wired (DONE!) ###########"

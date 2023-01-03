@@ -1,6 +1,10 @@
 #!/usr/bin/bash
 
+echo "########### Greenclip (installing...) ###########"
+
 set -e
 
 sudo wget --directory-prefix /usr/local/bin https://github.com/erebe/greenclip/releases/download/v4.2/greenclip
 sudo chmod +x /usr/local/bin/greenclip
+
+echo "########### Greenclip (DONE!) ###########"
