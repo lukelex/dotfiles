@@ -9,7 +9,8 @@ do
   workspace=$(echo $line | jq '.current.name')
   output=$(echo $line | jq '.current.output')
 
-  echo $workspace
+  echo "$workspace on $output"
+
   notify-send -a System \
               -i "$FONT_AWESOME_PATH/light/display.svg" \
               -t 650 \
