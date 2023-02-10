@@ -4,7 +4,7 @@ nm-applet &
 xfce4-power-manager &
 wired --run &
 dropbox start -i &
-xautolock -time 5 -locker 'u_exit lock' -detectsleep -corners ---- &
+xautolock -time 5 -locker 'u_exit lock' -detectsleep -corners ---- -notify 15 -notifier "u_autolocking" &
 flameshot &
 ibus &
 1password --silent &

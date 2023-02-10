@@ -1,0 +1,7 @@
+#!/bin/bash
+
+notify-send -a System \
+  -i "$FONT_AWESOME_PATH/light/user-clock.svg" \
+  -h string:wired-tag:system \
+  -h int:value:0\
+  "LOCKING screen in 15 seconds"
