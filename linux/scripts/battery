@@ -27,9 +27,9 @@ icon() {
     echo "%{F#FF0000}$CRITICAL%{F-}"
   elif [[ 1 -eq $(echo "$value < 16" | bc -l) ]]; then
     echo $LOW
-  elif [[ 1 -eq $(echo "$value < 31" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value < 26" | bc -l) ]]; then
     echo $QUARTER
-  elif [[ 1 -eq $(echo "$value < 66" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value < 51" | bc -l) ]]; then
     echo $HALF
   elif [[ 1 -eq $(echo "$value < 91" | bc -l) ]]; then
     echo $THREE_QUARTERS

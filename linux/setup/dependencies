@@ -14,7 +14,7 @@ pamac install --no-confirm \
   vlc birdfont unzip unrar fragments sxiv playerctl woeusb \
   pantheon-calculator gsimplecal spotify google-chrome cozy \
   imagemagick-full simplescreenrecorder text-pieces curtail \
-  blanket xclip neofetch tree \
+  blanket xclip neofetch tree v4l-utils \
 
   # Coding
   neovim neovide kitty ctags bat tldr zeal docker docker-compose \

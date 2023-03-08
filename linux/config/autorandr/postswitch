@@ -8,4 +8,4 @@ polybar-msg cmd restart
 notify-send -a System \
             -i "$FONT_AWESOME_PATH/light/display.svg" \
             -h string:wired-tag:system \
-            "Display profile" "$AUTORANDR_CURRENT_PROFILE"
+            "\"$AUTORANDR_CURRENT_PROFILE\""

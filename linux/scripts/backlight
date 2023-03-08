@@ -16,7 +16,7 @@ icon() {
 
 case $1 in
   if)
-    light -L 2>&- | grep monitor
+    light -L 2>&- | grep auto
     ;;
   icon)
     icon
