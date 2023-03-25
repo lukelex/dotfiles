@@ -2,8 +2,16 @@ vim.g.shell = "bash"
 
 vim.g.mapleader = " "
 
+-- Tweaks for file browsing
+vim.g.netrw_banner = 0 -- disable annoying banner
+vim.g.netrw_browse_split = 4 -- open in prior window
+vim.g.netrw_altv = 1 -- open split to the right
+vim.g.netrw_liststyle = 3 -- tree view
+
 vim.opt.guifont = "Hack:h17"
 
+vim.cmd("set noshowmode") -- Hide current mode
+vim.cmd("set nowrap") -- avoid line wrapping
 vim.opt.laststatus = 2 -- always display status line
 vim.opt.backspace = "2"
 vim.opt.ruler = true -- show the cursor position all the time

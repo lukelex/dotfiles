@@ -13,28 +13,14 @@ set shell=bash
 
 syntax on
 
-set nowrap " avoid line wrapping
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
 
 " Tweaks for file browsing
-let g:netrw_banner=0        " disable annoying banner
-let g:netrw_browse_split=4  " open in prior window
-let g:netrw_altv=1          " open split to the right
-let g:netrw_liststyle=3     " tree view
 let g:netrw_list_hide=netrw_gitignore#Hide()
 let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
 
-let g:easytags_async = 1
-let g:easytags_auto_highlight = 0
-
-let mapleader = "\<Space>"
-
 let g:snipMate = { 'snippet_version' : 1 }
-
-" adopt new ruby hash syntax
-" :%s/:\([^ ]*\)\(\s*\)=>/\1:/g
-" :%s/:(\w+)(\s*)=>/\1:/g
 
 " master fucking undo
 nnoremap <F5> :UndotreeToggle<CR>
@@ -71,9 +57,6 @@ nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 
-" SuperTab
-nmap <leader>t :TagbarToggle<CR>
-
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72
 autocmd FileType gitcommit setlocal spell
@@ -88,20 +71,8 @@ au BufRead,BufNewFile *.jbuilder setfiletype ruby
 au BufRead,BufNewFile *.eex setfiletype eelixir
 au BufRead,BufNewFile *.exs setfiletype eelixir
 
-" Removes trailing spaces
-function! TrimWhiteSpace()
-  %s/\s\+$//e
-endfunction
-
-nnoremap <silent> <Leader>rts :call TrimWhiteSpace()<CR>
-autocmd FileWritePre    * :call TrimWhiteSpace()
-autocmd FileAppendPre   * :call TrimWhiteSpace()
-autocmd FilterWritePre  * :call TrimWhiteSpace()
-autocmd BufWritePre     * :call TrimWhiteSpace()
-
 vmap <Leader>b :<C-U>!git blame <C-R>=expand("%:p") <CR> \| sed -n <C-R>=line("'<") <CR>,<C-R>=line("'>") <CR>p <CR>
 
-set noshowmode " Hide current mode
 let g:lightline = {
       \ 'colorscheme': 'one',
       \ 'active': {
