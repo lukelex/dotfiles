@@ -71,8 +71,6 @@ au BufRead,BufNewFile *.jbuilder setfiletype ruby
 au BufRead,BufNewFile *.eex setfiletype eelixir
 au BufRead,BufNewFile *.exs setfiletype eelixir
 
-vmap <Leader>b :<C-U>!git blame <C-R>=expand("%:p") <CR> \| sed -n <C-R>=line("'<") <CR>,<C-R>=line("'>") <CR>p <CR>
-
 let g:lightline = {
       \ 'colorscheme': 'one',
       \ 'active': {
