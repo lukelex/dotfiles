@@ -4,3 +4,5 @@ vim/bundle
 workspace*.json
 
 linux/bin/*
+
+linux/config/nvim/backup/

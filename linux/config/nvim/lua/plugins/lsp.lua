@@ -14,3 +14,9 @@ require("mason-lspconfig").setup({
     "vimls",
   }
 })
+
+require("lspconfig").ruby_ls.setup {}
+require("lspconfig").gdscript.setup {}
+require("lspconfig").lua_ls.setup {}
+require("lspconfig").dockerls.setup {}
+require("lspconfig").docker_compose_language_service.setup {}

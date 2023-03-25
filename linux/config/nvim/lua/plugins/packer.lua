@@ -27,6 +27,7 @@ return require("packer").startup(function(use)
   use "airblade/vim-gitgutter"
   use "tpope/vim-repeat"
   use "tpope/vim-surround"
+  use "Raimondi/delimitMate"
   use {
     "junegunn/fzf.vim",
     "junegunn/fzf", run = function() vim.fn["fzf#install()"](0) end
@@ -43,6 +44,7 @@ return require("packer").startup(function(use)
   use "fladson/vim-kitty"
   use "ron-rs/ron.vim"
   use "elkowar/yuck.vim"
+  use "baskerville/vim-sxhkdrc"
 
   -- Language Server Protocol
   use {

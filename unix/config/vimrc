@@ -3,57 +3,20 @@ filetype off
 
 set shell=bash
 
-" call plug#begin('~/.vim/plugged')
-"
 " " Ruby
-" Plug 'vim-ruby/vim-ruby'
 " Plug 'tpope/vim-endwise'
-" Plug 'nelstrom/vim-textobj-rubyblock'
-"
-" " Javascript
-" Plug 'jelera/vim-javascript-syntax'
-" Plug 'mxw/vim-jsx'
-" Plug 'pangloss/vim-javascript'
-"
-" " Elixir
-" Plug 'elixir-lang/vim-elixir'
-"
-" " Html
-" Plug 'slim-template/vim-slim'
-"
-" " Editor improvements
-" " Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-" " Plug 'junegunn/fzf.vim'
-" Plug 'tomtom/tlib_vim'
-" Plug 'MarcWeber/vim-addon-mw-utils'
-" Plug 'airblade/vim-gitgutter'
-" Plug 'itchyny/lightline.vim'
-" Plug 'majutsushi/tagbar'
-" Plug 'ervandew/supertab'
-" Plug 'benjifisher/matchit.zip'
-" Plug 'chrisbra/csv.vim'
-" " Plug 'baskerville/vim-sxhkdrc'
 "
 " " Generic code
 " Plug 'garbas/vim-snipmate'
 " Plug 'honza/vim-snippets'
-" " Plug 'tpope/vim-repeat'
-" Plug 'Raimondi/delimitMate'
 " Plug 'scrooloose/syntastic'
 " Plug 'jparise/vim-graphql'
 " Plug 'leafgarland/typescript-vim'
 " Plug 'peitalin/vim-jsx-typescript'
-" call plug#end()
 
 syntax on
-set backspace=2
-set ruler         " show the cursor position all the time
-set showcmd       " display incomplete commands
 
-set mouse=a " enable mouse events in all modes
 set nowrap " avoid line wrapping
-set hlsearch " highlight search results
-set incsearch " show search results while typing
 setlocal ignorecase " ignore case when searching
 setlocal smartcase " when searching try to be smart about cases
 
@@ -77,56 +40,18 @@ let g:snipMate = { 'snippet_version' : 1 }
 " :%s/:(\w+)(\s*)=>/\1:/g
 
 " master fucking undo
-set undofile
-set undodir=~/.cache/undodir
 nnoremap <F5> :UndotreeToggle<CR>
 
 " backup files
-" set nobackup
-" set nowb
 set noswapfile
-set backup
-set backupdir=~/backup_vim
-
-set clipboard=unnamedplus
-
-" autoread files that were changed outside of vim
-set autoread
-
-set number
-set relativenumber " has become SUPER slow
-
-set ttyfast
-" set ttyscroll=3
-set lazyredraw
-
-" use 2 spaces instead of tabs
-set expandtab
-set smarttab
-set tabstop=2
-set shiftwidth=2
-
-" use natural screen spliting
-set splitbelow
-set splitright
 
 colorscheme railscasts
-set cursorline " show cursor line (causes repaint, which will make terminal vim slower)
-hi Search cterm=NONE ctermfg=NONE ctermbg=blue
-
-set guifont=Hack:h17
 
 au BufReadPost .env.* set syntax=sh
 
 " Make it obvious where 70 characters is on text files
 autocmd BufRead,BufNewFile *.md set textwidth=70
 set colorcolumn=+1
-
-" disable scrollbars
-set guioptions-=r
-set guioptions-=R
-set guioptions-=l
-set guioptions-=L
 
 " remap 0 in normal mode to go to the beginning of the text line
 nmap 0 ^
@@ -180,7 +105,6 @@ autocmd BufWritePre     * :call TrimWhiteSpace()
 vmap <Leader>b :<C-U>!git blame <C-R>=expand("%:p") <CR> \| sed -n <C-R>=line("'<") <CR>,<C-R>=line("'>") <CR>p <CR>
 
 set noshowmode " Hide current mode
-set laststatus=2 " always display status line
 let g:lightline = {
       \ 'colorscheme': 'one',
       \ 'active': {
