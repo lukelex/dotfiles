@@ -56,6 +56,8 @@ super + ctrl + e
   u_emoji
 super + ctrl + c
   u_clipboard
+super + ctrl + f
+  pcmanfm
 super + ctrl + p
   1password --quick-access
 
