@@ -10,9 +10,6 @@ set shell=bash
 " Plug 'garbas/vim-snipmate'
 " Plug 'honza/vim-snippets'
 " Plug 'scrooloose/syntastic'
-" Plug 'jparise/vim-graphql'
-" Plug 'leafgarland/typescript-vim'
-" Plug 'peitalin/vim-jsx-typescript'
 
 syntax on
 

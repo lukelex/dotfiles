@@ -27,6 +27,7 @@ return require("packer").startup(function(use)
   use "airblade/vim-gitgutter"
   use "tpope/vim-repeat"
   use "tpope/vim-surround"
+  use "tpope/vim-endwise"
   use "Raimondi/delimitMate"
   use {
     "junegunn/fzf.vim",
