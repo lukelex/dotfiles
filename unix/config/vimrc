@@ -3,64 +3,47 @@ filetype off
 
 set shell=bash
 
-call plug#begin('~/.vim/plugged')
-
-" Ruby
-Plug 'vim-ruby/vim-ruby'
-Plug 'tpope/vim-endwise'
-Plug 'nelstrom/vim-textobj-rubyblock'
-
-" Javascript
-Plug 'jelera/vim-javascript-syntax'
-Plug 'mxw/vim-jsx'
-Plug 'pangloss/vim-javascript'
-
-" Elixir
-Plug 'elixir-lang/vim-elixir'
-
-" Html
-Plug 'slim-template/vim-slim'
-
-" Editor improvements
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-Plug 'junegunn/fzf.vim'
-Plug 'tpope/vim-fugitive'
-Plug 'tomtom/tlib_vim'
-Plug 'MarcWeber/vim-addon-mw-utils'
-Plug 'airblade/vim-gitgutter'
-Plug 'mileszs/ack.vim'
-Plug 'itchyny/lightline.vim'
-Plug 'majutsushi/tagbar'
-Plug 'ervandew/supertab'
-Plug 'benjifisher/matchit.zip'
-Plug 'mbbill/undotree'
-Plug 'DataWraith/auto_mkdir'
-Plug 'danro/rename.vim'
-Plug 'henrik/vim-indexed-search'
-Plug 'ngmy/vim-rubocop'
-Plug 'schickling/vim-bufonly'
-Plug 'chrisbra/csv.vim'
-Plug 'baskerville/vim-sxhkdrc'
-Plug 'editorconfig/editorconfig-vim'
-Plug 'terrastruct/d2-vim'
-
-" Generic code
-Plug 'tpope/vim-commentary'
-Plug 'garbas/vim-snipmate'
-Plug 'honza/vim-snippets'
-Plug 'kana/vim-textobj-user'
-Plug 'tpope/vim-surround'
-Plug 'tpope/vim-repeat'
-Plug 'Raimondi/delimitMate'
-Plug 'scrooloose/syntastic'
-Plug 'jparise/vim-graphql'
-Plug 'fladson/vim-kitty'
-Plug 'leafgarland/typescript-vim'
-Plug 'peitalin/vim-jsx-typescript'
-Plug 'ron-rs/ron.vim'
-Plug 'elkowar/yuck.vim'
-
-call plug#end()
+" call plug#begin('~/.vim/plugged')
+"
+" " Ruby
+" Plug 'vim-ruby/vim-ruby'
+" Plug 'tpope/vim-endwise'
+" Plug 'nelstrom/vim-textobj-rubyblock'
+"
+" " Javascript
+" Plug 'jelera/vim-javascript-syntax'
+" Plug 'mxw/vim-jsx'
+" Plug 'pangloss/vim-javascript'
+"
+" " Elixir
+" Plug 'elixir-lang/vim-elixir'
+"
+" " Html
+" Plug 'slim-template/vim-slim'
+"
+" " Editor improvements
+" " Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+" " Plug 'junegunn/fzf.vim'
+" Plug 'tomtom/tlib_vim'
+" Plug 'MarcWeber/vim-addon-mw-utils'
+" Plug 'airblade/vim-gitgutter'
+" Plug 'itchyny/lightline.vim'
+" Plug 'majutsushi/tagbar'
+" Plug 'ervandew/supertab'
+" Plug 'benjifisher/matchit.zip'
+" Plug 'chrisbra/csv.vim'
+" " Plug 'baskerville/vim-sxhkdrc'
+"
+" " Generic code
+" Plug 'garbas/vim-snipmate'
+" Plug 'honza/vim-snippets'
+" " Plug 'tpope/vim-repeat'
+" Plug 'Raimondi/delimitMate'
+" Plug 'scrooloose/syntastic'
+" Plug 'jparise/vim-graphql'
+" Plug 'leafgarland/typescript-vim'
+" Plug 'peitalin/vim-jsx-typescript'
+" call plug#end()
 
 syntax on
 set backspace=2
@@ -88,11 +71,6 @@ let g:easytags_auto_highlight = 0
 let mapleader = "\<Space>"
 
 let g:snipMate = { 'snippet_version' : 1 }
-
-" clean the current search
-nmap <leader>h :nohlsearch<cr>
-
-nmap <leader>r :RuboCop<cr>
 
 " adopt new ruby hash syntax
 " :%s/:\([^ ]*\)\(\s*\)=>/\1:/g
@@ -150,19 +128,9 @@ set guioptions-=R
 set guioptions-=l
 set guioptions-=L
 
-" always horizontally center search results
-nmap n nzz
-nmap N Nzz
-
 " remap 0 in normal mode to go to the beginning of the text line
 nmap 0 ^
 nmap - ^
-
-nmap <leader>p :FZF<cr>
-nmap <leader>u :Buffers<cr>
-let g:fzf_preview_window = ['right:50%', 'ctrl-/']
-let g:fzf_buffers_jump = 1
-let g:fzf_tags_command = 'ctags -R --exclude=node_modules --exclude=public'
 
 if executable('ag')
   " Use ag over grep
