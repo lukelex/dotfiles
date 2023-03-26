@@ -1,5 +1,6 @@
 require("core.editor")
 require("core.keybindings")
+require("core.diagnostic")
 
 require("plugins.packer")
 require("plugins.fzf")
