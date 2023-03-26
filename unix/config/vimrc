@@ -3,14 +3,6 @@ filetype off
 
 set shell=bash
 
-" " Ruby
-" Plug 'tpope/vim-endwise'
-"
-" " Generic code
-" Plug 'garbas/vim-snipmate'
-" Plug 'honza/vim-snippets'
-" Plug 'scrooloose/syntastic'
-
 syntax on
 
 setlocal ignorecase " ignore case when searching
@@ -19,8 +11,6 @@ setlocal smartcase " when searching try to be smart about cases
 " Tweaks for file browsing
 let g:netrw_list_hide=netrw_gitignore#Hide()
 let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
-
-let g:snipMate = { 'snippet_version' : 1 }
 
 " master fucking undo
 nnoremap <F5> :UndotreeToggle<CR>

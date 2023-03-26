@@ -16,12 +16,14 @@ require("mason-lspconfig").setup({
 })
 
 local on_attach = function()
-  vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = 0 })
-  vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = 0 })
-  vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = 0 })
+  local opts = { noremap = true, silent = true, buffer = 0 }
+
+  vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+  vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+  vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
 end
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 local config = require("lspconfig")
 config.ruby_ls.setup {
@@ -52,3 +54,5 @@ config.docker_compose_language_service.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
+
+require("plugins.lsp.appearance")

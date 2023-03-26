@@ -18,7 +18,9 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   group = group,
 })
 
-return require("packer").startup(function(use)
+local packer = require("packer")
+
+return packer.startup(function(use)
   use "wbthomason/packer.nvim"
 
   -- Editor improvements
@@ -66,11 +68,12 @@ return require("packer").startup(function(use)
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "L3MON4D3/LuaSnip",
+    "rafamadriz/friendly-snippets"
   }
 
   -- Automatically set up your configuration after cloning packer.nvim
   -- Put this at the end after all plugins
   if packer_bootstrap then
-    require("packer").sync()
+    packer.sync()
   end
 end)
