@@ -11,6 +11,13 @@ end
 
 local packer_bootstrap = ensure_packer()
 
+local group = vim.api.nvim_create_augroup("packer_user_config", { clear = true })
+vim.api.nvim_create_autocmd("BufWritePost", {
+  command = "source <afile> | PackerSync",
+  pattern = "packer.lua", -- the name of your plugins file
+  group = group,
+})
+
 return require("packer").startup(function(use)
   use "wbthomason/packer.nvim"
 
