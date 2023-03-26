@@ -1,3 +1,5 @@
+vim.g.mapleader = " "
+
 -- clean the current search
 vim.api.nvim_set_keymap("n", "<leader>h", ":nohlsearch<CR>", {})
 

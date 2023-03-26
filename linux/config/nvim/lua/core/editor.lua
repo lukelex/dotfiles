@@ -1,7 +1,5 @@
 vim.g.shell = "bash"
 
-vim.g.mapleader = " "
-
 -- Tweaks for file browsing
 vim.g.netrw_banner = 0 -- disable annoying banner
 vim.g.netrw_browse_split = 4 -- open in prior window
@@ -52,4 +50,4 @@ vim.opt.splitright = true
 
 vim.opt.ttyfast = true
 -- vim.opt.ttyscroll = 3
-vim.opt.lazyredraw = true
+-- vim.opt.lazyredraw = true

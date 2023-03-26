@@ -6,6 +6,7 @@ require("mason-lspconfig").setup({
     "tsserver",
     "vuels",
     "html",
+    "cssls",
     "marksman",
     "lua_ls",
     "sqlls",
@@ -42,7 +43,15 @@ config.dockerls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
+config.tsserver.setup {
+  on_attach = on_attach,
+  capabilities = capabilities,
+}
 config.vuels.setup {
+  on_attach = on_attach,
+  capabilities = capabilities,
+}
+config.cssls.setup {
   on_attach = on_attach,
   capabilities = capabilities,
 }
