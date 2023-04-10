@@ -7,6 +7,18 @@
                                                    :y "66px"
                                                    :anchor "top right")
   (v-window
-    (notifications)
+    (box :class "panel notification-panel"
+         :spacing SPACING
+         :orientation "vertical"
+         :space-evenly false
+
+      (notifications-header)
+      (scroll :vscroll true
+              :hscroll false
+              :height 799
+        (notifications-body)
+      )
+      (notifications-footer)
+    )
   )
 )

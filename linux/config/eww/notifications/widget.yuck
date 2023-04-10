@@ -2,40 +2,61 @@
 (defvar notification-icon-name "bell")
 ; (defvar notification-icon-name "bell-slash")
 
-(defwidget notifications []
-  (box :class "panel notification-panel" :spacing SPACING
-       :orientation "vertical" :space-evenly false
-    (box :class "header" :orientation "horizontal"
-      (label :class "title text" :text "Notification Center" :halign "start")
-      (box :orientation "horizontal" :halign "end"
-        (pointer :active true
-          (button :class "settings" :onclick "wired toggle &"
-            (icon-small :name notification-icon-name)
-          )
-        )
-      )
-    )
-    (scroll :vscroll true :hscroll false :height 799
-      (box :class "body" :orientation "vertical" :space-evenly false
-        (for entry in wired
-          (box :class "entry" :spacing SPACING :width 400
-               :orientation "vertical" :space-evenly false
-            (label :class "text" :limit-width 40 :halign "start"
-                   :text "${entry.app_name}: ${entry.summary}")
-            (label :class "text" :wrap true :limit-width 100
-                   :halign "start" :text { entry.body })
-            ; (button :class "button ${ "active" }" :onclick "u_wifi toggle" :tooltip "Toggle wifi On & Off")
-          )
-        )
-      )
-    )
-    (box :class "footer" :orientation "horizontal"
+(defwidget notifications-header []
+  (box :class "header"
+       :orientation "horizontal"
+    (label :class "title text"
+           :text "Notification Center"
+           :halign "start")
+    (box :orientation "horizontal"
+         :halign "end"
       (pointer :active true
-        (box :orientation "horizontal" :halign "end" :space-evenly false
-          (label :class "text" :text "Clear All")
-          (button :class "settings" :onclick "u_notification-center open &"
-            (icon-small :name "bars-sort")
-          )
+        (button :class "settings"
+                :onclick "wired toggle &"
+          (icon-small :name notification-icon-name)
+        )
+      )
+    )
+  )
+)
+
+(defwidget notifications-body []
+  (box :class "body"
+       :orientation "vertical"
+       :space-evenly false
+    (for entry in wired
+      (box :class "entry"
+           :spacing SPACING
+           :width 400
+           :orientation "vertical"
+           :space-evenly false
+        (label :class "text"
+               :limit-width 40
+               :halign "start"
+               :text "${entry.app_name}: ${entry.summary}")
+        (label :class "text"
+               :wrap true
+               :limit-width 100
+               :halign "start"
+               :text { entry.body })
+        ; (button :class "button ${ "active" }" :onclick "u_wifi toggle" :tooltip "Toggle wifi On & Off")
+      )
+    )
+  )
+)
+
+(defwidget notifications-footer []
+  (box :class "footer"
+       :orientation "horizontal"
+    (pointer :active true
+      (box :orientation "horizontal"
+           :halign "end"
+           :space-evenly false
+        (label :class "text"
+               :text "Clear All")
+        (button :class "settings"
+                :onclick "u_notification-center open &"
+          (icon-small :name "bars-sort")
         )
       )
     )
