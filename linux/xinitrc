@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 userresources=$HOME/.Xresources
 xprofile=$HOME/dotfiles/linux/xprofile
@@ -21,7 +21,6 @@ if [ -f $xprofile ]; then
   source $xprofile
 fi
 
-# auto start programs
 if [ -d /etc/X11/xinit/xinitrc.d ] ; then
   for f in /etc/X11/xinit/xinitrc.d/?*.sh ; do
     [ -x "$f" ] && source "$f"
@@ -40,10 +39,10 @@ get_session(){
     awesome) dbus_args+=(awesome) ;;
     bspwm) dbus_args+=(bspwm-session) ;;
     deepin) dbus_args+=(startdde) ;;
+    hypr) dbus_args+=(Hypr) ;;
     i3|i3wm) dbus_args+=($default_session) ;;
     *) dbus_args+=($default_session) ;;
   esac
   echo "dbus-launch ${dbus_args[*]}"
 }
 exec $(get_session "$1")
-

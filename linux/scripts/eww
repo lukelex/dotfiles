@@ -2,8 +2,8 @@
 
 ## Run eww daemon if not running already
 if [[ ! `pidof eww` ]]; then
-	eww daemon
-	sleep 1
+  eww daemon
+  sleep 1
 fi
 
 toggle() {
