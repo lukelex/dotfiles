@@ -5,24 +5,13 @@
 @import "./user/styles.scss";
 
 @import "./variables";
+@import "./themes/light.scss";
 
 * {
   all: unset;
   font-family: Hack;
   font-family: Noto Sans CJK JP;
   font-weight: bold;
-}
-
-.window.light {
-  background-color: $light-background-1;
-
-  .panel {
-    background-color: $light-background-2;
-  }
-
-  .button {
-    background-color: $light-background-3;
-  }
 }
 
 .window {

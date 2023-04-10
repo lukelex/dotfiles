@@ -1,0 +1,24 @@
+$light-background-1: rgba(202, 202, 202, $opacity);
+$light-background-2: rgba(212, 212, 212, $opacity);
+$light-background-3: rgba(222, 222, 222, $opacity);
+$light-background-4: rgba(232, 232, 232, $opacity);
+
+.window.light {
+  background-color: $light-background-1;
+
+  .panel {
+    background-color: $light-background-2;
+  }
+
+  .button {
+    background-color: $light-background-3;
+  }
+
+  .notification-panel {
+    .body {
+      .entry {
+        background-color: $light-background-3;
+      }
+    }
+  }
+}

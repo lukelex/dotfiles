@@ -37,9 +37,12 @@
 )
 
 (defwidget power-menu []
-  (box :class "panel" :orientation "horizontal" :spacing SPACING
+  (box :class "panel"
+       :orientation "horizontal"
+       :spacing SPACING
     (pointer :active true
-      (button :class "button" :onclick "u_eww toggle power"
+      (button :class "button"
+              :onclick "u_eww toggle power"
         (icon :name "power-off")
       )
     )
