@@ -22,8 +22,8 @@ colorscheme railscasts
 
 au BufReadPost .env.* set syntax=sh
 
-" Make it obvious where 70 characters is on text files
-autocmd BufRead,BufNewFile *.md set textwidth=70
+" Make it obvious where 65 characters is on text files
+autocmd BufRead,BufNewFile *.md set textwidth=65
 set colorcolumn=+1
 
 " remap 0 in normal mode to go to the beginning of the text line
