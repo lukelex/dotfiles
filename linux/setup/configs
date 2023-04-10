@@ -27,6 +27,7 @@ ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
 ln -fvs ~/dotfiles/linux/profile ~/.profile
 ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
 ln -fvs ~/dotfiles/linux/xinitrc ~/.xinitrc
+ln -fvs ~/dotfiles/linux/bash_profile ~/.bash_profile
 ln -fvs ~/dotfiles/linux/config/eww ~/.config/eww
 ln -fvs ~/dotfiles/linux/config/keyboard.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/config/greenclip.toml ~/.config/greenclip.toml
