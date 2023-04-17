@@ -16,3 +16,5 @@ elif [[ $(which batcat) ]]; then
   alias b="batcat"
   alias bat="batcat"
 fi
+
+[ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
