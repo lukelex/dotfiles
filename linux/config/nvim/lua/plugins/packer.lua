@@ -58,9 +58,9 @@ return packer.startup(function(use)
 
   -- Language Server Protocol
   use {
+    "neovim/nvim-lspconfig",
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
-    "neovim/nvim-lspconfig",
   }
   use {
     "hrsh7th/nvim-cmp",
