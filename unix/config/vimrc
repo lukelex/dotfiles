@@ -21,6 +21,7 @@ set noswapfile
 colorscheme railscasts
 
 au BufReadPost .env.* set syntax=sh
+au BufReadPost *.conf set syntax=conf
 
 " Make it obvious where 65 characters is on text files
 autocmd BufRead,BufNewFile *.md set textwidth=65
