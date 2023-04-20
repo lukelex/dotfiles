@@ -31,7 +31,7 @@ ln -fvs ~/dotfiles/linux/bash_profile ~/.bash_profile
 ln -fvs ~/dotfiles/linux/config/eww ~/.config/eww
 ln -fvs ~/dotfiles/linux/config/keyboard.map ~/.Xmodmap
 ln -fvs ~/dotfiles/linux/config/greenclip.toml ~/.config/greenclip.toml
-# sudo ln -fvs ~/dotfiles/linux/devices/30-touchpad.conf /etc/X11/xorg.conf.d/30-touchpad.conf
+sudo ln -fvs ~/dotfiles/linux/devices/pointers.conf /etc/X11/xorg.conf.d/30-pointers.conf
 # sudo ln -fvs ~/dotfiles/linux/config/kernel_modules.conf /etc/modules-load.d/modules.conf
 # sudo ln -fvs ~/dotfiles/linux/config/bluetooth.conf /etc/bluetooth/main.conf
 # sudo cp -f ~/dotfiles/linux/config/sudoers.d/20-custom-rules /etc/sudoers.d/20-custom-rules
