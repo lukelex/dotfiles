@@ -44,6 +44,8 @@ return packer.startup(function(use)
   }
   use "itchyny/lightline.vim"
 
+  use "rebelot/kanagawa.nvim"
+
   -- Language improvements
   use "editorconfig/editorconfig-vim"
   use "terrastruct/d2-vim"

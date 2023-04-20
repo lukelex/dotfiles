@@ -6,8 +6,6 @@ vim.g.netrw_browse_split = 4 -- open in prior window
 vim.g.netrw_altv = 1 -- open split to the right
 vim.g.netrw_liststyle = 3 -- tree view
 
-vim.opt.guifont = "Hack:h17"
-
 vim.cmd("set noshowmode") -- Hide current mode
 vim.cmd("set nowrap") -- avoid line wrapping
 vim.opt.laststatus = 2 -- always display status line

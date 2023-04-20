@@ -18,8 +18,6 @@ nnoremap <F5> :UndotreeToggle<CR>
 " backup files
 set noswapfile
 
-colorscheme railscasts
-
 au BufReadPost .env.* set syntax=sh
 au BufReadPost *.conf set syntax=conf
 

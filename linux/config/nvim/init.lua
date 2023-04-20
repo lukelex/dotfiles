@@ -1,4 +1,5 @@
 require("core.editor")
+require("core.appearance")
 require("core.keybindings")
 require("core.diagnostic")
 
