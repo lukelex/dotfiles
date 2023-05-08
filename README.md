@@ -8,7 +8,7 @@ supporting my preferred workflows.
 
 <img src="preview.jpg" alt="Rice Showcase" align="right" width="400px">
 
-* Operating System is [Manjaro](https://manjaro.org/);
+* Operating System is [Arch Linux](https://archlinux.org/);
 * Window Management is handled by [i3wm](https://github.com/Airblader/i3);
 * Top & Bottom bars are built with [Polybar](https://github.com/polybar/polybar);
 * Widgets are built with [Eww](https://github.com/elkowar/eww);

@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+set -e
+
+for script in ~/dotfiles/linux/scripts/*; do
+  ln -fvs "$script" "$HOME/dotfiles/linux/bin/u_$(basename $script)"
+done

@@ -1,14 +1,7 @@
 #!/usr/bin/bash
 
-rm -rf ~/.bash_profile ~/.bashrc ~/.vimrc ~/.zshrc
+rm -rf ~/.zshrc
 
-ln -fvs ~/dotfiles/unix/config/vimrc ~/.vimrc
 ln -fvs ~/dotfiles/unix/config/zshrc ~/.zshrc
-
-mkdir -pv ~/.vim/colors
-ln -fvs ~/dotfiles/vim/colors/railscasts.vim ~/.vim/colors/railscasts.vim
-
-mkdir -p ~/.config/nvim
-ln -fvs ~/dotfiles/unix/config/neo.vim ~/.config/nvim/init.vim
 
 mkdir -v ~/backup_vim

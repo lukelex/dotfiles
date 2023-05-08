@@ -1,30 +1,11 @@
 #!/usr/bin/bash
 
-pamac install --no-confirm \
-  # Desktop
-  picom \
-  ttf-hack noto-fonts-cjk polybar xwallpaper wired ddcutil \
-  zsh zsh-completions rofi rofi-bluetooth-git xdo light \
-  autorandr rofi-greenclip \
-  sysstat xdotool gconf cmake jq eww-git sxhkd xautolock\
-  pulseaudio pavucontrol paprefs pulseaudio-bluetooth blueman \
+set -e
 
-  # Utilities
-  dropbox flameshot timeshift etcher 1password nordvpn-bin \
-  vlc birdfont unzip unrar fragments sxiv playerctl woeusb \
-  pantheon-calculator gsimplecal spotify google-chrome cozy \
-  imagemagick-full simplescreenrecorder text-pieces curtail \
-  blanket xclip neofetch tree v4l-utils \
+sudo pacman -S --noconfirm i3-wm picom rofi ibus inetutils openssh polkit polkit-gnome xfce4-power-manager network-manager-applet man-db wget ttf-hack noto-fonts-cjk polybar xwallpaper ddcutil zsh zsh-completions xdo light autorandr sysstat xdotool cmake jq sxhkd xautolock imagemagick i3lock blueman flameshot vlc birdfont unzip unrar fragments sxiv playerctl pantheon-calculator gsimplecal curtail blanket xclip neofetch tree v4l-utils rubygems npm neovim neovide kitty ctags bat tldr docker docker-compose the_silver_searcher diff-so-fancy telegram-desktop
+sudo pacman -Sc
 
-  # Coding
-  neovim neovide kitty ctags bat tldr zeal docker docker-compose \
-  the_silver_searcher diff-so-fancy \
+source ./yay
 
-  # Communication
-  slack-desktop whatsapp-nativefier telegram-desktop \
-
-  # Keyboards
-  via-bin stress librecad avr-gcc dfu-programmer avrdude \
-  gcc-arm-none-eabi-bin bootloadhid
-
-install_pulse
+yay -S --noconfirm eww-git dropbox wired oh-my-zsh google-chrome 1password spotify slack-desktop zeal
+sudo yay -Sc

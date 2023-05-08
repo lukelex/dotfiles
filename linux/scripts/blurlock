@@ -3,7 +3,7 @@
 # Constants
 DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dimensions
 PARAMS="-colorspace sRGB" # ensure that images are created in sRGB colorspace, to avoid greyscale output
-DEFAULT_CACHE_FOLDER="$HOME"/.cache/i3lock-multimonitor/img/ # Cache folder
+DEFAULT_CACHE_FOLDER="$HOME"/.cache/i3lock/img/ # Cache folder
 DEFAULT_IMAGE="$HOME/wallpaper.png"
 
 # Use XDG cache folder if that variable is set.
@@ -59,7 +59,7 @@ OUTPUT_IMG="$CACHE_FOLDER""$MD5_SCREEN_CONFIG"."$MD5_BKG_IMG".png # Path of fina
 OUTPUT_IMG_WIDTH=0 # Decide size to cover all screens
 OUTPUT_IMG_HEIGHT=0 # Decide size to cover all screens
 
-#i3lock command
+# i3lock command
 if [ "$lock_cmd" ]; then
   LOCK_BASE_CMD="$lock_cmd"
 else

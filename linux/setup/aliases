@@ -10,7 +10,7 @@ alias v="viewnior"
 alias t="tree"
 alias cls="printf '\033c'"
 
-if command -v bat ; then
+if [[ $(which bat) ]] ; then
   alias b="bat"
 elif [[ $(which batcat) ]]; then
   alias b="batcat"

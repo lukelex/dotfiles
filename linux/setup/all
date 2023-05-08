@@ -1,10 +1,8 @@
 #!/usr/bin/bash
 
-source ~/dotfiles/unix/setup/configs
-source ~/dotfiles/unix/setup/dependencies
-source ~/dotfiles/unix/setup/git-config
+source ./unix/setup/configs
+source ./unix/setup/git-config
 
-source ~/dotfiles/linux/setup/configs
-source ~/dotfiles/linux/setup/dependencies
-source ~/dotfiles/linux/setup/binaries
-source ~/dotfiles/linux/setup/clean
+source ./linux/setup/dependencies
+source ./linux/setup/configs
+source ./linux/setup/binaries
