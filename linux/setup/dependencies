@@ -7,5 +7,5 @@ sudo pacman -Sc
 
 source ./yay
 
-yay -S --noconfirm eww-git dropbox wired oh-my-zsh google-chrome 1password spotify slack-desktop zeal
+yay -S --noconfirm eww-git dropbox wired oh-my-zsh google-chrome 1password spotify slack-desktop zeal rofi-bluetooth-git
 sudo yay -Sc
