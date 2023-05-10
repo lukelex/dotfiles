@@ -43,11 +43,11 @@ function icon_volume {
 }
 
 function turn_on {
-  amixer -D pulse set Master on > /dev/null
+  wpctl set-mute @DEFAULT_AUDIO_SINK@ 0
 }
 
 function get_volume {
-  amixer -D pulse get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+  bc <<< "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print $2}') * 100"
 }
 
 function get_mic {
@@ -55,7 +55,7 @@ function get_mic {
 }
 
 function vol_is_mute {
-  amixer -D pulse get Master | grep '%' | grep -oE '[^ ]+$' | grep off
+  pactl get-sink-mute @DEFAULT_SINK@ | grep yes
 }
 
 function mic_is_mute {
@@ -97,6 +97,7 @@ function show_mic {
                 "Microphone"
   fi
 }
+
 case $1 in
   mic)
     case $2 in
@@ -116,25 +117,22 @@ case $1 in
   vol)
     case $2 in
       get) get_volume;;
-      icon) icon_volume ;;
+      icon) icon_volume;;
       inc)
         turn_on
-        amixer -D pulse sset Master 1%+ > /dev/null
-        show_volume
-        ;;
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%+
+        show_volume;;
       dec)
         turn_on
-        amixer -D pulse sset Master 1%- > /dev/null
-        show_volume
-        ;;
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-
+        show_volume;;
       set)
-        amixer -D pulse sset Master $3% > /dev/null
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ $3%
         # show_volume
         ;;
-      show) show_volume ;;
+      show) show_volume;;
       toggle)
-        amixer -D pulse set Master 1+ toggle > /dev/null
-        show_volume
-        ;;
+        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+        show_volume;;
     esac
 esac
