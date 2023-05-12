@@ -10,10 +10,10 @@ alias v="viewnior"
 alias t="tree"
 alias cls="printf '\033c'"
 
-if [[ $(which bat) ]] ; then
+if [[ $(which bat | grep -v "not") ]] ; then
   alias b="bat"
   export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-elif [[ $(which batcat) ]]; then
+elif [[ $(which batcat | grep -v "not") ]]; then
   alias b="batcat"
   alias bat="batcat"
   export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
