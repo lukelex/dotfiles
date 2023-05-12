@@ -38,3 +38,5 @@ for _, lsp in ipairs(servers) do
     }
   }
 end
+
+config.gdscript.setup {}
