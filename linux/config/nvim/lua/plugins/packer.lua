@@ -47,7 +47,6 @@ return packer.startup(function(use)
   use "rebelot/kanagawa.nvim"
 
   -- Language improvements
-  use "editorconfig/editorconfig-vim"
   use "terrastruct/d2-vim"
   use {
     "kana/vim-textobj-user",
