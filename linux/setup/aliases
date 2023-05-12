@@ -12,9 +12,11 @@ alias cls="printf '\033c'"
 
 if [[ $(which bat) ]] ; then
   alias b="bat"
+  export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 elif [[ $(which batcat) ]]; then
   alias b="batcat"
   alias bat="batcat"
+  export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
 fi
 
 [ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
