@@ -5,3 +5,4 @@ rm -rf ~/.zshrc
 ln -fvs ~/dotfiles/unix/config/zshrc ~/.zshrc
 
 mkdir -v ~/backup_vim
+mkdir -v ~/projects
