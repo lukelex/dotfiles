@@ -1,3 +1,5 @@
+require("plugins.lsp.appearance")
+
 local servers = {
   "bashls",
   "solargraph",
