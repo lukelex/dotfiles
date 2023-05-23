@@ -61,7 +61,7 @@ au BufRead,BufNewFile *.eex setfiletype eelixir
 au BufRead,BufNewFile *.exs setfiletype eelixir
 
 let g:lightline = {
-      \ 'colorscheme': 'one',
+      \ 'colorscheme': 'nightfly',
       \ 'active': {
       \   'left': [
       \     ['mode'],

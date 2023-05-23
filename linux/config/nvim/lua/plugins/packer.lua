@@ -44,7 +44,8 @@ return packer.startup(function(use)
   }
   use "itchyny/lightline.vim"
 
-  use "rebelot/kanagawa.nvim"
+  -- Theme
+  use { "bluz71/vim-nightfly-colors", as = "nightfly" }
 
   -- Language improvements
   use "terrastruct/d2-vim"
