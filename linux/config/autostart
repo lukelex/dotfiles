@@ -2,12 +2,10 @@
 
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 nm-applet &
-xfce4-power-manager &
 wired --run &
 dropbox start -i &
-xautolock -time 5 -locker 'u_exit lock' -detectsleep -corners ---- -notify 15 -notifier 'u_autolocking' &
+xautolock -time 5 -locker 'u_exit lock' -detectsleep -corners ---- -notify 17 -notifier 'u_autolocking' &
 flameshot &
-ibus &
 1password --silent &
 greenclip daemon &
 u_eww &

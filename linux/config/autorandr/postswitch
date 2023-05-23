@@ -2,8 +2,8 @@
 
 set -e
 
-u_wallpaper load
-polybar-msg cmd restart
+u_wallpaper load 1> /dev/null
+polybar-msg cmd restart 1> /dev/null
 
 notify-send -a System \
             -i "$FONT_AWESOME_PATH/light/display.svg" \
