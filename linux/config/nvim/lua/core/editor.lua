@@ -9,7 +9,7 @@ vim.g.netrw_liststyle = 3 -- tree view
 vim.g.editorconfig = true
 
 vim.cmd("set noshowmode") -- Hide current mode
-vim.cmd("set nowrap") -- avoid line wrapping
+vim.opt.wrap = false
 vim.opt.laststatus = 2 -- always display status line
 vim.opt.backspace = "2"
 vim.opt.ruler = true -- show the cursor position all the time
@@ -17,6 +17,7 @@ vim.opt.showcmd = true -- display incomplete commands
 vim.opt.mouse = "a" -- enable mouse events in all modes
 vim.opt.hlsearch = true -- highlight search results
 vim.opt.incsearch = true -- show search results while typing
+vim.opt.scrolloff = 8
 
 -- master fucking undo
 vim.opt.undofile = true
@@ -49,5 +50,3 @@ vim.opt.splitbelow = true
 vim.opt.splitright = true
 
 vim.opt.ttyfast = true
--- vim.opt.ttyscroll = 3
--- vim.opt.lazyredraw = true
