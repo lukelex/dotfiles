@@ -21,50 +21,50 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 local packer = require("packer")
 
 return packer.startup(function(use)
-  use "wbthomason/packer.nvim"
+  use("wbthomason/packer.nvim")
 
   -- Editor improvements
-  use "mbbill/undotree"
-  use "nvim-treesitter/nvim-treesitter"
-  use "DataWraith/auto_mkdir"
-  use "danro/rename.vim"
-  use "henrik/vim-indexed-search"
-  use "schickling/vim-bufonly"
-  use "mileszs/ack.vim"
-  use "tpope/vim-commentary"
-  use "tpope/vim-fugitive"
-  use "airblade/vim-gitgutter"
-  use "tpope/vim-repeat"
-  use "tpope/vim-surround"
-  use "tpope/vim-endwise"
-  use "Raimondi/delimitMate"
-  use {
+  use("mbbill/undotree")
+  use("nvim-treesitter/nvim-treesitter", { run = ":TSUpdate" })
+  use("DataWraith/auto_mkdir")
+  use("danro/rename.vim")
+  use("henrik/vim-indexed-search")
+  use("schickling/vim-bufonly")
+  use("mileszs/ack.vim")
+  use("tpope/vim-commentary")
+  use("tpope/vim-fugitive")
+  use("airblade/vim-gitgutter")
+  use("tpope/vim-repeat")
+  use("tpope/vim-surround")
+  use("tpope/vim-endwise")
+  use("Raimondi/delimitMate")
+  use({
     "junegunn/fzf.vim",
     "junegunn/fzf", run = function() vim.fn["fzf#install()"](0) end
-  }
+  })
   use "itchyny/lightline.vim"
 
   -- Theme
-  use { "bluz71/vim-nightfly-colors", as = "nightfly" }
+  use({ "bluz71/vim-nightfly-colors", as = "nightfly" })
 
   -- Language improvements
-  use "terrastruct/d2-vim"
+  use("terrastruct/d2-vim")
   use {
     "kana/vim-textobj-user",
     "nelstrom/vim-textobj-rubyblock"
   }
-  use "fladson/vim-kitty"
-  use "ron-rs/ron.vim"
-  use "elkowar/yuck.vim"
-  use "baskerville/vim-sxhkdrc"
+  use("fladson/vim-kitty")
+  use("ron-rs/ron.vim")
+  use("elkowar/yuck.vim")
+  use("baskerville/vim-sxhkdrc")
 
   -- Language Server Protocol
-  use {
+  use({
     "neovim/nvim-lspconfig",
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
-  }
-  use {
+  })
+  use({
     "hrsh7th/nvim-cmp",
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-nvim-lua",
@@ -72,7 +72,7 @@ return packer.startup(function(use)
     "hrsh7th/cmp-path",
     "L3MON4D3/LuaSnip",
     "rafamadriz/friendly-snippets"
-  }
+  })
 
   -- Automatically set up your configuration after cloning packer.nvim
   -- Put this at the end after all plugins
