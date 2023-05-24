@@ -1,6 +1,8 @@
 local cmp = require("cmp")
 local snippets = require("luasnip")
 
+require("luasnip.loaders.from_vscode").lazy_load()
+
 local function check_backspace()
   local col = vim.fn.col(".") - 1
   return col == 0 or vim.fn.getline("."):sub(col, col):match("%s")
@@ -60,9 +62,9 @@ cmp.setup({
     end
   },
   sources = cmp.config.sources({
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
-    { name = "buffer" },
+    { name = "nvim_lsp", keyword_length = 4 },
+    { name = "luasnip", keyword_length = 4 },
+    { name = "buffer", keyword_length = 4 },
     { name = "path" }
   }, {
     { name = "buffer" },

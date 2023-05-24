@@ -63,6 +63,7 @@ return packer.startup(function(use)
     "neovim/nvim-lspconfig",
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
+    "j-hui/fidget.nvim"
   })
   use({
     "hrsh7th/nvim-cmp",
