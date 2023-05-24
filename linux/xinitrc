@@ -4,7 +4,6 @@ userresources=$HOME/.Xresources
 xprofile=$HOME/dotfiles/linux/xprofile
 sysresources=/etc/X11/xinit/.Xresources
 environment=$HOME/dotfiles/linux/env
-default_session='i3 --shmlog-size 0'
 
 # merge in defaults and keymaps
 if [ -f $sysresources ]; then
@@ -33,16 +32,12 @@ if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   ssh-add ~/.ssh/id_ed25519 2> /dev/null
 fi
 
-get_session(){
-  local dbus_args=(--sh-syntax --exit-with-session)
-  case $1 in
-    awesome) dbus_args+=(awesome) ;;
-    bspwm) dbus_args+=(bspwm-session) ;;
-    deepin) dbus_args+=(startdde) ;;
-    hypr) dbus_args+=(Hypr) ;;
-    i3|i3wm) dbus_args+=($default_session) ;;
-    *) dbus_args+=($default_session) ;;
-  esac
-  echo "dbus-launch ${dbus_args[*]}"
-}
-exec $(get_session "$1")
+local default_session=${1:'i3 --shmlog-size 0'}
+case $1 in
+  awesome) exec awesome ;;
+  bspwm) exec bspwm-session ;;
+  deepin) exec startdde ;;
+  hypr) exec Hypr ;;
+  i3|i3wm) exec "$default_session" ;;
+  *) exec "$default_session" ;;
+esac
