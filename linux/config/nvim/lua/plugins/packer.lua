@@ -39,8 +39,8 @@ return packer.startup(function(use)
   use("tpope/vim-endwise")
   use("Raimondi/delimitMate")
   use({
-    "junegunn/fzf.vim",
-    "junegunn/fzf", run = function() vim.fn["fzf#install()"](0) end
+    "nvim-telescope/telescope.nvim",
+    requires = { { "nvim-lua/plenary.nvim" } }
   })
   use "itchyny/lightline.vim"
 

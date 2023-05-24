@@ -1,6 +1,5 @@
 #!/usr/bin/bash
 
 export EDITOR='nvim'
-export FZF_DEFAULT_COMMAND="ag -l '.*' --ignore=qa"
 
 source ~/dotfiles/unix/setup/aliases
