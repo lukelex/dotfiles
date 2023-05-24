@@ -12,9 +12,6 @@ setlocal smartcase " when searching try to be smart about cases
 let g:netrw_list_hide=netrw_gitignore#Hide()
 let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
 
-" master fucking undo
-nnoremap <F5> :UndotreeToggle<CR>
-
 " backup files
 set noswapfile
 
@@ -39,12 +36,6 @@ cnoreabbrev ag Ack
 cnoreabbrev aG Ack
 cnoreabbrev Ag Ack
 cnoreabbrev AG Ack
-
-" navigate through panes with ctrl + hjkl
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
 
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72

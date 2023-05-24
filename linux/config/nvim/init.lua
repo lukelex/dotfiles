@@ -1,6 +1,6 @@
 require("core.editor")
+require("core.keymaps")
 require("core.appearance")
-require("core.keybindings")
 require("core.diagnostic")
 
 require("plugins.packer")
