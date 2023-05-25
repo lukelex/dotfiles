@@ -32,12 +32,10 @@ if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   ssh-add ~/.ssh/id_ed25519 2> /dev/null
 fi
 
-local default_session=${1:'i3 --shmlog-size 0'}
-case $1 in
+case "$1" in
   awesome) exec awesome ;;
   bspwm) exec bspwm-session ;;
   deepin) exec startdde ;;
   hypr) exec Hypr ;;
-  i3|i3wm) exec "$default_session" ;;
-  *) exec "$default_session" ;;
+  *) exec i3;;
 esac
