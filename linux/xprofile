@@ -17,8 +17,5 @@ touch /tmp/wired.log
 source ~/Dropbox/secrets 2&> /dev/null
 source ~/dotfiles/linux/config/autostart 2&> /dev/null
 
-# identify and set monitor profiles
-autorandr --change > /dev/null 2&> /dev/null
-
 # set wallpaper
 u_wallpaper load &
