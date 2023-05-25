@@ -38,6 +38,8 @@ return packer.startup(function(use)
   use("tpope/vim-surround")
   use("tpope/vim-endwise")
   use("Raimondi/delimitMate")
+
+  -- fuzzy file finder
   use({
     "nvim-telescope/telescope.nvim",
     requires = { { "nvim-lua/plenary.nvim" } }
@@ -49,10 +51,10 @@ return packer.startup(function(use)
 
   -- Language improvements
   use("terrastruct/d2-vim")
-  use {
+  use({
     "kana/vim-textobj-user",
     "nelstrom/vim-textobj-rubyblock"
-  }
+  })
   use("fladson/vim-kitty")
   use("ron-rs/ron.vim")
   use("elkowar/yuck.vim")
