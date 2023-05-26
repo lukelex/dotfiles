@@ -10,5 +10,3 @@ brew install ctags the_silver_searcher tldr bat \
 
 brew install --cask vlc google-chrome slack \
              vlc spectacle
-
-curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh

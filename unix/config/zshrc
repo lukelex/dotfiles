@@ -1,12 +1,6 @@
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
-
-# Look in ~/.oh-my-zsh/themes/
-ZSH_THEME="robbyrussell"
-
-source $ZSH/oh-my-zsh.sh
+source ~/dotfiles/unix/config/zsh/theme.zsh
 
 source ~/dotfiles/unix/env
-if [[ "$(uname)" == 'Linux' ]]; then
+if [[ "$(uname)" == "Linux" ]]; then
   source ~/dotfiles/linux/env
 fi
