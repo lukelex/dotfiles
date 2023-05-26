@@ -17,6 +17,8 @@ bindkey "^[[1;5D" backward-word
 autoload -Uz compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
+source ~/dotfiles/unix/config/zsh/functions.zsh
+
 source ~/dotfiles/unix/env
 if [[ "$(uname)" == "Linux" ]]; then
   source ~/dotfiles/linux/env
