@@ -1,10 +1,21 @@
 source ~/dotfiles/unix/config/zsh/theme.zsh
 
+# history settings
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
+
+bindkey -e
+
+# use Ctrl for word navigation
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
+
+# case insensitive autocompletion
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
 source ~/dotfiles/unix/env
 if [[ "$(uname)" == "Linux" ]]; then
