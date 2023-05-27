@@ -12,6 +12,9 @@ bindkey -e
 # use Ctrl for word navigation
 bindkey "^[[1;5C" forward-word
 bindkey "^[[1;5D" backward-word
+bindkey "^[[3~"   delete-char
+bindkey "^[[H"    beginning-of-line
+bindkey "^[[F"    end-of-line
 
 # case insensitive autocompletion
 autoload -Uz compinit && compinit
