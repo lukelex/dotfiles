@@ -7,6 +7,8 @@ mkdir ~/screenshots
 mkdir -p ~/.config/i3
 ln -fvs ~/dotfiles/linux/config/i3/main.conf ~/.config/i3/config
 
+ln -fvs ~/dotfiles/linux/config/nvim ~/.config/nvim
+
 mkdir -p ~/.config/rofi
 ln -fvs ~/dotfiles/linux/config/rofi/main.rasi ~/.config/rofi/config.rasi
 
