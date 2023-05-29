@@ -16,6 +16,9 @@ bindkey "^[[3~"   delete-char
 bindkey "^[[H"    beginning-of-line
 bindkey "^[[F"    end-of-line
 
+bindkey "^[[A" history-beginning-search-backward
+bindkey "^[[B" history-beginning-search-forward
+
 # case insensitive autocompletion
 autoload -Uz compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
