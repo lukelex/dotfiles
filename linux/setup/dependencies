@@ -2,10 +2,24 @@
 
 set -e
 
-sudo pacman -S --noconfirm i3-wm picom rofi ibus inetutils openssh arandr polkit polkit-gnome xfce4-power-manager network-manager-applet man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper ddcutil zsh zsh-completions xdo light autorandr sysstat xdotool cmake jq sxhkd xautolock imagemagick i3lock blueman flameshot vlc birdfont unzip unrar fragments sxiv playerctl pantheon-calculator gsimplecal curtail blanket xclip neofetch tree v4l-utils rubygems npm neovim fd ripgrep neovide kitty bat tldr docker docker-compose diff-so-fancy telegram-desktop pavucontrol pipewire-jack pipewire-alsa pipewire-pulse qjackctl rustup
-sudo pacman -Sc
-
 source ./linux/setup/yay
 
-yay -S --noconfirm eww-git dropbox wired oh-my-zsh google-chrome 1password spotify slack-desktop zeal rofi-bluetooth-git
+# essentials
+yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
+  polkit polkit-gnome xfce4-power-manager network-manager-applet \
+  man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper zsh \
+  zsh-completions autorandr sysstat cmake jq sxhkd xautolock \
+  imagemagick i3lock blueman flameshot fragments sxiv playerctl \
+  blanket xclip neofetch tree v4l-utils neovim fd ripgrep neovide \
+  kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
+  pipewire-pulse qjackctl rustup
+
+# non-essentials
+yay -S --needed --noconfirm eww-git light ddcutil dropbox xdo xdotool \
+  wired oh-my-zsh google-chrome 1password spotify telegram-desktop \
+  slack-desktop zeal rofi-bluetooth-git vlc unzip unrar birdfont \
+  pantheon-calculator gsimplecal curtail tldr docker docker-compose \
+  rubygems npm \
+  2> /dev/null
+
 sudo yay -Sc
