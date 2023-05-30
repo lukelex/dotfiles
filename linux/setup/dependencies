@@ -23,3 +23,6 @@ yay -S --needed --noconfirm eww-git light ddcutil dropbox xdo xdotool \
   2> /dev/null
 
 sudo yay -Sc
+
+systemctl enable docker bluetooth
+systemctl start docker bluetooth
