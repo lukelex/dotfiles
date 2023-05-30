@@ -11,4 +11,4 @@ greenclip daemon &
 u_eww &
 sxhkd -c ~/dotfiles/linux/config/sxhkdrc &
 u_polybar &
-u_i3_workspaces &
+u_i3-workspaces &

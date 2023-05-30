@@ -19,7 +19,7 @@ yay -S --needed --noconfirm eww-git light ddcutil dropbox xdo xdotool \
   wired oh-my-zsh google-chrome 1password spotify telegram-desktop \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar birdfont \
   pantheon-calculator gsimplecal curtail tldr docker docker-compose \
-  rubygems npm \
+  rubygems npm rofi-greenclip \
   2> /dev/null
 
 sudo yay -Sc
