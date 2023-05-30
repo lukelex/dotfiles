@@ -1,13 +1,17 @@
 #!/usr/bin/zsh
 
 # history settings
-HISTFILE=~/.zsh_history
+HISTFILE=$HOME/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
-setopt SHARE_HISTORY
-setopt HIST_IGNORE_ALL_DUPS
-setopt EXTENDED_HISTORY
-setopt HIST_SAVE_NO_DUPS
+
+setopt EXTENDED_HISTORY       # Write the history file in the ':start:elapsed;command' format.
+setopt HIST_EXPIRE_DUPS_FIRST # Expire duplicate entries first when trimming history.
+setopt HIST_IGNORE_ALL_DUPS   # Delete old recorded entry if new entry is a duplicate.
+setopt HIST_IGNORE_SPACE      # Don't record an entry starting with a space.
+setopt HIST_REDUCE_BLANKS     # Remove superfluous blanks before recording entry.
+setopt HIST_SAVE_NO_DUPS      # Don't write duplicate entries in the history file.
+setopt SHARE_HISTORY          # Share history between all sessions.
 
 function fancy-history() {
   local selection=$(history -t'%F %T' 0 | tac | fzf | tr -s '[:blank:]' ' ' | cut -f 5- -d ' ')
