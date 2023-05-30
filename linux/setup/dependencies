@@ -9,17 +9,17 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
   polkit polkit-gnome xfce4-power-manager network-manager-applet \
   man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper zsh \
   zsh-completions autorandr sysstat cmake jq sxhkd xautolock \
-  imagemagick i3lock blueman flameshot fragments sxiv playerctl \
-  blanket xclip neofetch tree v4l-utils neovim fd ripgrep neovide \
+  imagemagick i3lock blueman flameshot fragments playerctl \
+  xclip tree v4l-utils neovim fd ripgrep neovide rustup \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse qjackctl rustup
+  pipewire-pulse qjackctl
 
 # non-essentials
-yay -S --needed --noconfirm eww-git light ddcutil dropbox xdo xdotool \
+yay -S --needed --noconfirm eww light ddcutil dropbox xdo xdotool \
   wired oh-my-zsh google-chrome 1password spotify telegram-desktop \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar birdfont \
   pantheon-calculator gsimplecal curtail tldr docker docker-compose \
-  rubygems npm rofi-greenclip \
+  rubygems npm rofi-greenclip neofetch blanket sxiv \
   2> /dev/null
 
 sudo yay -Sc
