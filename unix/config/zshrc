@@ -1,17 +1,8 @@
-source ~/dotfiles/unix/config/zsh/theme.zsh
-source ~/dotfiles/unix/config/zsh/functions.zsh
-source ~/dotfiles/unix/config/zsh/work.zsh
-
-# history settings
-HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
-setopt SHARE_HISTORY
-setopt HIST_IGNORE_ALL_DUPS
-setopt EXTENDED_HISTORY
-setopt HIST_SAVE_NO_DUPS
-
 bindkey -e
+
+source ~/dotfiles/unix/config/zsh/theme.zsh
+source ~/dotfiles/unix/config/zsh/work.zsh
+source ~/dotfiles/unix/config/zsh/history.zsh
 
 # use Ctrl for word navigation
 bindkey "^[[1;5C" forward-word
