@@ -4,8 +4,8 @@
 alias e="nvim ."
 alias vim="nvim"
 
-alias l="ls --color=auto -lahF"
-alias ls="ls --color=auto"
+alias l="ls --group-directories-first --color=auto -lahF"
+alias ls="ls --group-directories-first --color=auto"
 
 # GIT
 alias g="git"
