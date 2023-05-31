@@ -1,8 +1,8 @@
 bindkey -e
 
 source ~/dotfiles/unix/config/zsh/theme.zsh
-source ~/dotfiles/unix/config/zsh/work.zsh
 source ~/dotfiles/unix/config/zsh/history.zsh
+source ~/dotfiles/unix/config/zsh/work.zsh
 
 # use Ctrl for word navigation
 bindkey "^[[1;5C" forward-word

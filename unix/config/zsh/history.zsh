@@ -1,6 +1,5 @@
 #!/usr/bin/zsh
 
-# history settings
 HISTFILE=$HOME/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
