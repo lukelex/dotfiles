@@ -12,4 +12,6 @@ if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   ssh-add ~/.ssh/id_ed25519 2> /dev/null
 fi
 
-. "$HOME/.cargo/env"
+if test -f "$HOME/.cargo/env"; then
+  source "$HOME/.cargo/env"
+fi
