@@ -10,9 +10,6 @@ bindkey "^[[H"    beginning-of-line # Ctrl+a
 bindkey "^[[F"    end-of-line       # Ctrl+e
 bindkey "^[[3~"   delete-char       # delete
 
-bindkey "^[[A" history-beginning-search-backward # up
-bindkey "^[[B" history-beginning-search-forward  # down
-
 # case insensitive autocompletion
 autoload -Uz compinit && compinit
 bindkey -M menuselect '^[[Z' reverse-menu-complete
