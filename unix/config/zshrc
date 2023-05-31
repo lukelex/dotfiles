@@ -4,15 +4,14 @@ source ~/dotfiles/unix/config/zsh/theme.zsh
 source ~/dotfiles/unix/config/zsh/history.zsh
 source ~/dotfiles/unix/config/zsh/work.zsh
 
-# use Ctrl for word navigation
-bindkey "^[[1;5C" forward-word
-bindkey "^[[1;5D" backward-word
-bindkey "^[[3~"   delete-char
-bindkey "^[[H"    beginning-of-line
-bindkey "^[[F"    end-of-line
+bindkey "^[[1;5C" forward-word      # Ctrl+right
+bindkey "^[[1;5D" backward-word     # Ctrl+left
+bindkey "^[[H"    beginning-of-line # Ctrl+a
+bindkey "^[[F"    end-of-line       # Ctrl+e
+bindkey "^[[3~"   delete-char       # delete
 
-bindkey "^[[A" history-beginning-search-backward
-bindkey "^[[B" history-beginning-search-forward
+bindkey "^[[A" history-beginning-search-backward # up
+bindkey "^[[B" history-beginning-search-forward  # down
 
 # case insensitive autocompletion
 autoload -Uz compinit && compinit

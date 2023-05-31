@@ -13,7 +13,7 @@ setopt HIST_SAVE_NO_DUPS      # Don't write duplicate entries in the history fil
 setopt SHARE_HISTORY          # Share history between all sessions.
 
 function fancy-history() {
-  local selection=$(history -t'%F %T' 0 | tac | fzf | tr -s '[:blank:]' ' ' | cut -f 5- -d ' ')
+  local selection=$(history -t'%F %T' 0 | tac | fzf --no-sort | tr -s '[:blank:]' ' ' | cut -f 5- -d ' ')
 
   zle kill-whole-line
   zle -U "$selection"
