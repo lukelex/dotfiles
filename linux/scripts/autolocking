@@ -1,6 +1,23 @@
 #!/usr/bin/bash
 
-notify-send -a System \
-  -i "$FONT_AWESOME_PATH/light/user-clock.svg" \
-  -h string:wired-tag:system \
-  "15 seconds to lock"
+function show_warning {
+  notify-send -a System \
+    -i "$FONT_AWESOME_PATH/light/user-clock.svg" \
+    -h string:wired-tag:system \
+    "$1 seconds to lock"
+}
+
+function should_lock {
+  local window_id=$(xprop -root | grep "_NET_ACTIVE_WINDOW" | head -n 1 | awk '{print $5}')
+  local fullscreen_window=$(xprop -id $window_id | grep -E "_NET_WM_STATE\(ATOM\).+?_NET_WM_STATE_FULLSCREEN")
+
+  if [[ -z $fullscreen_window ]]; then
+    echo "yes"
+  fi
+}
+
+case $1 in
+  warn) show_warning $2;;
+  lock) [ ! -z `should_lock` ] && u_exit lock;;
+  *) exit 0 ;;
+esac
