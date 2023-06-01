@@ -12,8 +12,8 @@ setopt HIST_REDUCE_BLANKS     # Remove superfluous blanks before recording entry
 setopt HIST_SAVE_NO_DUPS      # Don't write duplicate entries in the history file.
 setopt SHARE_HISTORY          # Share history between all sessions.
 
-bindkey "^[[A" history-beginning-search-backward # up
-bindkey "^[[B" history-beginning-search-forward  # down
+bindkey "^[[A" history-search-backward # up
+bindkey "^[[B" history-search-forward  # down
 
 function fancy-history() {
   local selection=$(history -t'%F %T' 0 | tac | fzf --no-sort | tr -s '[:blank:]' ' ' | cut -f 5- -d ' ')
