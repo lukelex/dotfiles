@@ -10,6 +10,9 @@ bindkey "^[[H"    beginning-of-line # Ctrl+a
 bindkey "^[[F"    end-of-line       # Ctrl+e
 bindkey "^[[3~"   delete-char       # delete
 
+autoload -U select-word-style
+select-word-style bash
+
 # case insensitive autocompletion
 autoload -Uz compinit && compinit
 bindkey -M menuselect '^[[Z' reverse-menu-complete
