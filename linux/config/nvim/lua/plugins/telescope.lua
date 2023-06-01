@@ -14,15 +14,16 @@ vim.keymap.set("n", "<Leader>s", builtin.grep_string, {})
 vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 
+local defaults = { theme = "ivy", }
 telescope.setup({
   pickers = {
-    find_files = { theme = "ivy", },
-    git_files = { theme = "ivy" },
-    buffers = { theme = "ivy", },
-    live_grep = { theme = "ivy", },
-    grep_string = { theme = "ivy", },
-    lsp_references = { theme = "ivy", },
-    diagnostics = { theme = "ivy", },
+    find_files = defaults,
+    git_files = defaults,
+    buffers = defaults,
+    live_grep = defaults,
+    grep_string  = defaults,
+    lsp_references  = defaults,
+    diagnostics = defaults,
   },
   defaults = {
     mappings = {
@@ -37,7 +38,7 @@ telescope.setup({
         ["<PageUp>"] = actions.preview_scrolling_up,
         ["<PageDown>"] = actions.preview_scrolling_down,
 
-        ["<CR>"] = actions.select_default,
+        ["<CR>"] = actions.select_tab_drop,
         ["<C-h>"] = actions.select_horizontal,
         ["<C-v>"] = actions.select_vertical,
         ["<C-t>"] = actions.select_tab,
