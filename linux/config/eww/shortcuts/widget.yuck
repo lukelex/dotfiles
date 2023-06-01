@@ -27,7 +27,7 @@
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "flameshot gui -p ~/screenshots & u_eww close"
+        (button :class "button" :onclick "flameshot gui -p $HOME/screenshots & u_eww close"
                 :tooltip "Opens screenshot tool"
           (icon :name "camera")
         )

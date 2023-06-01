@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-rm -rf ~/.yabairc ~/.skhdrc
+rm -rf "$HOME/.yabairc" "$HOME/.skhdrc"
 
-ln -fvs ~/dotfiles/osx/config/yabairc ~/.yabairc
-ln -fvs ~/dotfiles/osx/config/skhdrc ~/.skhdrc
+ln -fvs "$HOME/dotfiles/osx/config/yabairc" "$HOME/.yabairc"
+ln -fvs "$HOME/dotfiles/osx/config/skhdrc" "$HOME/.skhdrc"

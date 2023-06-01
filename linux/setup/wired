@@ -4,7 +4,7 @@ echo "########### Wired (installing...) ###########"
 
 set -e
 
-repo_location=~/wired-notify
+repo_location="$HOME/wired-notify"
 
 sudo apt-get install -y libxss-dev
 

@@ -2,4 +2,4 @@
 
 export EDITOR='nvim'
 
-source ~/dotfiles/unix/setup/aliases
+source "$HOME/dotfiles/unix/setup/aliases"

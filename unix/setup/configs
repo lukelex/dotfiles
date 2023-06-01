@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 
-rm -rf ~/.zshrc
+rm -rf "$HOME/.zshrc"
 
-ln -fvs ~/dotfiles/unix/config/zshrc ~/.zshrc
+ln -fvs "$HOME/dotfiles/unix/config/zshrc" "$HOME/.zshrc"
 
-mkdir -v ~/backup_vim
-mkdir -v ~/projects
+mkdir -v "$HOME/backup_vim"
+mkdir -v "$HOME/projects"

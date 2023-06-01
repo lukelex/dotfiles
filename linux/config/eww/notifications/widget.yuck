@@ -58,7 +58,7 @@
 
     (icon :name "bell")
 
-    ; (image :path "~/dotfiles/fonts/fa6/svgs/light/music-note.svg"
+    ; (image :path "$HOME/dotfiles/fonts/fa6/svgs/light/music-note.svg"
     ;   :image-width 62
     ;   :image-height 62)
   )
@@ -147,4 +147,3 @@
     )
   )
 )
-

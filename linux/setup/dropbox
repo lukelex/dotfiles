@@ -4,7 +4,7 @@ echo "########### Dropbox (installing...) ###########"
 
 set -e
 
-cd ~ && wget -O - "https://www.dropbox.com/download?plat=lnx.x86_64" | tar xzf -
+cd "$HOME" && wget -O - "https://www.dropbox.com/download?plat=lnx.x86_64" | tar xzf -
 
 curl -o dropbox.py -LO https://www.dropbox.com/download?dl=packages/dropbox.py
 chmod +x ./dropbox.py

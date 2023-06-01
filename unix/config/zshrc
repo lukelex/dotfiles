@@ -1,8 +1,8 @@
 bindkey -e
 
-source ~/dotfiles/unix/config/zsh/theme.zsh
-source ~/dotfiles/unix/config/zsh/history.zsh
-source ~/dotfiles/unix/config/zsh/work.zsh
+source "$HOME/dotfiles/unix/config/zsh/theme.zsh"
+source "$HOME/dotfiles/unix/config/zsh/history.zsh"
+source "$HOME/dotfiles/unix/config/zsh/work.zsh"
 
 bindkey "^[[1;5C" forward-word      # Ctrl+right
 bindkey "^[[1;5D" backward-word     # Ctrl+left
@@ -15,7 +15,7 @@ autoload -Uz compinit && compinit
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
-source ~/dotfiles/unix/env
+source "$HOME/dotfiles/unix/env"
 if [[ "$(uname)" == "Linux" ]]; then
-  source ~/dotfiles/linux/env
+  source "$HOME/dotfiles/linux/env"
 fi

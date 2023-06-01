@@ -1,60 +1,60 @@
 #!/usr/bin/bash
 
-mkdir ~/.config
-mkdir ~/.ssh
-mkdir ~/screenshots
+mkdir "$HOME/.config"
+mkdir "$HOME/.ssh"
+mkdir "$HOME/screenshots"
 
-mkdir -p ~/.config/i3
-ln -fvs ~/dotfiles/linux/config/i3/main.conf ~/.config/i3/config
+mkdir -p "$HOME/.config/i3"
+ln -fvs "$HOME/dotfiles/linux/config/i3/main.conf" "$HOME/.config/i3/config"
 
-ln -fvs ~/dotfiles/linux/config/nvim ~/.config/nvim
+ln -fvs "$HOME/dotfiles/linux/config/nvim" "$HOME/.config/nvim"
 
-mkdir -p ~/.config/rofi
-ln -fvs ~/dotfiles/linux/config/rofi/main.rasi ~/.config/rofi/config.rasi
+mkdir -p "$HOME/.config/rofi"
+ln -fvs "$HOME/dotfiles/linux/config/rofi/main.rasi" "$HOME/.config/rofi/config.rasi"
 
-mkdir -p ~/.config/gsimplecal
-ln -fvs ~/dotfiles/linux/config/gsimplecal ~/.config/gsimplecal/config
+mkdir -p "$HOME/.config/gsimplecal"
+ln -fvs "$HOME/dotfiles/linux/config/gsimplecal" "$HOME/.config/gsimplecal/config"
 
-mkdir -p ~/.config/wired
-ln -fvs ~/dotfiles/linux/config/wired.ron ~/.config/wired/wired.ron
+mkdir -p "$HOME/.config/wired"
+ln -fvs "$HOME/dotfiles/linux/config/wired.ron" "$HOME/.config/wired/wired.ron"
 
-mkdir -p ~/.config/kitty
-ln -fvs ~/dotfiles/linux/config/kitty.conf ~/.config/kitty/kitty.conf
+mkdir -p "$HOME/.config/kitty"
+ln -fvs "$HOME/dotfiles/linux/config/kitty.conf" "$HOME/.config/kitty/kitty.conf"
 
-mkdir -p ~/.config/flameshot
-ln -fvs ~/dotfiles/linux/config/flameshot.ini ~/.config/flameshot/flameshot.ini
+mkdir -p "$HOME/.config/flameshot"
+ln -fvs "$HOME/dotfiles/linux/config/flameshot.ini" "$HOME/.config/flameshot/flameshot.ini"
 
-ln -fvs ~/dotfiles/linux/Xresources ~/.Xresources
-ln -fvs ~/dotfiles/linux/profile ~/.profile
-ln -fvs ~/dotfiles/linux/xprofile ~/.xprofile
-ln -fvs ~/dotfiles/linux/xinitrc ~/.xinitrc
-ln -fvs ~/dotfiles/linux/config/eww ~/.config/eww
-ln -fvs ~/dotfiles/linux/config/keyboard.map ~/.Xmodmap
-ln -fvs ~/dotfiles/linux/config/greenclip.toml ~/.config/greenclip.toml
-sudo ln -fvs ~/dotfiles/linux/devices/pointers.conf /etc/X11/xorg.conf.d/30-pointers.conf
-# sudo ln -fvs ~/dotfiles/linux/config/kernel_modules.conf /etc/modules-load.d/modules.conf
-# sudo ln -fvs ~/dotfiles/linux/config/bluetooth.conf /etc/bluetooth/main.conf
-# sudo cp -f ~/dotfiles/linux/config/sudoers.d/20-custom-rules /etc/sudoers.d/20-custom-rules
-sudo ln -fvs ~/dotfiles/linux/udev/usb-watcher.rules /usr/lib/udev/rules.d/5-usb-watcher.rules
+ln -fvs "$HOME/dotfiles/linux/Xresources" "$HOME/.Xresources"
+ln -fvs "$HOME/dotfiles/linux/profile" "$HOME/.profile"
+ln -fvs "$HOME/dotfiles/linux/xprofile" "$HOME/.xprofile"
+ln -fvs "$HOME/dotfiles/linux/xinitrc" "$HOME/.xinitrc"
+ln -fvs "$HOME/dotfiles/linux/config/eww" "$HOME/.config/eww"
+ln -fvs "$HOME/dotfiles/linux/config/keyboard.map" "$HOME/.Xmodmap"
+ln -fvs "$HOME/dotfiles/linux/config/greenclip.toml" "$HOME/.config/greenclip.toml"
+sudo ln -fvs "$HOME/dotfiles/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
+# sudo ln -fvs "$HOME/dotfiles/linux/config/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
+# sudo ln -fvs "$HOME/dotfiles/linux/config/bluetooth.conf" "/etc/bluetooth/main.conf"
+# sudo cp -f "$HOME/dotfiles/linux/config/sudoers.d/20-custom-rules" "/etc/sudoers.d/20-custom-rules"
+sudo ln -fvs "$HOME/dotfiles/linux/udev/usb-watcher.rules" "/usr/lib/udev/rules.d/5-usb-watcher.rules"
 
-# ln -fvs ~/dotfiles/linux/config/default-apps.list ~/.local/share/applications/defaults.list
+# ln -fvs "$HOME/dotfiles/linux/config/default-apps.list" "$HOME/.local/share/applications/defaults.list"
 
-sudo mkdir -pv /usr/share/fonts/OTF
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Brands-Regular-400.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Brands-Regular-400.otf
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Duotone-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Duotone-Solid-900.otf
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Light-300.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Light-300.otf
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Regular-400.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Regular-400.otf
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Solid-900.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Solid-900.otf
-sudo ln -fvs ~/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Thin-100.otf /usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Thin-100.otf
-mkdir -p ~/.config/fontconfig/
-ln -fvs ~/dotfiles/linux/config/fonts.conf ~/.config/fontconfig/fonts.conf
+sudo mkdir -pv "/usr/share/fonts/OTF"
+sudo ln -fvs "$HOME/dotfiles/fonts/Font\ Awesome\ 6\ Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font\ Awesome\ 6\ Brands-Regular-400.otf"
+sudo ln -fvs "$HOME/dotfiles/fonts/Font\ Awesome\ 6\ Duotone-Solid-900.otf" "/usr/share/fonts/OTF/Font\ Awesome\ 6\ Duotone-Solid-900.otf"
+sudo ln -fvs "$HOME/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Light-300.otf" "/usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Light-300.otf"
+sudo ln -fvs "$HOME/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Regular-400.otf" "/usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Regular-400.otf"
+sudo ln -fvs "$HOME/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Solid-900.otf"
+sudo ln -fvs "$HOME/dotfiles/fonts/Font\ Awesome\ 6\ Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font\ Awesome\ 6\ Pro-Thin-100.otf"
+mkdir -p "$HOME/.config/fontconfig/"
+ln -fvs "$HOME/dotfiles/linux/config/fonts.conf" "$HOME/.config/fontconfig/fonts.conf"
 fc-cache -r
 
-sudo mkdir -p /usr/share/icons/FontAwesome-6/solid/512x512/
-sudo ln -fvs ~/dotfiles/fonts/fa6/pngs/solid /usr/share/icons/FontAwesome-6/solid/512x512/all
+sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
+sudo ln -fvs "$HOME/dotfiles/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/solid/512x512/all"
 
-mkdir -p ~/.config/autorandr/
-ln -fvs ~/dotfiles/linux/config/autorandr/postswitch ~/.config/autorandr/postswitch
+mkdir -p "$HOME/.config/autorandr/"
+ln -fvs "$HOME/dotfiles/linux/config/autorandr/postswitch" "$HOME/.config/autorandr/postswitch"
 
 sudo rmmod pcspkr
 

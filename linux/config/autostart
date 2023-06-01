@@ -9,6 +9,6 @@ flameshot &
 1password --silent &
 greenclip daemon &
 u_eww &
-sxhkd -c ~/dotfiles/linux/config/sxhkdrc &
+sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
 u_polybar &
 u_i3-workspaces &
