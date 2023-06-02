@@ -21,10 +21,10 @@ vim.opt.scrolloff = 8
 
 -- master fucking undo
 vim.opt.undofile = true
-vim.opt.undodir = string.format("%s/.cache/undodir", vim.env.HOME)
+vim.opt.undodir = string.format("%s/.vim-cache/undodir", vim.env.HOME)
 
 vim.opt.backup = true
-vim.opt.backupdir = string.format("%s/.config/nvim/backup", vim.env.HOME)
+vim.opt.backupdir = string.format("%s/.vim-cache/backup", vim.env.HOME)
 
 -- universal clipboard
 vim.opt.clipboard = "unnamedplus"
