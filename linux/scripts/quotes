@@ -1,15 +1,19 @@
 #!/usr/bin/bash
 
+mkdir /tmp/quotes 2> /dev/null
+
 CACHE_DIR='/tmp/quotes'
-DATE=$(date | sed 's/T.*//')
+DATE=$(date -u +%Y-%m-%d)
 CACHE_FILE=$CACHE_DIR/$DATE
+LANGUAGE='en'
+QUOTES_URL="https://quotes.rest/qod.json?category=inspire&language=$LANGUAGE"
 
 mkdir -p $CACHE_DIR
 
 get_quote() {
   if [[ ! -f $CACHE_FILE ]]; then
-    local request=$(curl -Ls "https://quotes.rest/qod.json?category=inspire")
-    $(echo $request | jq -r '.contents.quotes[0].quote' > $CACHE_FILE)
+    local response=$(curl -Ls -H "Authorization: Bearer $QUOTES_API_KEY" $QUOTES_URL)
+    $(echo $response | jq -r '.contents.quotes[0].quote' > $CACHE_FILE)
   fi
 
   echo $(cat $CACHE_FILE)
