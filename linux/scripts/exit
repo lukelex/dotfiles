@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 
-u_music pause
-u_eww close 2&> /dev/null
+function reset_ui {
+  u_music pause
+  u_eww close 2&> /dev/null
+}
 
 case "$1" in
   lock)
@@ -14,10 +16,10 @@ case "$1" in
     logout
     ;;
   suspend)
-    u_exit lock && systemctl suspend
+    reset_ui && u_exit lock && systemctl suspend
     ;;
   hibernate)
-    u_exit lock && systemctl hibernate
+    reset_ui && u_exit lock && systemctl hibernate
     ;;
   reboot)
     systemctl reboot
