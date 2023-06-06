@@ -2,6 +2,6 @@
 
 set -e
 
-for script in "$HOME/dotfiles/linux/scripts/*;" do
+for script in $HOME/dotfiles/linux/scripts/*; do
   ln -fvs "$script" "$HOME/dotfiles/linux/bin/u_$(basename $script)"
 done
