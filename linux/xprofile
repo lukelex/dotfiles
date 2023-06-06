@@ -17,5 +17,9 @@ touch /tmp/wired.log
 source "$HOME/Dropbox/secrets" 2&> /dev/null
 source "$HOME/dotfiles/linux/config/autostart" 2&> /dev/null
 
-# set wallpaper
-u_wallpaper load &
+# load wallpaper
+if command -v u_wallpaper &> /dev/null
+then
+  echo "u_wallpaper could not be found"
+  u_wallpaper load &
+fi

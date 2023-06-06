@@ -8,11 +8,11 @@ source ./linux/setup/yay
 yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
   polkit polkit-gnome xfce4-power-manager network-manager-applet \
   man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper zsh \
-  zsh-completions autorandr sysstat cmake jq sxhkd xautolock \
+  zsh-completions autorandr cmake jq sxhkd xautolock \
   imagemagick i3lock blueman flameshot fragments playerctl \
-  xclip tree v4l-utils neovim fd ripgrep neovide rustup \
+  xclip tree v4l-utils neovim fd ripgrep rustup \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse qjackctl
+  pipewire-pulse
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox xdo xdotool \
@@ -20,6 +20,7 @@ yay -S --needed --noconfirm eww light ddcutil dropbox xdo xdotool \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar birdfont \
   pantheon-calculator gsimplecal curtail tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
+  sysstat neovide qjackctl \
   2> /dev/null
 
 sudo yay -Sc
