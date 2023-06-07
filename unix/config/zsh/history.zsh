@@ -16,7 +16,13 @@ bindkey "^[[A" history-search-backward # up
 bindkey "^[[B" history-search-forward  # down
 
 function fancy-history() {
-  local selection=$(history -t'%F %T' 0 | tac | fzf --no-sort | tr -s '[:blank:]' ' ' | cut -f 5- -d ' ')
+  local selection=$(
+    history -t'%F' 0 \
+      | tac \
+      | fzf --no-sort \
+      | tr --squeeze-repeats '[:blank:]' ' ' \
+      | cut --fields 4- --delimiter ' '
+    )
 
   zle kill-whole-line
   zle -U "$selection"
