@@ -14,7 +14,7 @@ get_percentage() {
   echo $(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')
 }
 
-function is_charging {
+is_charging() {
   echo $(echo "$stats" | grep -E 'state.+?\bcharging\b')
 }
 
@@ -71,15 +71,11 @@ warn() {
 }
 
 case $1 in
-  icon) echo `icon`
-    ;;
-  show)
-    show_battery
-    ;;
+  if) upower -i `upower -e | grep 'BAT'`;;
+  icon) echo `icon`;;
+  show) show_battery;;
   icon_and_warn)
     warn
-    echo `icon`
-    ;;
-  get) echo -e `get`
-    ;;
+    echo `icon`;;
+  get) echo -e `get`;;
 esac
