@@ -7,6 +7,7 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export KITTY_CONFIG_DIRECTORY="$HOME/dotfiles/linux/config/"
 export BROWSER=/usr/bin/google-chrome-stable
 export BAT_PAGER='less -RFI'
+export FZF_DEFAULT_OPTS='--bind ctrl-l:page-down,ctrl-h:page-up'
 
 if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   eval `ssh-agent -s` > /dev/null
