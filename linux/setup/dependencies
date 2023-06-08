@@ -20,7 +20,7 @@ yay -S --needed --noconfirm eww light ddcutil dropbox xdo xdotool \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar birdfont \
   pantheon-calculator gsimplecal curtail tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
-  sysstat neovide qjackctl \
+  sysstat neovide qjackctl viewnior \
   2> /dev/null
 
 sudo yay -Sc
