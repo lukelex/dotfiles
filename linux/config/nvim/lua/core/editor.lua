@@ -2,7 +2,7 @@ vim.g.shell = "bash"
 
 -- Tweaks for file browsing
 vim.g.netrw_banner = 0 -- disable annoying banner
-vim.g.netrw_browse_split = 4 -- open in prior window
+vim.g.netrw_browse_split = 0 -- open in prior window
 vim.g.netrw_altv = 1 -- open split to the right
 vim.g.netrw_liststyle = 3 -- tree view
 
@@ -17,7 +17,6 @@ vim.opt.showcmd = true -- display incomplete commands
 vim.opt.mouse = "a" -- enable mouse events in all modes
 vim.opt.hlsearch = true -- highlight search results
 vim.opt.incsearch = true -- show search results while typing
-vim.opt.scrolloff = 8
 
 -- master fucking undo
 vim.opt.undofile = true
