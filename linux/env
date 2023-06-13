@@ -5,5 +5,5 @@
 # Remember to enable any locales that you might need
 # sudo vim /etc/locale.gen && locale-gen
 
-source "$HOME/dotfiles/linux/profile"
-source "$HOME/dotfiles/linux/setup/aliases"
+source "$DOTFILES/linux/profile"
+source "$DOTFILES/linux/setup/aliases"

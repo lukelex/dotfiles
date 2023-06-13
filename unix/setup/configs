@@ -2,7 +2,7 @@
 
 rm -rf "$HOME/.zshrc"
 
-ln -fvs "$HOME/dotfiles/unix/config/zshrc" "$HOME/.zshrc"
+ln -fvs "$DOTFILES/unix/config/zshrc" "$HOME/.zshrc"
 
 mkdir -v "$HOME/backup_vim"
 mkdir -v "$HOME/projects"

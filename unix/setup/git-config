@@ -23,4 +23,4 @@ git config --global rebase.autosquash true
 git config --global push.default current
 git config --global pull.rebase true
 
-git config --global core.excludesfile "$HOME/dotfiles/unix/gitignore"
+git config --global core.excludesfile "$DOTFILES/unix/gitignore"

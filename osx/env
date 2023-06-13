@@ -1,3 +1,5 @@
 #!/usr/bin/bash
 
-source "$HOME/dotfiles/osx/setup/aliases"
+export DOTFILES="$HOME/dotfiles"
+
+source "$DOTFILES/osx/setup/aliases"

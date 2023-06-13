@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 
 userresources=$HOME/.Xresources
-xprofile=$HOME/dotfiles/linux/xprofile
+xprofile=$DOTFILES/linux/xprofile
 sysresources=/etc/X11/xinit/.Xresources
-environment=$HOME/dotfiles/linux/env
+environment=$DOTFILES/linux/env
 
 # merge in defaults and keymaps
 if [ -f $sysresources ]; then

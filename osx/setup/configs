@@ -2,5 +2,5 @@
 
 rm -rf "$HOME/.yabairc" "$HOME/.skhdrc"
 
-ln -fvs "$HOME/dotfiles/osx/config/yabairc" "$HOME/.yabairc"
-ln -fvs "$HOME/dotfiles/osx/config/skhdrc" "$HOME/.skhdrc"
+ln -fvs "$DOTFILES/osx/config/yabairc" "$HOME/.yabairc"
+ln -fvs "$DOTFILES/osx/config/skhdrc" "$HOME/.skhdrc"

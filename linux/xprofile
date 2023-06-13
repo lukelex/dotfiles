@@ -1,25 +1,20 @@
 #!/usr/bin/bash
 
-# keyboard configs
-xset r rate 200 35
-setxkbmap -layout us -variant mac
-xmodmap "$HOME/dotfiles/linux/config/keyboard.map"
-
 export QT_QPA_PLATFORMTHEME="qt5ct"
 export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
-export FONT_AWESOME_PATH="$HOME/dotfiles/fonts/fa6/svgs"
+export FONT_AWESOME_PATH="$DOTFILES/fonts/fa6/svgs"
 
 # Custom binaries
-export PATH="$HOME/dotfiles/linux/bin:$PATH"
+export PATH="$DOTFILES/linux/bin:$PATH"
 
 touch /tmp/wired.log
 
+source "$DOTFILES/config/keyboard" &
 source "$HOME/Dropbox/secrets" 2&> /dev/null
-source "$HOME/dotfiles/linux/config/autostart" 2&> /dev/null
+source "$DOTFILES/linux/config/autostart" 2&> /dev/null
 
 # load wallpaper
 if command -v u_wallpaper &> /dev/null
 then
-  echo "u_wallpaper could not be found"
   u_wallpaper load &
 fi
