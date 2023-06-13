@@ -2,6 +2,7 @@ bindkey -e
 
 source "$DOTFILES/unix/config/zsh/theme.zsh"
 source "$DOTFILES/unix/config/zsh/history.zsh"
+source "$DOTFILES/unix/config/zsh/projects.zsh"
 source "$DOTFILES/unix/config/zsh/work.zsh"
 
 bindkey "^[[1;5C" forward-word      # Ctrl+right
