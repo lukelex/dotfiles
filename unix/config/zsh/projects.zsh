@@ -24,7 +24,6 @@ function projects-search() {
   zle kill-whole-line
   zle -U "cd $selection"
   zle accept-line
-  zle execute-named-cmd
 }
 zle -N projects-search
 

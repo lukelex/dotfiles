@@ -8,7 +8,7 @@ export DOTFILES="$HOME/dotfiles"
 export KITTY_CONFIG_DIRECTORY="$DOTFILES/linux/config/"
 export BROWSER=/usr/bin/google-chrome-stable
 export BAT_PAGER='less -RFI'
-export FZF_DEFAULT_OPTS="--layout=reverse --border --header 'Ctrl+d: PageUp / Ctrl+l: PageDown' --bind ctrl-l:page-down,ctrl-h:page-up"
+export FZF_DEFAULT_OPTS="--layout=reverse --border --header 'Ctrl+h: PageDown / Ctrl+l: PageUp' --bind ctrl-h:page-down,ctrl-l:page-up"
 
 if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   eval `ssh-agent -s` > /dev/null
