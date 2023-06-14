@@ -19,7 +19,7 @@ function fancy-history() {
   local selection=$(
     history -t'%F' 0 \
       | tac \
-      | fzf --no-sort \
+      | fzf \
       | tr --squeeze-repeats '[:blank:]' ' ' \
       | cut --fields 4- --delimiter ' '
     )
