@@ -21,8 +21,11 @@ function projects-search() {
       | awk '{print $2"/"$1}'
   )
 
-  zle kill-whole-line
-  zle -U "cd $selection"
+  if [ -n "$selection" ]; then
+    zle kill-whole-line
+    zle -U "cd $selection"
+  fi
+
   zle accept-line
 }
 zle -N projects-search
