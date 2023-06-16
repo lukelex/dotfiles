@@ -1,5 +1,7 @@
 bindkey -e
 
+export DOTFILES="$HOME/dotfiles"
+
 source "$DOTFILES/unix/config/zsh/theme.zsh"
 source "$DOTFILES/unix/config/zsh/history.zsh"
 source "$DOTFILES/unix/config/zsh/projects.zsh"
