@@ -12,16 +12,19 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
   imagemagick i3lock blueman flameshot fragments playerctl \
   xclip tree v4l-utils neovim fd fzf ripgrep rustup \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse
+  pipewire-pulse google-chrome
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox xdo xdotool \
-  wired oh-my-zsh google-chrome 1password spotify telegram-desktop \
-  slack-desktop zeal rofi-bluetooth-git vlc unzip unrar birdfont \
-  pantheon-calculator gsimplecal curtail tldr docker docker-compose \
+  wired 1password spotify telegram-desktop \
+  slack-desktop zeal rofi-bluetooth-git vlc unzip unrar \
+  pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
-  sysstat neovide qjackctl viewnior kicad discord \
+  sysstat neovide qjackctl viewnior \
   2> /dev/null
+
+# # Optionals
+# yay -S --needed --noconfirm kicad discord curtail birdfont \
 
 sudo yay -Sc
 
