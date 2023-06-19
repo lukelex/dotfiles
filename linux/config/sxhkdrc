@@ -38,8 +38,6 @@ super + d
 super + Return
   kitty
 
-super + shift + m
-  polybar-msg cmd toggle
 super + shift + p
   polybar-msg cmd restart
 

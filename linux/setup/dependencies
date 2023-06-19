@@ -15,7 +15,7 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
   pipewire-pulse google-chrome
 
 # non-essentials
-yay -S --needed --noconfirm eww light ddcutil dropbox xdo xdotool \
+yay -S --needed --noconfirm eww light ddcutil dropbox \
   wired 1password spotify telegram-desktop \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
