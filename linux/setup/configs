@@ -60,6 +60,9 @@ sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/b
 mkdir -p "$XDG_CONFIG_HOME/autorandr/"
 ln -fvs "$DOTFILES/linux/config/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
 
+ln -fvs "$DOTFILES/linux/config/mimeapps.list" ~/.local/share/applications/mimeapps.list
+ln -fvs "$DOTFILES/linux/config/mimeapps.list" ~/.config/mimeapps.list
+
 sudo rmmod pcspkr
 
 sudo usermod -a -G video $USER

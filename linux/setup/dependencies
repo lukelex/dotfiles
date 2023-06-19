@@ -20,10 +20,10 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
-  sysstat neovide qjackctl viewnior \
+  sysstat neovide qjackctl viewnior zathura zathura-pdf-poppler \
   2> /dev/null
 
-# # Optionals
+# Optionals
 # yay -S --needed --noconfirm kicad discord curtail birdfont \
 
 sudo yay -Sc

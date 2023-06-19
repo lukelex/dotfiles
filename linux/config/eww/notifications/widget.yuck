@@ -68,12 +68,17 @@
 
     (label :class "text entry-header"
            :limit-width 40
+           :tooltip entry
            :halign "start"
-           :text "${entry.app_name}: ${entry.summary}")
+           :text { entry.app_name })
+
+    (label :class "text entry-header"
+           :limit-width 40
+           :halign "start"
+           :text { entry.summary })
 
     (label :class "text entry-body"
-           :wrap true
-           :limit-width 100
+           :limit-width 40
            :halign "start"
            :text { entry.body })
   )
