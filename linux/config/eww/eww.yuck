@@ -50,25 +50,25 @@
 )
 
 (defwidget icon [name]
-  (image :path "${ICONS_PATH}/${name}.svg"
+  (image :path "${ICONS_PATH}/${name}.png"
          :image-width ICON_SIZE
          :image-height ICON_SIZE)
 )
 
 (defwidget icon-small [name]
-  (image :path "${ICONS_PATH}/${name}.svg"
+  (image :path "${ICONS_PATH}/${name}.png"
          :image-width ICON_SIZE_SMALL
          :image-height ICON_SIZE_SMALL)
 )
 
 (defwidget icon-large [name]
-  (image :path "${ICONS_PATH}/${name}.svg"
+  (image :path "${ICONS_PATH}/${name}.png"
          :image-width ICON_SIZE_LARGE
          :image-height ICON_SIZE_LARGE)
 )
 
 (defwidget brands-icon [name]
-  (image :path "${BRANDS_ICONS_PATH}/${name}.svg"
+  (image :path "${BRANDS_ICONS_PATH}/${name}.png"
          :image-width ICON_SIZE
          :image-height ICON_SIZE)
 )
