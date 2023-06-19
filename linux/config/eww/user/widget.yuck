@@ -1,4 +1,3 @@
-(defvar USER_IMG "/home/lukas/Pictures/user.jpg")
 (defpoll username :interval "60m" `whoami`)
 (defpoll uptime :interval "60s" `uptime -p | sed -e 's/up //g'`)
 
@@ -7,17 +6,22 @@
        :orientation "horizontal"
        :space-evenly false
        :spacing SPACING
-       :hexpand true
+       :hexpand false
 
     (box :class "button"
-      (image :class "user-img"
-             :path USER_IMG
-             :image-width 32
-             :image-height 32)
+      (icon :name "user")
     )
     (box :orientation "vertical" :valign "center"
-      (label :class "text" :text "Hi ${username}!" :halign "start")
-      (label :class "text" :text uptime :halign "start")
+      (label :class "text"
+             :text "Hi ${username}!"
+             :tooltip "${username}"
+             :limit-width 25
+             :halign "start")
+      (label :class "text"
+             :text uptime
+             :tooltip uptime
+             :limit-width 25
+             :halign "start")
     )
   )
 )
