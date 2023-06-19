@@ -10,6 +10,7 @@
     (box :class "panel notification-panel"
          :spacing SPACING
          :orientation "vertical"
+         :hexpand false
          :space-evenly false
 
       (notifications-header)

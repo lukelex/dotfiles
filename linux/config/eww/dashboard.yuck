@@ -15,20 +15,33 @@
                                          :y "66px"
                                          :anchor "top left")
   (v-window
-    (box :spacing SPACING :orientation "horizontal" :space-evenly false :hexpand true
+    (box :spacing SPACING
+         :orientation "horizontal"
+         :space-evenly false
+         :hexpand false
       (user)
       (power-menu)
     )
-    (box :spacing SPACING :orientation "horizontal" :space-evenly true
+    (box :spacing SPACING
+         :orientation "horizontal"
+         :space-evenly true
+         :hexpand false
       (packages)
-      (battery)
+      ; (battery)
     )
-    (box :spacing SPACING :orientation "horizontal" :space-evenly true
+    (box :spacing SPACING
+         :orientation "horizontal"
+         :space-evenly true
+         :hexpand false
       (wifi)
       (bluetooth)
     )
     (system-stats)
-    (box :class "panel" :spacing SPACING :orientation "vertical" :space-evenly true
+    (box :class "panel"
+         :spacing SPACING
+         :orientation "vertical"
+         :space-evenly true
+         :hexpand false
       (volume)
       (brightness)
     )
