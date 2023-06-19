@@ -1,4 +1,4 @@
-(defpoll wifi_ssid :interval "3s" `iwgetid -r`)
+(defpoll wifi_ssid :interval "3s" `nmcli -t -f active,ssid dev wifi | grep ^yes | cut -d: -f2-`)
 
 (defwidget wifi []
   (box :class "panel"

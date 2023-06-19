@@ -26,14 +26,6 @@
         )
       )
     )
-    (box :space-evenly false :halign "center"
-      (circular-progress :class "stat low" :thickness 5 :clockwise true
-                         :value "${EWW_TEMPS['COMPOSITE']}"
-        (button :class "button" :tooltip "${EWW_TEMPS['COMPOSITE']}°C"
-          (icon :name "temperature-list")
-        )
-      )
-    )
   )
 )
 
