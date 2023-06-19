@@ -7,6 +7,8 @@ mkdir "$HOME/screenshots"
 mkdir -p "$XDG_CONFIG_HOME/i3"
 ln -fvs "$DOTFILES/linux/config/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
 
+ln -fvs "$DOTFILES/linux/config/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
+
 ln -fvs "$DOTFILES/linux/config/nvim" "$XDG_CONFIG_HOME/nvim"
 
 mkdir -p "$XDG_CONFIG_HOME/rofi"
