@@ -28,5 +28,5 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
 
 sudo yay -Sc
 
-systemctl enable docker bluetooth
-systemctl start docker bluetooth
+systemctl enable docker bluetooth NetworkManager
+systemctl start docker bluetooth NetworkManager
