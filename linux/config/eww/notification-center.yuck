@@ -13,13 +13,15 @@
          :hexpand false
          :space-evenly false
 
-      (notifications-header)
+      ; (notifications-header)
+
       (scroll :vscroll true
               :hscroll false
               :height 799
         (notifications-body)
       )
-      (notifications-footer)
+
+      ; (notifications-footer)
     )
   )
 )

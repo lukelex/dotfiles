@@ -13,6 +13,10 @@ $light-accent-text: #00232c;
 
   .text {
     color: black;
+
+    &.subdued {
+      color: grey;
+    }
   }
 
   .accented {

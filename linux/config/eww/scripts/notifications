@@ -1,6 +1,7 @@
 #!/bin/env ruby
 
 require "json"
+require "date"
 
 HIDE_LIST = [
   "info",
@@ -11,8 +12,26 @@ HIDE_LIST = [
   "power manager",
   "package manager",
   "networkmanager applet",
-  "microphone"
+  "microphone",
+  "notify-send"
 ].freeze
+
+ICONS = {
+  "Google Chrome" => "globe",
+  "Telegram Desktop" => "messages",
+  "discord" => "messages",
+  "blueman" => "bluetooth"
+}.freeze
+
+def enrich(entry)
+  entry.merge(
+    {
+      "icon" => ICONS[entry.fetch("app_name")] || "bell",
+      "app_name" => entry.fetch("app_name").capitalize,
+      "timestamp" => Time.at(entry.fetch("time")).strftime("%m/%d %H:%M")
+    }
+  )
+end
 
 puts `cat /tmp/wired.log`
   .split("\n")
@@ -20,4 +39,5 @@ puts `cat /tmp/wired.log`
   .select { |entry| (entry.values_at("app_name", "summary").map(&:downcase) & HIDE_LIST).empty? }
   .sort { |entry, _| entry.fetch("time") }
   .first(25)
+  .map(&method(:enrich))
   .to_json

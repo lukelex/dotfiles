@@ -1,4 +1,5 @@
 (defvar SPACING 7)
+(defvar MAGIC_NUMBER 1.6)
 (defvar ICON_SIZE 35)
 (defvar ICON_SIZE_SMALL 21)
 (defvar ICON_SIZE_LARGE 70)
@@ -51,6 +52,7 @@
 
 (defwidget icon [name]
   (image :path "${ICONS_PATH}/${name}.png"
+         :tooltip "${ICONS_PATH}/${name}.png"
          :image-width ICON_SIZE
          :image-height ICON_SIZE)
 )

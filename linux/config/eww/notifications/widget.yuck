@@ -20,6 +20,7 @@
   (scroll :vscroll true
           :hscroll false
           :height 797
+
     (box :class "body"
          :orientation "vertical"
          :space-evenly false
@@ -34,9 +35,9 @@
 (defwidget notification-entry [entry]
   (box :class "entry"
        :spacing SPACING
-       :width 400
        :orientation "horizontal"
        :space-evenly false
+       :width 425
 
     (box :orientation "horizontal"
          :space-evenly false
@@ -46,41 +47,52 @@
       (notification-entry-contents :entry entry)
     )
 
-    (notification-entry-actions :entry entry)
+    ; (notification-entry-actions :entry entry)
   )
 )
 
 (defwidget notification-entry-image [entry]
   (box :class "image"
-       :width 62
-       :height 62
+       :width { ICON_SIZE * MAGIC_NUMBER }
+       :height { ICON_SIZE * MAGIC_NUMBER }
        :halign "start"
 
-    (icon :name "bell")
+    (icon :name { entry.icon })
   )
 )
 
 (defwidget notification-entry-contents [entry]
   (box :class "contents"
        :orientation "vertical"
-       :halign "start"
-       :hexpand true
+       :tooltip entry
 
-    (label :class "text entry-header"
-           :limit-width 40
-           :tooltip entry
-           :halign "start"
-           :text { entry.app_name })
+    (box :orientation "horizontal"
+         :space-evenly false
 
-    (label :class "text entry-header"
-           :limit-width 40
+      (box :orientation "horizontal"
            :halign "start"
-           :text { entry.summary })
+
+        (label :class "text"
+               :limit-width 25
+               :text { entry.summary }
+        )
+      )
+
+      (box :orientation "horizontal"
+           :halign "end"
+
+        (label :class "text subdued"
+               :limit-width 25
+               :text { entry.timestamp }
+        )
+      )
+    )
 
     (label :class "text entry-body"
            :limit-width 40
            :halign "start"
-           :text { entry.body })
+           :text { entry.body }
+    )
   )
 )
 
@@ -118,6 +130,7 @@
     (box :orientation "horizontal"
          :halign "end"
          :space-evenly false
+
       (button :class "settings"
         (icon-small :name "bars-sort")
       )
@@ -126,7 +139,10 @@
 )
 
 (defwidget notifications-settings []
-  (box :orientation "horizontal" :halign "start" :space-evenly false
+  (box :orientation "horizontal"
+       :halign "start"
+       :space-evenly false
+
     (pointer :active true
       (button :class "settings"
         (icon-small :name "gear")
