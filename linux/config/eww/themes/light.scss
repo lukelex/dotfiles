@@ -8,6 +8,11 @@ $light-background-4: rgba(232, 232, 232, $opacity);
 $light-accent-background: #53C3B9;
 $light-accent-text: #00232c;
 
+.bar-window {
+  font-size: 24px;
+  background-color: $light-background-1;
+}
+
 .window.light {
   background-color: $light-background-1;
 

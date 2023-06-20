@@ -1,0 +1,122 @@
+(defvar BAR_SPACING 8)
+(defvar BAR_APP_SPACING 18)
+
+(defwindow bar
+  :monitor 0
+  :windowtype "dock"
+  :geometry (geometry :x "0%"
+                      :y "0%"
+                      :width "90%"
+                      :height "10px"
+                      :anchor "top center")
+  :reserve (struts :side "top" :distance "4%")
+
+  (centerbox :orientation "horizontal"
+             :class "bar-window"
+    (bar-left)
+    (bar-center)
+    (bar-right)
+  )
+)
+
+(defwidget bar-left []
+  (box :orientation "horizontal"
+       :halign "start"
+       :spacing BAR_SPACING
+       :space-evenly false
+    (bar-icon :name "pineapple")
+    (workspaces)
+    (bar-music)
+  )
+)
+(deflisten music :initial ""
+  "playerctl --follow metadata --format '{{ title }}' || true")
+(defwidget bar-music []
+  (box :orientation "horizontal"
+       :halign "center"
+       :spacing BAR_SPACING
+       :space-evenly false
+    (bar-icon :name "backward-step")
+    (label :text { music })
+    (bar-icon :name "forward-step")
+  )
+)
+
+(defpoll bar-time :interval "10s"
+  "date '+%H:%M'"
+)
+(defpoll bar-date :interval "60s"
+  "date '+%d %b - %A'"
+)
+(defwidget bar-time []
+  (box :orientation "horizontal"
+       :halign "center"
+       :spacing BAR_SPACING
+       :space-evenly false
+    (bar-icon :name "clock")
+    (label :text { bar-time })
+    (bar-icon :name "calendar")
+    (label :text { bar-date })
+  )
+)
+(defwidget bar-center []
+  (box :orientation "horizontal"
+       :halign "center"
+       :spacing BAR_SPACING
+       :space-evenly false
+    (bar-time)
+  )
+)
+
+(defwidget bar-right []
+  (bar-apps)
+)
+
+(defwidget bar-apps []
+  (box :orientation "horizontal"
+       :halign "end"
+       :spacing BAR_APP_SPACING
+    (bar-brands-icon :name "docker")
+    (bar-icon :name "microphone")
+    (bar-icon :name "clipboard")
+    (bar-icon :name "camera")
+    (bar-icon :name "usb-drive")
+    (bar-icon :name "bluetooth")
+    (bar-icon :name "display")
+    (bar-icon :name "volume")
+    (bar-icon :name "wifi")
+    (bar-icon :name "messages")
+  )
+)
+
+(defvar BAR_ICON_SIZE 24)
+(defvar BAR_ICONS_PATH "/home/lukas/dotfiles/fonts/fa6/pngs/regular")
+(defvar BAR_BRANDS_ICONS_PATH "/home/lukas/dotfiles/fonts/fa6/pngs/brands")
+(defwidget bar-icon [name]
+  (image :path "${BAR_ICONS_PATH}/${name}.png"
+         :image-width BAR_ICON_SIZE
+         :image-height BAR_ICON_SIZE)
+)
+(defwidget bar-brands-icon [name]
+  (image :path "${BAR_BRANDS_ICONS_PATH}/${name}.png"
+         :image-width BAR_ICON_SIZE
+         :image-height BAR_ICON_SIZE)
+)
+
+(defwidget workspaces []
+  (box :class "workspaces"
+       :orientation "h"
+       :halign "start"
+       :spacing BAR_SPACING
+    (button :onclick "i3-msg workspace 1" 1)
+    (button :onclick "i3-msg workspace 2" 2)
+    (button :onclick "i3-msg workspace 3" 3)
+    (button :onclick "i3-msg workspace 4" 4)
+    (button :onclick "i3-msg workspace 5" 5)
+    (button :onclick "i3-msg workspace 6" 6)
+    (button :onclick "i3-msg workspace 7" 7)
+    (button :onclick "i3-msg workspace 8" 8)
+    (button :onclick "i3-msg workspace 9" 9)
+    (button :onclick "i3-msg workspace 10" 10)
+  )
+)

@@ -77,3 +77,4 @@
 (include "./calion.yuck")
 (include "./notification-center.yuck")
 (include "./power.yuck")
+(include "./bar.yuck")
