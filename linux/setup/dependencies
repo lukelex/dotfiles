@@ -16,7 +16,7 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \
-  wired 1password spotify telegram-desktop \
+  wired 1password spotify telegram-desktop cups \
   slack-desktop zeal rofi-bluetooth-git vlc unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
@@ -28,5 +28,5 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
 
 sudo yay -Sc
 
-systemctl enable docker bluetooth NetworkManager
-systemctl start docker bluetooth NetworkManager
+systemctl enable docker bluetooth NetworkManager avahi-daemon cups
+systemctl start docker bluetooth NetworkManager avahi-daemon cups
