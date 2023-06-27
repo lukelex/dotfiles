@@ -17,3 +17,7 @@ fi
 if test -f "$HOME/.cargo/env"; then
   source "$HOME/.cargo/env"
 fi
+
+if [ -z "${DISPLAY}" ] && [ "$(tty)" = "/dev/tty1" ]; then
+  exec startx
+fi
