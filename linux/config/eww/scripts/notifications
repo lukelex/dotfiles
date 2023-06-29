@@ -16,21 +16,48 @@ HIDE_LIST = [
   "notify-send"
 ].freeze
 
-ICONS = {
-  "Google Chrome" => "globe",
-  "Telegram Desktop" => "messages",
-  "discord" => "messages",
-  "blueman" => "bluetooth"
-}.freeze
+ICONS = [
+  {
+    body: /was saved in/,
+    icon: "key-skeleton"
+  },
+  {
+    name: "Printers",
+    icon: "print"
+  },
+  {
+    name: "Google Chrome",
+    icon: "globe"
+  },
+  {
+    name: "Telegram Desktop",
+    icon: "messages"
+  },
+  {
+    name: "discord",
+    icon: "messages"
+  },
+  {
+    name: "blueman",
+    icon: "bluetooth"
+  }
+].freeze
 
 def enrich(entry)
   entry.merge(
     {
-      "icon" => ICONS[entry.fetch("app_name")] || "bell",
+      "icon" => icon_for(entry),
       "app_name" => entry.fetch("app_name").capitalize,
       "timestamp" => Time.at(entry.fetch("time")).strftime("%m/%d %H:%M")
     }
   )
+end
+
+def icon_for(entry)
+  ICONS.find do |i|
+    (i[:name] == entry.fetch("app_name")) ||
+      i[:body]&.match?(entry.fetch("body"))
+  end&.fetch(:icon, "bell")
 end
 
 puts `cat /tmp/wired.log`

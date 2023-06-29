@@ -3,10 +3,10 @@
 ICON=$FONT_AWESOME_PATH/light/print.svg
 
 show() {
-  notify-send -a System \
+  notify-send -a Printers \
               -i $ICON \
-              -h string:wired-tag:system \
-              "$1"
+              -h string:wired-tag:printers \
+              "Printers" "$1"
 }
 
 show "Searching network..."
