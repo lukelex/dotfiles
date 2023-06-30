@@ -6,6 +6,7 @@ SAVEHIST=10000
 
 setopt EXTENDED_HISTORY       # Write the history file in the ':start:elapsed;command' format.
 setopt HIST_EXPIRE_DUPS_FIRST # Expire duplicate entries first when trimming history.
+setopt HIST_IGNORE_DUPS       # Ignore duplicated commands history list
 setopt HIST_IGNORE_ALL_DUPS   # Delete old recorded entry if new entry is a duplicate.
 setopt HIST_IGNORE_SPACE      # Don't record an entry starting with a space.
 setopt HIST_REDUCE_BLANKS     # Remove superfluous blanks before recording entry.
@@ -19,7 +20,7 @@ function fancy-history() {
   local selection=$(
     history -t'%F' 0 \
       | tac \
-      | fzf --no-sort \
+      | fzf --tiebreak index \
       | tr --squeeze-repeats '[:blank:]' ' ' \
       | cut --fields 4- --delimiter ' '
     )
