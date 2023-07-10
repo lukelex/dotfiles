@@ -10,7 +10,7 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
   man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper zsh \
   zsh-completions autorandr cmake jq sxhkd xautolock xord-xkill \
   imagemagick i3lock blueman flameshot fragments playerctl \
-  xclip tree v4l-utils neovim fd fzf ripgrep rustup \
+  xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
   pipewire-pulse google-chrome
 

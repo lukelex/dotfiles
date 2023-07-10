@@ -10,5 +10,6 @@ flameshot &
 greenclip daemon &
 u_eww &
 sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
+kmonad "$HOME/dotfiles/linux/config/kmonad.kbd" &
 u_polybar &
 u_i3-workspaces &
