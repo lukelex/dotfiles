@@ -21,6 +21,11 @@ autoload -Uz compinit && compinit
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
+autoload edit-command-line
+zle -N edit-command-line
+bindkey '^xe' edit-command-line
+bindkey '^x^e' edit-command-line
+
 source "$DOTFILES/unix/env"
 if [[ "$(uname)" == "Linux" ]]; then
   source "$DOTFILES/linux/env"
