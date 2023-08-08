@@ -16,7 +16,7 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \
-  wired 1password spotify telegram-desktop cups \
+  wired 1password spotify telegram-desktop cups kbt \
   slack-desktop zeal rofi-bluetooth-git vlc zip unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
