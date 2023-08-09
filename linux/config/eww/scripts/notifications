@@ -30,7 +30,7 @@ ICONS = [
     icon: "globe"
   },
   {
-    name: ["Telegram Desktop", "discord", "Slack"],
+    name: ["Telegram Desktop", "discord", "Slack", "WhatsApp"],
     icon: "messages"
   },
   {
@@ -52,6 +52,7 @@ end
 def icon_for(entry)
   ICONS.find do |i|
     Array(i[:name]).include?(entry.fetch("app_name")) ||
+      Array(i[:name]).any? { |n| entry.fetch("app_name").downcase.include?(n.downcase) } ||
       i[:body]&.match?(entry.fetch("body"))
   end&.fetch(:icon, "bell")
 end
