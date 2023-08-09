@@ -16,45 +16,63 @@ HIDE_LIST = [
   "notify-send"
 ].freeze
 
-ICONS = [
-  {
-    body: /was saved in/,
-    icon: "key-skeleton"
-  },
-  {
-    name: "Printers",
-    icon: "print"
-  },
-  {
-    name: "Google Chrome",
-    icon: "globe"
-  },
-  {
-    name: ["Telegram Desktop", "discord", "Slack", "WhatsApp"],
-    icon: "messages"
-  },
-  {
-    name: "blueman",
-    icon: "bluetooth"
-  }
-].freeze
-
 def enrich(entry)
   entry.merge(
     {
-      "icon" => icon_for(entry),
+      "icon" => Icon.for(entry),
       "app_name" => entry.fetch("app_name").capitalize,
       "timestamp" => Time.at(entry.fetch("time")).strftime("%m/%d %H:%M")
     }
   )
 end
 
-def icon_for(entry)
-  ICONS.find do |i|
-    Array(i[:name]).include?(entry.fetch("app_name")) ||
-      Array(i[:name]).any? { |n| entry.fetch("app_name").downcase.include?(n.downcase) } ||
-      i[:body]&.match?(entry.fetch("body"))
-  end&.fetch(:icon, "bell")
+module Icon
+  extend self
+
+  ICONS = [
+    {
+      body: /was saved in/,
+      icon: "key-skeleton"
+    },
+    {
+      name: "Printers",
+      icon: "print"
+    },
+    {
+      name: "Google Chrome",
+      icon: "globe"
+    },
+    {
+      name: ["Telegram Desktop", "discord", "Slack", "WhatsApp"],
+      icon: "messages"
+    },
+    {
+      name: "blueman",
+      icon: "bluetooth"
+    }
+  ].freeze
+
+  def for(entry)
+    ICONS.find do |icon|
+      in_name?(icon, entry) ||
+        in_app_name?(icon, entry) ||
+        in_body?(icon, entry)
+    end&.fetch(:icon, "bell")
+  end
+
+  private
+
+  def in_name?(icon, entry)
+    Array(icon[:name]).include?(entry.fetch("app_name"))
+  end
+
+  def in_app_name?(icon, entry)
+    Array(icon[:name]).any? { |n| entry.fetch("app_name").downcase.include?(n.downcase) }
+  end
+
+  def in_body?(icon, entry)
+    icon[:body]&.match?(entry.fetch("body"))
+  end
 end
 
 puts `cat /tmp/wired.log`
