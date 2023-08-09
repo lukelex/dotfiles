@@ -96,6 +96,20 @@
   )
 )
 
+(defwidget notification-entry-clear [entry]
+  (box :class "actions"
+       :space-evenly true
+       :orientation "vertical"
+
+    (pointer :active true
+      (button :class "actions"
+              :onclick "./scripts/notifications clear ${entry.id}"
+        (icon-small :name "trash")
+      )
+    )
+  )
+)
+
 (defwidget notification-entry-actions [entry]
   (box :class "actions"
        :space-evenly true
@@ -107,7 +121,7 @@
       )
     )
 
-    ; (for action in entry.actions
+    ; (for action in { entry.actions }
     ;   (pointer :active true
     ;     (button :class "actions"
     ;       (icon-small :name "arrow-right")
