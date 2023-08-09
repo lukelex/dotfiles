@@ -34,6 +34,10 @@ box.component {
   // margin: $magic-number;
 }
 
+.button {
+  padding: $magic-number * 1;
+}
+
 .big-button {
   border-radius: 50%;
   padding: $magic-number * 4;

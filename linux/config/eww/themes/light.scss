@@ -35,10 +35,6 @@ $light-accent-text: #00232c;
     background-color: $light-background-3;
   }
 
-  .button {
-    padding: $magic-number * 1;
-  }
-
   .button, .big-button {
     &:hover {
       background-color: $light-background-4;
@@ -51,6 +47,7 @@ $light-accent-text: #00232c;
         background-color: $light-background-3;
       }
     }
+
     .actions {
       background-color: $light-background-3;
     }

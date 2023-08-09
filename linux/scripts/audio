@@ -131,6 +131,7 @@ case $1 in
         # show_volume
         ;;
       show) show_volume;;
+      default) wpctl set-default $3;;
       toggle)
         wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
         show_volume;;

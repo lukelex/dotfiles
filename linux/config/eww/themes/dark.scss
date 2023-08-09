@@ -13,6 +13,10 @@ $dark-accent-text: #00232c;
 
   .text {
     color: #93a1a1;
+
+    &.subdued {
+      color: grey;
+    }
   }
 
   .accented {
@@ -27,8 +31,14 @@ $dark-accent-text: #00232c;
     background-color: $dark-background-2;
   }
 
-  .button {
+  .big-button {
     background-color: $dark-background-3;
+  }
+
+  .button, .big-button {
+    &:hover {
+      background-color: $dark-background-4;
+    }
   }
 
   .notification-panel {

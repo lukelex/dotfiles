@@ -1,0 +1,62 @@
+(defpoll output_devices :interval "2s" :initial "[]" `./scripts/media-devices output`)
+(defpoll input_devices :interval "2s" :initial "[]" `./scripts/media-devices input`)
+(defpoll video_devices :interval "2s" :initial "[]" `./scripts/media-devices video`)
+
+(defwindow media-devices :monitor 0
+                         :stacking "fg"
+                         :wm-ignore true
+                         :geometry (geometry :x "-20px"
+                                             :y "66px"
+                                             :anchor "top right")
+  (v-window
+    (media-devices-header)
+
+    (media-devices-body :devices output_devices)
+    (media-devices-body :devices input_devices)
+    (media-devices-body :devices video_devices)
+  )
+)
+
+(defwidget media-devices-header []
+  (box :class "panel"
+    (box :orientation "horizontal"
+      (box :halign "start"
+        (title :text "Media Devices")
+      )
+
+      (box :halign "end"
+        (pointer :active true
+          (button :class "button" :onclick "pavucontrol & u_eww close &"
+            (icon-small :name "gear")
+          )
+        )
+      )
+    )
+  )
+)
+
+(defwidget media-devices-body [devices]
+  (box :class "media-device-panel panel" :spacing SPACING
+       :orientation "vertical" :space-evenly false
+       :visible { arraylength(devices) != 0 }
+    (box :orientation "vertical"
+      (for entry in devices
+        (media-devices-entry :entry entry)
+      )
+    )
+  )
+)
+
+(defwidget media-devices-entry [entry]
+  (pointer :active true
+    (button :class "button" :onclick "wpctl set-default ${entry.id} && u_eww close &"
+      (line
+        (icon :name { entry.icon })
+        (label :class "text"
+               :limit-width 30
+               :text { entry.name }
+        )
+      )
+    )
+  )
+)

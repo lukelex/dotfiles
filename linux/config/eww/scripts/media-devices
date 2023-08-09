@@ -1,0 +1,69 @@
+#!/bin/env ruby
+
+_pipewire, audio_raw, video_raw, _settings = `wpctl status`.split("\n\n")
+
+module PATTERNS
+  PARAGRAPH = /(.+?\d\..+\n)+\s│/
+  DEVICE = /(?<default>\*)?\s+(?<id>\d+)\.\s(?<name>.+?)(?<metadata>\s*\[.+?\])?\n/
+end
+
+Audio = Struct.new(:text) do
+  def input
+    Device.parse text.match(/Sources:\n#{PATTERNS::PARAGRAPH}/).to_s
+  end
+
+  def output
+    Device.parse text.match(/Sinks:\n#{PATTERNS::PARAGRAPH}/).to_s
+  end
+end
+
+Video = Struct.new(:text) do
+  def to_a
+    Device.parse(text.match(/Sources:\n#{PATTERNS::PARAGRAPH}/).to_s)
+  end
+end
+
+Device = Struct.new(:default, :id, :name, :metadata) do
+  def self.parse(text)
+    text.scan(PATTERNS::DEVICE).map do |entry|
+      new(*entry)
+    end
+  end
+
+  def to_h
+    super.merge(icon: Icon.for(self), default: !default.nil?, id: id.to_i)
+  end
+end
+
+module Icon
+  extend self
+
+  ICONS = {
+    "DAC" => "headphones",
+    "HDMI" => "tv-music",
+    "headset" => "headset",
+    "speakers" => "speakers"
+  }.freeze
+  FALLBACK_ICONS = {
+    "output" => "speakers",
+    "input" => "microphone",
+    "video" => "camera-web",
+  }.freeze
+
+  def for(entry)
+    ICONS[entry.name] ||
+      ICONS.find { |key, _value| entry.name.include?(key) }&.last ||
+      FALLBACK_ICONS[ARGV.first]
+  end
+end
+
+require "json"
+print JSON.dump \
+  case ARGV.first
+  when "output"
+    Audio.new(audio_raw).output.map(&:to_h)
+  when "input"
+    Audio.new(audio_raw).input.map(&:to_h)
+  when "video"
+    Video.new(video_raw).to_a.map(&:to_h)
+  end

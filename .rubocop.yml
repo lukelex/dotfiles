@@ -4,3 +4,6 @@ AllCops:
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
+
+Style/ModuleFunction:
+  EnforcedStyle: extend_self
