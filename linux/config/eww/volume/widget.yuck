@@ -3,7 +3,7 @@
 (defwidget volume []
   (box :orientation "horizontal" :space-evenly false :spacing SPACING
     (pointer :active true
-      (button :class "button" :onclick "u_audio vol toggle"
+      (button :class "big-button" :onclick "u_audio vol toggle"
               :tooltip "Toggle Master volume On & Off"
         (icon :name "volume")
       )

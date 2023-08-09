@@ -5,7 +5,7 @@
     (box :space-evenly false :halign "center"
       (circular-progress :class "stat low" :thickness 5 :clockwise true
                          :value "${EWW_DISK['/']['used_perc']}"
-        (button :class "button" :tooltip "${EWW_DISK['/']['used_perc']}%"
+        (button :class "big-button" :tooltip "${EWW_DISK['/']['used_perc']}%"
           (icon :name "hard-drive")
         )
       )
@@ -13,7 +13,7 @@
     (box :space-evenly false :halign "center"
       (circular-progress :class "stat low" :thickness 5 :clockwise true
                          :value "${round(EWW_CPU['avg'], 0)}"
-        (button :class "button" :tooltip "${EWW_CPU}"
+        (button :class "big-button" :tooltip "${EWW_CPU}"
           (icon :name "microchip")
         )
       )
@@ -21,7 +21,7 @@
     (box :space-evenly false :halign "center"
       (circular-progress :class "stat low" :thickness 5 :clockwise true
                          :value "${round(EWW_RAM['used_mem_perc'], 0)}"
-        (button :class "button" :tooltip "${EWW_RAM}"
+        (button :class "big-button" :tooltip "${EWW_RAM}"
           (icon :name "memory")
         )
       )

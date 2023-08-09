@@ -6,7 +6,7 @@
        :orientation "horizontal"
        :space-evenly false
     (pointer :active true
-      (button :class "button ${ "active" }"
+      (button :class "big-button ${ "active" }"
               :onclick "u_wifi toggle"
               :tooltip "Toggle wifi On & Off"
         (icon :name "wifi")

@@ -3,7 +3,7 @@
 (defwidget brightness []
   (box :orientation "horizontal" :space-evenly false :spacing SPACING
     (pointer :active true
-      (button :class "button" :tooltip "Toggle autobrightness"
+      (button :class "big-button" :tooltip "Toggle autobrightness"
         (icon :name "brightness")
       )
     )

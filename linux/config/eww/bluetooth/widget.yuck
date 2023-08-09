@@ -4,7 +4,7 @@
 (defwidget bluetooth []
   (box :class "panel" :spacing SPACING :orientation "horizontal" :space-evenly false
     (pointer :active true
-      (button :class "button connection ${bluetooth_active} ${bluetooth_active == "yes" ? "" : "disabled" }"
+      (button :class "big-button connection ${bluetooth_active} ${bluetooth_active == "yes" ? "" : "disabled" }"
               :onclick "u_bluetooth toggle" :tooltip "Toggle bluetooth On & Off"
         (brands-icon :name "bluetooth")
       )

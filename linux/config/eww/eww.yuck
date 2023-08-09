@@ -50,6 +50,13 @@
   )
 )
 
+(defwidget title [text]
+  (label :class "title text"
+         :limit-width 25
+         :text text
+  )
+)
+
 (defwidget icon [name]
   (image :path "${ICONS_PATH}/${name}.png"
          :tooltip "${ICONS_PATH}/${name}.png"

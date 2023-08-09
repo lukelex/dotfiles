@@ -8,7 +8,7 @@
        :spacing SPACING
        :hexpand false
 
-    (box :class "button"
+    (box :class "big-button"
       (icon :name "user")
     )
     (box :orientation "vertical" :valign "center"

@@ -54,7 +54,7 @@
        :orientation "horizontal"
        :spacing SPACING
     (pointer :active true
-      (button :class "button"
+      (button :class "big-button"
               :onclick "u_eww toggle power"
         (icon :name "power-off")
       )
@@ -65,7 +65,7 @@
 ; (defwidget ext_monitor_brightness []
 ;   (box :orientation "horizontal" :space-evenly false :spacing SPACING
 ;     (pointer :active true
-;       (button :class "button" :onclick "u_monitors brightness reset" :tooltip "Resets brightness to 0" :timeout "5s"
+;       (button :class "big-button" :onclick "u_monitors brightness reset" :tooltip "Resets brightness to 0" :timeout "5s"
 ;         (icon :name "display")
 ;       )
 ;     )
@@ -78,7 +78,7 @@
 
 ; (defwidget keyboard_brightness [?active]
 ;   (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
-;     (button :class "button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
+;     (button :class "big-button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
 ;       (icon :name "keyboard-brightness")
 ;     )
 ;     (eventbox :cursor { active ? "grab" : "default" } :hexpand true

@@ -31,8 +31,18 @@ $light-accent-text: #00232c;
     background-color: $light-background-2;
   }
 
-  .button {
+  .big-button {
     background-color: $light-background-3;
+  }
+
+  .button {
+    padding: $magic-number * 1;
+  }
+
+  .button, .big-button {
+    &:hover {
+      background-color: $light-background-4;
+    }
   }
 
   .notification-panel {

@@ -3,7 +3,7 @@
        :space-evenly true :hexpand true
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "u_setup-printer & u_eww close"
+        (button :class "big-button" :onclick "u_setup-printer & u_eww close"
                 :tooltip "Find and setup IP printer"
           (icon :name "print")
         )
@@ -11,7 +11,7 @@
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "u_nightmode & u_eww close"
+        (button :class "big-button" :onclick "u_nightmode & u_eww close"
                 :tooltip "Toggle nightmode On & Off"
           (icon :name "moon")
         )
@@ -19,7 +19,7 @@
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "u_emoji & u_eww close"
+        (button :class "big-button" :onclick "u_emoji & u_eww close"
                 :tooltip "Open Emoji selector"
           (icon :name "face-smile-beam")
         )
@@ -27,7 +27,7 @@
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
-        (button :class "button" :onclick "flameshot gui -p $HOME/screenshots & u_eww close"
+        (button :class "big-button" :onclick "flameshot gui -p $HOME/screenshots & u_eww close"
                 :tooltip "Opens screenshot tool"
           (icon :name "camera")
         )
