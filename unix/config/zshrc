@@ -26,6 +26,9 @@ zle -N edit-command-line
 bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
 
+bindkey '^H' backward-kill-word
+bindkey '5~' kill-word
+
 source "$DOTFILES/unix/env"
 if [[ "$(uname)" == "Linux" ]]; then
   source "$DOTFILES/linux/env"
