@@ -7,6 +7,7 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export KITTY_CONFIG_DIRECTORY="$DOTFILES/linux/config/"
 export BROWSER=/usr/bin/google-chrome-stable
 export BAT_PAGER='less -RFI'
+export MANPAGER='nvim +Man!'
 export FZF_DEFAULT_OPTS="--layout=reverse --border --header 'Ctrl+h: PageDown / Ctrl+l: PageUp' --bind ctrl-h:page-down,ctrl-l:page-up"
 
 if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
