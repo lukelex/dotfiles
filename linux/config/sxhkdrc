@@ -50,8 +50,6 @@ super + ctrl+ b
   rofi-bluetooth
 super + ctrl + u
   u_usb-mounter
-super + ctrl + e
-  u_emoji
 super + ctrl + c
   u_clipboard
 super + ctrl + f
