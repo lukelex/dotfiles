@@ -27,7 +27,7 @@ bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
 
 bindkey '^H' backward-kill-word
-bindkey '5~' kill-word
+bindkey '\e[3;5~' kill-word
 
 source "$DOTFILES/unix/env"
 if [[ "$(uname)" == "Linux" ]]; then
