@@ -12,7 +12,7 @@ yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
   imagemagick i3lock blueman flameshot fragments playerctl \
   xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome
+  pipewire-pulse google-chrome xss-lock
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \

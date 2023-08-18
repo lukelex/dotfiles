@@ -4,7 +4,8 @@
 nm-applet &
 wired --run &
 dropbox start -i &
-xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 17 -notifier 'u_autolocking 15' &
+xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10' &
+xss-lock --transfer-sleep-lock -- u_exit lock &
 flameshot &
 1password --silent &
 greenclip daemon &

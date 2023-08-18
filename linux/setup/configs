@@ -65,6 +65,8 @@ ln -fvs "$DOTFILES/linux/config/autorandr/postswitch" "$XDG_CONFIG_HOME/autorand
 ln -fvs "$DOTFILES/linux/config/mimeapps.conf" ~/.local/share/applications/mimeapps.list
 ln -fvs "$DOTFILES/linux/config/mimeapps.conf" ~/.config/mimeapps.list
 
+xset dpms 1200 0 0
+
 sudo rmmod pcspkr
 
 sudo usermod -a -G video $USER
