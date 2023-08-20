@@ -1,35 +1,26 @@
 #!/usr/bin/bash
 
 function reset_ui {
-  u_music pause
+  u_music pause 2&> /dev/null
   u_eww close 2&> /dev/null
 }
 
 case "$1" in
   lock)
-    u_blurlock
-    ;;
+    u_blurlock;;
   logout)
-    i3-msg exit
-    ;;
-  switch_user)
-    logout
-    ;;
+    loginctl terminate-session `loginctl session-status | awk 'NR==1{print $1}'`;;
   suspend)
-    reset_ui && u_exit lock && systemctl suspend
-    ;;
+    reset_ui && systemctl suspend;;
   hibernate)
-    reset_ui && u_exit lock && systemctl hibernate
-    ;;
+    reset_ui && systemctl hibernate;;
   reboot)
-    systemctl reboot
-    ;;
+    systemctl reboot;;
   shutdown)
-    systemctl poweroff
-    ;;
+    systemctl poweroff;;
   *)
     echo "== ! exit: missing or invalid argument ! =="
-    echo "Try again with: lock | logout | switch_user | suspend | hibernate | reboot | shutdown"
+    echo "Try again with: lock | logout | suspend | hibernate | reboot | shutdown"
     exit 2
 esac
 
