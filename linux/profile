@@ -1,14 +1,6 @@
 #!/usr/bin/bash
 
-export TZ='Europe/Copenhagen'
-export TERMINFO='/usr/share/terminfo'
-export TERM="xterm-kitty"
-export XDG_CONFIG_HOME="$HOME/.config"
-export KITTY_CONFIG_DIRECTORY="$DOTFILES/linux/config/"
-export BROWSER=/usr/bin/google-chrome-stable
-export BAT_PAGER='less -RFI'
-export MANPAGER='nvim +Man!'
-export FZF_DEFAULT_OPTS="--layout=reverse --border --header 'Ctrl+h: PageDown / Ctrl+l: PageUp' --bind ctrl-h:page-down,ctrl-l:page-up"
+source "$HOME/dotfiles/linux/variables"
 
 if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   eval `ssh-agent -s` > /dev/null

@@ -63,19 +63,18 @@ OUTPUT_IMG_HEIGHT=0 # Decide size to cover all screens
 if [ "$lock_cmd" ]; then
   LOCK_BASE_CMD="$lock_cmd"
 else
-  LOCK_BASE_CMD="i3lock -i $OUTPUT_IMG"
+  LOCK_BASE_CMD="i3lock --image $OUTPUT_IMG"
 fi
 
 if [ "$lock_args" ]; then
-  LOCK_ARGS="$lock_args"  # Passed command
+  LOCK_ARGS="$lock_args"
 else
-  LOCK_ARGS="-t -e"  # Default
+  LOCK_ARGS="--tiling --ignore-empty-password --show-failed-attempts --nofork"
 fi
 LOCK_CMD="$LOCK_BASE_CMD $LOCK_ARGS"
 
 if [ -e $OUTPUT_IMG ]
 then
-  # Lock screen since image already exists
   $LOCK_CMD
   exit 0
 fi

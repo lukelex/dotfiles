@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+source ./linux/variables
+
 source ./unix/setup/configs
 source ./unix/setup/git-config
 

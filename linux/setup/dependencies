@@ -2,29 +2,35 @@
 
 set -e
 
-source ./linux/setup/yay
+if ! command -v yay &> /dev/null
+then
+  source ./linux/setup/yay
+fi
 
 # essentials
-yay -S --needed --noconfirm i3-wm picom rofi ibus inetutils openssh arandr \
+yay -S --needed --noconfirm xinit i3-wm picom rofi ibus openssh \
   polkit polkit-gnome xfce4-power-manager network-manager-applet \
   man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper zsh \
   zsh-completions autorandr cmake jq sxhkd xautolock xorg-xkill \
-  imagemagick i3lock blueman flameshot fragments playerctl \
-  xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
+  imagemagick i3lock blueman flameshot fragments playerctl inetutils \
+  xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad arandr \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
   pipewire-pulse google-chrome xss-lock
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \
-  wired 1password spotify telegram-desktop cups kbt \
+  wired 1password spotify cups kbt \
   slack-desktop zeal rofi-bluetooth-git vlc zip unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
-  sysstat neovide qjackctl viewnior zathura zathura-pdf-poppler \
+  sysstat viewnior zathura zathura-pdf-poppler etcher-bin \
   2> /dev/null
 
 # Optionals
-# yay -S --needed --noconfirm kicad discord curtail birdfont \
+# yay -S --needed --noconfirm kicad curtail birdfont \
+#   whatsapp-for-linux telegram-desktop discord \
+
+rustup default stable
 
 sudo yay -Sc
 

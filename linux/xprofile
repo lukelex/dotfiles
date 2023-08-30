@@ -1,15 +1,13 @@
 #!/usr/bin/bash
 
-export QT_QPA_PLATFORMTHEME="qt5ct"
-export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
-export FONT_AWESOME_PATH="$DOTFILES/fonts/fa6/svgs"
+source "$HOME/dotfiles/linux/variables"
 
 # Custom binaries
 export PATH="$DOTFILES/linux/bin:$PATH"
 
 touch /tmp/wired.log
 
-source "$DOTFILES/config/keyboard" &
+source "$DOTFILES/linux/config/keyboard" &
 source "$HOME/Dropbox/secrets" 2&> /dev/null
 source "$DOTFILES/linux/config/autostart" 2&> /dev/null
 

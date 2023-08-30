@@ -32,7 +32,7 @@ function icon_volume {
   if [[ `vol_is_mute` ]]; then
     echo $VOL_MUTE
   elif [[ 1 -eq $(echo "$value > 85" | bc -l) ]]; then
-    echo "%{F#FF0000}$VOL_HIGH%{F-}"
+    echo $VOL_HIGH
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
     echo $VOL_HIGH
   elif [[ 1 -eq $(echo "$value > 25" | bc -l) ]]; then
