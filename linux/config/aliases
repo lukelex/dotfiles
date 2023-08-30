@@ -4,6 +4,14 @@
 alias e="nvim ."
 alias vim="nvim"
 
+# Bash
+alias open="xdg-open"
+alias o="xdg-open"
+alias v="viewnior"
+alias t="tree"
+alias cls="printf '\033c'"
+alias b="bat"
+
 alias l="ls --group-directories-first --color=auto -lahF"
 alias ls="ls --group-directories-first --color=auto"
 
@@ -36,3 +44,5 @@ alias gcap="git add . && git commit --amend --no-edit && git push --force-with-l
 # Docker
 alias dc="docker"
 alias dcp="docker-compose"
+
+[ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"

@@ -2,10 +2,10 @@ bindkey -e
 
 source "$HOME/dotfiles/linux/variables"
 
-source "$DOTFILES/unix/config/zsh/theme.zsh"
-source "$DOTFILES/unix/config/zsh/history.zsh"
-source "$DOTFILES/unix/config/zsh/projects.zsh"
-source "$DOTFILES/unix/config/zsh/work.zsh"
+source "$DOTFILES/linux/config/zsh/theme.zsh"
+source "$DOTFILES/linux/config/zsh/history.zsh"
+source "$DOTFILES/linux/config/zsh/projects.zsh"
+source "$DOTFILES/linux/config/zsh/work.zsh"
 
 bindkey "^[[1;5C" forward-word      # Ctrl+right
 bindkey "^[[1;5D" backward-word     # Ctrl+left
@@ -29,7 +29,6 @@ bindkey '^x^e' edit-command-line
 bindkey '^H' backward-kill-word
 bindkey '\e[3;5~' kill-word
 
-source "$DOTFILES/unix/env"
 if [[ "$(uname)" == "Linux" ]]; then
   source "$DOTFILES/linux/env"
 fi

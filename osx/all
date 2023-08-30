@@ -1,9 +1,0 @@
-#!/usr/bin/bash
-
-source "$DOTFILES/unix/setup/aliases"
-source "$DOTFILES/unix/setup/configs"
-source "$DOTFILES/unix/setup/git-config"
-
-source "$DOTFILES/osx/setup/aliases"
-source "$DOTFILES/osx/setup/dependencies"
-source "$DOTFILES/osx/setup/configs"

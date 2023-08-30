@@ -9,4 +9,4 @@ require("plugins.lsp")
 require("plugins.cmp")
 require("plugins.treesitter")
 
-vim.cmd("source $HOME/dotfiles/unix/config/vimrc")
+vim.cmd("source $DOTFILES/linux/config/nvim/vimrc")

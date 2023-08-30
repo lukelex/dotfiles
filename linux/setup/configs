@@ -9,8 +9,13 @@ mkdir -p "$HOME/screenshots"
 mkdir -p "$XDG_CONFIG_HOME/i3"
 ln -fvs "$DOTFILES/linux/config/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
 
+rm -rf "$HOME/.zshrc"
+ln -fvs "$DOTFILES/linux/config/zsh/zshrc" "$HOME/.zshrc"
+
 sudo ln -fvs "$DOTFILES/linux/config/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
 
+mkdir -pv "$HOME/backup_vim"
+mkdir -pv "$HOME/projects"
 ln -fvs "$DOTFILES/linux/config/nvim" "$XDG_CONFIG_HOME/nvim"
 
 mkdir -p "$XDG_CONFIG_HOME/rofi"

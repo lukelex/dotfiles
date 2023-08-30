@@ -1,5 +1,0 @@
-#!/usr/bin/bash
-
-export EDITOR='nvim'
-
-source "$DOTFILES/unix/setup/aliases"

@@ -1,5 +1,0 @@
-#!/usr/bin/bash
-
-export DOTFILES="$HOME/dotfiles"
-
-source "$DOTFILES/osx/setup/aliases"

@@ -6,4 +6,4 @@
 # sudo vim /etc/locale.gen && locale-gen
 
 source "$DOTFILES/linux/profile"
-source "$DOTFILES/linux/setup/aliases"
+source "$DOTFILES/linux/config/aliases"

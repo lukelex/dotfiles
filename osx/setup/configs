@@ -1,6 +1,0 @@
-#!/usr/bin/bash
-
-rm -rf "$HOME/.yabairc" "$HOME/.skhdrc"
-
-ln -fvs "$DOTFILES/osx/config/yabairc" "$HOME/.yabairc"
-ln -fvs "$DOTFILES/osx/config/skhdrc" "$HOME/.skhdrc"
