@@ -12,7 +12,7 @@ alias t="tree"
 alias cls="printf '\033c'"
 alias b="bat"
 
-alias l="ls --group-directories-first --color=auto -lahF"
+alias l="ls --group-directories-first --color=auto -lahvF"
 alias ls="ls --group-directories-first --color=auto"
 
 # GIT
