@@ -8,4 +8,6 @@ case $1 in
   update|change)
     ln -fvs "$2" "$WALLPAPER_PATH"
     $0 load;;
+  random)
+    $0 change `find $2 | shuf -n 1`
 esac
