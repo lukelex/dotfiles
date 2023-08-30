@@ -18,17 +18,11 @@ supporting my preferred workflows.
 * Application Launcher is [rofi](https://github.com/davatorium/rofi);
 * Code editing using [NeoVim](https://neovim.io/).
 
-## Setup
+## Installation
 
 Configuration is done through symlinks and relative paths.
 
-### Clone the repo
-
 ```sh
 $ git clone git@github.com:lukelex/dotfiles.git
-```
-### Install dependencies and set Symlinks
-
-```sh
-cd dotfiles && ./linux/setup/all
+$ cd dotfiles && ./linux/install/all
 ```

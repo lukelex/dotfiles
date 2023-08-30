@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+
+source ./linux/variables
+
+source ./linux/install/dependencies
+source ./linux/install/binaries
+source ./linux/install/configs
+source ./linux/install/git-config

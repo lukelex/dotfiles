@@ -1,9 +1,0 @@
-#!/usr/bin/bash
-
-source ./linux/variables
-
-source ./linux/setup/configs
-source ./linux/setup/git-config
-source ./linux/setup/dependencies
-source ./linux/setup/configs
-source ./linux/setup/binaries
