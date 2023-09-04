@@ -49,7 +49,7 @@ sudo ln -fvs "$DOTFILES/linux/udev/usb-watcher.rules" "/usr/lib/udev/rules.d/5-u
 ln -fvs "$DOTFILES/linux/config/default-apps.list" "$HOME/.local/share/applications/defaults.list"
 
 sudo mkdir -pv "/usr/share/fonts/OTF"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
+sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
 sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Duotone-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Duotone-Solid-900.otf"
 sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Light-300.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Light-300.otf"
 sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Regular-400.otf"
