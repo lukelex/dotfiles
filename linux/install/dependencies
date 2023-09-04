@@ -8,7 +8,7 @@ then
 fi
 
 # essentials
-yay -S --needed --noconfirm xinit i3-wm picom rofi ibus openssh \
+yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi ibus openssh \
   polkit polkit-gnome xfce4-power-manager network-manager-applet \
   man-db wget ttf-hack noto-fonts-cjk polybar bc xwallpaper zsh \
   zsh-completions autorandr cmake jq sxhkd xautolock xorg-xkill \
