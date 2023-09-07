@@ -26,11 +26,6 @@ set colorcolumn=+1
 nmap 0 ^
 nmap - ^
 
-if executable('ag')
-  " Use ag over grep
-  let g:ackprg = 'ag --vimgrep --smart-case'
-endif
-
 " because I misstype AG quite often
 cnoreabbrev ag Ack
 cnoreabbrev aG Ack
