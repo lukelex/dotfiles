@@ -45,10 +45,13 @@ return packer.startup(function(use)
     "nvim-telescope/telescope.nvim",
     requires = { { "nvim-lua/plenary.nvim" } }
   })
-  use "itchyny/lightline.vim"
 
   -- Theme
   use({ "bluz71/vim-nightfly-colors", as = "nightfly" })
+  use({
+    "nvim-lualine/lualine.nvim",
+    requires = { 'nvim-tree/nvim-web-devicons', opt = true }
+  })
 
   -- Language improvements
   use("terrastruct/d2-vim")
