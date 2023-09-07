@@ -38,6 +38,7 @@ return packer.startup(function(use)
   use("tpope/vim-surround")
   use("tpope/vim-endwise")
   use("Raimondi/delimitMate")
+  use("norcalli/nvim-colorizer.lua")
 
   -- fuzzy file finder
   use({
