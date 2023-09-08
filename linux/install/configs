@@ -9,6 +9,9 @@ mkdir -p "$HOME/screenshots"
 mkdir -p "$XDG_CONFIG_HOME/i3"
 ln -fvs "$DOTFILES/linux/config/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
 
+sudo mkdir -p "/etc/ly"
+sudo ln -fvs "$DOTFILES/linux/config/ly.ini" "/etc/ly/config.ini"
+
 rm -rf "$HOME/.zshrc"
 ln -fvs "$DOTFILES/linux/config/zsh/zshrc" "$HOME/.zshrc"
 

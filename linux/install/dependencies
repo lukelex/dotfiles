@@ -15,7 +15,7 @@ yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi ibus openssh \
   imagemagick i3lock blueman flameshot fragments playerctl inetutils \
   xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad arandr \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome xss-lock xwallpaper
+  pipewire-pulse google-chrome xss-lock xwallpaper ly
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \
@@ -35,5 +35,5 @@ rustup default stable
 
 sudo yay -Sc
 
-systemctl enable docker bluetooth NetworkManager avahi-daemon cups
+systemctl enable docker ly bluetooth NetworkManager avahi-daemon cups
 systemctl start docker bluetooth NetworkManager avahi-daemon cups
