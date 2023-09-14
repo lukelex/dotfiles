@@ -49,6 +49,3 @@ vim.opt.splitbelow = true
 vim.opt.splitright = true
 
 vim.opt.ttyfast = true
-
-vim.cmd("set termguicolors")
-require("colorizer").setup()

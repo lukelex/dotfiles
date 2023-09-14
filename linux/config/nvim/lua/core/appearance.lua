@@ -12,3 +12,6 @@ require("lualine").setup({
 vim.opt.guifont = "Hack:h17"
 
 vim.diagnostic.config({ float = { border = "rounded" } })
+
+vim.cmd("set termguicolors")
+require("colorizer").setup()
