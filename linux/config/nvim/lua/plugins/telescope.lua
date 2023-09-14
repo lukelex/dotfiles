@@ -14,7 +14,7 @@ vim.keymap.set("n", "<Leader>s", builtin.grep_string, {})
 vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 
-local defaults = { theme = "ivy", }
+local defaults = {}
 telescope.setup({
   pickers = {
     find_files = defaults,

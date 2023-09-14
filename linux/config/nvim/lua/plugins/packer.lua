@@ -29,7 +29,6 @@ return packer.startup(function(use)
   use("DataWraith/auto_mkdir")
   use("danro/rename.vim")
   use("schickling/vim-bufonly")
-  use("mileszs/ack.vim")
   use("tpope/vim-commentary")
   use("tpope/vim-fugitive")
   use("airblade/vim-gitgutter")
@@ -38,18 +37,16 @@ return packer.startup(function(use)
   use("tpope/vim-endwise")
   use("Raimondi/delimitMate")
   use("norcalli/nvim-colorizer.lua")
-
-  -- fuzzy file finder
   use({
     "nvim-telescope/telescope.nvim",
     requires = { { "nvim-lua/plenary.nvim" } }
   })
 
-  -- Theme
+  -- Themes
   use({ "bluz71/vim-nightfly-colors", as = "nightfly" })
   use({
     "nvim-lualine/lualine.nvim",
-    requires = { 'nvim-tree/nvim-web-devicons', opt = true }
+    requires = { 'nvim-tree/nvim-web-devicons' }
   })
 
   -- Language improvements
