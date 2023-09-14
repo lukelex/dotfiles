@@ -8,6 +8,7 @@ vim.g.netrw_liststyle = 3 -- tree view
 
 vim.g.editorconfig = true
 
+vim.cmd("set shortmess-=S")
 vim.cmd("set noshowmode") -- Hide current mode
 vim.opt.wrap = false
 vim.opt.laststatus = 2 -- always display status line
