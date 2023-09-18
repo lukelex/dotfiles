@@ -5,7 +5,7 @@ pcall(require, "core.appearance")
 
 pcall(require, "plugins.packer")
 pcall(require, "plugins.telescope")
-pcall(require, "plugins.lsp")
+pcall(require, "plugins.language-server-protocol")
 pcall(require, "plugins.cmp")
 pcall(require, "plugins.treesitter")
 
