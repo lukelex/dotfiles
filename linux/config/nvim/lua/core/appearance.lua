@@ -15,3 +15,5 @@ vim.diagnostic.config({ float = { border = "rounded" } })
 
 vim.cmd("set termguicolors")
 require("colorizer").setup()
+
+require("gitsigns").setup()
