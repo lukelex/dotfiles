@@ -1,7 +1,7 @@
 configuration {
   show-icons: true;
   icon-theme: "Papirus";
-  font: "roboto 21";
+  font: "Hack 18";
 
   kb-remove-to-eol: "";
   kb-accept-entry: "Return,KP_Enter";

@@ -42,8 +42,8 @@ return packer.startup(function(use)
     requires = { { "nvim-lua/plenary.nvim" } }
   })
 
-  -- Themes
-  use({ "bluz71/vim-nightfly-colors", as = "nightfly" })
+  -- Appearance
+  use("folke/tokyonight.nvim")
   use({
     "nvim-lualine/lualine.nvim",
     requires = { 'nvim-tree/nvim-web-devicons' }
