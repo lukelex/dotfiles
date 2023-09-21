@@ -43,6 +43,7 @@ return packer.startup(function(use)
   })
 
   -- Appearance
+  use("lukas-reineke/indent-blankline.nvim")
   use("folke/tokyonight.nvim")
   use({
     "nvim-lualine/lualine.nvim",

@@ -13,8 +13,9 @@ vim.keymap.set("n", "<Leader>g", builtin.live_grep, {})
 vim.keymap.set("n", "<Leader>s", builtin.grep_string, {})
 vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
+vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
 
-local defaults = {}
+local defaults = { theme = "dropdown", }
 telescope.setup({
   pickers = {
     find_files = defaults,
