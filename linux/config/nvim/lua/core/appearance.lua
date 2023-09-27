@@ -1,11 +1,11 @@
 require("lualine").setup({
   options = {
-    theme = "auto",
+    theme = require("lush_theme.lualine"),
     icons_enabled = true,
   },
 })
 
-vim.cmd.colorscheme "tokyonight-night"
+vim.cmd.colorscheme "railscasts"
 
 vim.opt.guifont = "Hack:h17"
 
