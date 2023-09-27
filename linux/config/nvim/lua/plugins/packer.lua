@@ -48,7 +48,6 @@ return packer.startup(function(use)
     "lukelex/railscasts.nvim",
     requires = { "rktjmp/lush.nvim" }
   })
-  use("folke/tokyonight.nvim")
   use({
     "nvim-lualine/lualine.nvim",
     requires = { 'nvim-tree/nvim-web-devicons' }
