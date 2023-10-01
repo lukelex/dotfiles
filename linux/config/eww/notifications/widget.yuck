@@ -1,17 +1,19 @@
 (defpoll wired :interval "10s" :initial "[]" `./scripts/notifications`)
 
 (defwidget notifications-header []
-  (box :class "header panel"
+  (box :class "header"
        :orientation "horizontal"
 
     (label :class "title text"
-           :text "Notification Center"
+           :text "Recent Notifications"
            :halign "start")
 
     (box :orientation "horizontal"
          :halign "end"
 
-      (notifications-clear)
+      (quick-toggler :script "echo"
+                     :enabled true)
+      ; (notifications-clear)
     )
   )
 )
@@ -65,9 +67,10 @@
   (box :class "contents"
        :orientation "vertical"
        :tooltip entry
+       :hexpand true
 
     (box :orientation "horizontal"
-         :space-evenly false
+         :space-evenly true
 
       (box :orientation "horizontal"
            :halign "start"
@@ -145,8 +148,10 @@
          :halign "end"
          :space-evenly false
 
-      (button :class "settings"
-        (icon-small :name "bars-sort")
+      (pointer :active true
+        (button :class "settings"
+          (icon-small :name "bars-sort")
+        )
       )
     )
   )

@@ -1,0 +1,115 @@
+(defwidget quick-action [?text icon script enabled]
+  (box :class "quick-action ${enabled ? "on" : ""}"
+       :orientation "vertical"
+       :space-evenly false
+         :hexpand false
+    (box :class "body"
+         :hexpand false
+         :space-evenly false
+         :halign "center"
+         :orientation "vertical"
+      (box :space-evenly false
+           :halign "center"
+        (pointer :active true
+                 :hexpand false
+          (button :class "button"
+                  :onclick "${script} & u_eww close &"
+            (icon-small :name icon)
+          )
+        )
+      )
+      (label :class "text" :text text)
+    )
+  )
+)
+
+(defwidget quick-toggler [script ?tooltip ?enabled]
+  (box :class "quick-toggler ${enabled ? "on" : "off"}"
+       :orientation "vertical"
+       :space-evenly false
+    (box :class "body"
+         :space-evenly true
+      (pointer :active true
+        (button :class "first button"
+                :onclick "${script} on & u_eww close &"
+                :tooltip tooltip
+          (label :class "text" :text "On")
+        )
+      )
+      (pointer :active true
+        (button :class "second button"
+                :onclick "${script} off & u_eww close &"
+                :tooltip "Go to settings"
+          (label :class "text" :text "Off")
+        )
+      )
+    )
+  )
+)
+
+(defwidget quick-setter [icon script enabled ?text ?tooltip]
+  (box :class "quick-setter ${enabled ? "on" : "off"}"
+       :orientation "vertical"
+       :space-evenly false
+    (box :class "body"
+         :space-evenly false
+         :hexpand false
+         :halign "center"
+      (pointer :active true
+        (button :class "button first"
+                :onclick "${script} toggle &"
+                :tooltip tooltip
+          (icon-small :name icon)
+        )
+      )
+      (pointer :active true
+        (button :class "button second"
+                :onclick "${script} & u_eww close &"
+                :tooltip "Go to settings"
+          (icon-small :name "arrow-right")
+        )
+      )
+    )
+    (label :class "title text"
+           :visible { strlength(text) != 0 }
+           :text text
+    )
+  )
+)
+
+(defwidget slider-setter [icon tooltip script value]
+  (box :orientation "horizontal"
+       :space-evenly false
+       :spacing SPACING
+    (pointer :active true
+      (button :class "big-button"
+              :onclick "${script} 0"
+              :tooltip "Resets to 0"
+              :timeout "5s"
+        (icon-small :name icon)
+      )
+    )
+    (eventbox :cursor "grab" :hexpand true
+      (scale :value value
+             :min 0
+             :max 100
+             :onchange "${script} {} &"
+             :tooltip tooltip
+             :timeout "5")
+    )
+  )
+)
+
+
+
+; (defwidget keyboard_brightness [?active]
+;   (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
+;     (button :class "big-button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
+;       (icon :name "keyboard-brightness")
+;     )
+;     (eventbox :cursor { active ? "grab" : "default" } :hexpand true
+;       (scale :active {active} :hexpand true :value 2 :min 1 :max 3 :onchange "u_keeb_backlight set {}"
+;              :tooltip "Change laptop keyboard brightness")
+;     )
+;   )
+; )

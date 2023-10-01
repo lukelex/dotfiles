@@ -1,0 +1,209 @@
+(defwindow connections :monitor 0
+                       :stacking "fg"
+                       :wm-ignore true
+                       :geometry (geometry :x "-20px"
+                                           :y "66px"
+                                           :anchor "top right")
+  (v-window
+    (box :spacing SPACING
+         :orientation "vertical"
+         :space-evenly false
+      (box :spacing SPACING
+           :class "panel"
+           :orientation "vertical"
+           :space-evenly false
+        (toggleable-module :name "Wifi"
+                           :icon "wifi"
+                           :app "nm-connection-editor"
+                           :enabled true
+                           :expanded true
+          (box :orientation "horizontal"
+               :hexpand true
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "router")
+              (label :class "text"
+                     :text "alexanders"
+                     :limit-width 16
+              )
+            )
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "signal")
+              (label :class "text"
+                     :text "-55 dBm"
+              )
+            )
+          )
+          (box :orientation "horizontal"
+               :hexpand true
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "circle-down")
+              (label :class "text"
+                     :text "0.89 MB/s"
+              )
+            )
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "circle-up")
+              (label :class "text"
+                     :text "0.13 MB/s"
+              )
+            )
+          )
+          (box :orientation "horizontal"
+               :hexpand true
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "network-wired")
+              (label :class "text"
+                     :text "192.168.0.13"
+              )
+            )
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "globe")
+              (label :class "text"
+                     :text "85.204.132.59"
+              )
+            )
+          )
+        )
+      )
+      (box :spacing SPACING
+           :class "panel"
+           :orientation "vertical"
+           :space-evenly false
+        (toggleable-module :name "Bluetooth"
+                           :icon "bluetooth"
+                           :app "blueman-manager"
+                           :enabled true
+                           :expanded true
+          (box :orientation "horizontal"
+               :hexpand true
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "arrows-to-dotted-line")
+              (label :class "text"
+                     :text "Elecom Huge"
+                     :limit-width 20
+              )
+            )
+            (box :halign "end"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "battery-half")
+              (label :class "text"
+                     :text "87%"
+              )
+            )
+          )
+          (box :orientation "horizontal"
+               :hexpand true
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "arrows-to-dotted-line")
+              (label :class "text"
+                     :text "THX Panda Wireless"
+                     :limit-width 20
+              )
+            )
+            (box :halign "end"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "battery-half")
+              (label :class "text"
+                     :text "31%"
+              )
+            )
+          )
+          (box :orientation "horizontal"
+               :hexpand true
+            (box :halign "start"
+                 :space-evenly false
+                 :spacing SPACING
+              (icon-small :name "arrows-to-dotted-line")
+              (label :class "text"
+                     :text "Hisense HS214"
+                     :limit-width 20
+              )
+            )
+          )
+        )
+      )
+      (box :spacing SPACING
+           :class "panel"
+           :orientation "vertical"
+           :space-evenly false
+        (toggleable-module :name "Ethernet"
+                           :icon "ethernet"
+                           :app "nm-connection-editor"
+                           :enabled false
+                           :expanded false
+        )
+      )
+    )
+  )
+)
+
+(defwidget toggleable-module [name icon app enabled expanded]
+  (box :orientation "vertical"
+       :space-evenly false
+       :spacing SPACING
+    (box :orientation "horizontal"
+         :valign "center"
+      (box :halign "start"
+           :space-evenly false
+           :spacing SPACING
+        (icon-small :name icon)
+        (title :text name)
+      )
+
+      (box :halign "end"
+           :space-evenly false
+           :spacing SPACING
+        (quick-toggler :script ""
+                       :tooltip ""
+                       :enabled enabled)
+        ; (pointer :active true
+        ;   (button :class "button" :onclick ""
+        ;     (icon-small :name "info")
+        ;   )
+        ; )
+        ; (pointer :active true
+        ;   (button :class "button" :onclick "${app} & u_eww close &"
+        ;     (icon-small :name "gear")
+        ;   )
+        ; )
+      )
+    )
+
+    (revealer :transition "slidedown"
+              :reveal expanded
+              :visible expanded
+      (box :orientation "vertical"
+         :style "border: 2px solid grey; padding: 4px; border-radius: 4px;"
+         :spacing SPACING
+        (box :orientation "vertical"
+           :style "border: 2px solid grey; padding: 4px; border-radius: 4px;"
+           :spacing SPACING
+          (children)
+        )
+      )
+    )
+  )
+)
+; monitor icon
+; object-union
+; object-subtract
+; object-intersect
+; object-exclude

@@ -51,7 +51,7 @@
   (pointer :active true
     (button :class "button" :onclick "wpctl set-default ${entry.id} && u_eww close &"
       (line
-        (icon :name { entry.icon })
+        (icon-small :name { entry.icon })
         (label :class "text"
                :limit-width 30
                :text { entry.name }

@@ -1,0 +1,65 @@
+(defpoll brightness_value :interval "5s" :initial 0 `u_backlight get`)
+
+(defwindow backlights :monitor 0
+                      :stacking "fg"
+                      :wm-ignore true
+                      :geometry (geometry :x "-20px"
+                                          :y "66px"
+                                          :anchor "top right")
+  (v-window
+    (box :spacing SPACING
+         :class "panel"
+         :orientation "vertical"
+         :space-evenly false
+      (box :spacing SPACING
+           :orientation "horizontal"
+           :space-evenly false
+        (box :spacing SPACING
+             :orientation "vertical"
+          (box :spacing SPACING
+               :orientation "horizontal"
+               :halign "start"
+            (quick-action
+              :icon "brightness"
+              :script ""
+              :enabled false
+              :text "Auto Brightness"
+            )
+            (quick-action
+              :icon "moon"
+              :script ""
+              :enabled false
+              :text "Night Mode"
+            )
+            (quick-action
+              :icon "link"
+              :script ""
+              :enabled false
+              :text "Link devices"
+            )
+          )
+        )
+        (box :halign "end" :valign "start"
+          (pointer :active true
+            (button :class "button"
+              (icon-small :name "gear")
+            )
+          )
+        )
+      )
+      (box :class "h-spacer" :hexpand true)
+      (slider-setter :icon "display"
+                     :tooltip "External display brightness"
+                     :script "u_monitors brightness set"
+                     :value 35)
+      (slider-setter :icon "laptop"
+                     :tooltip "Laptop display brightness"
+                     :script "u_monitors brightness set"
+                     :value 50)
+      (slider-setter :icon "keyboard-brightness"
+                     :tooltip "Keyboard brightness"
+                     :script "u_monitors brightness set"
+                     :value 50)
+    )
+  )
+)

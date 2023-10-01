@@ -6,7 +6,7 @@
        :orientation "horizontal"
        :space-evenly false
        :spacing SPACING
-       :hexpand false
+       :hexpand true
 
     (box :class "big-button"
       (icon :name "user")

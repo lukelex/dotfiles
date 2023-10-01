@@ -1,0 +1,77 @@
+(defwindow experimentation :monitor 0
+                       :stacking "fg"
+                       :wm-ignore true
+                       :geometry (geometry :x "-20px"
+                                           :y "66px"
+                                           :anchor "top right")
+  (v-window
+    (box :spacing SPACING
+         :class "panel"
+         :orientation "vertical"
+         :space-evenly false
+      (box :space-evenly false
+        (box :halign "start"
+             :spacing SPACING
+             :space-evenly false
+             :hexpand true
+          (icon-small :name "wifi")
+          (label :class "text"
+                 :text "alexanders")
+        )
+        (box :halign "end"
+          (quick-toggler :script "echo"
+                         :enabled true)
+        )
+      )
+
+      (box :space-evenly false
+        (box :halign "start"
+             :spacing SPACING
+             :space-evenly false
+             :hexpand true
+          (icon-small :name "bluetooth")
+          (label :class "text"
+                 :text "1 connected device")
+        )
+        (box :halign "end"
+          (quick-toggler :script "echo"
+                         :enabled false)
+        )
+        ; (box :halign "end" :valign "start"
+        ;   (pointer :active true
+        ;     (button :class "button"
+        ;       (icon-small :name "gear")
+        ;     )
+        ;   )
+        ; )
+      )
+    )
+
+    (connections-header
+      :name "Wifi"
+      :app "nm-connection-editor"
+    )
+    (connections-header
+      :name "Bluetooth"
+      :app "blueman-manager"
+    )
+  )
+)
+
+(defwidget connections-header [name app]
+  (box :class "panel"
+    (box :orientation "horizontal"
+      (box :halign "start"
+        (title :text name)
+      )
+
+      (box :halign "end"
+        (pointer :active true
+          (button :class "button" :onclick "${app} & u_eww close &"
+            (icon-small :name "gear")
+          )
+        )
+      )
+    )
+  )
+)

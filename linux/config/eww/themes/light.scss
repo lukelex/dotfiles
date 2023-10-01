@@ -31,6 +31,59 @@ $light-accent-text: #00232c;
     background-color: $light-background-2;
   }
 
+  .quick-action {
+    .body .button {
+      &:hover {
+        background-color: $light-background-3;
+      }
+    }
+  }
+
+  .quick-toggler, .quick-setter {
+    .body .button {
+      background-color: $light-background-3;
+    }
+  }
+
+  .quick-toggler {
+    .button.first:hover {
+      background-color: lightblue;
+    }
+    .button.second:hover {
+      background-color: darkgrey;
+    }
+
+    &.on .button.first {
+      background-color: lightblue;
+    }
+
+    &.off .button.second {
+      background-color: darkgrey;
+    }
+  }
+
+  .quick-setter {
+    .second:hover {
+      background-color: $light-background-4;
+    }
+
+    &.on .button.first {
+      background-color: lightblue;
+
+      &:hover {
+        background-color: darkgrey;
+      }
+    }
+
+    &.off .button.first {
+      background-color: darkgrey;
+
+      &:hover {
+        background-color: lightblue;
+      }
+    }
+  }
+
   .big-button {
     background-color: $light-background-3;
   }

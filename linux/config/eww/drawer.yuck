@@ -1,0 +1,51 @@
+(defwindow drawer :monitor 0
+                  :stacking "fg"
+                  :wm-ignore true
+                  :geometry (geometry :x "-20px"
+                                      :y "66px"
+                                      :anchor "top right")
+  (v-window
+    (box :spacing SPACING
+         :class "panel"
+         :orientation "vertical"
+         :space-evenly false
+      (box :spacing { SPACING * 2 }
+           :orientation "horizontal"
+           :space-evenly true
+           :hexpand false
+        (quick-setter
+          :asd "alexanders"
+          :icon "wifi"
+          :script "nm-connection-editor"
+          :enabled true
+          :tooltip "Toggle Wifi"
+        )
+        (quick-setter
+          :asd "2 devices"
+          :icon "bluetooth"
+          :script "blueman-manager"
+          :enabled true
+          :tooltip "Toggle Bluetooth"
+        )
+        (quick-setter
+          :icon "ethernet"
+          :script ""
+          :enabled false
+          :tooltip "Toggle Wired connection"
+        )
+        (quick-setter
+          :icon "plane-up"
+          :script ""
+          :enabled false
+          :tooltip "Toggle Flight Mode"
+        )
+        (quick-setter
+          :icon "nfc-signal"
+          :script ""
+          :enabled false
+          :tooltip "Toggle Flight Mode"
+        )
+      )
+    )
+  )
+)

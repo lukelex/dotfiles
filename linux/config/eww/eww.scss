@@ -31,7 +31,47 @@ box.component {
 .panel {
   border-radius: $radius * 0.6;
   padding: $magic-number * 2;
-  // margin: $magic-number;
+}
+
+.quick-action {
+  .body {
+    border-radius: 50%;
+
+    .button {
+      border-radius: 50%;
+      border: 2px solid black;
+      padding: $magic-number * 2;
+    }
+  }
+}
+
+.quick-toggler {
+  .button {
+    padding: $magic-number * 2;
+  }
+}
+
+.quick-setter, .quick-toggler {
+  .body {
+    border-radius: $magic-number * 1.5;
+  }
+
+  .first {
+    padding: $magic-number * 2;
+    border-right: 1px solid lightgrey;
+    border-top-left-radius: $magic-number * 1.5;
+    border-bottom-left-radius: $magic-number * 1.5;
+  }
+
+  .second {
+    border-left: 1px solid lightgrey;
+    border-top-right-radius: $magic-number * 1.5;
+    border-bottom-right-radius: $magic-number * 1.5;
+  }
+}
+
+.h-spacer {
+  border-bottom: 1px solid lightgrey;
 }
 
 .button {

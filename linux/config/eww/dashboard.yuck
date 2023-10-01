@@ -1,11 +1,8 @@
 (include "./user/widget.yuck")
-(include "./wifi/widget.yuck")
 (include "./volume/widget.yuck")
 (include "./battery/widget.yuck")
 (include "./packages/widget.yuck")
-(include "./bluetooth/widget.yuck")
 (include "./shortcuts/widget.yuck")
-(include "./brightness/widget.yuck")
 (include "./system-stats/widget.yuck")
 
 (defwindow dashboard :monitor 0
@@ -29,13 +26,6 @@
       (packages)
       ; (battery)
     )
-    (box :spacing SPACING
-         :orientation "horizontal"
-         :space-evenly true
-         :hexpand false
-      (wifi)
-      (bluetooth)
-    )
     (system-stats)
     (box :class "panel"
          :spacing SPACING
@@ -43,7 +33,6 @@
          :space-evenly true
          :hexpand false
       (volume)
-      (brightness)
     )
     (shortcuts)
   )
@@ -61,29 +50,3 @@
     )
   )
 )
-
-; (defwidget ext_monitor_brightness []
-;   (box :orientation "horizontal" :space-evenly false :spacing SPACING
-;     (pointer :active true
-;       (button :class "big-button" :onclick "u_monitors brightness reset" :tooltip "Resets brightness to 0" :timeout "5s"
-;         (icon :name "display")
-;       )
-;     )
-;     (eventbox :cursor "grab" :hexpand true
-;       (scale :value ext_monitor_brightness :min 0 :max 100 :onchange "u_monitors brightness set {} &"
-;              :tooltip "Change brightness on all detected monitors" :timeout "5")
-;     )
-;   )
-; )
-
-; (defwidget keyboard_brightness [?active]
-;   (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
-;     (button :class "big-button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
-;       (icon :name "keyboard-brightness")
-;     )
-;     (eventbox :cursor { active ? "grab" : "default" } :hexpand true
-;       (scale :active {active} :hexpand true :value 2 :min 1 :max 3 :onchange "u_keeb_backlight set {}"
-;              :tooltip "Change laptop keyboard brightness")
-;     )
-;   )
-; )
