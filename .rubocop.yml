@@ -1,9 +1,9 @@
 AllCops:
   TargetRubyVersion: 3.0
-  NewCops: enable
+  NewCops: "enable"
 
 Style/StringLiterals:
-  EnforcedStyle: double_quotes
+  EnforcedStyle: "double_quotes"
 
 Style/ModuleFunction:
-  EnforcedStyle: extend_self
+  EnforcedStyle: "extend_self"

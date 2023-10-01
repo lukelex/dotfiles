@@ -36,7 +36,6 @@ return packer.startup(function(use)
   use("tpope/vim-surround")
   use("tpope/vim-endwise")
   use("Raimondi/delimitMate")
-  use("norcalli/nvim-colorizer.lua")
   use({
     "nvim-telescope/telescope.nvim",
     requires = { { "nvim-lua/plenary.nvim" } }
@@ -44,13 +43,14 @@ return packer.startup(function(use)
 
   -- Appearance
   use("lukas-reineke/indent-blankline.nvim")
+  use("norcalli/nvim-colorizer.lua")
   use({
     "lukelex/railscasts.nvim",
     requires = { "rktjmp/lush.nvim" }
   })
   use({
     "nvim-lualine/lualine.nvim",
-    requires = { 'nvim-tree/nvim-web-devicons' }
+    requires = { "nvim-tree/nvim-web-devicons" }
   })
 
   -- Language improvements
