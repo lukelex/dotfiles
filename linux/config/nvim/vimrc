@@ -26,12 +26,6 @@ set colorcolumn=+1
 nmap 0 ^
 nmap - ^
 
-" because I misstype AG quite often
-cnoreabbrev ag Ack
-cnoreabbrev aG Ack
-cnoreabbrev Ag Ack
-cnoreabbrev AG Ack
-
 " Automatically wrap at 72 characters and spell check git commit messages
 autocmd FileType gitcommit setlocal textwidth=72
 autocmd FileType gitcommit setlocal spell

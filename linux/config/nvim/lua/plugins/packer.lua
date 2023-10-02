@@ -59,7 +59,6 @@ return packer.startup(function(use)
     "kana/vim-textobj-user",
     "nelstrom/vim-textobj-rubyblock"
   })
-  use("fladson/vim-kitty")
   use("ron-rs/ron.vim")
   use("elkowar/yuck.vim")
   use("baskerville/vim-sxhkdrc")
