@@ -21,6 +21,7 @@ telescope.setup({
     layout_strategy = "vertical",
     layout_config = {
       vertical = {
+        prompt_position = "top",
         height = 100
       }
     },
