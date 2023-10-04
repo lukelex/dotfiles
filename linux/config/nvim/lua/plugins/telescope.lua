@@ -15,18 +15,9 @@ vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
 
-local defaults = { theme = "dropdown", }
 telescope.setup({
-  pickers = {
-    find_files = defaults,
-    git_files = defaults,
-    buffers = defaults,
-    live_grep = defaults,
-    grep_string  = defaults,
-    lsp_references  = defaults,
-    diagnostics = defaults,
-  },
   defaults = {
+    theme = "dropdown",
     mappings = {
       i = {
         ["<C-k>"] = actions.move_selection_previous,
