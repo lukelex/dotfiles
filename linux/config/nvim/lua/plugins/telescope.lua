@@ -18,6 +18,12 @@ vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
 telescope.setup({
   defaults = {
     theme = "dropdown",
+    layout_strategy = "vertical",
+    layout_config = {
+      vertical = {
+        height = 100
+      }
+    },
     mappings = {
       i = {
         ["<C-k>"] = actions.move_selection_previous,
