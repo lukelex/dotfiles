@@ -41,6 +41,7 @@ telescope.setup({
         ["<C-h>"] = actions.select_horizontal,
         ["<C-v>"] = actions.select_vertical,
         ["<C-t>"] = actions.select_tab,
+        ["<C-q>"] = actions.send_to_qflist,
       }
     }
   }
