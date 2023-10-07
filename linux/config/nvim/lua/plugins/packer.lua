@@ -26,6 +26,11 @@ return packer.startup(function(use)
   -- Editor improvements
   use("mbbill/undotree")
   use("nvim-treesitter/nvim-treesitter", { run = ":TSUpdate" })
+  use({
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    after = "nvim-treesitter",
+    requires = "nvim-treesitter/nvim-treesitter",
+  })
   use("DataWraith/auto_mkdir")
   use("danro/rename.vim")
   use("schickling/vim-bufonly")
