@@ -1,52 +1,55 @@
-vim.g.shell = "bash"
+local opt = vim.opt
+local global = vim.g
+
+global.shell = "bash"
+
+-- backup files
+vim.cmd("set noswapfile")
 
 -- Tweaks for file browsing
-vim.g.netrw_banner = 0 -- disable annoying banner
-vim.g.netrw_browse_split = 0 -- open in prior window
-vim.g.netrw_altv = 1 -- open split to the right
-vim.g.netrw_liststyle = 3 -- tree view
+global.netrw_banner = 0 -- disable annoying banner
+global.netrw_browse_split = 0 -- open in prior window
+global.netrw_altv = 1 -- open split to the right
+global.netrw_liststyle = 3 -- tree view
 
-vim.g.editorconfig = true
+global.editorconfig = true
 
-vim.cmd("set shortmess-=S")
-vim.cmd("set noshowmode") -- Hide current mode
-vim.opt.wrap = false
-vim.opt.laststatus = 2 -- always display status line
-vim.opt.backspace = "2"
-vim.opt.ruler = true -- show the cursor position all the time
-vim.opt.showcmd = true -- display incomplete commands
-vim.opt.mouse = "a" -- enable mouse events in all modes
-vim.opt.hlsearch = true -- highlight search results
-vim.opt.incsearch = true -- show search results while typing
+opt.backspace = "2"
+opt.showcmd = true -- display incomplete commands
+opt.mouse = "a" -- enable mouse events in all modes
 
 -- master fucking undo
-vim.opt.undofile = true
-vim.opt.undodir = string.format("%s/.vim-cache/undodir", vim.env.HOME)
+opt.undofile = true
+opt.undodir = string.format("%s/.vim-cache/undodir", vim.env.HOME)
 
-vim.opt.backup = true
-vim.opt.backupdir = string.format("%s/.vim-cache/backup", vim.env.HOME)
+opt.backup = true
+opt.backupdir = string.format("%s/.vim-cache/backup", vim.env.HOME)
 
--- universal clipboard
-vim.opt.clipboard = "unnamedplus"
+-- use system clipboard as default register
+opt.clipboard:append("unnamedplus")
 
 -- autoread files that were changed outside of vim
-vim.opt.autoread = true
+opt.autoread = true
 
-vim.opt.cursorline = true -- show cursor line
-vim.opt.number = true
-vim.opt.relativenumber = true
+-- line number
+opt.number = true
+opt.relativenumber = true
+
+-- search settings
+vim.cmd("setlocal ignorecase") -- ignore case when searching
+vim.cmd("setlocal smartcase") -- when searching try to be smart about cases
 
 -- use 2 spaces instead of tabs
-vim.opt.expandtab = true
-vim.opt.smarttab = true
-vim.opt.tabstop = 2
-vim.opt.shiftwidth = 2
+opt.expandtab = true
+opt.smarttab = true
+opt.tabstop = 2
+opt.shiftwidth = 2
 
 -- use an already open window if possible
-vim.opt.switchbuf = "useopen"
+opt.switchbuf = "useopen"
 
 -- use natural screen spliting
-vim.opt.splitbelow = true
-vim.opt.splitright = true
+opt.splitbelow = true
+opt.splitright = true
 
-vim.opt.ttyfast = true
+opt.ttyfast = true
