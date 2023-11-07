@@ -31,11 +31,4 @@ require("ibl").setup {
   scope = { enabled = false },
 }
 
-require("lualine").setup({
-  options = {
-    theme = "railscasts",
-    icons_enabled = true,
-  },
-})
-
 vim.cmd.colorscheme "railscasts"

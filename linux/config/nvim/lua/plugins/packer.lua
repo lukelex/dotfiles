@@ -45,6 +45,7 @@ return packer.startup(function(use)
     "nvim-telescope/telescope.nvim",
     requires = { { "nvim-lua/plenary.nvim" } }
   })
+  use("nanozuki/tabby.nvim")
 
   -- Appearance
   use("lukas-reineke/indent-blankline.nvim")
