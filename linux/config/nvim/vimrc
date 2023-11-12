@@ -3,10 +3,6 @@ filetype off
 
 syntax on
 
-" Tweaks for file browsing
-let g:netrw_list_hide=netrw_gitignore#Hide()
-let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
-
 au BufReadPost .env.* set syntax=sh
 au BufReadPost *.conf set syntax=conf
 
