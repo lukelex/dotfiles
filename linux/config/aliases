@@ -41,6 +41,10 @@ alias gls="git log --oneline --decorate"
 alias grl="git reflog"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
+git_clean() {
+  git branch -vv | grep ': gone]' | grep -v '\*' | awk '{ print $1; }' | xargs -r git branch -d
+}
+
 # Docker
 alias dc="docker"
 alias dcp="docker-compose"
