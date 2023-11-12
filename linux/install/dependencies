@@ -23,7 +23,7 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
   slack-desktop zeal rofi-bluetooth-git vlc zip unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
-  sysstat viewnior zathura zathura-pdf-poppler etcher-bin \
+  sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
   2> /dev/null
 
 # Optionals
