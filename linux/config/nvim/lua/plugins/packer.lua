@@ -39,7 +39,11 @@ return packer.startup(function(use)
   use("lewis6991/gitsigns.nvim")
   use("tpope/vim-repeat")
   use("tpope/vim-surround")
-  use("tpope/vim-endwise")
+  use({
+    "RRethy/nvim-treesitter-endwise",
+    after = "nvim-treesitter",
+    requires = "nvim-treesitter/nvim-treesitter",
+  })
   use("Raimondi/delimitMate")
   use({
     "nvim-telescope/telescope.nvim",

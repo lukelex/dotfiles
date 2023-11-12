@@ -1,3 +1,9 @@
+require("nvim-treesitter.configs").setup {
+  endwise = {
+    enable = true,
+  },
+}
+
 vim.opt.termguicolors = true
 require("colorizer").setup()
 
