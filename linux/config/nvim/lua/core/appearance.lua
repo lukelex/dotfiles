@@ -22,13 +22,6 @@ vim.cmd("set shortmess-=S") -- show search count message
 vim.cmd("autocmd BufRead,BufNewFile *.md set textwidth=65")
 vim.cmd("set colorcolumn=+1")
 
-opt.termguicolors = true
-require("colorizer").setup()
-
 opt.signcolumn = "yes" -- always show sign column so that text doesn't shift
-
-require("ibl").setup {
-  scope = { enabled = false },
-}
 
 vim.cmd.colorscheme "railscasts"
