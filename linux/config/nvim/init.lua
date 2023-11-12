@@ -10,6 +10,7 @@ pcall(require, "plugins.cmp")
 pcall(require, "plugins.treesitter")
 pcall(require, "plugins.lualine")
 pcall(require, "plugins.tabby")
+pcall(require, "plugins.gitsigns")
 pcall(require, "plugins.others")
 
 vim.cmd("source $DOTFILES/linux/config/nvim/vimrc")
