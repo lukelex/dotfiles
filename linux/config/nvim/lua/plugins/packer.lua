@@ -46,8 +46,17 @@ return packer.startup(function(use)
   })
   use("Raimondi/delimitMate")
   use({
+    "nvim-telescope/telescope-fzf-native.nvim",
+    run = "make"
+  })
+  use({
     "nvim-telescope/telescope.nvim",
-    requires = { { "nvim-lua/plenary.nvim" } }
+    requires = {
+      {
+        "nvim-lua/plenary.nvim",
+        "BurntSushi/ripgrep",
+      }
+    }
   })
   use("nanozuki/tabby.nvim")
 
