@@ -6,7 +6,9 @@ end
 local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
 
-vim.keymap.set("n", "<Leader>p", builtin.git_files, {})
+local flexible_find = require("plugins.telescope.flexible-find")
+
+vim.keymap.set("n", "<Leader>p", flexible_find.project_files, { noremap = true, silent = true })
 vim.keymap.set("n", "<Leader>f", builtin.find_files, {})
 vim.keymap.set("n", "<Leader>b", builtin.buffers, {})
 vim.keymap.set("n", "<Leader>g", builtin.live_grep, {})
