@@ -42,7 +42,20 @@ alias grl="git reflog"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
 git_clean() {
-  git branch -vv | grep ': gone]' | grep -v '\*' | awk '{ print $1; }' | xargs -r git branch -d
+  set -eu
+
+  local branches=$(git branch | grep -v -E '(main|development|\*)')
+  local heads=$(git ls-remote --heads -q)
+
+  for branch in $branches; do
+    echo -n "Looking for $branch..."
+    if [[ $(echo $heads | grep $branch | wc -l) -eq 0 ]]; then
+      echo "dit not find it remotely. I'm removing it!"
+      git branch -D $branch
+    else
+      echo "found it. I'm keeping it!"
+    fi
+  done
 }
 
 # Docker
