@@ -4,8 +4,9 @@ WALLPAPER_PATH="$HOME/wallpaper.png"
 
 case $1 in
   load)
-    xwallpaper --zoom "$WALLPAPER_PATH";;&
+    xwallpaper --zoom "$WALLPAPER_PATH";;
   update|change)
+    rm -rf "$WALLPAPER_PATH"
     ln -fvs "$2" "$WALLPAPER_PATH"
     $0 load;;
   random)
