@@ -47,8 +47,8 @@ git_clean() {
   local branches=$(git branch | grep -v -E '(main|development|\*)')
   local heads=$(git ls-remote --heads -q)
 
-  for branch in $branches; do
-    echo -n "Looking for $branch..."
+  for branch in $(echo $branches); do
+    echo -n "Looking for '$branch'..."
     if [[ $(echo $heads | grep $branch | wc -l) -eq 0 ]]; then
       echo "dit not find it remotely. I'm removing it!"
       git branch -D $branch
