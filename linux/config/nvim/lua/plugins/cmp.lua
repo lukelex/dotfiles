@@ -62,9 +62,9 @@ cmp.setup({
     end
   },
   sources = cmp.config.sources({
-    { name = "nvim_lsp", keyword_length = 4 },
-    { name = "luasnip", keyword_length = 4 },
-    { name = "buffer", keyword_length = 4 },
+    { name = "nvim_lsp", keyword_length = 2 },
+    { name = "luasnip", keyword_length = 2 },
+    { name = "buffer", keyword_length = 2 },
     { name = "path" }
   }, {
     { name = "buffer" },
