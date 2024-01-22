@@ -81,6 +81,7 @@ return packer.startup(function(use)
   use("ron-rs/ron.vim")
   use("elkowar/yuck.vim")
   use("baskerville/vim-sxhkdrc")
+  use("kmonad/kmonad-vim")
 
   -- Language Server Protocol
   use({
