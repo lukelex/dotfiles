@@ -35,5 +35,4 @@ rustup default stable
 
 sudo yay -Sc
 
-systemctl enable docker ly bluetooth NetworkManager avahi-daemon cups
-systemctl start docker bluetooth NetworkManager avahi-daemon cups
+systemctl enable --now docker ly bluetooth NetworkManager avahi-daemon cups
