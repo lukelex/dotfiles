@@ -1,0 +1,14 @@
+[Unit]
+Description=X11 Autolocker
+Documentation=https://man.archlinux.org/man/xautolock.1x.en
+After=graphical.target
+ConditionEnvironment=DISPLAY
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Type=simple
+ExecStart=xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10'
+Restart=always
+RestartSec=5
