@@ -2,14 +2,15 @@
 Description=Wired Notification Daemon
 Documentation=https://github.com/Toqozz/wired-notify
 After=graphical.target
-ConditionEnvironment=DISPLAY
 
 [Install]
 WantedBy=default.target
 
 [Service]
-Type=dbus
-BusName=org.freedesktop.Notifications
+Type=simple
 ExecStart=/usr/bin/wired
+ExecStartPre=/bin/sleep 3
+EnvironmentFile=%h/Dropbox/secrets.env
+EnvironmentFile=%h/dotfiles/linux/variables.env
 Restart=always
-RestartSec=10
+RestartSec=5

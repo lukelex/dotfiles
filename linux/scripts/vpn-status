@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
 info=$(sudo nordvpn status)
 tatus=$(echo "$info" | grep Status | awk '{print $4}')
 summary=$(echo "$info" | grep -vE "(Status|server|tech|protocol)")

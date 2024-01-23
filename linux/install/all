@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-source ./linux/variables
+source ./linux/variables.env
 
 source ./linux/install/dependencies
 source ./linux/install/binaries

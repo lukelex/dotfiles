@@ -1,6 +1,6 @@
 bindkey -e
 
-source "$HOME/dotfiles/linux/variables"
+source "$HOME/dotfiles/linux/variables.env"
 
 source "$DOTFILES/linux/config/zsh/theme.zsh"
 source "$DOTFILES/linux/config/zsh/history.zsh"

@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
 i3-msg --type subscribe --monitor '[ "workspace" ]' | while read line
 do
   is_focus=$(echo $line | jq 'select( .change == "focus")')

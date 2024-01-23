@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
 get() {
   last_monitor=$(echo $monitors | grep -o .$)
 

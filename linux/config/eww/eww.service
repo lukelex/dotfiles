@@ -1,13 +1,17 @@
 [Unit]
 Description=Widget system (ElKowar's Wacky Widgets)
+Documentation=https://github.com/elkowar/eww
+After=graphical.target
+
+[Install]
+WantedBy=default.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=true
 StandardOutput=journal
 EnvironmentFile=%h/Dropbox/secrets.env
+EnvironmentFile=%h/dotfiles/linux/variables.env
 ExecStart=/usr/bin/eww daemon
 ExecStop=/usr/bin/eww kill
-
-[Install]
-WantedBy=default.target
+ExecStartPre=/bin/sleep 1

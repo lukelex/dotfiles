@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
 CHARGING=
 CRITICAL=
 LOW=

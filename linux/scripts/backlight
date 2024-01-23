@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
 HIGH=
 LOW=
 VALUE=$(light -G 2>&- | cut -f1 -d".")

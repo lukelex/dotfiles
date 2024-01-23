@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
 function show_warning {
   notify-send -a System \
     -i "$FONT_AWESOME_PATH/light/user-clock.svg" \

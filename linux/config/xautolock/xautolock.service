@@ -2,7 +2,6 @@
 Description=X11 Autolocker
 Documentation=https://man.archlinux.org/man/xautolock.1x.en
 After=graphical.target
-ConditionEnvironment=DISPLAY
 
 [Install]
 WantedBy=default.target

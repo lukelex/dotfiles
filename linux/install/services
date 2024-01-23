@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-source "$HOME/dotfiles/linux/variables"
+source "$HOME/dotfiles/linux/variables.env"
 
 systemctl enable --now docker ly bluetooth NetworkManager avahi-daemon cups
 

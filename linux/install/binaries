@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-set -e
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
 
 for script in $DOTFILES/linux/scripts/*; do
   sudo ln -fvs "$script" "/usr/local/bin/u_$(basename $script)"

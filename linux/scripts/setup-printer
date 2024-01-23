@@ -1,6 +1,10 @@
 #!/usr/bin/bash
 
-ICON=$FONT_AWESOME_PATH/light/print.svg
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
+ICON="$FONT_AWESOME_PATH/light/print.svg"
 
 show() {
   notify-send -a Printers \

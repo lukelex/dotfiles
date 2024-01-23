@@ -2,6 +2,8 @@
 
 set -eu
 
+source "$HOME/dotfiles/linux/variables.env"
+
 declare -A ICON_LIST=(
   ["01d"]="" # Clear sky day
   ["01n"]="" # Clear sky night.

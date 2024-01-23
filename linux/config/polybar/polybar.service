@@ -2,13 +2,15 @@
 Description=Polybar status bar
 Documentation=https://github.com/polybar/polybar/
 After=graphical.target
-ConditionEnvironment=DISPLAY
 
 [Install]
 WantedBy=default.target
 
 [Service]
 Type=simple
-Restart=always
-EnvironmentFile=%h/Dropbox/secrets.env
 ExecStart=/usr/local/bin/u_polybar
+ExecStartPre=/bin/sleep 2
+EnvironmentFile=%h/Dropbox/secrets.env
+EnvironmentFile=%h/dotfiles/linux/variables.env
+Restart=always
+RestartSec=5

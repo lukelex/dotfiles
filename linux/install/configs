@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-source "$HOME/dotfiles/linux/variables"
+source "$HOME/dotfiles/linux/variables.env"
 
 mkdir -p "$XDG_CONFIG_HOME"
 mkdir -p "$HOME/.ssh"

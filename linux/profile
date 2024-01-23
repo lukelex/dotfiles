@@ -1,6 +1,9 @@
 #!/usr/bin/bash
 
-source "$HOME/dotfiles/linux/variables"
+set -a
+
+source "$HOME/dotfiles/linux/variables.env"
+source "$HOME/Dropbox/secrets.env"
 
 if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   eval `ssh-agent -s` > /dev/null
@@ -10,4 +13,3 @@ fi
 if test -f "$HOME/.cargo/env"; then
   source "$HOME/.cargo/env"
 fi
-

@@ -1,9 +1,11 @@
 #!/usr/bin/bash
 
-set -e
+set -eu
 
-u_wallpaper load 1> /dev/null
-polybar-msg cmd restart 1> /dev/null
+source "$HOME/dotfiles/linux/variables.env"
+
+u_wallpaper load &> /dev/null
+polybar-msg cmd restart &> /dev/null
 
 notify-send -a System \
             -i "$FONT_AWESOME_PATH/light/display.svg" \

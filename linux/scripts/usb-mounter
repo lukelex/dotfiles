@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-set -e
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
 
 drives=$(lsblk  --noheadings --raw | awk '$1~/s.*[[:digit:]]/' | awk '{print "/dev/"$1,$7}')
 mounted=$(echo $drives | awk '$3!=""' | awk '{print "unmount",$1}')
