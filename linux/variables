@@ -15,3 +15,5 @@ export BROWSER=/usr/bin/google-chrome-stable
 export QT_QPA_PLATFORMTHEME="qt5ct"
 export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
 export FONT_AWESOME_PATH="$DOTFILES/fonts/fa6/svgs"
+
+source "$HOME/Dropbox/secrets.env" 2&> /dev/null

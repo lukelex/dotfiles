@@ -5,7 +5,6 @@ source "$HOME/dotfiles/linux/variables"
 touch /tmp/wired.log
 
 source "$DOTFILES/linux/config/keyboard" &
-source "$HOME/Dropbox/secrets" 2&> /dev/null
 source "$DOTFILES/linux/config/autostart" 2&> /dev/null
 
 if command -v u_wallpaper &> /dev/null
