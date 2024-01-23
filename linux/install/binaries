@@ -2,8 +2,6 @@
 
 set -e
 
-mkdir -pv "$DOTFILES/linux/bin"
-
 for script in $DOTFILES/linux/scripts/*; do
-  ln -fvs "$script" "$DOTFILES/linux/bin/u_$(basename $script)"
+  sudo ln -fvs "$script" "/usr/local/bin/u_$(basename $script)"
 done

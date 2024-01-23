@@ -2,9 +2,6 @@
 
 source "$HOME/dotfiles/linux/variables"
 
-# Custom binaries
-export PATH="$DOTFILES/linux/bin:$PATH"
-
 touch /tmp/wired.log
 
 source "$DOTFILES/linux/config/keyboard" &

@@ -1,0 +1,11 @@
+[Unit]
+Description=Polybar status bar
+
+[Service]
+Type=simple
+Restart=always
+EnvironmentFile=%h/Dropbox/secrets.env
+ExecStart=/usr/local/bin/u_polybar
+
+[Install]
+WantedBy=default.target

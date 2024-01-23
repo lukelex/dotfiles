@@ -85,3 +85,7 @@ sudo usermod -a -G docker $USER
 tldr -u
 
 chsh -s /usr/bin/zsh
+
+# timedatectl set-timezone CET
+
+systemctl --user enable --now "$DOTFILES/linux/config/polybar/polybar.service"
