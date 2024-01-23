@@ -34,5 +34,3 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
 rustup default stable
 
 sudo yay -Sc
-
-systemctl enable --now docker ly bluetooth NetworkManager avahi-daemon cups
