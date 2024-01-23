@@ -1,11 +1,14 @@
 [Unit]
 Description=Polybar status bar
+Documentation=https://github.com/polybar/polybar/
+After=graphical.target
+ConditionEnvironment=DISPLAY
+
+[Install]
+WantedBy=default.target
 
 [Service]
 Type=simple
 Restart=always
 EnvironmentFile=%h/Dropbox/secrets.env
 ExecStart=/usr/local/bin/u_polybar
-
-[Install]
-WantedBy=default.target
