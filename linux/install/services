@@ -4,6 +4,6 @@ source "$HOME/dotfiles/linux/variables"
 
 systemctl enable --now docker ly bluetooth NetworkManager avahi-daemon cups
 
-systemctl --user enable --now "$DOTFILES/linux/config/polybar/polybar.service"
-systemctl --user enable --now "$DOTFILES/linux/config/wired/wired.service"
-systemctl --user enable --now "$DOTFILES/linux/config/eww/eww.service"
+systemctl enable --user --now "$DOTFILES/linux/config/polybar/polybar.service"
+systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
+systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
