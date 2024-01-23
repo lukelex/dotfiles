@@ -6,3 +6,4 @@ systemctl enable --now docker ly bluetooth NetworkManager avahi-daemon cups
 
 systemctl --user enable --now "$DOTFILES/linux/config/polybar/polybar.service"
 systemctl --user enable --now "$DOTFILES/linux/config/wired/wired.service"
+systemctl --user enable --now "$DOTFILES/linux/config/eww/eww.service"
