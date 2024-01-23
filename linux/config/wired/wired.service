@@ -1,0 +1,18 @@
+[Unit]
+Description=Wired Notification Daemon
+Documentation=https://github.com/Toqozz/wired-notify
+After=graphical.target
+ConditionEnvironment=DISPLAY
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.Notifications
+ExecStart=/usr/bin/wired
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -28,7 +28,7 @@ mkdir -p "$XDG_CONFIG_HOME/gsimplecal"
 ln -fvs "$DOTFILES/linux/config/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
 
 mkdir -p "$XDG_CONFIG_HOME/wired"
-ln -fvs "$DOTFILES/linux/config/wired.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
+ln -fvs "$DOTFILES/linux/config/wired/config.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
 
 mkdir -p "$XDG_CONFIG_HOME/kitty"
 ln -fvs "$DOTFILES/linux/config/kitty.conf" "$XDG_CONFIG_HOME/kitty/kitty.conf"
@@ -89,3 +89,4 @@ chsh -s /usr/bin/zsh
 # timedatectl set-timezone CET
 
 systemctl --user enable --now "$DOTFILES/linux/config/polybar/polybar.service"
+systemctl --user enable --now "$DOTFILES/linux/config/wired/wired.service"
