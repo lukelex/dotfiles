@@ -23,8 +23,6 @@ declare -A ICON_LIST=(
   ["50n"]="" # Mist night.
 )
 
-WB_API_KEY=$WEATHER_BIT_API_KEY
-OW_API_KEY=$OPEN_WEATHER_API_KEY
 SYSTEM="metric" # Unit system {imperial or metric}
 UNIT="°C" # Units of measurement.
 
@@ -35,7 +33,7 @@ FORECAST=$(
   curl -Ls --get \
     --data-urlencode "q=$CITY" \
     --data-urlencode "units=$SYSTEM" \
-    --data-urlencode "appid=$OW_API_KEY" \
+    --data-urlencode "appid=$OPEN_WEATHER_API_KEY" \
     "http://api.openweathermap.org/data/2.5/weather"
 )
 ICON=${ICON_LIST[$(echo $FORECAST | jq -r '.weather[0].icon')]}

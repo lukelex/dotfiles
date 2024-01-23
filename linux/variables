@@ -3,8 +3,6 @@
 export DOTFILES="$HOME/dotfiles"
 export XDG_CONFIG_HOME="$HOME/.config"
 
-export TZ='Europe/Copenhagen'
-
 export TERMINFO='/usr/share/terminfo'
 export TERM="xterm-kitty"
 export KITTY_CONFIG_DIRECTORY="$DOTFILES/linux/config/"
