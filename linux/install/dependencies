@@ -15,7 +15,7 @@ yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi ibus openssh \
   imagemagick i3lock blueman flameshot fragments playerctl inetutils \
   xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad arandr \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome xss-lock xwallpaper ly xdotool
+  pipewire-pulse google-chrome xss-lock xwallpaper ly xdotool dbus
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \
