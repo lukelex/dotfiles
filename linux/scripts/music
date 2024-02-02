@@ -11,12 +11,15 @@ case $1 in
     playerctl -p spotify next &
     ;;
   pause)
-    playerctl -p spotify pause &
+    playerctl --all-players pause &
     ;;
   play)
     playerctl -p spotify play &
     ;;
   toggle)
-    playerctl -p spotify play-pause &
+    case $(playerctl --all-players status | grep "Playing" | head -n 1) in
+      "Playing") playerctl --all-players pause ;;
+      *) playerctl -p spotify play ;;
+    esac
     ;;
 esac
