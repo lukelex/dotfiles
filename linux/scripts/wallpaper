@@ -10,5 +10,5 @@ case $1 in
     ln -fvs "$2" "$WALLPAPER_PATH"
     $0 load;;
   random)
-    $0 change `find $2 | shuf -n 1`
+    $0 change `find $2 -maxdepth 1 -type f | shuf -n 1`
 esac
