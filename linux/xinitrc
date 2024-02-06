@@ -5,7 +5,6 @@ xprofile=$DOTFILES/linux/xprofile
 sysresources=/etc/X11/xinit/.Xresources
 environment=$DOTFILES/linux/env
 
-# merge in defaults and keymaps
 if [ -f $sysresources ]; then
   xrdb -merge $sysresources
 fi

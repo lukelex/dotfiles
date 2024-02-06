@@ -20,17 +20,13 @@ icon() {
 
 case $1 in
   if)
-    light -L 2>&- | grep auto
-    ;;
+    light -L 2>&- | grep auto;;
   icon)
-    icon
-    ;;
+    icon;;
   get)
-    echo $VALUE
-    ;;
+    echo $VALUE;;
   set)
-    light -S $2
-    ;;
+    light -S $2;;
   inc)
     light -A 2 2>&-
     $($0 show)
