@@ -5,6 +5,5 @@ source "$HOME/dotfiles/linux/variables.env"
 systemctl enable --now docker ly bluetooth NetworkManager avahi-daemon cups
 
 systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
-systemctl enable --user --now "$DOTFILES/linux/config/polybar/polybar.service"
 systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
 systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"

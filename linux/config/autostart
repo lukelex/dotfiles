@@ -2,11 +2,14 @@
 
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 nm-applet &
-dropbox start -i &
+
+sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
+kmonad "$HOME/dotfiles/linux/config/kmonad.kbd" &
+xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10' &
 xss-lock --transfer-sleep-lock -- u_exit lock &
 flameshot &
 1password --silent &
 greenclip daemon &
-sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
-kmonad "$HOME/dotfiles/linux/config/kmonad.kbd" &
 u_i3-workspaces &
+dropbox start -i &
+u_polybar &
