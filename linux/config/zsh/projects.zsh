@@ -8,7 +8,7 @@ function projects-search() {
   while [[ $s ]]
   do
     local scope="${s%%"$delimiter"*}"
-    for folder in $(ls $scope)
+    for folder in $(find $scope -maxdepth 1 -type d | tail -n +2)
     do
       directories+=( "$folder $scope" )
     done
