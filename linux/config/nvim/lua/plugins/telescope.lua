@@ -16,7 +16,7 @@ vim.keymap.set("n", "<Leader>s", builtin.grep_string, {})
 vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
-vim.keymap.set("n", "<Leader>a", builtin.resume, { })
+vim.keymap.set("n", "<Leader>c", builtin.resume, { })
 
 telescope.setup({
   defaults = {

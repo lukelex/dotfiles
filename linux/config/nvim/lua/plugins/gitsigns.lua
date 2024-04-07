@@ -10,3 +10,5 @@ require("gitsigns").setup {
     untracked    = { text = "┆" },
   },
 }
+
+vim.keymap.set("n", "gh", ":Gitsigns preview_hunk<CR>", {})

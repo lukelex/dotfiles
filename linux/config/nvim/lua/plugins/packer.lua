@@ -31,6 +31,7 @@ return packer.startup(function(use)
     after = "nvim-treesitter",
     requires = "nvim-treesitter/nvim-treesitter",
   })
+  use('nvim-treesitter/playground')
   use("DataWraith/auto_mkdir")
   use("danro/rename.vim")
   use("schickling/vim-bufonly")
