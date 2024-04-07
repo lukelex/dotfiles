@@ -5,8 +5,8 @@
 
   // Choose the order of the modules
   "modules-left": ["custom/power", "custom/clock", "custom/date", "custom/spotify"],
-  "modules-center": ["hyprland/workspaces", "hyprland/submap", "sway/mode", "sway/scratchpad"],
-  "modules-right": ["idle_inhibitor", "pulseaudio", "bluetooth", "network", "cpu", "memory", "temperature", "backlight", "sway/language", "battery", "tray"],
+  "modules-center": ["hyprland/workspaces", "hyprland/submap"],
+  "modules-right": ["idle_inhibitor", "pulseaudio", "bluetooth", "network", "memory", "backlight", "battery", "tray"],
 
   // Modules configuration
   "hyprland/workspaces": {
@@ -31,16 +31,6 @@
     "max-length": 8,
     "tooltip": false
   },
-  "sway/mode": {
-    "format": "<span style=\"italic\">{}</span>"
-  },
-  "sway/scratchpad": {
-    "format": "{icon} {count}",
-    "show-empty": false,
-    "format-icons": ["", ""],
-    "tooltip": true,
-    "tooltip-format": "{app}: {title}"
-  },
   "idle_inhibitor": {
     "format": "<big>{icon}</big>",
     "format-icons": {
@@ -62,19 +52,10 @@
     "interval": 5,
     "exec": "date '+%d %b - %A'",
   },
-  "cpu": {
-    "format": "{usage}% <big></big>",
-    "tooltip": false
-  },
   "memory": {
     "format": "{used:0.0f}/{total:0.0f}G ",
     "tooltip": true,
     "tooltip-format": "Swap: {swapUsed}/{swapTotal}G"
-  },
-  "temperature": {
-    "critical-threshold": 80,
-    "format": "{temperatureC}°C {icon}",
-    "format-icons": ["", "", ""]
   },
   "backlight": {
     // "device": "acpi_video1",
