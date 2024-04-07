@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+
+set -aeu
+
+take() {
+  hyprshot --mode $1 --output-folder "$HOME/screenshots"
+
+  play "$HOME/dotfiles/sounds/camera-shutter.ogg" &> /dev/null &
+}
+
+take $1

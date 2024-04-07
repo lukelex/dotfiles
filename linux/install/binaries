@@ -4,6 +4,8 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-for script in $DOTFILES/linux/scripts/*; do
+files=$(find "$DOTFILES/linux/scripts/" -maxdepth 1 -type f -perm 755)
+
+for script in $files; do
   sudo ln -fvs "$script" "/usr/local/bin/u_$(basename $script)"
 done

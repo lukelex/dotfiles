@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+export XDG_SESSION_TYPE="x11"
+export XDG_SESSION_DESKTOP="$1"
+
 userresources=$HOME/.Xresources
 xprofile=$DOTFILES/linux/xprofile
 sysresources=/etc/X11/xinit/.Xresources
@@ -34,7 +37,5 @@ fi
 case "$1" in
   awesome) exec awesome ;;
   bspwm) exec bspwm-session ;;
-  deepin) exec startdde ;;
-  hypr) exec Hypr ;;
-  *) exec i3;;
+  i3|i3wm|*) exec dbus-run-session -- i3 ;;
 esac

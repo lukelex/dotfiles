@@ -82,6 +82,10 @@ return packer.startup(function(use)
   use("elkowar/yuck.vim")
   use("baskerville/vim-sxhkdrc")
   use("kmonad/kmonad-vim")
+  use({
+    "luckasRanarison/tree-sitter-hyprlang",
+    requires = { "nvim-treesitter/nvim-treesitter" },
+  })
 
   -- Language Server Protocol
   use({

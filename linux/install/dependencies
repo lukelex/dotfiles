@@ -8,14 +8,38 @@ then
 fi
 
 # essentials
-yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi ibus openssh \
-  polkit polkit-gnome xfce4-power-manager network-manager-applet \
-  man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk polybar bc zsh \
-  zsh-completions autorandr cmake jq sxhkd xautolock xorg-xkill \
-  imagemagick i3lock blueman flameshot fragments playerctl inetutils \
-  xclip tree v4l-utils neovim fd fzf ripgrep rustup kmonad arandr \
+yay -S --needed --noconfirm ibus openssh \
+  polkit polkit-gnome network-manager-applet \
+  man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
+  zsh-completions cmake jq sxhkd \
+  imagemagick blueman fragments playerctl inetutils \
+  tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome xss-lock xwallpaper ly xdotool dbus
+  pipewire-pulse google-chrome ly dbus
+
+read -p 'Would you like to install Hyprland?' answer
+case $answer in
+  [Yy]* | "")
+    echo 'Installing Wayland dependencies...'
+    # wayland
+    yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
+      swhkd swayidle hyprlock waybar hyprshot wlogout \
+      qt5-wayland qt6-wayland eww-wayland wofi sox
+    ;;
+  * ) ;;
+esac
+
+read -p 'Would you like to install i3wm?' answer
+case $answer in
+  [Yy]* | "")
+    echo 'Installing X.Org dependencies...'
+    # xorg
+    yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi autorandr \
+      xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
+      xfce4-power-manager flameshot arandr xclip xdotool
+    ;;
+  * ) ;;
+esac
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \

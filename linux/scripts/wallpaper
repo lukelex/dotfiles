@@ -1,14 +1,19 @@
 #!/usr/bin/bash
 
+set -eu
+
 WALLPAPER_PATH="$HOME/wallpaper.png"
 
 case $1 in
   load)
-    xwallpaper --zoom "$WALLPAPER_PATH";;
+    case "$XDG_SESSION_TYPE" in
+      x11) xwallpaper --zoom "$WALLPAPER_PATH" ;;
+      wayland) swww img "$WALLPAPER_PATH" --resize crop --transition-type wipe ;;
+    esac ;;
   update|change)
     rm -rf "$WALLPAPER_PATH"
     ln -fvs "$2" "$WALLPAPER_PATH"
-    $0 load;;
+    $0 load ;;
   random)
     $0 change `find $2 -maxdepth 1 -type f | shuf -n 1`
 esac

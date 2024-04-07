@@ -103,12 +103,13 @@ function show_mic {
 }
 
 case $1 in
-  mic)
+  mic|microphone)
     case $2 in
       get) get_mic;;
       icon) icon_mic ;;
       set)
         amixer -D pulse sset Capture $3% > /dev/null
+        play "$HOME/dotfiles/sounds/audio-volume-change.oga" &> /dev/null &
         # show_mic
         ;;
       show) show_mic ;;
@@ -118,20 +119,23 @@ case $1 in
         ;;
     esac
     ;;
-  vol)
+  vol|volume)
     case $2 in
       get) get_volume;;
       icon) icon_volume;;
       inc)
         turn_on
         wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%+
+        play "$HOME/dotfiles/sounds/audio-volume-change.oga" &> /dev/null &
         show_volume;;
       dec)
         turn_on
         wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-
+        play "$HOME/dotfiles/sounds/audio-volume-change.oga" &> /dev/null &
         show_volume;;
       set)
         wpctl set-volume @DEFAULT_AUDIO_SINK@ $3%
+        play "$HOME/dotfiles/sounds/audio-volume-change.oga" &> /dev/null &
         # show_volume
         ;;
       show) show_volume;;

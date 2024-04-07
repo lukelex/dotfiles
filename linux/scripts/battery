@@ -12,7 +12,8 @@ HALF=
 THREE_QUARTERS=
 FULL=
 
-stats=$(upower -i /org/freedesktop/UPower/devices/battery_$2 | grep -E "state|to full|percentage|time to empty")
+device=$(upower -e | grep 'BAT' | head -n 1)
+stats=$(upower -i `echo $device` | grep -E "state|to full|percentage|time to empty")
 
 get_percentage() {
   echo $(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')
@@ -75,11 +76,9 @@ warn() {
 }
 
 case $1 in
-  if) upower -i `upower -e | grep 'BAT'`;;
-  icon) echo `icon`;;
-  show) show_battery;;
-  icon_and_warn)
-    warn
-    echo `icon`;;
-  get) echo -e `get`;;
+  if) upower -i `upower -e | grep 'BAT'` ;;
+  icon) echo `icon` ;;
+  show) show_battery ;;
+  icon_and_warn) warn && echo `icon` ;;
+  get) echo -e `get` ;;
 esac

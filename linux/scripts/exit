@@ -7,16 +7,26 @@ function reset_ui {
 
 case "$1" in
   lock)
-    u_blurlock;;
+    reset_ui
+    case "$XDG_SESSION_TYPE" in
+      x11) u_blurlock ;;
+      wayland) hyprlock ;;
+    esac ;;
   logout)
-    loginctl terminate-session `loginctl session-status | awk 'NR==1{print $1}'`;;
-  suspend)
-    reset_ui && systemctl suspend;;
+    case "$XDG_SESSION_DESKTOP" in
+      i3|i3wm) i3-msg exit ;;
+      Hyprland) hyprctl dispatch exit 1 ;;
+      *) loginctl terminate-session `loginctl session-status | awk 'NR==1{print $1}'` ;;
+    esac ;;
+  sleep|suspend)
+    reset_ui
+    $0 lock &
+    systemctl suspend ;;
   hibernate)
     reset_ui && systemctl hibernate;;
-  reboot)
+  reboot|reset)
     systemctl reboot;;
-  shutdown)
+  shutdown|poweroff)
     systemctl poweroff;;
   *)
     echo "== ! exit: missing or invalid argument ! =="

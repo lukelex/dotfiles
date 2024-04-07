@@ -2,54 +2,62 @@
 
 source "$HOME/dotfiles/linux/variables.env"
 
+DOT_CONFIG="$DOTFILES/linux/config"
+
 mkdir -p "$XDG_CONFIG_HOME"
 mkdir -p "$HOME/.ssh"
 mkdir -p "$HOME/screenshots"
 
 mkdir -p "$XDG_CONFIG_HOME/i3"
-ln -fvs "$DOTFILES/linux/config/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
+ln -fvs "$DOT_CONFIG/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
+
+rm -rf "$XDG_CONFIG_HOME/hypr"
+ln -fvs "$DOT_CONFIG/hypr" "$XDG_CONFIG_HOME/hypr"
+
+mkdir -p "$XDG_CONFIG_HOME/waybar"
+ln -fvs "$DOT_CONFIG/waybar/config.json" "$XDG_CONFIG_HOME/waybar/config"
 
 sudo mkdir -p "/etc/ly"
-sudo ln -fvs "$DOTFILES/linux/config/ly.ini" "/etc/ly/config.ini"
+sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
 
 rm -rf "$HOME/.zshrc"
-ln -fvs "$DOTFILES/linux/config/zsh/zshrc" "$HOME/.zshrc"
+ln -fvs "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
 
-sudo ln -fvs "$DOTFILES/linux/config/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
+sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
 
 mkdir -pv "$HOME/backup_vim"
 mkdir -pv "$HOME/projects"
-ln -fvs "$DOTFILES/linux/config/nvim" "$XDG_CONFIG_HOME/nvim"
+ln -fvs "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
 
-mkdir -p "$XDG_CONFIG_HOME/rofi"
-ln -fvs "$DOTFILES/linux/config/rofi/main.rasi" "$XDG_CONFIG_HOME/rofi/config.rasi"
+rm -rf "$XDG_CONFIG_HOME/rofi"
+ln -fvs "$DOT_CONFIG/rofi" "$XDG_CONFIG_HOME/rofi"
 
 mkdir -p "$XDG_CONFIG_HOME/gsimplecal"
-ln -fvs "$DOTFILES/linux/config/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
+ln -fvs "$DOT_CONFIG/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
 
 mkdir -p "$XDG_CONFIG_HOME/wired"
-ln -fvs "$DOTFILES/linux/config/wired/config.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
+ln -fvs "$DOT_CONFIG/wired/config.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
 
-mkdir -p "$XDG_CONFIG_HOME/kitty"
-ln -fvs "$DOTFILES/linux/config/kitty.conf" "$XDG_CONFIG_HOME/kitty/kitty.conf"
+rm -rf "$XDG_CONFIG_HOME/kitty"
+ln -fvs "$DOT_CONFIG/kitty" "$XDG_CONFIG_HOME/kitty"
 
 mkdir -p "$XDG_CONFIG_HOME/flameshot"
-ln -fvs "$DOTFILES/linux/config/flameshot.ini" "$XDG_CONFIG_HOME/flameshot/flameshot.ini"
+ln -fvs "$DOT_CONFIG/flameshot.ini" "$XDG_CONFIG_HOME/flameshot/flameshot.ini"
 
 ln -fvs "$DOTFILES/linux/Xresources" "$HOME/.Xresources"
 ln -fvs "$DOTFILES/linux/profile" "$HOME/.profile"
 ln -fvs "$DOTFILES/linux/xprofile" "$HOME/.xprofile"
 ln -fvs "$DOTFILES/linux/xinitrc" "$HOME/.xinitrc"
-ln -fvs "$DOTFILES/linux/config/eww" "$XDG_CONFIG_HOME/eww"
-ln -fvs "$DOTFILES/linux/config/keyboard.map" "$HOME/.Xmodmap"
-ln -fvs "$DOTFILES/linux/config/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
+ln -fvs "$DOT_CONFIG/eww" "$XDG_CONFIG_HOME/eww"
+ln -fvs "$DOT_CONFIG/keyboard.map" "$HOME/.Xmodmap"
+ln -fvs "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
 sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
-# sudo ln -fvs "$DOTFILES/linux/config/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
-# sudo ln -fvs "$DOTFILES/linux/config/bluetooth.conf" "/etc/bluetooth/main.conf"
-# sudo cp -f "$DOTFILES/linux/config/sudoers.d/20-custom-rules" "/etc/sudoers.d/20-custom-rules"
+# sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
+# sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
+# sudo cp -f "$DOT_CONFIG/sudoers.d/20-custom-rules" "/etc/sudoers.d/20-custom-rules"
 sudo ln -fvs "$DOTFILES/linux/udev/usb-watcher.rules" "/usr/lib/udev/rules.d/5-usb-watcher.rules"
 
-ln -fvs "$DOTFILES/linux/config/default-apps.list" "$HOME/.local/share/applications/defaults.list"
+ln -fvs "$DOT_CONFIG/default-apps.list" "$HOME/.local/share/applications/defaults.list"
 
 sudo mkdir -pv "/usr/share/fonts/OTF"
 sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
@@ -59,7 +67,7 @@ sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/share/fo
 sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Solid-900.otf"
 sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Thin-100.otf"
 mkdir -p "$XDG_CONFIG_HOME/fontconfig/"
-ln -fvs "$DOTFILES/linux/config/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
+ln -fvs "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
 fc-cache -r
 
 sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
@@ -70,10 +78,10 @@ sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/so
 sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/brands/512x512/all"
 
 mkdir -p "$XDG_CONFIG_HOME/autorandr/"
-ln -fvs "$DOTFILES/linux/config/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
+ln -fvs "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
 
-ln -fvs "$DOTFILES/linux/config/mimeapps.conf" ~/.local/share/applications/mimeapps.list
-ln -fvs "$DOTFILES/linux/config/mimeapps.conf" ~/.config/mimeapps.list
+ln -fvs "$DOT_CONFIG/mimeapps.conf" ~/.local/share/applications/mimeapps.list
+ln -fvs "$DOT_CONFIG/mimeapps.conf" ~/.config/mimeapps.list
 
 xset dpms 1200 0 0
 

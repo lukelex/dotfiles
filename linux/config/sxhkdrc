@@ -44,7 +44,7 @@ super + shift + p
 Print
   flameshot gui -c -p "$HOME/screenshots"
 shift + Print
-  flameshot screen -c
+  flameshot screen -c -p "$HOME/screenshots"
 
 super + ctrl+ b
   rofi-bluetooth
