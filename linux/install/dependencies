@@ -4,7 +4,7 @@ set -e
 
 if ! command -v yay &> /dev/null
 then
-  source ./linux/setup/yay
+  source ./linux/install/yay
 fi
 
 # essentials
@@ -50,10 +50,17 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
   2> /dev/null
 
-# Optionals
-# yay -S --needed --noconfirm kicad curtail birdfont \
-#   whatsapp-for-linux telegram-desktop discord \
-#   nvidia nvidia-settings
+read -p 'Would you like to install optional dependencies?' answer
+case $answer in
+  [Yy]* | "")
+    echo 'Installing optional dependencies...'
+    # Optionals
+    yay -S --needed --noconfirm kicad curtail birdfont \
+      whatsapp-for-linux telegram-desktop discord \
+      nvidia nvidia-settings
+    ;;
+  * ) ;;
+esac
 
 rustup default stable
 

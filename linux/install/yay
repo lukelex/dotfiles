@@ -2,6 +2,7 @@
 
 set -e
 
+rm -rf yay-git
 git clone https://aur.archlinux.org/yay-git.git
 
 cd yay-git
