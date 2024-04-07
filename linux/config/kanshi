@@ -1,8 +1,12 @@
-profile {
+profile 'odyssey' {
   output eDP-1 disable
-  output DP-2 mode 5120x1440@60Hz position 0,0
+  output DP-2 enable mode 5120x1440@60Hz scale 1
 }
 
-profile {
-  output eDP-1 mode 3456x2160@60.000999Hz position 0,0
+profile '1080p' {
+  output eDP-1 enable mode 1920x1080@60Hz scale 1
+}
+
+profile '3k' {
+  output eDP-1 enable mode 3456x2160@60Hz scale 1.25
 }
