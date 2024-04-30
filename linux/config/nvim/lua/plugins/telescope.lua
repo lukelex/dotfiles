@@ -6,13 +6,13 @@ end
 local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
 
-local flexible_find = require("plugins.telescope.flexible-find")
+local finders = require("plugins.telescope.finders")
 
-vim.keymap.set("n", "<Leader>p", flexible_find.project_files, { noremap = true, silent = true })
-vim.keymap.set("n", "<Leader>f", builtin.find_files, {})
+vim.keymap.set("n", "<Leader>p", finders.project_files, { noremap = true, silent = true })
+vim.keymap.set("n", "<Leader>f", finders.find_files, {})
 vim.keymap.set("n", "<Leader>b", builtin.buffers, {})
-vim.keymap.set("n", "<Leader>g", builtin.live_grep, {})
-vim.keymap.set("n", "<Leader>s", builtin.grep_string, {})
+vim.keymap.set("n", "<Leader>g", finders.live_grep, {})
+vim.keymap.set("n", "<Leader>s", finders.grep_string, {})
 vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
