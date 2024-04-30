@@ -56,11 +56,19 @@ case $answer in
     echo 'Installing optional dependencies...'
     # Optionals
     yay -S --needed --noconfirm kicad curtail birdfont \
-      whatsapp-for-linux telegram-desktop discord \
-      nvidia nvidia-settings
+      whatsapp-for-linux telegram-desktop discord
     ;;
   * ) ;;
 esac
+
+if $(lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'); then
+  read -p "I've found an NVidia GPU. Would you like to install its driver and utilities?" answer
+  case $answer in
+    [Yy]* | "")
+      yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
+    * ) ;;
+  esac
+fi
 
 rustup default stable
 
