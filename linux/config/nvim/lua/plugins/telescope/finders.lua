@@ -25,6 +25,7 @@ end
 local ripgrep_args = {
   glob_pattern = {
     '!.git/',
+    '!tmp/',
     '!*.otf',
     '!*.jpg',
     '!*.png',
