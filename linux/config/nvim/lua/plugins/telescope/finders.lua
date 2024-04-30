@@ -26,14 +26,11 @@ local ripgrep_args = {
   glob_pattern = {
     '!.git/',
     '!tmp/',
-    '!*.otf',
-    '!*.jpg',
-    '!*.png',
-    '!*.ogg',
-    '!*.oga',
+    -- '!*.log',
   },
   additional_args = {
-    "-uuu",
+    "--no-ignore",
+    "--hidden"
   }
 }
 
