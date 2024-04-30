@@ -27,17 +27,25 @@ cmp.setup({
     ["<C-e>"] = cmp.mapping.abort(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }),
     ["<Tab>"] = cmp.mapping(function (fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif snippets.expandable() then
+      if snippets.expandable() then
         snippets.expand()
-      elseif snippets.expand_or_jumpable() then
-        snippets.expand_or_jump()
-      elseif check_backspace() then
-        fallback()
+      elseif cmp.visible() then
+        cmp.select_next_item()
       else
         fallback()
       end
+
+      -- if cmp.visible() then
+      --   cmp.select_next_item()
+      -- elseif snippets.expandable() then
+      --   snippets.expand()
+      -- elseif snippets.expand_or_jumpable() then
+      --   snippets.expand_or_jump()
+      -- elseif check_backspace() then
+      --   fallback()
+      -- else
+      --   fallback()
+      -- end
     end, { "i", "s" }),
     ["<S-Tab>"] = cmp.mapping(function (fallback)
       if cmp.visible() then
@@ -62,9 +70,9 @@ cmp.setup({
     end
   },
   sources = cmp.config.sources({
-    { name = "nvim_lsp", keyword_length = 2 },
+    { name = "nvim_lsp", keyword_length = 3 },
     { name = "luasnip", keyword_length = 2 },
-    { name = "buffer", keyword_length = 2 },
+    { name = "buffer", keyword_length = 4 },
     { name = "path" }
   }, {
     { name = "buffer" },
