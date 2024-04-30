@@ -123,7 +123,7 @@
     "on-click": "u_dummodoro toggle"
   },
   "custom/spotify": {
-    "exec": "u_music show",
+    "exec": "u_music show trimmed",
     "interval": 1,
     "format": "<big></big> {}",
     "on-click": "u_music toggle"

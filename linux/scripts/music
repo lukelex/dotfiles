@@ -1,8 +1,30 @@
 #!/usr/bin/bash
 
+trim() {
+  local text=$1
+
+  # Maximum length for the title
+  max_length=30
+
+  if [ ${#text} -gt $max_length ]; then
+    trimmed_title="${text:0:$max_length}..."
+  else
+    trimmed_title="$text"
+  fi
+
+  echo "$trimmed_title"
+}
+
+get_title() {
+  echo $(playerctl -p spotify metadata --format '{{ title }}')
+}
+
 case $1 in
   show)
-    playerctl -p spotify metadata --format '{{ title }}'
+    case "$2" in
+      trimmed) trim "$(get_title)";;
+      *) get_title;;
+    esac
     ;;
   previous)
     playerctl -p spotify previous &
