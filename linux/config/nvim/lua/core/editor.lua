@@ -53,3 +53,5 @@ opt.splitbelow = true
 opt.splitright = true
 
 opt.ttyfast = true
+
+vim.cmd('command! PrettyPrintJSON %!python -m json.tool')
