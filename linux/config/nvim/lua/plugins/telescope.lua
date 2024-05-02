@@ -18,6 +18,24 @@ vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
 vim.keymap.set("n", "<Leader>c", builtin.resume, { })
 
+local mappings = {
+  ["<C-k>"] = actions.move_selection_previous,
+  ["<C-j>"] = actions.move_selection_next,
+  ["<Up>"] = actions.move_selection_previous,
+  ["<Down>"] = actions.move_selection_next,
+
+  ["<C-u>"] = actions.preview_scrolling_up,
+  ["<C-d>"] = actions.preview_scrolling_down,
+  ["<PageUp>"] = actions.preview_scrolling_up,
+  ["<PageDown>"] = actions.preview_scrolling_down,
+
+  ["<CR>"] = actions.select_tab_drop,
+  ["<C-h>"] = actions.select_horizontal,
+  ["<C-v>"] = actions.select_vertical,
+  ["<C-t>"] = actions.select_tab,
+  ["<C-q>"] = actions.send_to_qflist,
+}
+
 telescope.setup({
   defaults = {
     theme = "dropdown",
@@ -29,23 +47,8 @@ telescope.setup({
       }
     },
     mappings = {
-      i = {
-        ["<C-k>"] = actions.move_selection_previous,
-        ["<C-j>"] = actions.move_selection_next,
-        ["<Up>"] = actions.move_selection_previous,
-        ["<Down>"] = actions.move_selection_next,
-
-        ["<C-u>"] = actions.preview_scrolling_up,
-        ["<C-d>"] = actions.preview_scrolling_down,
-        ["<PageUp>"] = actions.preview_scrolling_up,
-        ["<PageDown>"] = actions.preview_scrolling_down,
-
-        ["<CR>"] = actions.select_tab_drop,
-        ["<C-h>"] = actions.select_horizontal,
-        ["<C-v>"] = actions.select_vertical,
-        ["<C-t>"] = actions.select_tab,
-        ["<C-q>"] = actions.send_to_qflist,
-      }
+      n = mappings,
+      i = mappings,
     }
   }
 })
