@@ -5,10 +5,13 @@ set -eu
 source "$HOME/dotfiles/linux/variables.env"
 
 function show_warning {
-  notify-send -a System \
-    -i "$FONT_AWESOME_PATH/light/user-clock.svg" \
-    -h string:wired-tag:system \
-    "$1 seconds to lock"
+  case "$XDG_SESSION_TYPE" in
+    x11) notify-send -a System \
+        -i "$FONT_AWESOME_PATH/light/user-clock.svg" \
+        -h string:wired-tag:system \
+        "$1 seconds to lock" ;;
+    wayland) ;;
+  esac
 }
 
 function should_lock {
