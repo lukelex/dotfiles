@@ -15,8 +15,11 @@ function show_warning {
 }
 
 function should_lock {
-  local window_id=$(xprop -root | grep "_NET_ACTIVE_WINDOW" | head -n 1 | awk '{print $5}')
-  local fullscreen_window=$(xprop -id $window_id | grep -E "_NET_WM_STATE\(ATOM\).+?_NET_WM_STATE_FULLSCREEN")
+  local window_id
+  local fullscreen_window
+
+  window_id=$(xprop -root | grep "_NET_ACTIVE_WINDOW" | head -n 1 | awk '{print $5}')
+  fullscreen_window=$(xprop -id $window_id | grep -E "_NET_WM_STATE\(ATOM\).+?_NET_WM_STATE_FULLSCREEN")
 
   if [[ -z $fullscreen_window ]]; then
     echo "yes"
@@ -25,6 +28,6 @@ function should_lock {
 
 case $1 in
   warn) show_warning $2;;
-  lock) [ ! -z `should_lock` ] && u_exit lock;;
+  lock) [ ! -z "`should_lock`" ] && u_exit lock;;
   *) exit 0 ;;
 esac

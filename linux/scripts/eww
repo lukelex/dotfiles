@@ -8,7 +8,7 @@ fi
 
 toggle() {
   window=$1
-  closed=$(eww list-windows | grep -v '^*')
+  closed=$(eww list-windows | grep -v '^\*')
   eww close-all
 
   if [[ $(echo $closed | grep $window) ]]; then

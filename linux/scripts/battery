@@ -13,14 +13,14 @@ THREE_QUARTERS=
 FULL=
 
 device=$(upower -e | grep 'BAT' | head -n 1)
-stats=$(upower -i `echo $device` | grep -E "state|to full|percentage|time to empty")
+stats=$(upower -i "`echo $device`" | grep -E "state|to full|percentage|time to empty")
 
 get_percentage() {
-  echo $(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')
+  echo "$(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')"
 }
 
 is_charging() {
-  echo $(echo "$stats" | grep -E 'state.+?\bcharging\b')
+  echo "$(echo "$stats" | grep -E 'state.+?\bcharging\b')"
 }
 
 icon() {
@@ -52,9 +52,13 @@ get() {
 }
 
 show_battery() {
-  local state=$(echo "$stats" | grep state | awk '{print $2}')
-  local charge=$(echo "$stats" | grep percentage | awk '{print $2}')
-  local time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
+  local state
+  local charge
+  local time
+
+  state=$(echo "$stats" | grep state | awk '{print $2}')
+  charge=$(echo "$stats" | grep percentage | awk '{print $2}')
+  time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
 
   if [[ -z $time ]]; then
     message="Fully charged!"
@@ -70,15 +74,15 @@ show_battery() {
 }
 
 warn() {
-  if [[ `icon` == $CRITICAL ]]; then
+  if [[ "`icon`" == "$CRITICAL" ]]; then
     show_battery
   fi
 }
 
 case $1 in
-  if) upower -i `upower -e | grep 'BAT'` ;;
-  icon) echo `icon` ;;
+  if) upower -i "`upower -e | grep 'BAT'`" ;;
+  icon) echo "`icon`" ;;
   show) show_battery ;;
-  icon_and_warn) warn && echo `icon` ;;
-  get) echo -e `get` ;;
+  icon_and_warn) warn && echo "`icon`" ;;
+  get) echo -e "`get`" ;;
 esac

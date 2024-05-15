@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-set -eu
-
 source "$HOME/dotfiles/linux/variables.env"
 
 get() {
@@ -47,12 +45,8 @@ current=`get`
 current=${current:-0}
 
 case $2 in
-  if)
-    echo $monitors | grep 1
-    ;;
-  get)
-    echo $current
-    ;;
+  if) echo $monitors | grep 1 ;;
+  get) echo "$current" ;;
   set)
     set $3
     show $3

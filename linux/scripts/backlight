@@ -6,42 +6,45 @@ source "$HOME/dotfiles/linux/variables.env"
 
 HIGH=
 LOW=
-VALUE=$(light -G 2>&- | cut -f1 -d".")
+
+get_value() {
+  echo "$(light -G 2>&- | cut -f1 -d '.')"
+}
 
 icon() {
-  if [[ 1 -eq $(echo "$VALUE > 75" | bc -l) ]]; then
+  if [[ 1 -eq $(echo "$1 > 75" | bc -l) ]]; then
     echo "%{F#FF0000}$HIGH%{F-}"
-  elif [[ 1 -eq $(echo "$VALUE > 25" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$1 > 25" | bc -l) ]]; then
     echo $HIGH
   else
     echo $LOW
   fi
 }
 
+audio_tick() {
+  play "$HOME/dotfiles/sounds/audio-volume-change.oga" &> /dev/null &
+}
+
+show() {
+  notify-send -a System \
+              -i "$FONT_AWESOME_PATH/light/brightness.svg" \
+              -h string:wired-tag:system \
+              -h int:value:"`get_value`" \
+              "Brightness"
+}
+
 case $1 in
-  if)
-    light -L 2>&- | grep auto;;
-  icon)
-    icon;;
-  get)
-    echo $VALUE;;
-  set)
-    light -S $2;;
+  if) light -L 2>&- | grep auto;;
+  icon) icon get_value ;;
+  get) echo $VALUE;;
+  set) light -S $2;;
+  show) show ;;
   inc)
     light -A 2 2>&-
-    $($0 show)
-    ;;
+    audio_tick &
+    show ;;
   dec)
     light -U 2 2>&-
-    $($0 show)
-    ;;
-  show)
-    brightness=$(light -G | cut -f1 -d".")
-
-    notify-send -a System \
-                -i "$FONT_AWESOME_PATH/light/brightness.svg" \
-                -h string:wired-tag:system \
-                -h int:value:"$VALUE" \
-                "Brightness"
-    ;;
+    audio_tick &
+    show ;;
 esac

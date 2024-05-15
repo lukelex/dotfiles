@@ -16,7 +16,7 @@ trim() {
 }
 
 get_title() {
-  echo $(playerctl -p spotify metadata --format '{{ title }}')
+  echo "$(playerctl -p spotify metadata --format '{{ title }}')"
 }
 
 case $1 in

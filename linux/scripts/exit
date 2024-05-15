@@ -16,7 +16,7 @@ case "$1" in
     case "$XDG_SESSION_DESKTOP" in
       i3|i3wm) i3-msg exit ;;
       Hyprland) hyprctl dispatch exit 1 ;;
-      *) loginctl terminate-session `loginctl session-status | awk 'NR==1{print $1}'` ;;
+      *) loginctl terminate-session "`loginctl session-status | awk 'NR==1{print $1}'`" ;;
     esac ;;
   sleep|suspend)
     reset_ui
@@ -25,13 +25,13 @@ case "$1" in
   hibernate)
     reset_ui && systemctl hibernate;;
   reboot|reset)
-    systemctl reboot;;
+    systemctl reboot ;;
   shutdown|poweroff)
-    systemctl poweroff;;
+    systemctl poweroff ;;
   *)
     echo "== ! exit: missing or invalid argument ! =="
     echo "Try again with: lock | logout | suspend | hibernate | reboot | shutdown"
-    exit 2
+    exit 2 ;;
 esac
 
 exit 0

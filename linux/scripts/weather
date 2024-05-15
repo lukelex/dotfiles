@@ -60,5 +60,5 @@ EOM
 
 case $1 in
   icon) echo $ICON;;
-  show) `show`
+  show) show
 esac
