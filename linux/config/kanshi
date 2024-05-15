@@ -8,5 +8,5 @@ profile '1080p' {
 }
 
 profile '3k' {
-  output eDP-1 enable mode 3456x2160@60Hz scale 1.25
+  output eDP-1 enable mode 3456x2160@60Hz scale 1.50
 }
