@@ -23,3 +23,7 @@ au BufRead,BufNewFile *.json_schema setfiletype json
 au BufRead,BufNewFile *.service* setfiletype systemd
 au BufRead,BufNewFile *.conf setfiletype conf
 au BufRead,BufNewFile .env.* setfiletype sh
+
+command! PrettyPrintJSON %!python -m json.tool
+command! PrettyPrintHTML !tidy -mi -html -wrap 0 %
+command! PrettyPrintXML !tidy -mi -xml -wrap 0 %
