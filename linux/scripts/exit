@@ -10,7 +10,7 @@ case "$1" in
     reset_ui
     case "$XDG_SESSION_TYPE" in
       x11) u_blurlock ;;
-      wayland) hyprlock ;;
+      wayland) pidof hyprlock || hyprlock ;; # avoid starting multiple hyprlock instances.
     esac ;;
   logout)
     case "$XDG_SESSION_DESKTOP" in

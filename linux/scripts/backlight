@@ -34,10 +34,11 @@ show() {
 }
 
 case $1 in
-  if) light -L 2>&- | grep auto;;
+  if) light -L 2>&- | grep auto ;;
   icon) icon get_value ;;
-  get) echo $VALUE;;
-  set) light -S $2;;
+  get) echo $VALUE ;;
+  set) light -S $2 ;;
+  restore) light -I ;;
   show) show ;;
   inc)
     light -A 2 2>&-
