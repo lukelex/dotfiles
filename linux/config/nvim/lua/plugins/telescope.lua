@@ -8,15 +8,16 @@ local builtin = require("telescope.builtin")
 
 local finders = require("plugins.telescope.finders")
 
-vim.keymap.set("n", "<Leader>p", finders.project_files, { noremap = true, silent = true })
-vim.keymap.set("n", "<Leader>f", finders.find_files, {})
+vim.keymap.set("n", "<Leader>f", finders.project_files, { noremap = true, silent = true })
+vim.keymap.set("n", "<Leader>gf", finders.all_files, {})
+vim.keymap.set("n", "<Leader>gw", finders.word, {})
+vim.keymap.set("n", "<Leader>gs", finders.string, {})
+vim.keymap.set("n", "<Leader>gg", finders.string_global, {})
 vim.keymap.set("n", "<Leader>b", builtin.buffers, {})
-vim.keymap.set("n", "<Leader>g", finders.live_grep, {})
-vim.keymap.set("n", "<Leader>s", finders.grep_string, {})
 vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
-vim.keymap.set("n", "<Leader>c", builtin.resume, { })
+vim.keymap.set("n", "<Leader>r", builtin.resume, {})
 
 local mappings = {
   ["<C-k>"] = actions.move_selection_previous,
