@@ -50,6 +50,12 @@ yay -S --needed --noconfirm eww light ddcutil dropbox \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
   2> /dev/null
 
+read -p 'Would you like to be able to sync your iPod?' answer
+case $answer in
+  [Yy]* | "") yay -S --needed --noconfirm rhythmbox libgpod gvfs ;;
+  * ) ;;
+esac
+
 read -p 'Would you like to install optional dependencies?' answer
 case $answer in
   [Yy]* | "")
