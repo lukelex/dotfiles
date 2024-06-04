@@ -22,7 +22,9 @@ M.project_files = function()
   local is_inside_work_tree = vim.v.shell_error == 0
 
   if is_inside_work_tree then
-    builtin.git_files()
+    builtin.git_files({
+      show_untracked = true
+    })
   else
     M.all_files({ no_ignore = true })
   end
