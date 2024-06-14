@@ -21,7 +21,6 @@ read -p 'Would you like to install Hyprland?' answer
 case $answer in
   [Yy]* | "")
     echo 'Installing Wayland dependencies...'
-    # wayland
     yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
       swhkd hypridle hyprlock waybar hyprshot wlogout \
       qt5-wayland qt6-wayland eww-wayland wofi sox
@@ -33,7 +32,6 @@ read -p 'Would you like to install i3wm?' answer
 case $answer in
   [Yy]* | "")
     echo 'Installing X.Org dependencies...'
-    # xorg
     yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi autorandr \
       xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
       xfce4-power-manager flameshot arandr xclip xdotool

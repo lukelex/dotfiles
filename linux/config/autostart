@@ -3,16 +3,31 @@
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 nm-applet &
 
-sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
 kmonad "$HOME/dotfiles/linux/config/kmonad/mini-m.kbd" &
 
-xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10' &
-xss-lock --transfer-sleep-lock -- u_exit lock &
-
-flameshot &
 1password --silent &
-greenclip daemon &
 dropbox start -i &
+playerctld daemon &
+udiskie -a &
 
-u_i3-workspaces &
-u_polybar &
+case "$XDG_SESSION_TYPE" in
+  wayland)
+    kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
+    swww init && u_wallpaper random "$HOME/Dropbox/wallpapers/32x9" &> /dev/null &
+
+    waybar -c "$HOME/dotfiles/linux/config/waybar/config.json" -s "$HOME/dotfiles/linux/config/waybar/style.css" &
+    hypridle &
+    ;;
+  *)
+    xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10' &
+    xss-lock --transfer-sleep-lock -- u_exit lock &
+
+    sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
+
+    flameshot &
+    greenclip daemon &
+
+    u_i3-workspaces &
+    $(sleep 1 && u_polybar) &
+    ;;
+esac
