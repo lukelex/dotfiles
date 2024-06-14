@@ -94,4 +94,7 @@ tldr -u
 
 chsh -s /usr/bin/zsh
 
+gsettings get org.gnome.desktop.interface cursor-theme Bibata-Modern-Amber
+gsettings get org.gnome.desktop.interface cursor-size 32
+
 # timedatectl set-timezone CET
