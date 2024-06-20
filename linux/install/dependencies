@@ -15,7 +15,7 @@ yay -S --needed --noconfirm ibus openssh \
   imagemagick blueman fragments playerctl inetutils \
   tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome ly dbus udiskie
+  pipewire-pulse google-chrome ly dbus udiskie pcmanfm
 
 read -p 'Would you like to install Hyprland?' answer
 case $answer in
