@@ -13,12 +13,14 @@ udiskie -a &
 case "$XDG_SESSION_TYPE" in
   wayland)
     kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
-    swww-daemon && u_wallpaper random "$HOME/Dropbox/wallpapers/32x9" &> /dev/null &
+    swww-daemon &
 
     waybar -c "$HOME/dotfiles/linux/config/waybar/config.json" -s "$HOME/dotfiles/linux/config/waybar/style.css" &
     hypridle &
     ;;
   *)
+    autorandr --change
+
     xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10' &
     xss-lock --transfer-sleep-lock -- u_exit lock &
 
@@ -31,3 +33,8 @@ case "$XDG_SESSION_TYPE" in
     $(sleep 1 && u_polybar) &
     ;;
 esac
+
+if command -v u_wallpaper &> /dev/null
+then
+  u_wallpaper random "$HOME/Dropbox/wallpapers/32x9" &> /dev/null &
+fi
