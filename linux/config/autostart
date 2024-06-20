@@ -13,7 +13,7 @@ udiskie -a &
 case "$XDG_SESSION_TYPE" in
   wayland)
     kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
-    swww init && u_wallpaper random "$HOME/Dropbox/wallpapers/32x9" &> /dev/null &
+    swww-daemon && u_wallpaper random "$HOME/Dropbox/wallpapers/32x9" &> /dev/null &
 
     waybar -c "$HOME/dotfiles/linux/config/waybar/config.json" -s "$HOME/dotfiles/linux/config/waybar/style.css" &
     hypridle &
