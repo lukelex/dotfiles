@@ -9,6 +9,8 @@ local servers = {
   "lua_ls",
   "sqlls",
   "dockerls",
+  "rust_analyzer",
+  "slint_lsp",
   "docker_compose_language_service",
   "vimls",
 }
