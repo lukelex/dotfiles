@@ -54,7 +54,6 @@ ln -fvs "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
 sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
 # sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
-# sudo cp -f "$DOT_CONFIG/sudoers.d/20-custom-rules" "/etc/sudoers.d/20-custom-rules"
 sudo ln -fvs "$DOTFILES/linux/udev/usb-watcher.rules" "/usr/lib/udev/rules.d/5-usb-watcher.rules"
 
 ln -fvs "$DOT_CONFIG/default-apps.list" "$HOME/.local/share/applications/defaults.list"
