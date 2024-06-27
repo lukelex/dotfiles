@@ -1,0 +1,12 @@
+[Unit]
+Description=Kmonad Keyboard Config
+
+[Service]
+Restart=always
+RestartSec=3
+ExecStart=/usr/bin/kmonad %h/linux/config/kmonad/mini-m.kbd
+Nice=-20
+
+[Install]
+DefaultInstance=config
+WantedBy=default.target

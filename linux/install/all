@@ -4,8 +4,8 @@ source ./linux/variables.env
 
 source ./linux/install/dependencies
 source ./linux/install/binaries
+source ./linux/install/icons
 source ./linux/install/configs
 source ./linux/install/git-config
-source ./linux/install/icons
 
 source ./linux/install/services

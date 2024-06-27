@@ -1,0 +1,12 @@
+[Unit]
+Description=SWHKD hotkey daemon
+BindsTo=default.target
+
+[Service]
+Type=simple
+; ExecStart=~/dotfiles/linux/config/swhkd/hotkeys.sh
+ExecStart=killall swhks && swhks & pkexec swhkd
+; ExecStop=killall swhks
+
+[Install]
+WantedBy=default.target

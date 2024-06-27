@@ -20,7 +20,7 @@ cmp.setup({
     ["<C-d>"] = cmp.mapping.scroll_docs(4),
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<C-e>"] = cmp.mapping.abort(),
-    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    ["<CR>"] = cmp.mapping.confirm({ select = true }), -- should only choose if an option is selected
     ["<Tab>"] = cmp.mapping(function (fallback)
       if snippets.expandable() then
         snippets.expand()

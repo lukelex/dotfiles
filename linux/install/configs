@@ -86,14 +86,14 @@ xset dpms 1200 0 0
 
 sudo rmmod pcspkr 2&> /dev/null
 
-sudo usermod -a -G video $USER
-sudo usermod -a -G docker $USER
+sudo usermod -a -G video "$USER"
+sudo usermod -a -G docker "$USER"
 
 tldr -u
 
 chsh -s /usr/bin/zsh
 
-gsettings get org.gnome.desktop.interface cursor-theme Bibata-Modern-Amber
-gsettings get org.gnome.desktop.interface cursor-size 32
+gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
+gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE"
 
 # timedatectl set-timezone CET

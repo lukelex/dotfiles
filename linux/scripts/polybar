@@ -2,7 +2,13 @@
 
 HOSTNAME=$(hostname -s)
 
+# killall -q polybar
+
+while pgrep -u $UID -x polybar > /dev/null; do sleep 1; done
+
 primary=$(polybar -m | grep primary | sed -e 's/:.*$//g')
 
 MONITOR=$monitor polybar top -c "$HOME/dotfiles/linux/config/polybar/bars.ini" &
 MONITOR=$monitor polybar stats -c "$HOME/dotfiles/linux/config/polybar/bars.ini"
+
+echo "Polybar launched..."
