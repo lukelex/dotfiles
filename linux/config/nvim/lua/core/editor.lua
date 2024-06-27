@@ -55,3 +55,27 @@ opt.splitright = true
 opt.ttyfast = true
 
 vim.cmd('command! PrettyPrintJSON %!python -m json.tool')
+
+function OpenGitConflicts()
+  local handle = io.popen('git diff --name-only --diff-filter=U')
+  local result = handle:read("*a")
+  handle:close()
+
+  -- Split the result into lines (file paths)
+  local files = {}
+  for file in result:gmatch("[^\r\n]+") do
+    table.insert(files, file)
+  end
+
+  -- Open each file in a new buffer
+  if next(files) ~= nil then
+    for _, file in ipairs(files) do
+      vim.cmd('edit ' .. file)
+    end
+  else
+    print("No conflicts found.")
+  end
+end
+
+-- Optionally, map this function to a Vim command for easy access
+vim.cmd('command! OpenConflicts lua OpenGitConflicts()')

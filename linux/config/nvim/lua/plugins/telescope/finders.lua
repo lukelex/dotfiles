@@ -1,4 +1,5 @@
 local builtin = require("telescope.builtin")
+local theme = require('telescope.themes')
 
 local M = {}
 
@@ -56,6 +57,17 @@ end
 
 M.string = function()
   builtin.live_grep(ripgrep_args)
+end
+
+M.spell_check = function()
+  builtin.spell_suggest(
+    theme.get_cursor {
+      prompt_title = "",
+      layout_config = {
+        height = 0.25,
+        width = 0.25
+      }
+    })
 end
 
 return M

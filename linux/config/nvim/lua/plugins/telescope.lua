@@ -18,6 +18,7 @@ vim.keymap.set("n", "<Leader>r", builtin.lsp_references, {})
 vim.keymap.set("n", "<Leader>d", builtin.diagnostics, {})
 vim.keymap.set("n", "<Leader>q", builtin.quickfix, {})
 vim.keymap.set("n", "<Leader>r", builtin.resume, {})
+vim.keymap.set("n", "<Leader>s", finders.spell_check, {})
 
 local mappings = {
   ["<C-k>"] = actions.move_selection_previous,
