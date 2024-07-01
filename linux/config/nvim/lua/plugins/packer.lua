@@ -45,7 +45,7 @@ return packer.startup(function(use)
     after = "nvim-treesitter",
     requires = "nvim-treesitter/nvim-treesitter",
   })
-  use("Raimondi/delimitMate")
+  use("echasnovski/mini.pairs")
   use({
     "nvim-telescope/telescope-fzf-native.nvim",
     run = "make"
@@ -60,6 +60,7 @@ return packer.startup(function(use)
     }
   })
   use("nanozuki/tabby.nvim")
+  use("echasnovski/mini.cursorword")
 
   -- Appearance
   use("lukas-reineke/indent-blankline.nvim")
