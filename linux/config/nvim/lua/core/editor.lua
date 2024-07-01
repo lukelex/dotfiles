@@ -54,6 +54,16 @@ opt.splitright = true
 
 opt.ttyfast = true
 
+vim.filetype.add({
+  extension = {
+    es6 = 'javascript',
+    jbuilder = 'ruby',
+    json_schema = 'json',
+    rasi = 'rasi',
+    service = 'systemd',
+  }
+})
+
 vim.cmd('command! PrettyPrintJSON %!python -m json.tool')
 
 function OpenGitConflicts()

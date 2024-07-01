@@ -14,16 +14,7 @@ autocmd FileType gitcommit setlocal spell
 set complete+=kspell
 
 au BufRead,BufNewFile *.md setlocal spell
-au BufRead,BufNewFile *.hbs setfiletype html
-au BufRead,BufNewFile *.es6 setfiletype javascript
-au BufRead,BufNewFile *.jbuilder setfiletype ruby
-au BufRead,BufNewFile *.eex setfiletype eelixir
-au BufRead,BufNewFile *.exs setfiletype eelixir
-au BufRead,BufNewFile *.json_schema setfiletype json
-au BufRead,BufNewFile *.service* setfiletype systemd
-au BufRead,BufNewFile *.conf setfiletype conf
 au BufRead,BufNewFile .env.* setfiletype sh
-au BufRead,BufNewFile *.rasi setfiletype rasi
 
 command! PrettyPrintJSON %!python -m json.tool
 command! PrettyPrintHTML !tidy -mi -html -wrap 0 %
