@@ -2,9 +2,11 @@
 
 trim() {
   local text=$1
+  local scale_rate=175
+  local horizontal_size=$(xrandr | grep '*' | head -n 1 | cut -d 'x' -f 1 | xargs)
 
   # Maximum length for the title
-  max_length=30
+  max_length=$(echo $horizontal_size | xargs -I _ echo "_ / $scale_rate" | bc -l | cut -d '.' -f 1)
 
   if [ ${#text} -gt $max_length ]; then
     trimmed_title="${text:0:$max_length}..."

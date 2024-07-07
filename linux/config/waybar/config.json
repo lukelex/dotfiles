@@ -90,7 +90,7 @@
     "format-ethernet": "{ipaddr}/{cidr} <big></big>",
     "tooltip-format": "{essid} ({signalStrength}%) | {ifname} via {gwaddr} <big></big>",
     "format-linked": "{ifname} (No IP) <big></big>",
-    "format-disconnected": "Disconnected <big>⚠</big>",
+    "format-disconnected": "<big></big>",
     "format-alt": "{ifname}: {ipaddr}/{cidr}"
   },
   "pulseaudio": {
