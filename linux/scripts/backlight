@@ -38,6 +38,7 @@ case $1 in
   icon) icon get_value ;;
   get) echo $VALUE ;;
   set) light -S $2 ;;
+  dim) light -O && light -T 0.25 ;;
   restore) light -I ;;
   show) show ;;
   inc)
