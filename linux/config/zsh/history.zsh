@@ -20,14 +20,15 @@ function fancy-history() {
   local selection=$(
     history -t'%F' 0 \
       | tac \
-      | fzf --tiebreak index \
+      | fzf --scheme=history \
       | tr --squeeze-repeats '[:blank:]' ' ' \
       | cut --fields 4- --delimiter ' '
     )
 
-  zle kill-whole-line
-  zle -U "$selection"
-  zle accept-line
+  if [ -n "$selection" ]; then
+    zle kill-whole-line
+    zle -U "$selection"
+  fi
 }
 zle -N fancy-history
 
