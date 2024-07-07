@@ -88,6 +88,7 @@ sudo rmmod pcspkr 2&> /dev/null
 
 sudo usermod -a -G video "$USER"
 sudo usermod -a -G docker "$USER"
+sudo usermod -a -G input "$USER"
 
 tldr -u
 

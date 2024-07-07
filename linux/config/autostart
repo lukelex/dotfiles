@@ -4,6 +4,7 @@
 nm-applet &
 
 kmonad "$HOME/dotfiles/linux/config/kmonad/mini-m.kbd" &
+kmonad "$HOME/dotfiles/linux/config/kmonad/thinkpad.kbd" &
 
 1password --silent &
 dropbox start -i &
