@@ -63,9 +63,9 @@
     "format-icons": ["", "", "", "", "", "", "", "", ""]
   },
   "battery": {
-    "bat": "BAT0",
+    "weighted-average": true,
     "states": {
-      "good": 95,
+      "good": 90,
       "warning": 30,
       "critical": 15
     },
