@@ -28,7 +28,7 @@
   },
   "hyprland/submap": {
     "format": "✌️ {}",
-    "max-length": 8,
+    "max-length": 12,
     "tooltip": false
   },
   "idle_inhibitor": {
