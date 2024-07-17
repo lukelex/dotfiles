@@ -94,7 +94,6 @@ tldr -u
 
 chsh -s /usr/bin/zsh
 
-gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
-gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE"
+sudo mandb
 
 # timedatectl set-timezone CET
