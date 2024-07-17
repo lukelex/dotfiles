@@ -12,3 +12,10 @@ for set in $icon_sets; do
 
   sudo ln -fvs "$set" "$destination"
 done
+
+sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
+sudo mkdir -p "/usr/share/icons/FontAwesome-6/brands/512x512/"
+sudo rm -rf "/usr/share/icons/FontAwesome-6/solid/512x512/all"
+sudo rm -rf "/usr/share/icons/FontAwesome-6/brands/512x512/all"
+sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/solid/512x512/all"
+sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/brands/512x512/all"

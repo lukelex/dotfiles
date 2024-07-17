@@ -69,13 +69,6 @@ mkdir -p "$XDG_CONFIG_HOME/fontconfig/"
 ln -fvs "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
 fc-cache -r
 
-sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
-sudo mkdir -p "/usr/share/icons/FontAwesome-6/brands/512x512/"
-sudo rm -rf "/usr/share/icons/FontAwesome-6/solid/512x512/all"
-sudo rm -rf "/usr/share/icons/FontAwesome-6/brands/512x512/all"
-sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/solid/512x512/all"
-sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/brands/512x512/all"
-
 mkdir -p "$XDG_CONFIG_HOME/autorandr/"
 ln -fvs "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
 
