@@ -89,6 +89,17 @@ return packer.startup(function(use)
     "luckasRanarison/tree-sitter-hyprlang",
     requires = { "nvim-treesitter/nvim-treesitter" },
   })
+  use({
+    "MeanderingProgrammer/markdown.nvim",
+    after = { "nvim-treesitter" },
+    requires = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons", opt = true
+    },
+    config = function()
+      require("render-markdown").setup()
+    end
+  })
 
   -- Language Server Protocol
   use({
