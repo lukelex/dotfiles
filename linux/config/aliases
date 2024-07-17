@@ -11,6 +11,7 @@ alias v="viewnior"
 alias t="tree"
 alias cls="printf '\033c'"
 alias b="bat"
+alias m="man"
 
 alias l="ls --group-directories-first --color=auto -lahvF"
 alias ls="ls --group-directories-first --color=auto"
