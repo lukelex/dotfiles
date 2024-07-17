@@ -65,6 +65,13 @@ return packer.startup(function(use)
     requires = { "MunifTanjim/nui.nvim" }
   })
   use("echasnovski/mini.cursorword")
+  use({
+    "rachartier/tiny-inline-diagnostic.nvim",
+    config = function()
+      vim.diagnostic.config({ virtual_text = false })
+      require("tiny-inline-diagnostic").setup()
+    end
+  })
 
   -- Appearance
   use("lukas-reineke/indent-blankline.nvim")

@@ -1,6 +1,5 @@
 pcall(require, "core.editor")
 pcall(require, "core.keymaps")
-pcall(require, "core.diagnostic")
 pcall(require, "core.appearance")
 
 pcall(require, "plugins.packer")
