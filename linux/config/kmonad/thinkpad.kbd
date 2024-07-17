@@ -38,8 +38,8 @@
 (deflayer navigation
   _        _    _    _    _    _    _    _    _    _    _    _    _    _    _    _    _
   _        _    _    _    _    _    _    _    _    _    _    vold volu _
-  _        _    _    _    _    _    _    _    _    _    _    _    _    _
-  _        _    _    _    _    _    left down up   rght _    _    _
+  _        _    up   _    _    _    _    _    _    _    _    _    _    _
+  _        left down rght _    _    left down up   rght _    _    _
   _        _    _    _    _    _    _    _    @prv @nxt @ply _              _    _    _
   _        _    _    _         _              _    _    _                   _    _    _
 )
