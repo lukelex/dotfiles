@@ -60,10 +60,6 @@ return packer.startup(function(use)
     }
   })
   use("nanozuki/tabby.nvim")
-  use({
-    "VonHeikemen/searchbox.nvim",
-    requires = { "MunifTanjim/nui.nvim" }
-  })
   use("echasnovski/mini.cursorword")
   use({
     "rachartier/tiny-inline-diagnostic.nvim",

@@ -8,6 +8,8 @@ local function map(keycode, instruction)
   })
 end
 
+-- clean the current search
+map("<leader>h", ":nohlsearch<CR>")
 
 -- always horizontally center search results
 map("n", "nzzzv")
