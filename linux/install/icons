@@ -4,6 +4,8 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
+mkdir -p "$HOME/.local/share/icons"
+
 icon_sets=$(find "$DOTFILES/icons/" -maxdepth 1 -type d | tail -n +2)
 
 for set in $icon_sets; do

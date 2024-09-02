@@ -17,7 +17,7 @@ yay -S --needed --noconfirm ibus openssh \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
   pipewire-pulse google-chrome ly dbus udiskie pcmanfm
 
-read -p 'Would you like to install Hyprland?' answer
+read -p 'Would you like to install Hyprland? [Y/n] ' answer
 case $answer in
   [Yy]* | "")
     echo 'Installing Wayland dependencies...'
@@ -29,27 +29,29 @@ case $answer in
   * ) ;;
 esac
 
-read -p 'Would you like to install i3wm?' answer
+read -p 'Would you like to install i3wm? [Y/n] ' answer
 case $answer in
   [Yy]* | "")
     echo 'Installing X.Org dependencies...'
-    yay -S --needed --noconfirm xorg-xinit i3-wm picom rofi autorandr \
+    yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
       xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
-      xfce4-power-manager flameshot arandr xclip xdotool
+      xfce4-power-manager flameshot arandr xclip xdotool wired \
+      simplescreenrecorder picom autorandr \
+      rofi rofi-greenclip rofi-bluetooth-git
     ;;
   * ) ;;
 esac
 
 # non-essentials
 yay -S --needed --noconfirm eww light ddcutil dropbox \
-  wired 1password spotify cups ghostscript kbt cameractrls \
-  slack-desktop zeal rofi-bluetooth-git vlc zip unzip unrar \
+  1password spotify cups ghostscript kbt cameractrls \
+  slack-desktop zeal vlc zip unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
-  rubygems npm rofi-greenclip neofetch blanket sxiv simplescreenrecorder \
+  rubygems npm  neofetch blanket sxiv \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
   2> /dev/null
 
-read -p 'Would you like to be able to sync your iPod?' answer
+read -p 'Would you like to be able to sync your iPod? [Y/n] ' answer
 case $answer in
   [Yy]* | "") yay -S --needed --noconfirm rhythmbox libgpod gvfs ;;
   * ) ;;
@@ -58,7 +60,7 @@ esac
 # Audio manipulation tools
 # ffmpeg
 
-read -p 'Would you like to install optional dependencies?' answer
+read -p 'Would you like to install optional dependencies? [Y/n] ' answer
 case $answer in
   [Yy]* | "")
     echo 'Installing optional dependencies...'
@@ -69,7 +71,7 @@ case $answer in
 esac
 
 if eval lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'; then
-  read -p "I've found an NVidia GPU. Would you like to install its driver and utilities?" answer
+  read -p "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] " answer
   case $answer in
     [Yy]* | "")
       yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
