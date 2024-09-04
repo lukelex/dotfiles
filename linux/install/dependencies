@@ -23,7 +23,7 @@ case $answer in
     echo 'Installing Wayland dependencies...'
     yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
       swhkd hypridle hyprlock waybar hyprshot \
-      qt5-wayland qt6-wayland eww-wayland wofi sox \
+      qt5-wayland qt6-wayland wofi sox \
       xdg-desktop-portal-hyprland-git
     ;;
   * ) ;;
@@ -36,18 +36,18 @@ case $answer in
     yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
       xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
       xfce4-power-manager flameshot arandr xclip xdotool wired \
-      simplescreenrecorder picom autorandr \
+      simplescreenrecorder picom autorandr eww \
       rofi rofi-greenclip rofi-bluetooth-git
     ;;
   * ) ;;
 esac
 
 # non-essentials
-yay -S --needed --noconfirm eww light ddcutil dropbox \
+yay -S --needed --noconfirm light ddcutil dropbox \
   1password spotify cups ghostscript kbt cameractrls \
   slack-desktop zeal vlc zip unzip unrar \
   pantheon-calculator gsimplecal tldr docker docker-compose \
-  rubygems npm  neofetch blanket sxiv \
+  rubygems npm fastfetch blanket sxiv \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
   2> /dev/null
 
