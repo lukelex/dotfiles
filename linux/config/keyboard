@@ -3,4 +3,3 @@
 # keyboard configs
 xset r rate 200 35
 setxkbmap -layout us -variant mac
-xmodmap "$DOTFILES/linux/config/keyboard.map"

@@ -49,7 +49,6 @@ ln -fvs "$DOTFILES/linux/profile" "$HOME/.profile"
 ln -fvs "$DOTFILES/linux/xprofile" "$HOME/.xprofile"
 ln -fvs "$DOTFILES/linux/xinitrc" "$HOME/.xinitrc"
 ln -fvs "$DOT_CONFIG/eww" "$XDG_CONFIG_HOME/eww"
-ln -fvs "$DOT_CONFIG/keyboard.map" "$HOME/.Xmodmap"
 ln -fvs "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
 sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
@@ -79,9 +78,16 @@ xset dpms 1200 0 0
 
 sudo rmmod pcspkr 2&> /dev/null
 
-sudo usermod -a -G video "$USER"
-sudo usermod -a -G docker "$USER"
-sudo usermod -a -G input "$USER"
+sudo usermod -aG video "$USER"
+sudo usermod -aG docker "$USER"
+sudo usermod -aG input "$USER"
+
+# Kmonad dependencies
+sudo modprobe uinput
+sudo groupadd uinput
+sudo usermod -aG uinput "$USER"
+sudo cp "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
+# Kmonad dependencies
 
 tldr -u
 
