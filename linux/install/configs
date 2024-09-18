@@ -95,4 +95,4 @@ chsh -s /usr/bin/zsh
 
 sudo mandb
 
-# timedatectl set-timezone CET
+timedatectl set-timezone CET
