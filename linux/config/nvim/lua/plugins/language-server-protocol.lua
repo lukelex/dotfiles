@@ -2,6 +2,7 @@ local servers = {
   "bashls",
   "solargraph",
   "ts_ls",
+  "svelte",
   "vuels",
   "html",
   "cssls",
