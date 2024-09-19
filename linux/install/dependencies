@@ -13,7 +13,7 @@ yay -S --needed --noconfirm ibus openssh \
   man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
   zsh-completions cmake jq sxhkd tidy \
   imagemagick blueman fragments playerctl inetutils \
-  tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
+  tree v4l-utils neovim nvim-packer-git fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
   pipewire-pulse google-chrome ly dbus udiskie pcmanfm
 
