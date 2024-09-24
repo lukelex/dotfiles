@@ -125,6 +125,9 @@ return packer.startup(function(use)
     "rafamadriz/friendly-snippets"
   })
 
+  -- Code Linting & Formatting
+  use({"stevearc/conform.nvim"})
+
   -- Automatically set up your configuration after cloning packer.nvim
   -- Put this at the end after all plugins
   if packer_bootstrap then
