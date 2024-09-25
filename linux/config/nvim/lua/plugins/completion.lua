@@ -21,7 +21,7 @@ cmp.setup({
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<C-e>"] = cmp.mapping.abort(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }), -- should only choose if an option is selected
-    ["<Tab>"] = cmp.mapping(function (fallback)
+    ["<Tab>"] = cmp.mapping(function(fallback)
       if snippets.expandable() then
         snippets.expand()
       elseif cmp.visible() then
@@ -30,7 +30,7 @@ cmp.setup({
         fallback()
       end
     end, { "i", "s" }),
-    ["<S-Tab>"] = cmp.mapping(function (fallback)
+    ["<S-Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
       elseif snippets.jumpable(-1) then
@@ -54,8 +54,8 @@ cmp.setup({
   },
   sources = cmp.config.sources({
     { name = "nvim_lsp", keyword_length = 3 },
-    { name = "luasnip", keyword_length = 2 },
-    { name = "buffer", keyword_length = 4 },
+    { name = "luasnip",  keyword_length = 2 },
+    { name = "buffer",   keyword_length = 4 },
     { name = "path" }
   }, {
     { name = "buffer" },

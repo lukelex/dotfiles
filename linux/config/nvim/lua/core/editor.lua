@@ -7,16 +7,16 @@ global.shell = "bash"
 vim.cmd("set noswapfile")
 
 -- Tweaks for file browsing
-global.netrw_banner = 0 -- disable annoying banner
+global.netrw_banner = 0       -- disable annoying banner
 global.netrw_browse_split = 0 -- open in prior window
-global.netrw_altv = 1 -- open split to the right
-global.netrw_liststyle = 3 -- tree view
+global.netrw_altv = 1         -- open split to the right
+global.netrw_liststyle = 3    -- tree view
 
 global.editorconfig = true
 
 opt.backspace = "2"
 opt.showcmd = true -- display incomplete commands
-opt.mouse = "a" -- enable mouse events in all modes
+opt.mouse = "a"    -- enable mouse events in all modes
 
 -- master fucking undo
 opt.undofile = true
@@ -37,7 +37,7 @@ opt.relativenumber = true
 
 -- search settings
 vim.cmd("setlocal ignorecase") -- ignore case when searching
-vim.cmd("setlocal smartcase") -- when searching try to be smart about cases
+vim.cmd("setlocal smartcase")  -- when searching try to be smart about cases
 
 -- use 2 spaces instead of tabs
 opt.expandtab = true

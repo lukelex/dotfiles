@@ -5,14 +5,14 @@ local mode_map = {
   R = "( •̯́ ₃ •̯̀)",
   v = "(⊙ _ ⊙ )",
   V = "(⊙ _ ⊙ )",
-  no ="(ﾉ°□°ﾉ )",
+  no = "(ﾉ°□°ﾉ )",
   ["\22"] = "(⊙ _ ⊙ )",
   t = "(⌐■_■)",
   ['!'] = "(ﾉ°□°ﾉ )",
   c = "(ﾉ°□°ﾉ )",
   s = "SUB"
 }
- -- (╯°□°）╯︵ ( ͜。͡ʖ͜。)
+-- (╯°□°）╯︵ ( ͜。͡ʖ͜。)
 
 require("lualine").setup({
   options = {
@@ -43,7 +43,7 @@ require("lualine").setup({
       },
     },
     lualine_b = { "branch", "diff" },
-    lualine_c = { },
+    lualine_c = {},
     lualine_x = { "encoding", "fileformat" },
     lualine_y = { "progress" },
     lualine_z = { "location" }

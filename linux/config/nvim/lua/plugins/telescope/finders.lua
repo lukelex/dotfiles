@@ -6,8 +6,8 @@ local M = {}
 local function merge_tables(first, second)
   local all_options = {}
 
-  for k,v in pairs(first or {}) do all_options[k] = v end
-  for k,v in pairs(second or {}) do all_options[k] = v end
+  for k, v in pairs(first or {}) do all_options[k] = v end
+  for k, v in pairs(second or {}) do all_options[k] = v end
 
   return all_options
 end
