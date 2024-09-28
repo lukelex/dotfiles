@@ -53,7 +53,10 @@ yay -S --needed --noconfirm light ddcutil dropbox \
 
 read -p 'Would you like to be able to sync your iPod? [Y/n] ' answer
 case $answer in
-  [Yy]* | "") yay -S --needed --noconfirm rhythmbox libgpod gvfs ;;
+  [Yy]* | "")
+    echo 'Installing iPod dependencies...'
+    yay -S --needed --noconfirm rhythmbox libgpod gvfs
+    ;;
   * ) ;;
 esac
 
