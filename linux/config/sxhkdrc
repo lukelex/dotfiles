@@ -53,7 +53,7 @@ super + ctrl + u
 super + ctrl + c
   u_clipboard
 super + ctrl + f
-  pcmanfm
+  kitty yazi
 super + ctrl + p
   1password --quick-access
 

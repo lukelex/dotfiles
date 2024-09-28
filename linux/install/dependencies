@@ -11,7 +11,7 @@ fi
 yay -S --needed --noconfirm ibus openssh \
   polkit polkit-gnome network-manager-applet \
   man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
-  zsh-completions cmake jq sxhkd tidy \
+  zsh-completions cmake jq tidy yazi \
   imagemagick blueman fragments playerctl inetutils \
   tree v4l-utils neovim nvim-packer-git fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
@@ -36,7 +36,7 @@ case $answer in
     yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
       xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
       xfce4-power-manager flameshot arandr xclip xdotool wired \
-      simplescreenrecorder picom autorandr eww \
+      simplescreenrecorder picom autorandr eww sxhkd \
       rofi rofi-greenclip rofi-bluetooth-git
     ;;
   * ) ;;
