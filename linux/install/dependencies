@@ -68,7 +68,7 @@ case $answer in
   [Yy]* | "")
     echo 'Installing optional dependencies...'
     yay -S --needed --noconfirm kicad curtail birdfont \
-      whatsapp-for-linux telegram-desktop discord
+      whatsapp-for-linux telegram-desktop discord via-appimage
     ;;
   * ) ;;
 esac
