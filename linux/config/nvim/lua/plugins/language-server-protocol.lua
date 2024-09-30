@@ -1,6 +1,7 @@
 local servers = {
   "bashls",
   "solargraph",
+  "standardrb", -- gem install erb
   "ts_ls",
   "svelte",
   "vuels",
