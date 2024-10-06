@@ -38,8 +38,15 @@ case $1 in
   icon) icon get_value ;;
   get) echo $VALUE ;;
   set) light -S $2 ;;
-  dim) light -O && light -T 0.25 ;;
-  restore) light -I ;;
+  dim)
+    # light -O && light -T 0.25
+    light -O -s sysfs/leds/tpacpi::kbd_backlight
+    light -S 0 -s sysfs/leds/tpacpi::kbd_backlight
+    ;;
+  restore)
+    light -I
+    light -I -s sysfs/leds/tpacpi::kbd_backlight
+    ;;
   show) show ;;
   inc)
     light -A 2 2>&-
