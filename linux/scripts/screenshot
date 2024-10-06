@@ -2,10 +2,14 @@
 
 set -aeu
 
-take() {
-  hyprshot --mode $1 --output-folder "$HOME/screenshots"
+audio_tick() {
+  play "$HOME/dotfiles/sounds/camera-shutter.ogg" vol 0.35 &> /dev/null &
+}
 
-  play "$HOME/dotfiles/sounds/camera-shutter.ogg" &> /dev/null &
+take() {
+  hyprshot --silent --mode $1 --output-folder "$HOME/screenshots" 2&>/dev/null
+
+  audio_tick
 }
 
 take $1
