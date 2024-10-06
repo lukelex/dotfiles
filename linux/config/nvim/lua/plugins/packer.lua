@@ -92,6 +92,7 @@ return packer.startup(function(use)
   use("baskerville/vim-sxhkdrc")
   use("kmonad/kmonad-vim")
   use("slint-ui/vim-slint")
+  use("luizribeiro/vim-cooklang")
   use({
     "luckasRanarison/tree-sitter-hyprlang",
     requires = { "nvim-treesitter/nvim-treesitter" },
