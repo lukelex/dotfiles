@@ -32,6 +32,9 @@ ln -fvs "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
 rm -rf "$XDG_CONFIG_HOME/rofi"
 ln -fvs "$DOT_CONFIG/rofi" "$XDG_CONFIG_HOME/rofi"
 
+rm -rf "$XDG_CONFIG_HOME/wofi"
+ln -fvs "$DOT_CONFIG/wofi" "$XDG_CONFIG_HOME/wofi"
+
 mkdir -p "$XDG_CONFIG_HOME/gsimplecal"
 ln -fvs "$DOT_CONFIG/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
 
