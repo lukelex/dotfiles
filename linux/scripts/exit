@@ -3,6 +3,7 @@
 function reset_ui {
   u_music pause 2&> /dev/null
   u_eww close 2&> /dev/null
+  wired -d all 2&> /dev/null
 }
 
 case "$1" in
