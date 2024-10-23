@@ -1,3 +1,6 @@
 [submodule "linux/i3/polybar/polybar-scripts"]
 	path = linux/i3/polybar/polybar-scripts
 	url = git@github.com:polybar/polybar-scripts.git
+[submodule "fonts"]
+	path = fonts
+	url = git@github.com:lukelex/FontAwesome.git
