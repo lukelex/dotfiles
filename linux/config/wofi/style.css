@@ -4,7 +4,7 @@ window {
   background-color: #2B2B2B;
   color: #6E9CBE;
   border: 5px solid #CC7833;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 1.5em;
 }
 
@@ -27,6 +27,7 @@ window {
   margin: 5px;
   border: none;
   background-color: #282a36;
+  border-radius: 12px;
 }
 
 #scroll {
