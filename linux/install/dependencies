@@ -49,6 +49,7 @@ yay -S --needed --noconfirm light ddcutil dropbox \
   pantheon-calculator gsimplecal tldr docker docker-compose \
   rubygems npm fastfetch blanket sxiv postbird \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
+  system-config-printer \
   2> /dev/null
 
 read -p 'Would you like to be able to sync your iPod? [Y/n] ' answer

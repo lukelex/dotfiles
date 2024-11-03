@@ -84,6 +84,7 @@ sudo rmmod pcspkr 2&> /dev/null
 sudo usermod -aG video "$USER"
 sudo usermod -aG docker "$USER"
 sudo usermod -aG input "$USER"
+sudo usermod -aG lp "$USER" # printer group
 
 # Kmonad dependencies
 sudo modprobe uinput
