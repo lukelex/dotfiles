@@ -21,6 +21,8 @@ vim.keymap.set("n", "<Leader>r", builtin.resume, {})
 vim.keymap.set("n", "<Leader>s", finders.spell_check, {})
 
 local mappings = {
+  ["<ESC>"] = actions.close,
+
   ["<C-k>"] = actions.move_selection_previous,
   ["<C-j>"] = actions.move_selection_next,
   ["<Up>"] = actions.move_selection_previous,
