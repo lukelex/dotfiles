@@ -39,12 +39,14 @@ return packer.startup(function(use)
   use("tpope/vim-fugitive")
   use("tpope/vim-repeat")
   use("tpope/vim-surround")
-  use("lewis6991/gitsigns.nvim")
   use({
     "RRethy/nvim-treesitter-endwise",
     after = "nvim-treesitter",
     requires = "nvim-treesitter/nvim-treesitter",
   })
+  use("echasnovski/mini.cursorword")
+  use("echasnovski/mini.diff")
+  use("echasnovski/mini.indentscope")
   use("echasnovski/mini.pairs")
   use({
     "nvim-telescope/telescope-fzf-native.nvim",
@@ -60,7 +62,6 @@ return packer.startup(function(use)
     }
   })
   use("nanozuki/tabby.nvim")
-  use("echasnovski/mini.cursorword")
   use({
     "rachartier/tiny-inline-diagnostic.nvim",
     config = function()
@@ -70,7 +71,6 @@ return packer.startup(function(use)
   })
 
   -- Appearance
-  use("lukas-reineke/indent-blankline.nvim")
   use("norcalli/nvim-colorizer.lua")
   use({
     "lukelex/railscasts.nvim",

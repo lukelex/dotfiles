@@ -7,9 +7,11 @@ require("nvim-treesitter.configs").setup {
 vim.opt.termguicolors = true
 require("colorizer").setup()
 
-require("ibl").setup {
-  scope = { enabled = false },
-}
-
-require('mini.cursorword').setup({ delay = 50 })
-require('mini.pairs').setup()
+require("mini.cursorword").setup({ delay = 50 })
+require("mini.pairs").setup()
+require("mini.diff").setup({
+  mappings = {
+    apply = "gha",
+  }
+})
+require("mini.indentscope").setup()
