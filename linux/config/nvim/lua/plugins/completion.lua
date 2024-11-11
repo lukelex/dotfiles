@@ -22,10 +22,10 @@ cmp.setup({
     ["<C-e>"] = cmp.mapping.abort(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }), -- should only choose if an option is selected
     ["<Tab>"] = cmp.mapping(function(fallback)
-      if snippets.expandable() then
-        snippets.expand()
-      elseif cmp.visible() then
+      if cmp.visible() then
         cmp.select_next_item()
+      elseif snippets.expandable() then
+        snippets.expand()
       else
         fallback()
       end
