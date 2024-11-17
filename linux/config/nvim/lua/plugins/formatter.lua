@@ -4,6 +4,7 @@ conform.setup({
   formatters_by_ft = {
     javascript = { "prettier" },
     typescript = { "prettier" },
+    mustache = { "djlint" },
     json = { "prettier" }
   },
   format_on_save = {
