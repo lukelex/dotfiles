@@ -1,19 +1,19 @@
 * {
-  bg0     : #1a1b26;
-  bg1     : #1f2335;
-  bg2     : #24283b;
+  bg0     : #2B2B2B;
+  bg1     : #000000;
+  bg2     : #7C6F64;
   bg3     : #CC7833;
-  fg0     : #c0caf5;
-  fg1     : #a9b1d6;
-  fg2     : #737aa2;
-  red     : #f7768e;
-  green   : #9ece6a;
-  yellow  : #e0af68;
-  blue    : #7aa2f7;
-  magenta : #9a7ecc;
-  cyan    : #4abaaf;
+  fg0     : #E6E1DC;
+  fg1     : #A9B1D6;
+  fg2     : #737AA2;
+  red     : #DA4939;
+  green   : #87AF5F;
+  yellow  : #E0AF68;
+  blue    : #7AA2F7;
+  magenta : #9A7ECC;
+  cyan    : #4ABAAF;
 
-  accent: @red;
+  accent: @green;
   urgent: @yellow;
 
   background-color : transparent;
@@ -34,7 +34,7 @@ window {
   x-offset : 4px;
   y-offset : 26px;
 
-  background-color: @bg1;
+  background-color: @bg0;
   border: 6px;
   border-color: @bg3;
   border-radius: 6px;
@@ -44,8 +44,9 @@ inputbar {
   spacing  : 8px;
   padding  : 4px 8px;
   children : [ icon-search, entry ];
+  border-radius: 6px 6px 0 0;
 
-  background-color: @bg0;
+  background-color: @bg1;
 }
 
 icon-search, entry, element-icon, element-text {
@@ -64,11 +65,10 @@ textbox {
 }
 
 listview {
-  padding      : 4px 0px;
   lines        : 12;
   columns      : 1;
   scrollbar    : true;
-  fixed-height : false;
+  fixed-height : true;
   dynamic      : true;
 }
 
