@@ -22,5 +22,3 @@ git config --global init.defaultBranch main
 git config --global rebase.autosquash true
 git config --global push.default current
 git config --global pull.rebase true
-
-git config --global core.excludesfile "$DOTFILES/.gitignore_global"
