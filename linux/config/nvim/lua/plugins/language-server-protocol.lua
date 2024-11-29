@@ -14,6 +14,7 @@ local servers = {
   "rust_analyzer",
   "slint_lsp",
   "docker_compose_language_service",
+  "tailwindcss",
   "vimls",
 }
 
