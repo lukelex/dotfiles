@@ -23,6 +23,7 @@ declare -A ICON_LIST=(
   ["13n"]="" # Snow night. Snowflake alternative: 
   ["50d"]="" # Mist day.
   ["50n"]="" # Mist night.
+  ["null"]="" # missing
 )
 
 SYSTEM="metric" # Unit system {imperial or metric}
