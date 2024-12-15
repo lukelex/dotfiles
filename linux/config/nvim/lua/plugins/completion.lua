@@ -1,5 +1,6 @@
 local cmp = require("cmp")
 local snippets = require("luasnip")
+local lspkind = require("lspkind")
 
 require("luasnip.loaders.from_vscode").lazy_load()
 
@@ -41,16 +42,18 @@ cmp.setup({
     end, { "i", "s" }),
   }),
   formatting = {
-    fields = { "abbr", "menu" },
+    fields = { "kind", "abbr", "menu" },
     format = function(entry, vim_item)
-      vim_item.menu = ({
-        nvim_lsp = "[LSP]",
-        luasnip = "[Snippet]",
-        buffer = "[Buffer]",
-        path = "[Path]",
-      })[entry.source.name]
-      return vim_item
-    end
+      if vim.tbl_contains({ 'path' }, entry.source.name) then
+        local icon, hl_group = require('nvim-web-devicons').get_icon(entry:get_completion_item().label)
+        if icon then
+          vim_item.kind = icon
+          vim_item.kind_hl_group = hl_group
+          return vim_item
+        end
+      end
+      return lspkind.cmp_format({ with_text = false })(entry, vim_item)
+    end,
   },
   sources = cmp.config.sources({
     { name = "nvim_lsp", keyword_length = 3 },
