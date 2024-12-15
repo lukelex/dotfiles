@@ -24,7 +24,7 @@ case "$1" in
     $0 lock &
     systemctl suspend ;;
   hibernate)
-    reset_ui && systemctl hibernate;;
+    reset_ui && systemctl hibernate ;;
   reboot|reset)
     systemctl reboot ;;
   shutdown|poweroff)

@@ -35,16 +35,15 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 local config = require("lspconfig")
 for _, lsp in ipairs(servers) do
-  config[lsp].setup {
+  config[lsp].setup({
     on_attach = on_attach,
     capabilities = capabilities,
     flags = {
       debounce_text_changes = 150,
     }
-  }
+  })
 end
 
-config.gdscript.setup {}
 
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
   border = "rounded",

@@ -36,6 +36,7 @@ local ripgrep_args = {
     '!.git/',
     '!tmp/',
     '!vendor/',
+    '!log/',
     '!target/',
     '!_cacache/',
     '!.cache/',

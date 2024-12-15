@@ -26,3 +26,5 @@ map("U", ":UndotreeToggle<CR>")
 
 -- finger pointing time
 map("gb", ":Git blame<CR>")
+
+map("gh", ":lua MiniDiff.toggle_overlay()<CR>")
