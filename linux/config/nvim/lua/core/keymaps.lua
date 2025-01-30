@@ -28,3 +28,5 @@ map("U", ":UndotreeToggle<CR>")
 map("gb", ":Git blame<CR>")
 
 map("gh", ":lua MiniDiff.toggle_overlay()<CR>")
+
+map("<space>e", ":lua vim.diagnostic.open_float(0, {scope='line'})<CR>")

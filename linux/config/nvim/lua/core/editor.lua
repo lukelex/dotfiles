@@ -64,8 +64,9 @@ vim.filetype.add({
   }
 })
 
-vim.cmd('command! PrettyPrintJSON %!python -m json.tool')
+vim.diagnostic.config({ virtual_text = false })
 
+vim.cmd('command! PrettyPrintJSON %!python -m json.tool')
 function OpenGitConflicts()
   local handle = io.popen('git diff --name-only --diff-filter=U')
   local result = handle:read("*a")
