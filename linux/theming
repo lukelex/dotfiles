@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+source "$HOME/dotfiles/linux/variables.env"
+
+export XCURSOR_THEME="$CURSOR_THEME"
+export XCURSOR_SIZE="$CURSOR_SIZE"
+# export HYPRCURSOR_THEME=${CURSOR_THEME}
+# export HYPRCURSOR_SIZE=${CURSOR_SIZE}
+
+hyprctl setcursor "$CURSOR_THEME" "$CURSOR_SIZE"
+
+gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
+gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE"
