@@ -62,13 +62,6 @@ return packer.startup(function(use)
     }
   })
   use("nanozuki/tabby.nvim")
-  use({
-    "rachartier/tiny-inline-diagnostic.nvim",
-    config = function()
-      vim.diagnostic.config({ virtual_text = false })
-      require("tiny-inline-diagnostic").setup()
-    end
-  })
 
   -- Appearance
   use("norcalli/nvim-colorizer.lua")
