@@ -16,7 +16,6 @@ case "$XDG_SESSION_TYPE" in
     kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
     swww-daemon &
 
-    waybar -c "$HOME/dotfiles/linux/config/waybar/config.json" -s "$HOME/dotfiles/linux/config/waybar/style.css" &
     hypridle &
     ;;
   *)

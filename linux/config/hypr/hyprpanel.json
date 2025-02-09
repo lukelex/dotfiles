@@ -1,0 +1,85 @@
+{
+  "bar.customModules.updates.pollingInterval": 1440000,
+  "theme.font.name": "Hack",
+  "theme.font.label": "Hack",
+  "theme.bar.floating": true,
+  "theme.bar.buttons.enableBorders": true,
+  "theme.bar.buttons.workspaces.enableBorder": false,
+  "bar.workspaces.show_icons": false,
+  "bar.workspaces.show_numbered": false,
+  "bar.workspaces.applicationIconOncePerWorkspace": true,
+  "theme.bar.buttons.workspaces.smartHighlight": true,
+  "bar.workspaces.workspaces": 10,
+  "bar.workspaces.scroll_speed": 0,
+  "bar.workspaces.ignored": "9??\"//",
+  "bar.windowtitle.label": true,
+  "bar.windowtitle.truncation_size": 40,
+  "theme.bar.buttons.volume.enableBorder": false,
+  "bar.volume.scrollDown": "hyprpanel vol -2",
+  "bar.volume.scrollUp": "hyprpanel vol +2",
+  "theme.bar.buttons.clock.enableBorder": false,
+  "bar.clock.format": "%a %b %d  %I:%M %p",
+  "bar.media.format": "{title}",
+  "bar.media.truncation_size": 25,
+  "bar.media.show_active_only": true,
+  "bar.notifications.show_total": true,
+  "menus.media.hideAlbum": false,
+  "notifications.displayedTotal": 7,
+  "theme.bar.menus.menu.notifications.height": "54em",
+  "theme.osd.muted_zero": true,
+  "menus.clock.weather.location": "Copenhagen",
+  "menus.clock.weather.key": "4ada2cd4c8ee45a690f131315250802",
+  "menus.clock.weather.unit": "metric",
+  "bar.scrollSpeed": 3,
+  "bar.windowtitle.custom_title": true,
+  "bar.layouts": {
+    "0": {
+      "left": [
+        "dashboard",
+        "workspaces"
+      ],
+      "middle": [
+        "media"
+      ],
+      "right": [
+        "volume",
+        "network",
+        "bluetooth",
+        "battery",
+        "clock",
+        "notifications"
+      ]
+    },
+    "1": {
+      "left": [
+        "dashboard",
+        "workspaces"
+      ],
+      "middle": [
+        "media"
+      ],
+      "right": [
+        "volume",
+        "clock",
+        "notifications"
+      ]
+    },
+    "2": {
+      "left": [
+        "dashboard",
+        "workspaces"
+      ],
+      "middle": [
+        "media"
+      ],
+      "right": [
+        "volume",
+        "clock",
+        "notifications"
+      ]
+    }
+  },
+  "theme.font.size": "1.0rem",
+  "menus.power.lowBatteryNotification": true,
+  "menus.power.lowBatteryThreshold": 15
+}
