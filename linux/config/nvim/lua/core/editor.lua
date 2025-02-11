@@ -61,7 +61,10 @@ vim.filetype.add({
     json_schema = 'json',
     rasi = 'rasi',
     service = 'systemd',
-  }
+  },
+  filename = {
+    ['Guardfile'] = 'ruby',
+  },
 })
 
 vim.diagnostic.config({ virtual_text = false })
