@@ -87,6 +87,7 @@ return packer.startup(function(use)
   use("slint-ui/vim-slint")
   use("luizribeiro/vim-cooklang")
   use("mustache/vim-mustache-handlebars")
+  use("isobit/vim-caddyfile")
   use({
     "luckasRanarison/tree-sitter-hyprlang",
     requires = { "nvim-treesitter/nvim-treesitter" },
