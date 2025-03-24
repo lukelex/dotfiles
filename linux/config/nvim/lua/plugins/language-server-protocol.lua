@@ -44,6 +44,19 @@ for _, lsp in ipairs(servers) do
   })
 end
 
+config.solargraph.setup({
+  cmd = { "solargraph", "stdio" },
+  filetypes = { "ruby" },
+  root_dir = config.util.root_pattern("Gemfile", ".git"),
+  settings = {
+    solargraph = {
+      diagnostics = false,
+      completion = true,
+      formatting = false
+    }
+  }
+})
+
 
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
   border = "rounded",
