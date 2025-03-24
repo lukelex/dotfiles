@@ -2,10 +2,10 @@ local conform = require("conform")
 
 conform.setup({
   formatters_by_ft = {
-    javascript = { "prettier" },
-    typescript = { "prettier" },
+    javascript = { "prettierd", "prettier", stop_after_first = true },
+    typescript = { "prettierd", "prettier", stop_after_first = true },
     mustache = { "djlint" },
-    json = { "prettier" }
+    json = { "deno" },
   },
   format_on_save = {
     async = false,
