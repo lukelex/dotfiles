@@ -57,6 +57,12 @@ config.solargraph.setup({
   }
 })
 
+local svelte_lsp_capabilities = vim.tbl_deep_extend("force", {}, capabilities)
+svelte_lsp_capabilities.workspace = { didChangeWatchedFiles = false }
+config.svelte.setup({
+  capabilities = svelte_lsp_capabilities,
+  filetypes = { "svelte" },
+})
 
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
   border = "rounded",
