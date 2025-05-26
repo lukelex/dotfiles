@@ -1,58 +1,61 @@
-local ensure_packer = function()
-  local fn = vim.fn
-  local install_path = fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
-  if fn.empty(fn.glob(install_path)) > 0 then
-    fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", install_path })
-    vim.cmd [[packadd packer.nvim]]
-    return true
+local function bootstrap_pckr()
+  local pckr_path = vim.fn.stdpath("data") .. "/pckr/pckr.nvim"
+
+  if not (vim.uv or vim.loop).fs_stat(pckr_path) then
+    vim.fn.system({
+      'git',
+      'clone',
+      "--filter=blob:none",
+      'https://github.com/lewis6991/pckr.nvim',
+      pckr_path
+    })
   end
-  return false
+
+  vim.opt.rtp:prepend(pckr_path)
 end
 
-local packer_bootstrap = ensure_packer()
+bootstrap_pckr()
 
 local group = vim.api.nvim_create_augroup("packer_user_config", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePost", {
-  command = "source <afile> | PackerSync",
+  command = "source <afile> | Pckr sync",
   pattern = "packer.lua", -- the name of your plugins file
   group = group,
 })
 
-local packer = require("packer")
-
-return packer.startup(function(use)
-  use("wbthomason/packer.nvim")
+require('pckr').add {
+  "wbthomason/packer.nvim",
 
   -- Editor improvements
-  use("mbbill/undotree")
-  use("nvim-treesitter/nvim-treesitter", { run = ":TSUpdate" })
-  use({
+  "mbbill/undotree",
+  "nvim-treesitter/nvim-treesitter", { run = ":TSUpdate" },
+  {
     "nvim-treesitter/nvim-treesitter-textobjects",
     after = "nvim-treesitter",
     requires = "nvim-treesitter/nvim-treesitter",
-  })
-  use("nvim-treesitter/playground")
-  use("DataWraith/auto_mkdir")
-  use("danro/rename.vim")
-  use("schickling/vim-bufonly")
-  use("tpope/vim-commentary")
-  use("tpope/vim-fugitive")
-  use("tpope/vim-repeat")
-  use("tpope/vim-surround")
-  use({
+  },
+  "nvim-treesitter/playground",
+  "DataWraith/auto_mkdir",
+  "danro/rename.vim",
+  "schickling/vim-bufonly",
+  "tpope/vim-commentary",
+  "tpope/vim-fugitive",
+  "tpope/vim-repeat",
+  "tpope/vim-surround",
+  {
     "RRethy/nvim-treesitter-endwise",
     after = "nvim-treesitter",
     requires = "nvim-treesitter/nvim-treesitter",
-  })
-  use("echasnovski/mini.cursorword")
-  use("echasnovski/mini.diff")
-  use("echasnovski/mini.indentscope")
-  use("echasnovski/mini.pairs")
-  use({
+  },
+  "echasnovski/mini.cursorword",
+  "echasnovski/mini.diff",
+  "echasnovski/mini.indentscope",
+  "echasnovski/mini.pairs",
+  {
     "nvim-telescope/telescope-fzf-native.nvim",
     run = "make"
-  })
-  use({
+  },
+  {
     "nvim-telescope/telescope.nvim",
     requires = {
       {
@@ -60,39 +63,39 @@ return packer.startup(function(use)
         "BurntSushi/ripgrep",
       }
     }
-  })
-  use("nanozuki/tabby.nvim")
+  },
+  "nanozuki/tabby.nvim",
 
   -- Appearance
-  use("norcalli/nvim-colorizer.lua")
-  use({
+  "norcalli/nvim-colorizer.lua",
+  {
     "lukelex/railscasts.nvim",
     requires = { "rktjmp/lush.nvim" }
-  })
-  use({
+  },
+  {
     "nvim-lualine/lualine.nvim",
     requires = { "nvim-tree/nvim-web-devicons" }
-  })
+  },
 
   -- Language improvements
-  use("terrastruct/d2-vim")
-  use({
+  "terrastruct/d2-vim",
+  {
     "kana/vim-textobj-user",
     "nelstrom/vim-textobj-rubyblock"
-  })
-  use("ron-rs/ron.vim")
-  use("elkowar/yuck.vim")
-  use("baskerville/vim-sxhkdrc")
-  use("kmonad/kmonad-vim")
-  use("slint-ui/vim-slint")
-  use("luizribeiro/vim-cooklang")
-  use("mustache/vim-mustache-handlebars")
-  use("isobit/vim-caddyfile")
-  use({
+  },
+  "ron-rs/ron.vim",
+  "elkowar/yuck.vim",
+  "baskerville/vim-sxhkdrc",
+  "kmonad/kmonad-vim",
+  "slint-ui/vim-slint",
+  "luizribeiro/vim-cooklang",
+  "mustache/vim-mustache-handlebars",
+  "isobit/vim-caddyfile",
+  {
     "luckasRanarison/tree-sitter-hyprlang",
     requires = { "nvim-treesitter/nvim-treesitter" },
-  })
-  use({
+  },
+  {
     "MeanderingProgrammer/markdown.nvim",
     after = { "nvim-treesitter" },
     requires = {
@@ -103,31 +106,27 @@ return packer.startup(function(use)
     config = function()
       require("render-markdown").setup()
     end
-  })
+  },
 
   -- Language Server Protocol
-  use({
+  {
     "neovim/nvim-lspconfig",
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
     "j-hui/fidget.nvim"
-  })
-  use({
+  },
+  {
     "hrsh7th/nvim-cmp",
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-nvim-lua",
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "L3MON4D3/LuaSnip",
-    "rafamadriz/friendly-snippets"
-  })
+    "rafamadriz/friendly-snippets",
+    "onsails/lspkind.nvim",
+  },
 
   -- Code Linting & Formatting
-  use({ "stevearc/conform.nvim" })
-
-  -- Automatically set up your configuration after cloning packer.nvim
-  -- Put this at the end after all plugins
-  if packer_bootstrap then
-    packer.sync()
-  end
-end)
+  { "stevearc/conform.nvim" },
+  { "mfussenegger/nvim-lint" },
+}
