@@ -23,5 +23,3 @@ vim.cmd("autocmd BufRead,BufNewFile *.md set textwidth=65")
 vim.cmd("set colorcolumn=+1")
 
 opt.signcolumn = "yes" -- always show sign column so that text doesn't shift
-
-vim.cmd.colorscheme "railscasts"
