@@ -26,7 +26,7 @@ return {
           additional_vim_regex_highlighting = false,
         },
         endwise = {
-          enable = true,
+          enable = false,
         },
         textobjects = {
           select = {
@@ -50,5 +50,6 @@ return {
   },
   {
     "nvim-treesitter/playground",
+    event = { "BufRead" },
   }
 }

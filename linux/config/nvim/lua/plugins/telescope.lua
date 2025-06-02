@@ -1,23 +1,16 @@
 return {
   {
     "nvim-telescope/telescope.nvim",
-    -- lazy = true,
     dependencies = {
-      {
-        "nvim-lua/plenary.nvim",
-        "BurntSushi/ripgrep",
-      },
+      "nvim-lua/plenary.nvim",
+      "BurntSushi/ripgrep",
       {
         "nvim-telescope/telescope-fzf-native.nvim",
-        run = "make"
+        build = "make",
       },
     },
     config = function()
-      local status_ok, telescope = pcall(require, "telescope")
-      if not status_ok then
-        return
-      end
-
+      local telescope = require("telescope")
       local actions = require("telescope.actions")
       local builtin = require("telescope.builtin")
 
@@ -72,10 +65,19 @@ return {
           file_ignore_patterns = {
             "*/node_modules/*"
           }
+        },
+        extensions = {
+          fzf = {
+            fuzzy = false,                  -- false will only do exact matching
+            override_generic_sorter = true, -- override the generic sorter
+            override_file_sorter = true,    -- override the file sorter
+            case_mode = "smart_case",       -- or "ignore_case" or "respect_case"
+            -- the default case_mode is "smart_case"
+          }
         }
       })
 
-      -- require("telescope").load_extension("fzf")
+      --       require("telescope").load_extension("fzf")
     end
   }
 }

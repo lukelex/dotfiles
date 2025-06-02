@@ -7,10 +7,14 @@ return {
     dependencies = {
       "rafamadriz/friendly-snippets",
       "neovim/nvim-lspconfig",
-      "L3MON4D3/LuaSnip",
-      -- "williamboman/mason.nvim",
-      -- "williamboman/mason-lspconfig.nvim",
-      -- "j-hui/fidget.nvim"
+      {
+        "L3MON4D3/LuaSnip",
+        config = function()
+          local snippets = require("luasnip")
+
+          snippets.filetype_extend("ruby", { "rails" })
+        end
+      }
     },
     opts = {
       keymap = {
@@ -21,19 +25,7 @@ return {
         ["<Tab>"] = { "snippet_forward", "fallback" },
         ["<S-Tab>"] = { "select_prev", "fallback" },
 
-        ['<C-space>'] = { function(cmp) cmp.show() end },
-
-        -- ['<Up>'] = { 'select_prev', 'fallback' },
-        -- ['<Down>'] = { 'select_next', 'fallback' },
-        -- ['<C-space>'] = {
-        --   function(cmp)
-        --     cmp.show({
-        --       providers = {
-        --         'snippets'
-        --       }
-        --     })
-        --   end
-        -- },
+        ["<C-space>"] = { function(cmp) cmp.show() end },
       },
       fuzzy = {
         implementation = "prefer_rust"
@@ -50,9 +42,6 @@ return {
           auto_show = true,
           auto_show_delay_ms = 200,
           window = { border = "rounded", },
-        },
-        ghost_text = {
-          enabled = true,
         },
       },
     },

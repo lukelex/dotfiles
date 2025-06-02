@@ -21,9 +21,6 @@ map("<C-K>", "<C-W><C-K>")
 map("<C-L>", "<C-W><C-L>")
 map("<C-H>", "<C-W><C-H>")
 
--- master fucking undo
-map("U", ":UndotreeToggle<CR>")
-
 -- finger pointing time
 map("gb", ":Git blame<CR>")
 

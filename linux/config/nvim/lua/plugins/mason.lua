@@ -3,6 +3,7 @@ local servers = {
   "solargraph",
   "standardrb", -- gem install erb
   "ts_ls",
+  -- "denols",
   "eslint",
   "svelte",
   "html",

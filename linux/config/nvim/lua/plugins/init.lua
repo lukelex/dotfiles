@@ -1,7 +1,6 @@
 return {
   {
     -- Editor improvements
-    "mbbill/undotree",
     "DataWraith/auto_mkdir",
     "danro/rename.vim",
     "schickling/vim-bufonly",
@@ -10,18 +9,8 @@ return {
     "tpope/vim-repeat",
     "tpope/vim-surround",
 
-    "echasnovski/mini.cursorword",
-    "echasnovski/mini.indentscope",
-    {
-      "echasnovski/mini.pairs",
-      config = function()
-        require("mini.pairs").setup()
-      end
-    },
-
     -- Appearance
-    "norcalli/nvim-colorizer.lua",
-    { "echasnovski/mini.notify", version = "*" },
+    -- { "echasnovski/mini.notify", version = "*" },
 
     { "mfussenegger/nvim-lint" },
 

@@ -4,7 +4,7 @@ return {
     version = "*",
     event = { "BufRead" },
     keys = {
-      { "gh", ":lua MiniDiff.toggle_overlay()<CR>", desc = "Toggle Diff Hunk" }
+      { "gh", function() MiniDiff.toggle_overlay() end, desc = "Toggle Diff Hunk", mode = "n" }
     },
     config = function()
       require("mini.diff").setup({
