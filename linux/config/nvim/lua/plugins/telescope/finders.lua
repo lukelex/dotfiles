@@ -40,6 +40,10 @@ local ripgrep_args = {
     '!target/',
     '!_cacache/',
     '!.cache/',
+    '!node_modules/',
+    '!**/storage/',
+    '!build/',
+    '!.svelte-kit/',
     -- '!*.log',
   },
   additional_args = {

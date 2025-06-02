@@ -67,7 +67,10 @@ vim.filetype.add({
   },
 })
 
-vim.diagnostic.config({ virtual_text = false })
+vim.diagnostic.config({
+  virtual_text = false,
+  signs = true,
+})
 
 vim.cmd('command! PrettyPrintJSON %!python -m json.tool')
 function OpenGitConflicts()
@@ -93,3 +96,5 @@ end
 
 -- Optionally, map this function to a Vim command for easy access
 vim.cmd('command! OpenConflicts lua OpenGitConflicts()')
+
+vim.opt.sessionoptions = 'curdir,folds,globals,help,tabpages,terminal,winsize'
