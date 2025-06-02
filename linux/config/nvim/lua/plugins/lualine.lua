@@ -29,6 +29,7 @@ return {
         },
         winbar = {
           lualine_a = { "filename" },
+          lualine_y = { "lsp_status" },
           lualine_z = { "diagnostics", "filetype" },
         },
         inactive_winbar = {
