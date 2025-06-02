@@ -24,8 +24,6 @@ map("<C-H>", "<C-W><C-H>")
 -- finger pointing time
 map("gb", ":Git blame<CR>")
 
-map("gh", ":lua MiniDiff.toggle_overlay()<CR>")
-
-map("<space>e", ":lua vim.diagnostic.open_float(0, {scope='line'})<CR>")
-
-vim.o.winborder = "rounded"
+-- Remap keys in normal mode
+map("0", "^")
+map("-", "^")

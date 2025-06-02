@@ -1,58 +1,60 @@
-local opt = vim.opt
 local global = vim.g
 
-global.shell = "bash"
+-- Disable Vi compatibility mode
+vim.g.compatible = false
+
+vim.g.shell = "bash"
 
 -- backup files
 vim.cmd("set noswapfile")
 
 -- Tweaks for file browsing
-global.netrw_banner = 0       -- disable annoying banner
-global.netrw_browse_split = 0 -- open in prior window
-global.netrw_altv = 1         -- open split to the right
-global.netrw_liststyle = 3    -- tree view
+vim.g.netrw_banner = 0       -- disable annoying banner
+vim.g.netrw_browse_split = 0 -- open in prior window
+vim.g.netrw_altv = 1         -- open split to the right
+vim.g.netrw_liststyle = 3    -- tree view
 
-global.editorconfig = true
+vim.g.editorconfig = true
 
-opt.backspace = "2"
-opt.showcmd = true -- display incomplete commands
-opt.mouse = "a"    -- enable mouse events in all modes
+vim.opt.backspace = "2"
+vim.opt.showcmd = true -- display incomplete commands
+vim.opt.mouse = "a"    -- enable mouse events in all modes
 
 -- master fucking undo
-opt.undofile = true
-opt.undodir = string.format("%s/.vim-cache/undodir", vim.env.HOME)
+vim.opt.undofile = true
+vim.opt.undodir = string.format("%s/.vim-cache/undodir", vim.env.HOME)
 
-opt.backup = true
-opt.backupdir = string.format("%s/.vim-cache/backup", vim.env.HOME)
+vim.opt.backup = true
+vim.opt.backupdir = string.format("%s/.vim-cache/backup", vim.env.HOME)
 
 -- use system clipboard as default register
-opt.clipboard:append("unnamedplus")
+vim.opt.clipboard:append("unnamedplus")
 
 -- autoread files that were changed outside of vim
-opt.autoread = true
+vim.opt.autoread = true
 
 -- line number
-opt.number = true
-opt.relativenumber = true
+vim.opt.number = true
+vim.opt.relativenumber = true
 
 -- search settings
 vim.cmd("setlocal ignorecase") -- ignore case when searching
 vim.cmd("setlocal smartcase")  -- when searching try to be smart about cases
 
 -- use 2 spaces instead of tabs
-opt.expandtab = true
-opt.smarttab = true
-opt.tabstop = 2
-opt.shiftwidth = 2
+vim.opt.expandtab = true
+vim.opt.smarttab = true
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
 
 -- use an already open window if possible
-opt.switchbuf = "useopen"
+vim.opt.switchbuf = "useopen"
 
 -- use natural screen spliting
-opt.splitbelow = true
-opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.splitright = true
 
-opt.ttyfast = true
+vim.opt.ttyfast = true
 
 vim.filetype.add({
   extension = {
@@ -94,7 +96,6 @@ function OpenGitConflicts()
   end
 end
 
--- Optionally, map this function to a Vim command for easy access
 vim.cmd('command! OpenConflicts lua OpenGitConflicts()')
 
 vim.opt.sessionoptions = 'curdir,folds,globals,help,tabpages,terminal,winsize'
