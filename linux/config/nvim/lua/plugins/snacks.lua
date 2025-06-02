@@ -42,14 +42,7 @@ return {
     },
     {
       "<leader>s",
-      function()
-        Snacks.picker.spelling({
-          finder = "vim_spelling",
-          format = "text",
-          layout = { preset = "dropdown" },
-          confirm = "item_action",
-        })
-      end,
+      "<cmd>lua Snacks.picker.spelling()<CR>",
       mode = { "n" },
       desc = "Spell Suggestions",
       noremap = true,
