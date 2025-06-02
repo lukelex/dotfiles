@@ -2,12 +2,12 @@ return {
   {
     -- Editor improvements
     "DataWraith/auto_mkdir",
+    "schickling/vim-bufonly",
     { "danro/rename.vim",                 event = { "BufRead" } },
     { "tpope/vim-commentary",             event = { "BufRead" } },
     { "tpope/vim-fugitive",               event = { "BufRead" } },
     { "tpope/vim-repeat",                 event = { "BufRead" } },
     { "tpope/vim-surround",               event = { "BufRead" } },
-    { "schickling/vim-bufonly",           event = { "BufRead" } },
     { "mfussenegger/nvim-lint",           event = { "BufRead" } },
 
     -- Language improvements
