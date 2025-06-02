@@ -12,7 +12,12 @@ return {
 
     "echasnovski/mini.cursorword",
     "echasnovski/mini.indentscope",
-    "echasnovski/mini.pairs",
+    {
+      "echasnovski/mini.pairs",
+      config = function()
+        require("mini.pairs").setup()
+      end
+    },
 
     -- Appearance
     "norcalli/nvim-colorizer.lua",
@@ -28,8 +33,5 @@ return {
     "luizribeiro/vim-cooklang",
     "mustache/vim-mustache-handlebars",
     "isobit/vim-caddyfile",
-
-    -- Debug
-    "nvim-treesitter/playground",
   }
 }

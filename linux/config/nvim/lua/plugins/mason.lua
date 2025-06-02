@@ -1,33 +1,3 @@
--- local servers = {
---   bashls = {},
---   solargraph = {
---     settings = {
---       solargraph = {
---         diagnostics = false,
---         completion = true,
---         formatting = false
---       }
---     }
---   },
---   standardrb = {}, -- gem install erb
---   ts_ls = {},
---   -- denols = {},
---   eslint = {},
---   svelte = {},
---   html = {},
---   cssls = {},
---   marksman = {},
---   lua_ls = {},
---   sqlls = {},
---   dockerls = {},
---   rust_analyzer = {},
---   slint_lsp = {},
---   docker_compose_language_service = {},
---   tailwindcss = {},
---   -- grammarly = {},
---   vimls = {},
--- }
-
 local servers = {
   "bashls",
   "solargraph",
@@ -41,9 +11,9 @@ local servers = {
   "lua_ls",
   "sqlls",
   "dockerls",
+  "docker_compose_language_service",
   "rust_analyzer",
   "slint_lsp",
-  "docker_compose_language_service",
   "tailwindcss",
   "vimls",
 }
@@ -53,23 +23,12 @@ return {
   dependencies = {
     "saghen/blink.cmp",
     { "mason-org/mason.nvim", opts = {} },
-    "neovim/nvim-lspconfig",
-    -- "j-hui/fidget.nvim"
-  },
-  opts = {
-    ensure_installed = {
-      "vimls",
-      "lua_ls",
-      "eslint",
-      "standardrb",
-      "dockerls",
-      "docker_compose_language_service",
-    },
   },
   config = function()
     require("mason").setup()
     require("mason-lspconfig").setup({
       automatic_enable = false,
+      ensure_installed = servers
     })
 
     local blink = require("blink.cmp")
@@ -84,37 +43,44 @@ return {
       vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
     end
 
-    -- lspconfig.lua_ls.setup({ capabilities = capabilities })
-    -- lspconfig.solargraph.setup({
-    --   cmd = { "solargraph", "stdio" },
-    --   filetypes = { "ruby" },
-    --   root_dir = lspconfig.util.root_pattern("Gemfile", ".git"),
-    --   settings = {
-    --     solargraph = {
-    --       diagnostics = false,
-    --       completion = true,
-    --       formatting = false
-    --     }
-    --   },
-    --   on_attach = on_attach,
-    --   capabilities = capabilities,
-    -- })
+    lspconfig.vimls.setup({ capabilities = capabilities })
+    lspconfig.bashls.setup({ capabilities = capabilities })
+    lspconfig.lua_ls.setup({ capabilities = capabilities })
+    lspconfig.sqlls.setup({ capabilities = capabilities })
+    lspconfig.marksman.setup({ capabilities = capabilities })
 
-    local function merge_tables(first, second)
-      local all_options = {}
-      for k, v in pairs(first or {}) do all_options[k] = v end
-      for k, v in pairs(second or {}) do all_options[k] = v end
-      return all_options
-    end
+    lspconfig.dockerls.setup({ capabilities = capabilities })
+    lspconfig.docker_compose_language_service.setup({ capabilities = capabilities })
 
-    for _, server in ipairs(servers) do
-      lspconfig[server].setup(merge_tables({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        -- flags = {
-        --   debounce_text_changes = 150,
-        -- }
-      }), {})
-    end
+    lspconfig.rust_analyzer.setup({ capabilities = capabilities })
+    lspconfig.slint_lsp.setup({ capabilities = capabilities })
+
+    lspconfig.standardrb.setup({ capabilities = capabilities })
+    lspconfig.solargraph.setup({
+      cmd = { "solargraph", "stdio" },
+      filetypes = { "ruby" },
+      root_dir = lspconfig.util.root_pattern("Gemfile", ".git"),
+      settings = {
+        solargraph = {
+          diagnostics = false,
+          completion = true,
+          formatting = false
+        }
+      },
+      on_attach = on_attach,
+      capabilities = capabilities,
+    })
+
+    lspconfig.html.setup({ capabilities = capabilities })
+    lspconfig.cssls.setup({ capabilities = capabilities })
+    lspconfig.tailwindcss.setup({ capabilities = capabilities })
+    lspconfig.ts_ls.setup({ capabilities = capabilities })
+    lspconfig.eslint.setup({ capabilities = capabilities })
+    local svelte_lsp_capabilities = vim.tbl_deep_extend("force", {}, capabilities)
+    svelte_lsp_capabilities.workspace = { didChangeWatchedFiles = false }
+    lspconfig.svelte.setup({
+      capabilities = svelte_lsp_capabilities,
+      filetypes = { "svelte" },
+    })
   end
 }
