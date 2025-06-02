@@ -18,5 +18,6 @@ return {
     { "luizribeiro/vim-cooklang",         event = { "BufRead" } },
     { "mustache/vim-mustache-handlebars", event = { "BufRead" } },
     { "isobit/vim-caddyfile",             event = { "BufRead" } },
+    { "terrastruct/d2-vim",               event = { "BufRead" } },
   }
 }
