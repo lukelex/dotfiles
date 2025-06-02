@@ -1,9 +1,7 @@
 return {
-  {
-    "mbbill/undotree",
-    event = { "BufRead" },
-    config = function()
-      vim.keymap.set("n", "U", ":UndotreeToggle<CR>")
-    end
-  }
+  "mbbill/undotree",
+  event = { "BufRead" },
+  keys = {
+    { "U", ":UndotreeToggle<CR>", mode = "n" }
+  },
 }

@@ -3,7 +3,10 @@ return {
   version = "*",
   priority = 1000,
   opts = {
-    notifier = { enabled = true },
+    notifier = {
+      enabled = true,
+      timeout = 5000, -- default timeout in ms
+    },
     quickfile = { enabled = true }
   },
   config = function(_, opts)
@@ -11,13 +14,13 @@ return {
 
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(args)
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
         local buf = args.buf
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
 
         vim.notify(
-          string.format("LSP '%s' attached to buffer %d", client.name, buf),
+          string.format("'%s' attached to buffer", client.name),
           "info",
-          { title = "LSP Attach" }
+          { title = string.format("LSP Attach (%d)", buf) }
         )
       end,
     })
