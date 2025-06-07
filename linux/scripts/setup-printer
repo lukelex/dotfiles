@@ -1,29 +1,46 @@
-#!/usr/bin/bash
+#!/bin/bash
 
-set -eu
+set -euo pipefail
 
-source "$HOME/dotfiles/linux/variables.env"
+echo "==> Starting printer setup..."
 
-ICON="$FONT_AWESOME_PATH/light/print.svg"
+# Ensure CUPS is running
+echo "==> Ensuring CUPS service is enabled and started..."
+sudo systemctl enable --now cups.service
 
-show() {
-  notify-send -a Printers \
-              -i $ICON \
-              -h string:wired-tag:printers \
-              "Printers" "$1"
-}
+# Prompt for manual or discovered IP
+read -p "Do you want to auto-discover printers via mDNS? [y/N] " autodiscover
 
-show "Searching network..."
-
-IP=$(avahi-browse -t -d local -c -a --resolve | sed -n '/^=.*Printer/,/txt =/p' | head -n 5 | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}')
-
-if [[ -z $IP ]]; then
-  show "Not found"
-  exit 1
+if [[ "$autodiscover" =~ ^[Yy]$ ]]; then
+  echo "==> Scanning for mDNS printers on the network (using avahi)..."
+  avahi-browse -rt _ipp._tcp | grep '=' | grep IPv4 | awk -F';' '{ print $4 " (" $8 ")" }'
+  echo ""
+  read -p "Enter the hostname of the printer from above (e.g., 'HP-OfficeJet.local'): " PRINTER_HOST
+  URI="ipp://$PRINTER_HOST/ipp/print"
+else
+  read -p "Enter the IP address of the printer (e.g., 192.168.1.100): " IP
+  read -p "Protocol to use (ipp/socket) [ipp]: " PROTOCOL
+  PROTOCOL=${PROTOCOL:-ipp}
+  if [[ "$PROTOCOL" == "socket" ]]; then
+    URI="socket://$IP"
+  else
+    URI="ipp://$IP/ipp/print"
+  fi
 fi
 
-show "Found on $IP"
+# Prompt for name and driver
+read -p "Enter a name for your printer (e.g., OfficePrinter): " PRINTER_NAME
+read -p "Enter a description (optional): " DESCRIPTION
+read -p "Enter the PPD or driver path (or leave blank for automatic): " DRIVER_PATH
 
-lpadmin -p epson -E -v ipp://$IP/ipp/print -m everywhere
+echo "==> Adding printer with lpadmin..."
+if [[ -z "$DRIVER_PATH" ]]; then
+  sudo lpadmin -p "$PRINTER_NAME" -E -v "$URI" -D "$DESCRIPTION" -m everywhere
+else
+  sudo lpadmin -p "$PRINTER_NAME" -E -v "$URI" -D "$DESCRIPTION" -P "$DRIVER_PATH"
+fi
 
-show "Registered as 'epson'"
+echo "==> Setting printer as default..."
+sudo lpoptions -d "$PRINTER_NAME"
+
+echo "✅ Printer '$PRINTER_NAME' set up and made default."
