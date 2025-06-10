@@ -1,4 +1,3 @@
-local global = vim.g
 
 -- Disable Vi compatibility mode
 vim.g.compatible = false
@@ -47,8 +46,6 @@ vim.opt.smarttab = true
 vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
 
--- use an already open window if possible
-vim.opt.switchbuf = "useopen"
 
 -- use natural screen spliting
 vim.opt.splitbelow = true

@@ -40,7 +40,6 @@ return {
     local on_attach = function()
       local opts = { noremap = true, silent = true, buffer = 0 }
       vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-      vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
       vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
       vim.keymap.set("n", "<leader>e", function() vim.diagnostic.open_float(0, { scope = "line" }) end)
     end

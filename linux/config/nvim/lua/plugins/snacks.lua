@@ -65,6 +65,17 @@ return {
       desc = "Resume Last Picker",
       noremap = true,
     },
+    {
+      "gr",
+      function() Snacks.picker.lsp_references() end,
+      nowait = true,
+      desc = "References"
+    },
+    {
+      "gd",
+      function() Snacks.picker.lsp_definitions() end,
+      desc = "Goto Definition"
+    },
   },
   opts = {
     notifier = {
@@ -94,10 +105,24 @@ return {
         },
       },
       ui_select = true,
+      formatters = {
+        file = {
+          truncate = 80,
+          filename_first = true
+        },
+      },
+      jump = {
+        reuse_win = true
+      },
       win = {
         input = {
           keys = {
             ["<Esc>"] = { "close", mode = { "n", "i" } },
+
+            ["<CR>"] = { { "pick_win", "jump" }, mode = { "n", "i" } },
+
+            ["<c-s>"] = { "edit_split", mode = { "n", "i" } },
+            ["<c-v>"] = { "edit_vsplit", mode = { "n", "i" } },
           },
         },
       },
