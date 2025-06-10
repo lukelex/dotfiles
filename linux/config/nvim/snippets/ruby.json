@@ -1,0 +1,9 @@
+{
+  "Debugger breakpoint": {
+    "prefix": "pry",
+    "desc": "asdasdasdasd",
+    "body": [
+      "binding.pry"
+    ]
+  }
+}

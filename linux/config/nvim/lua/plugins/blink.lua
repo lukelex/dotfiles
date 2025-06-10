@@ -4,16 +4,7 @@ return {
   event = { "InsertEnter" },
   version = "1.*",
   dependencies = {
-    "rafamadriz/friendly-snippets",
     "neovim/nvim-lspconfig",
-    {
-      "L3MON4D3/LuaSnip",
-      config = function()
-        local snippets = require("luasnip")
-
-        snippets.filetype_extend("ruby", { "rails" })
-      end
-    }
   },
   opts = {
     keymap = {
@@ -21,8 +12,15 @@ return {
 
       ["<C-j>"] = { "select_next", "fallback" },
       ["<C-k>"] = { "select_prev", "fallback" },
-      ["<Tab>"] = { "snippet_forward", "fallback" },
-      ["<S-Tab>"] = { "select_prev", "fallback" },
+      ["<Tab>"] = {
+        function(cmp)
+          if not cmp.snippet_active() then
+            return cmp.select_and_accept()
+          end
+        end,
+        "select_next",
+        "fallback"
+      },
 
       ["<C-space>"] = { function(cmp) cmp.show() end },
     },
@@ -38,8 +36,12 @@ return {
     appearance = {
       use_nvim_cmp_as_default = true,
     },
+    snippets = {
+      enabled = true,
+    },
     sources = {
       min_keyword_length = 3,
+      default = { "lsp", "path", "snippets", "buffer" }
     },
     completion = {
       list = { selection = { preselect = false } },
