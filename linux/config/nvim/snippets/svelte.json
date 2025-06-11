@@ -1,0 +1,48 @@
+{
+  "Script Tag": {
+    "prefix": "script",
+    "body": [
+      "<script lang=\"ts\">",
+      "  ${1:// script content}",
+      "</script>"
+    ]
+  },
+  "Svelte Component Template": {
+    "prefix": "svelte",
+    "body": [
+      "<script>",
+      "  ${1:// script here}",
+      "</script>",
+      "",
+      "<style>",
+      "  ${2:/* styles here */}",
+      "</style>",
+      "",
+      "<main>",
+      "  ${3:<!-- markup here -->}",
+      "</main>"
+    ]
+  },
+  "Bind Value": {
+    "prefix": "bind",
+    "body": [
+      "bind:value={${1:variable}}"
+    ]
+  },
+  "Each Loop": {
+    "prefix": "each",
+    "body": [
+      "{#each ${1:items} as ${2:item}}",
+      "  ${3:<!-- item content -->}",
+      "{/each}"
+    ]
+  },
+  "If Block": {
+    "prefix": "if",
+    "body": [
+      "{#if ${1:condition}}",
+      "  ${2:<!-- content -->}",
+      "{/if}"
+    ]
+  }
+}

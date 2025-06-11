@@ -1,7 +1,54 @@
 {
+  "Freeze static Strings": {
+    "prefix": "fro",
+    "body": [
+      "# frozen_string_literal: true\n"
+    ]
+  },
+  "Class Definition": {
+    "prefix": "cls",
+    "body": [
+      "class ${1:ClassName}",
+      "  ${2:# code here}",
+      "end"
+    ]
+  },
+  "Module Definition": {
+    "prefix": "mod",
+    "body": [
+      "module ${1:ModuleName}",
+      "  ${2:# code here}",
+      "end"
+    ]
+  },
+  "Method Definition": {
+    "prefix": "def",
+    "body": [
+      "def ${1:method_name}",
+      "  ${2:# code here}",
+      "end"
+    ]
+  },
+  "Rails Model": {
+    "prefix": "model",
+    "body": [
+      "class ${1:ModelName} < ::ApplicationRecord",
+      "  ${2:# associations, validations, etc.}",
+      "end"
+    ]
+  },
+  "FactoryBot Factory": {
+    "prefix": "fac",
+    "body": [
+      "FactoryBot.define do",
+      "  factory :${1:resource} do",
+      "    ${2:# attributes here}",
+      "  end",
+      "end"
+    ]
+  },
   "Debugger breakpoint": {
     "prefix": "pry",
-    "desc": "asdasdasdasd",
     "body": [
       "binding.pry"
     ]

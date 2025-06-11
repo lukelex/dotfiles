@@ -1,0 +1,46 @@
+{
+  "Console Log": {
+    "prefix": "log",
+    "body": [
+      "console.log(${1:variable});"
+    ]
+  },
+  "Function Declaration": {
+    "prefix": "fn",
+    "body": [
+      "function ${1:name}(${2:params}) {",
+      "  ${3:// code here}",
+      "}"
+    ]
+  },
+  "Arrow Function": {
+    "prefix": "afn",
+    "body": [
+      "const ${1:name} = (${2:params}) => {",
+      "  ${3:// code here}",
+      "};"
+    ]
+  },
+  "Import Statement": {
+    "prefix": "imp",
+    "body": [
+      "import ${1:module} from '${2:package}';"
+    ]
+  },
+  "Export Default": {
+    "prefix": "exp",
+    "body": [
+      "export default ${1:component};"
+    ]
+  },
+  "Try Catch": {
+    "prefix": "try",
+    "body": [
+      "try {",
+      "  ${1:// code here}",
+      "} catch (${2:error}) {",
+      "  ${3:console.error($2)}",
+      "}"
+    ]
+  }
+}

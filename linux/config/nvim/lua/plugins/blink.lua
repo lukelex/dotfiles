@@ -36,12 +36,12 @@ return {
     appearance = {
       use_nvim_cmp_as_default = true,
     },
-    snippets = {
-      enabled = true,
-    },
     sources = {
       min_keyword_length = 3,
-      default = { "lsp", "path", "snippets", "buffer" }
+      default = { "lsp", "path", "snippets", "buffer" },
+      providers = {
+        lsp = { fallbacks = {} }
+      }
     },
     completion = {
       list = { selection = { preselect = false } },
@@ -49,6 +49,11 @@ return {
         auto_show = true,
         auto_show_delay_ms = 200,
         window = { border = "rounded", },
+      },
+      menu = {
+        draw = {
+          columns = { { "kind_icon" }, { "label", "label_description", gap = 1 }, { "source_name" } },
+        },
       },
     },
   },
