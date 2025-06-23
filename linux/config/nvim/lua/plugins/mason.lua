@@ -35,32 +35,25 @@ return {
     local blink = require("blink.cmp")
     local capabilities = blink.get_lsp_capabilities()
 
-    local lspconfig = require("lspconfig")
+    local lsp = require("lspconfig")
 
-    local on_attach = function()
-      local opts = { noremap = true, silent = true, buffer = 0 }
-      vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-      vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-      vim.keymap.set("n", "<leader>e", function() vim.diagnostic.open_float(0, { scope = "line" }) end)
-    end
+    lsp.vimls.setup({ capabilities = capabilities })
+    lsp.bashls.setup({ capabilities = capabilities })
+    lsp.lua_ls.setup({ capabilities = capabilities })
+    lsp.sqlls.setup({ capabilities = capabilities })
+    lsp.marksman.setup({ capabilities = capabilities })
 
-    lspconfig.vimls.setup({ capabilities = capabilities })
-    lspconfig.bashls.setup({ capabilities = capabilities })
-    lspconfig.lua_ls.setup({ capabilities = capabilities })
-    lspconfig.sqlls.setup({ capabilities = capabilities })
-    lspconfig.marksman.setup({ capabilities = capabilities })
+    lsp.dockerls.setup({ capabilities = capabilities })
+    lsp.docker_compose_language_service.setup({ capabilities = capabilities })
 
-    lspconfig.dockerls.setup({ capabilities = capabilities })
-    lspconfig.docker_compose_language_service.setup({ capabilities = capabilities })
+    lsp.rust_analyzer.setup({ capabilities = capabilities })
+    lsp.slint_lsp.setup({ capabilities = capabilities })
 
-    lspconfig.rust_analyzer.setup({ capabilities = capabilities })
-    lspconfig.slint_lsp.setup({ capabilities = capabilities })
-
-    lspconfig.standardrb.setup({ capabilities = capabilities })
-    lspconfig.solargraph.setup({
+    lsp.standardrb.setup({ capabilities = capabilities })
+    lsp.solargraph.setup({
       cmd = { "solargraph", "stdio" },
       filetypes = { "ruby" },
-      root_dir = lspconfig.util.root_pattern("Gemfile", ".git"),
+      root_dir = lsp.util.root_pattern("Gemfile", ".git"),
       settings = {
         solargraph = {
           diagnostics = false,
@@ -68,18 +61,17 @@ return {
           formatting = false
         }
       },
-      on_attach = on_attach,
       capabilities = capabilities,
     })
 
-    lspconfig.html.setup({ capabilities = capabilities })
-    lspconfig.cssls.setup({ capabilities = capabilities })
-    lspconfig.tailwindcss.setup({ capabilities = capabilities })
-    lspconfig.ts_ls.setup({ capabilities = capabilities })
-    lspconfig.eslint.setup({ capabilities = capabilities })
+    lsp.html.setup({ capabilities = capabilities })
+    lsp.cssls.setup({ capabilities = capabilities })
+    lsp.tailwindcss.setup({ capabilities = capabilities })
+    lsp.ts_ls.setup({ capabilities = capabilities })
+    lsp.eslint.setup({ capabilities = capabilities })
     local svelte_lsp_capabilities = vim.tbl_deep_extend("force", {}, capabilities)
     svelte_lsp_capabilities.workspace = { didChangeWatchedFiles = false }
-    lspconfig.svelte.setup({
+    lsp.svelte.setup({
       capabilities = svelte_lsp_capabilities,
       filetypes = { "svelte" },
     })

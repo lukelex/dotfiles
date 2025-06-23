@@ -1,7 +1,7 @@
 return {
   "saghen/blink.cmp",
   lazy = false,
-  event = { "InsertEnter" },
+  event = { "BufRead" },
   version = "1.*",
   dependencies = {
     "neovim/nvim-lspconfig",
@@ -43,6 +43,7 @@ return {
         lsp = { fallbacks = {} }
       }
     },
+    cmdline = { enabled = false },
     completion = {
       list = { selection = { preselect = false } },
       documentation = {

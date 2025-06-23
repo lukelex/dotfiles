@@ -21,9 +21,13 @@ map("<C-K>", "<C-W><C-K>")
 map("<C-L>", "<C-W><C-L>")
 map("<C-H>", "<C-W><C-H>")
 
--- finger pointing time
-map("gb", ":Git blame<CR>")
-
 -- Remap keys in normal mode
 map("0", "^")
 map("-", "^")
+
+-- Language Server Protocol
+map("<leader>e", function()
+  vim.diagnostic.open_float(0, { scope = "line" })
+end)
+map("K", vim.lsp.buf.hover)
+map("gi", vim.lsp.buf.implementation)
