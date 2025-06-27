@@ -14,96 +14,123 @@ local function pathd(str)
   end
 end
 
+local components = {
+  filename = {
+    "filename",
+    path = 1,
+    fmt = pathd,
+    separator = {
+      left = "",
+      right = ""
+    }
+  },
+  diff = {
+    "diff",
+    symbols = { added = " ", modified = " ", removed = " " },
+    diff_color = {
+      added = { fg = "#87AF5F" },
+      modified = { fg = "#6D9CBE" },
+      removed = { fg = "#DA4939" },
+    },
+    separator = {
+      right = ""
+    }
+  },
+  lsp = {
+    lsp_count,
+    icon = " ",
+    separator = {
+      left = "",
+    }
+  },
+  diagnostics = {
+    "diagnostics",
+    separator = {
+      left = "",
+    }
+  },
+  filetype = {
+    "filetype",
+    separator = {
+      left = "",
+      right = ""
+    }
+  },
+  mode = {
+    "mode",
+    separator = {
+      left = "",
+      right = ""
+    },
+  },
+  branch = {
+    "branch",
+    icon = "",
+    fmt = function(str)
+      if vim.api.nvim_strwidth(str) > 25 then
+        return ("%s…"):format(str:sub(1, 24))
+      end
+
+      return str
+    end,
+    separator = {
+      right = ""
+    }
+  },
+  progress = {
+    "progress",
+    icon = " ",
+    separator = {
+      left = "",
+    }
+  },
+  location = {
+    "location",
+    icon = "",
+    separator = {
+      left = "",
+      right = ""
+    }
+  }
+}
+
 return {
   {
     "nvim-lualine/lualine.nvim",
     dependencies = {
       "nvim-tree/nvim-web-devicons"
     },
-    config = function()
-      require("lualine").setup({
-        options = {
-          theme = "railscasts",
-          icons_enabled = true,
-          globalstatus = true,
-          refresh = {
-            winbar = 300,
-            tabline = 1000,
-            statusline = 1000,
-            events = {
-              "WinEnter",
-              "BufEnter",
-              "BufWritePost",
-              "SessionLoadPost",
-              "FileChangedShellPost",
-              "VimResized",
-              "Filetype",
-              -- "CursorMoved",
-              -- "CursorMovedI",
-              "ModeChanged",
-            },
-          }
+    opts = {
+      options = {
+        theme = "railscasts",
+        icons_enabled = true,
+        globalstatus = true,
+        refresh = {
+          winbar = 300,
+          tabline = 1000,
+          statusline = 1000,
         },
-        winbar = {
-          lualine_a = { { "filename", path = 1, fmt = pathd } },
-          lualine_b = {
-            {
-              "diff",
-              symbols = { added = " ", modified = " ", removed = " " },
-              diff_color = {
-                added = { fg = "#87AF5F" },
-                modified = { fg = "#6D9CBE" },
-                removed = { fg = "#DA4939" },
-              },
-            }
-          },
-          lualine_y = { { lsp_count, icon = " " } },
-          lualine_z = { "diagnostics", "filetype" },
-        },
-        inactive_winbar = {
-          lualine_a = { { "filename", path = 1, fmt = pathd } },
-          lualine_b = { {
-            "diff",
-            symbols = { added = " ", modified = " ", removed = " " },
-            diff_color = {
-              added = { fg = "#87AF5F" },
-              modified = { fg = "#6D9CBE" },
-              removed = { fg = "#DA4939" },
-            },
-          } },
-          lualine_y = { { lsp_count, icon = " " } },
-          lualine_z = { "diagnostics", "filetype" },
-        },
-        sections = {
-          lualine_a = {
-            {
-              "mode",
-              icons_enabled = true,
-              separator = {
-                left = "",
-                right = ""
-              },
-            },
-          },
-          lualine_b = {
-            {
-              "branch",
-              icon = "",
-              fmt = function(str)
-                if vim.api.nvim_strwidth(str) > 25 then
-                  return ("%s…"):format(str:sub(1, 24))
-                end
-
-                return str
-              end,
-            }
-          },
-          lualine_c = {},
-          lualine_x = { "encoding", "fileformat" },
-          lualine_y = { { "progress", icon = " " } },
-          lualine_z = { { "location", icon = "" } }
-        },
-      })
-    end
+      },
+      winbar = {
+        lualine_a = { components.filename },
+        lualine_b = { components.diff },
+        lualine_y = { components.lsp, components.diagnostics },
+        lualine_z = { components.filetype },
+      },
+      inactive_winbar = {
+        lualine_a = { components.filename },
+        lualine_b = { components.diff },
+        lualine_y = { components.lsp, components.diagnostics },
+        lualine_z = { components.filetype },
+      },
+      sections = {
+        lualine_a = { components.mode },
+        lualine_b = { components.branch },
+        lualine_c = {},
+        lualine_x = { "encoding", "fileformat" },
+        lualine_y = { components.progress },
+        lualine_z = { components.location }
+      },
+    }
   }
 }
