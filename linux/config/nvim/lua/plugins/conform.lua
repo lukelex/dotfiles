@@ -9,7 +9,7 @@ return {
           javascript = { "prettierd", "prettier", stop_after_first = true },
           typescript = { "prettierd", "prettier", stop_after_first = true },
           mustache = { "djlint" },
-          json = { "deno" },
+          json = { "prettierd" },
         },
         format_on_save = {
           async = false,

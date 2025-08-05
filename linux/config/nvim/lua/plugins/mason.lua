@@ -20,7 +20,7 @@ local servers = {
 }
 
 return {
-  "williamboman/mason-lspconfig.nvim",
+  "mason-org/mason-lspconfig.nvim",
   dependencies = {
     "saghen/blink.cmp",
     { "mason-org/mason.nvim", opts = {} },
