@@ -6,10 +6,18 @@ return {
 
       conform.setup({
         formatters_by_ft = {
-          javascript = { "prettierd", "prettier", stop_after_first = true },
-          typescript = { "prettierd", "prettier", stop_after_first = true },
+          javascript = { "prettierd", stop_after_first = true },
+          typescript = { "biome", "prettierd", stop_after_first = true },
           mustache = { "djlint" },
           json = { "prettierd" },
+          bash = { "beautysh" },
+          sh = { "beautysh" },
+          zsh = { "beautysh" },
+        },
+        formatters = {
+          beautysh = {
+            args = { "--indent-size", "2", "-" },
+          },
         },
         format_on_save = {
           async = false,
