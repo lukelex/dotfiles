@@ -31,3 +31,6 @@ map("<leader>e", function()
 end)
 map("K", vim.lsp.buf.hover)
 map("gi", vim.lsp.buf.implementation)
+
+map("gdn", vim.diagnostic.goto_next)
+map("gdp", vim.diagnostic.goto_prev)
