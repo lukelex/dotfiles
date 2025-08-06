@@ -23,7 +23,7 @@ function fancy-history() {
       | fzf --scheme=history \
       | tr --squeeze-repeats '[:blank:]' ' ' \
       | cut --fields 4- --delimiter ' '
-    )
+  )
 
   if [ -n "$selection" ]; then
     zle kill-whole-line

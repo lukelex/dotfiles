@@ -4,83 +4,84 @@ set -e
 
 if ! command -v yay &> /dev/null
 then
-  source ./linux/install/yay
+    source ./linux/install/yay
 fi
 
 # essentials
 yay -S --needed --noconfirm ibus openssh \
-  polkit polkit-gnome network-manager-applet \
-  man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
-  zsh-completions cmake jq tidy yazi pcmanfm \
-  imagemagick blueman fragments playerctl inetutils \
-  tree v4l-utils neovim nvim-packer-git fd fzf ripgrep rustup kmonad \
-  kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome dbus udiskie
+    polkit polkit-gnome network-manager-applet \
+    man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
+    zsh-completions cmake jq tidy yazi pcmanfm \
+    imagemagick blueman fragments playerctl inetutils \
+    tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
+    kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
+    pipewire-pulse google-chrome dbus udiskie
 
-read -p 'Would you like to install Hyprland? [Y/n] ' answer
+read -rp 'Would you like to install Hyprland? [Y/n] ' answer
 case $answer in
-  [Yy]* | "")
-    echo 'Installing Wayland dependencies...'
-    yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
-      swhkd hypridle hyprlock hyprpanel-bin hyprshot \
-      qt5-wayland qt6-wayland wofi sox \
-      xdg-desktop-portal-hyprland-git
-    ;;
-  * ) ;;
+    [Yy]* | "")
+        echo 'Installing Wayland dependencies...'
+        yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
+            swhkd hypridle hyprlock hyprpanel-bin hyprshot \
+            qt5-wayland qt6-wayland wofi sox \
+            xdg-desktop-portal-hyprland-git
+        ;;
+    * ) ;;
 esac
 
-read -p 'Would you like to install i3wm? [Y/n] ' answer
+read -pr 'Would you like to install i3wm? [Y/n] ' answer
 case $answer in
-  [Yy]* | "")
-    echo 'Installing X.Org dependencies...'
-    yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
-      xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
-      xfce4-power-manager flameshot arandr xclip xdotool wired \
-      simplescreenrecorder picom autorandr eww sxhkd \
-      rofi rofi-greenclip rofi-bluetooth-git sddm
-    ;;
-  * ) ;;
+    [Yy]* | "")
+        echo 'Installing X.Org dependencies...'
+        yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
+            xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
+            xfce4-power-manager flameshot arandr xclip xdotool wired \
+            simplescreenrecorder picom autorandr eww sxhkd \
+            rofi rofi-greenclip rofi-bluetooth-git sddm qt6-svg
+        ;;
+    * ) ;;
 esac
 
 # non-essentials
 yay -S --needed --noconfirm light ddcutil dropbox \
-  1password spotify cups ghostscript kbt cameractrls \
-  slack-desktop zeal vlc zip unzip unrar btop \
-  pantheon-calculator gsimplecal tldr docker docker-compose \
-  rubygems npm fastfetch blanket sxiv postbird \
-  sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
-  system-config-printer \
-  2> /dev/null
+    1password spotify cups ghostscript kbt cameractrls \
+    zeal vlc zip unzip unrar btop \
+    pantheon-calculator gsimplecal tldr docker docker-compose \
+    rubygems npm fastfetch blanket sxiv postbird \
+    sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
+    system-config-printer \
+    2> /dev/null
 
-read -p 'Would you like to be able to sync your iPod? [Y/n] ' answer
+read -pr 'Would you like to be able to sync your iPod? [Y/n] ' answer
 case $answer in
-  [Yy]* | "")
-    echo 'Installing iPod dependencies...'
-    yay -S --needed --noconfirm rhythmbox libgpod gvfs
-    ;;
-  * ) ;;
+    [Yy]* | "")
+        echo 'Installing iPod dependencies...'
+        yay -S --needed --noconfirm rhythmbox libgpod gvfs
+        ;;
+    * ) ;;
 esac
 
 # Audio manipulation tools
 # ffmpeg
 
-read -p 'Would you like to install optional dependencies? [Y/n] ' answer
+read -pr 'Would you like to install optional dependencies? [Y/n] ' answer
 case $answer in
-  [Yy]* | "")
-    echo 'Installing optional dependencies...'
-    yay -S --needed --noconfirm kicad curtail birdfont \
-      whatsapp-for-linux telegram-desktop discord via-appimage
-    ;;
-  * ) ;;
+    [Yy]* | "")
+        echo 'Installing optional dependencies...'
+        yay -S --needed --noconfirm kicad curtail birdfont \
+            whatsapp-for-linux telegram-desktop discord via-appimage \
+            slack-desktop
+        ;;
+    * ) ;;
 esac
 
 if eval lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'; then
-  read -p "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] " answer
-  case $answer in
-    [Yy]* | "")
-      yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
-    * ) ;;
-  esac
+    read -rp "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] " answer
+    case $answer in
+        [Yy]* | "")
+            yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
+        * ) ;;
+    esac
 fi
 
 rustup default stable

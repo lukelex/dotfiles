@@ -31,5 +31,5 @@ bindkey '^H' backward-kill-word
 bindkey '\e[3;5~' kill-word
 
 if [[ "$(uname)" == "Linux" ]]; then
-  source "$DOTFILES/linux/env"
+    source "$DOTFILES/linux/env"
 fi
