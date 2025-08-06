@@ -23,6 +23,7 @@ return {
   "mason-org/mason-lspconfig.nvim",
   dependencies = {
     "saghen/blink.cmp",
+    "neovim/nvim-lspconfig",
     { "mason-org/mason.nvim", opts = {} },
   },
   config = function()

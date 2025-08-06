@@ -8,6 +8,8 @@ return {
     },
     config = function()
       -- require("nvim-treesitter.configs").setup(opts)
+
+      vim.opt.smartindent = false
       require("nvim-treesitter.configs").setup {
         ensure_installed = {
           "ruby",
@@ -21,6 +23,7 @@ return {
         },
         sync_install = false,
         auto_install = true,
+        indent = true,
         highlight = {
           enable = true,
           additional_vim_regex_highlighting = false,

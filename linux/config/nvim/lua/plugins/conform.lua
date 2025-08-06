@@ -7,8 +7,9 @@ return {
       conform.setup({
         formatters_by_ft = {
           javascript = { "prettierd", stop_after_first = true },
-          typescript = { "biome", "prettierd", stop_after_first = true },
+          typescript = { "prettierd", stop_after_first = true },
           mustache = { "djlint" },
+          markdown = { "prettierd" },
           json = { "prettierd" },
           bash = { "beautysh" },
           sh = { "beautysh" },

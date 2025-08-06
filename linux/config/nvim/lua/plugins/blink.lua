@@ -3,9 +3,6 @@ return {
   lazy = false,
   event = { "BufRead" },
   version = "1.*",
-  dependencies = {
-    "neovim/nvim-lspconfig",
-  },
   opts = {
     keymap = {
       preset = "enter",
