@@ -37,7 +37,10 @@ return {
       min_keyword_length = 3,
       default = { "lsp", "path", "snippets", "buffer" },
       providers = {
-        lsp = { fallbacks = {} }
+        lsp = {
+          async = true,    -- Whether we should show the completions before this provider returns, without waiting for it
+          timeout_ms = 250 -- How long to wait for the provider to return before showing completions and treating it as asynchronous
+        }
       }
     },
     cmdline = { enabled = false },
