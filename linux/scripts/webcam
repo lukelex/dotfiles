@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Count number of video devices
+video_devices=($(v4l2-ctl --list-devices 2>/dev/null | grep -B1 "/dev/video" | grep -v "/dev/video"))
+
+# If more than one device, we assume an external webcam is connected
+if [ "${#video_devices[@]}" -gt 1 ]; then
+  echo ""
+fi
