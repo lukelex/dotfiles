@@ -11,7 +11,7 @@ end
 devices = `bluetoothctl paired-devices | awk '{ print $2 }'`.split("\n").map do |uid|
   info = `bluetoothctl info #{uid} | grep -Ev '^Device|UUID|Modalias'`
     .split("\n")
-    .map { |device| device.split(/:/).map(&:strip) }
+    .map { |device| device.split(":").map(&:strip) }
     .to_h
 
   info.merge(

@@ -83,6 +83,6 @@ case $1 in
   if) upower -i "$(upower -e | grep 'BAT')" ;;
   icon) "$(icon)" ;;
   show) show_battery ;;
-  icon_and_warn) warn && "$(icon)" ;;
+  icon_and_warn) warn && icon ;;
   get) echo -e "$(get)" ;;
 esac

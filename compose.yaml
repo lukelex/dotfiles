@@ -1,7 +1,0 @@
-services:
-  linter:
-    image: "dotfiles-linter:latest"
-    build: "."
-    volumes:
-      - ".:/usr/src/app"
-    command: "./bin/bash-lint"
