@@ -3,12 +3,14 @@
 trim() {
   local text=$1
   local scale_rate=175
-  local horizontal_size=$(xrandr | grep '*' | head -n 1 | cut -d 'x' -f 1 | xargs)
+  local horizontal_size
+
+  horizontal_size=$(xrandr | grep '\*' | head -n 1 | cut -d 'x' -f 1 | xargs)
 
   # Maximum length for the title
-  max_length=$(echo $horizontal_size | xargs -I _ echo "_ / $scale_rate" | bc -l | cut -d '.' -f 1)
+  max_length=$(echo "$horizontal_size" | xargs -I _ echo "_ / $scale_rate" | bc -l | cut -d '.' -f 1)
 
-  if [ ${#text} -gt $max_length ]; then
+  if [ ${#text} -gt "$max_length" ]; then
     trimmed_title="${text:0:$max_length}..."
   else
     trimmed_title="$text"
@@ -24,8 +26,8 @@ get_title() {
 case $1 in
   show)
     case "$2" in
-      trimmed) trim "$(get_title)";;
-      *) get_title;;
+      trimmed) trim "$(get_title)" ;;
+      *) get_title ;;
     esac
     ;;
   previous)

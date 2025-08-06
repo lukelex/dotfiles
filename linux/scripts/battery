@@ -13,7 +13,7 @@ THREE_QUARTERS=
 FULL=
 
 device=$(upower -e | grep 'BAT' | head -n 1)
-stats=$(upower -i "`echo $device`" | grep -E "state|to full|percentage|time to empty")
+stats=$(upower -i "$(echo $device)" | grep -E "state|to full|percentage|time to empty")
 
 get_percentage() {
   echo "$(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')"
@@ -24,9 +24,9 @@ is_charging() {
 }
 
 icon() {
-  value=`get_percentage`
+  value=$(get_percentage)
 
-  if [[ `is_charging` ]]; then
+  if [[ $(is_charging) ]]; then
     echo $CHARGING
   elif [[ 1 -eq $(echo "$value < 6" | bc -l) ]]; then
     echo "%{F#FF0000}$CRITICAL%{F-}"
@@ -67,22 +67,22 @@ show_battery() {
   fi
 
   notify-send -a System \
-              -i "$FONT_AWESOME_PATH/light/battery-full.svg" \
-              -h string:wired-tag:system \
-              -h int:value:"$charge" \
-              "$message"
+    -i "$FONT_AWESOME_PATH/light/battery-full.svg" \
+    -h string:wired-tag:system \
+    -h int:value:"$charge" \
+    "$message"
 }
 
 warn() {
-  if [[ "`icon`" == "$CRITICAL" ]]; then
+  if [[ "$(icon)" == "$CRITICAL" ]]; then
     show_battery
   fi
 }
 
 case $1 in
-  if) upower -i "`upower -e | grep 'BAT'`" ;;
-  icon) echo "`icon`" ;;
+  if) upower -i "$(upower -e | grep 'BAT')" ;;
+  icon) "$(icon)" ;;
   show) show_battery ;;
-  icon_and_warn) warn && echo "`icon`" ;;
-  get) echo -e "`get`" ;;
+  icon_and_warn) warn && "$(icon)" ;;
+  get) echo -e "$(get)" ;;
 esac

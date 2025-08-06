@@ -27,17 +27,17 @@ audio_tick() {
 
 show() {
   notify-send -a System \
-              -i "$FONT_AWESOME_PATH/light/brightness.svg" \
-              -h string:wired-tag:system \
-              -h int:value:"`get_value`" \
-              "Brightness"
+    -i "$FONT_AWESOME_PATH/light/brightness.svg" \
+    -h string:wired-tag:system \
+    -h int:value:"$(get_value)" \
+    "Brightness"
 }
 
 case $1 in
   if) light -L 2>&- | grep auto ;;
   icon) icon get_value ;;
-  get) echo $VALUE ;;
-  set) light -S $2 ;;
+  get) echo "$VALUE" ;;
+  set) light -S "$2" ;;
   dim)
     # light -O && light -T 0.25
     light -O -s sysfs/leds/tpacpi::kbd_backlight

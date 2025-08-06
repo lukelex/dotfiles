@@ -11,14 +11,17 @@ QUOTES_URL="https://quotes.rest/qod.json?category=inspire&language=$LANGUAGE"
 mkdir -p $CACHE_DIR
 
 get_quote() {
+  local response
+
   if [[ ! -f $CACHE_FILE ]]; then
-    local response=$(curl -Ls -H "Authorization: Bearer $QUOTES_API_KEY" $QUOTES_URL)
-    $(echo $response | jq -r '.contents.quotes[0].quote' > $CACHE_FILE)
+    response=$(curl -Ls -H "Authorization: Bearer $QUOTES_API_KEY" "$QUOTES_URL")
+
+    echo "$response" | jq -r '.contents.quotes[0].quote' > "$CACHE_FILE"
   fi
 
-  echo $(cat $CACHE_FILE)
+  echo $(cat "$CACHE_FILE")
 }
 
 case $1 in
-  get) echo `get_quote` ;;
+  get) echo $(get_quote) ;;
 esac

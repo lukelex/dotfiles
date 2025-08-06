@@ -30,7 +30,7 @@ SYSTEM="metric" # Unit system {imperial or metric}
 UNIT="°C" # Units of measurement.
 
 LOCATION_DATA=$(curl -Ls http://ipwho.is)
-CITY=$(echo $LOCATION_DATA | jq -r .city)
+CITY=$(echo "$LOCATION_DATA" | jq -r .city)
 
 FORECAST=$(
   curl -Ls --get \
@@ -39,27 +39,27 @@ FORECAST=$(
     --data-urlencode "appid=$OPEN_WEATHER_API_KEY" \
     "http://api.openweathermap.org/data/2.5/weather"
 )
-ICON=${ICON_LIST[$(echo $FORECAST | jq -r '.weather[0].icon')]}
+ICON=${ICON_LIST[$(echo "$FORECAST" | jq -r '.weather[0].icon')]}
 
 function show {
-  SUMMARY=$(echo $FORECAST | jq -r '.weather[0].main')
-  TEMP=$(echo $FORECAST | jq -r '.main.temp')
+  SUMMARY=$(echo "$FORECAST" | jq -r '.weather[0].main')
+  TEMP=$(echo "$FORECAST" | jq -r '.main.temp')
   DESCRIPTION=$(cat <<- EOM
-Minimum: $(echo $FORECAST | jq -r '.main.temp_min')$UNIT
-Maximun: $(echo $FORECAST | jq -r '.main.temp_max')$UNIT
-Feels Like: $(echo $FORECAST | jq -r '.main.feels_like')$UNIT
-Humidity: $(echo $FORECAST | jq -r '.main.humidity')%
-Location: $(echo $FORECAST | jq -r '"\(.name) - \(.sys.country)"')
+Minimum: $(echo "$FORECAST" | jq -r '.main.temp_min')$UNIT
+Maximun: $(echo "$FORECAST" | jq -r '.main.temp_max')$UNIT
+Feels Like: $(echo "$FORECAST" | jq -r '.main.feels_like')$UNIT
+Humidity: $(echo "$FORECAST" | jq -r '.main.humidity')%
+Location: $(echo "$FORECAST" | jq -r '"\(.name) - \(.sys.country)"')
 EOM
-)
+  )
   notify-send -a Info \
-              -i "$FONT_AWESOME_PATH/light/cloud-bolt-sun.svg" \
-              -h string:wired-tag:info \
-              -t 10000 \
-              "$SUMMARY $TEMP$UNIT" "$DESCRIPTION"
+    -i "$FONT_AWESOME_PATH/light/cloud-bolt-sun.svg" \
+    -h string:wired-tag:info \
+    -t 10000 \
+    "$SUMMARY $TEMP$UNIT" "$DESCRIPTION"
 }
 
 case $1 in
-  icon) echo $ICON;;
+  icon) echo "$ICON" ;;
   show) show
 esac

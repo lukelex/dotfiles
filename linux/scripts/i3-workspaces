@@ -4,20 +4,20 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-i3-msg --type subscribe --monitor '[ "workspace" ]' | while read line
+i3-msg --type subscribe --monitor '[ "workspace" ]' | while read -r line
 do
-  is_focus=$(echo $line | jq 'select( .change == "focus")')
+  is_focus=$(echo "$line" | jq 'select( .change == "focus")')
 
   [ -z "$is_focus" ] && continue
 
-  workspace=$(echo $line | jq '.current.name')
-  output=$(echo $line | jq '.current.output')
+  workspace=$(echo "$line" | jq '.current.name')
+  output=$(echo "$line" | jq '.current.output')
 
   echo "$workspace on $output"
 
   notify-send -a System \
-              -i "$FONT_AWESOME_PATH/light/display.svg" \
-              -t 650 \
-              -h string:wired-tag:system \
-              "$workspace on $output"
+    -i "$FONT_AWESOME_PATH/light/display.svg" \
+    -t 650 \
+    -h string:wired-tag:system \
+    "$workspace on $output"
 done

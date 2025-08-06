@@ -7,9 +7,9 @@ audio_tick() {
 }
 
 take() {
-  hyprshot --silent --mode $1 --output-folder "$HOME/screenshots" 2&>/dev/null
+  hyprshot --silent --mode "$1" --output-folder "$HOME/screenshots" 2&>/dev/null
 
   audio_tick
 }
 
-take $1
+take "$1"

@@ -9,17 +9,17 @@ echo "==> Ensuring CUPS service is enabled and started..."
 sudo systemctl enable --now cups.service
 
 # Prompt for manual or discovered IP
-read -p "Do you want to auto-discover printers via mDNS? [y/N] " autodiscover
+read -rp "Do you want to auto-discover printers via mDNS? [y/N] " autodiscover
 
 if [[ "$autodiscover" =~ ^[Yy]$ ]]; then
   echo "==> Scanning for mDNS printers on the network (using avahi)..."
   avahi-browse -rt _ipp._tcp | grep '=' | grep IPv4 | awk -F';' '{ print $4 " (" $8 ")" }'
   echo ""
-  read -p "Enter the hostname of the printer from above (e.g., 'HP-OfficeJet.local'): " PRINTER_HOST
+  read -rp "Enter the hostname of the printer from above (e.g., 'HP-OfficeJet.local'): " PRINTER_HOST
   URI="ipp://$PRINTER_HOST/ipp/print"
 else
-  read -p "Enter the IP address of the printer (e.g., 192.168.1.100): " IP
-  read -p "Protocol to use (ipp/socket) [ipp]: " PROTOCOL
+  read -rp "Enter the IP address of the printer (e.g., 192.168.1.100): " IP
+  read -rp "Protocol to use (ipp/socket) [ipp]: " PROTOCOL
   PROTOCOL=${PROTOCOL:-ipp}
   if [[ "$PROTOCOL" == "socket" ]]; then
     URI="socket://$IP"
@@ -29,9 +29,9 @@ else
 fi
 
 # Prompt for name and driver
-read -p "Enter a name for your printer (e.g., OfficePrinter): " PRINTER_NAME
-read -p "Enter a description (optional): " DESCRIPTION
-read -p "Enter the PPD or driver path (or leave blank for automatic): " DRIVER_PATH
+read -rp "Enter a name for your printer (e.g., OfficePrinter): " PRINTER_NAME
+read -rp "Enter a description (optional): " DESCRIPTION
+read -rp "Enter the PPD or driver path (or leave blank for automatic): " DRIVER_PATH
 
 echo "==> Adding printer with lpadmin..."
 if [[ -z "$DRIVER_PATH" ]]; then

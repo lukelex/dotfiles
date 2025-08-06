@@ -3,9 +3,9 @@
 source "$HOME/dotfiles/linux/variables.env"
 
 get() {
-  last_monitor=$(echo $monitors | grep -o .$)
+  last_monitor=$(echo "$monitors" | grep -o .$)
 
-  sudo ddcutil --bus=$last_monitor getvcp $feature | grep -oP 'current\svalue\s*=\s*\K\d+'
+  sudo ddcutil --bus="$last_monitor" getvcp "$feature" | grep -oP 'current\svalue\s*=\s*\K\d+'
 }
 
 set() {
@@ -15,21 +15,21 @@ set() {
     return 0
   fi
 
-  IFS=$"\n"
+  IFS=$'\n'
   while read -r line
   do
-    sudo ddcutil --bus=$line setvcp $feature $new_value &> /dev/null &
-  done < <(echo $monitors)
+    sudo ddcutil --bus="$line" setvcp "$feature" "$new_value" &> /dev/null &
+  done < <(echo "$monitors")
 }
 
 show() {
   value=$1
 
   notify-send -a System \
-              -i "$FONT_AWESOME_PATH/light/display.svg" \
-              -h int:value:$value \
-              -h string:wired-tag:system \
-              "$feature_name"
+    -i "$FONT_AWESOME_PATH/light/display.svg" \
+    -h int:value:"$value" \
+    -h string:wired-tag:system \
+    "$feature_name"
 }
 
 case $1 in
@@ -41,25 +41,25 @@ esac
 
 monitors=$(sudo ddcutil detect | grep "I2C bus" | grep -o .$)
 step=5
-current=`get`
+current=$(get)
 current=${current:-0}
 
 case $2 in
-  if) echo $monitors | grep 1 ;;
+  if) echo "$monitors" | grep 1 ;;
   get) echo "$current" ;;
   set)
-    set $3
-    show $3
+    set "$3"
+    show "$3"
     ;;
   inc)
-    new_value=$(($current + $step))
-    set $new_value
-    show $new_value
+    new_value=$(("$current" + "$step"))
+    set "$new_value"
+    show "$new_value"
     ;;
   dec)
-    new_value=$(($current - $step))
-    set $new_value
-    show $new_value
+    new_value=$(("$current" - "$step"))
+    set "$new_value"
+    show "$new_value"
     ;;
   reset)
     set 0

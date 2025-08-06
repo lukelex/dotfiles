@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 ## Run eww daemon if not running already
-if [[ ! `pidof eww` ]]; then
+if [[ ! $(pidof eww) ]]; then
   eww daemon
   sleep 1
 fi
@@ -11,12 +11,12 @@ toggle() {
   closed=$(eww list-windows | grep -v '^\*')
   eww close-all
 
-  if [[ $(echo $closed | grep $window) ]]; then
-    eww open $1
+  if [[ $(echo "$closed" | grep "$window") ]]; then
+    eww open "$1"
   fi
 }
 
 case $1 in
-  toggle) toggle $2 ;;
+  toggle) toggle "$2" ;;
   close) eww close-all ;;
 esac
