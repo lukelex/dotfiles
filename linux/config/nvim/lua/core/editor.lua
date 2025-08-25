@@ -1,3 +1,4 @@
+vim.g.loaded_netrw = 1
 
 -- Disable Vi compatibility mode
 vim.g.compatible = false

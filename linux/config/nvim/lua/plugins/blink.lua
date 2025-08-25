@@ -35,7 +35,15 @@ return {
     },
     sources = {
       min_keyword_length = 3,
-      default = { "lsp", "path", "snippets", "buffer" },
+      default = function(ctx)
+        local success, node = pcall(vim.treesitter.get_node)
+
+        if success and node and vim.tbl_contains({ 'comment', 'line_comment', 'block_comment' }, node:type()) then
+          return { 'buffer' }
+        else
+          return { 'snippets', 'lsp', 'path' }
+        end
+      end,
       providers = {
         lsp = {
           async = true,    -- Whether we should show the completions before this provider returns, without waiting for it
@@ -52,6 +60,7 @@ return {
         window = { border = "rounded", },
       },
       menu = {
+        auto_show = true,
         draw = {
           treesitter = { "lsp" },
           columns = { { "kind_icon" }, { "label", "label_description", gap = 1 }, { "source_name" } },
