@@ -13,6 +13,7 @@ udiskie -a &
 
 case "$XDG_SESSION_TYPE" in
   wayland)
+    waybar &
     kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
     swww-daemon &
 
