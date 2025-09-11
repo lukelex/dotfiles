@@ -97,3 +97,78 @@ end
 vim.cmd('command! OpenConflicts lua OpenGitConflicts()')
 
 vim.opt.sessionoptions = 'curdir,folds,globals,help,tabpages,terminal,winsize'
+
+-- local M = {}
+
+local function ensure_directory_exists(path)
+  local dir = vim.fn.fnamemodify(path, ":h")
+  if vim.fn.isdirectory(dir) == 0 then
+    vim.fn.mkdir(dir, "p")
+  end
+end
+
+local function path_to_test(path)
+  return path
+      :gsub("/backend/app/", "/backend/spec/")
+      :gsub("%.rb$", "_spec.rb")
+end
+
+local function path_to_source(path)
+  return path
+      :gsub("/backend/spec/", "/backend/app/")
+      :gsub("_spec%.rb$", ".rb")
+end
+
+local function find_window_with_file(target_path)
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local bufname = vim.api.nvim_buf_get_name(buf)
+    if vim.fn.fnamemodify(bufname, ":p") == vim.fn.fnamemodify(target_path, ":p") then
+      return win
+    end
+  end
+  return nil
+end
+
+function ToggleTestFile()
+  local filepath = vim.fn.expand("%:p")
+  local target_path
+
+  if filepath:match("/backend/app/") then
+    target_path = path_to_test(filepath)
+  elseif filepath:match("/backend/spec/") then
+    target_path = path_to_source(filepath)
+  else
+    print("Not in app/ or spec/ file.")
+    return
+  end
+
+  ensure_directory_exists(target_path)
+
+  if vim.fn.filereadable(target_path) == 0 then
+    local file = io.open(target_path, "w")
+    if file then
+      file:write("-- RSpec test file\n")
+      file:close()
+      print("Created file: " .. target_path)
+    else
+      print("Failed to create file: " .. target_path)
+      return
+    end
+  end
+
+  local existing_win = find_window_with_file(target_path)
+  if existing_win then
+    vim.api.nvim_set_current_win(existing_win)
+  else
+    vim.cmd("vsplit " .. vim.fn.fnameescape(target_path))
+  end
+end
+
+-- return M
+
+vim.cmd('command! ToggleTestFile lua OpenRubyTestFile()')
+vim.keymap.set("n", "<Space>t", function()
+  -- require("user.test_nav").open_test_file()
+  ToggleTestFile()
+end, { desc = "Open test file in vertical split" })
