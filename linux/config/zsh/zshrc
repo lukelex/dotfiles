@@ -4,6 +4,7 @@ source "$HOME/dotfiles/linux/variables.env"
 
 source "$DOTFILES/linux/config/zsh/theme.zsh"
 source "$DOTFILES/linux/config/zsh/history.zsh"
+source "$DOTFILES/linux/config/zsh/branches.zsh"
 source "$DOTFILES/linux/config/zsh/doc-search.zsh"
 source "$DOTFILES/linux/config/zsh/projects.zsh"
 source "$DOTFILES/linux/config/zsh/work.zsh"
