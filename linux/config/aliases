@@ -43,18 +43,45 @@ alias grl="git reflog"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
 git_clean() {
-  set -eu
+  # Don't kill the whole shell on error
+  set -u
+  set +e
 
-  local branches=$(git branch | grep -v -E '(main|development|\*)')
-  local heads=$(git ls-remote --heads -q)
+  # ANSI colors
+  RED='\033[0;31m'
+  BLUE='\033[0;34m'
+  NC='\033[0m' # No Color
 
-  for branch in $(echo $branches); do
-    echo -n "Looking for '$branch'..."
-    if [[ $(echo $heads | grep $branch | wc -l) -eq 0 ]]; then
-      echo "dit not find it remotely. I'm removing it!"
-      git branch -D $branch
+  # Ensure we are in a git repo
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    echo "Not inside a git repository."
+    return 0
+  fi
+
+  git remote prune origin &> /dev/null || true
+
+  local heads
+  local branches=()
+
+  # Collect local branches safely into an array
+  while IFS= read -r branch; do
+    # strip leading * and spaces
+    branch="${branch##\* }"
+    branch="${branch## }"
+    # skip protected ones
+    if [[ "$branch" != "main" && "$branch" != "development" ]]; then
+      branches+=("$branch")
+    fi
+  done < <(git branch --format="%(refname:short)")
+
+  heads=$(git ls-remote --heads -q) || true
+
+  for branch in "${branches[@]}"; do
+    if ! echo "$heads" | grep -q -F "$branch"; then
+      echo -e "Looking for '$branch'... ${RED}not found remotely → removing${NC}"
+      git branch -D "$branch" || true
     else
-      echo "found it. I'm keeping it!"
+      echo -e "Looking for '$branch'... ${BLUE}found remotely → keeping${NC}"
     fi
   done
 }
