@@ -50,6 +50,7 @@ git_clean() {
   # ANSI colors
   RED='\033[0;31m'
   BLUE='\033[0;34m'
+  GREEN='\033[0;32m'
   NC='\033[0m' # No Color
 
   # Ensure we are in a git repo
@@ -58,10 +59,21 @@ git_clean() {
     return 0
   fi
 
-  git remote prune origin &> /dev/null || true
+  # Prune origin and count how many were removed
+  local prune_output
+  prune_output=$(git remote prune origin 2>/dev/null)
+  local pruned_count=0
+  if [[ -n "$prune_output" ]]; then
+    pruned_count=$(echo "$prune_output" | grep -c "pruned")
+    echo -e "${GREEN}Pruned $pruned_count stale remote branch(es) from origin${NC}"
+  else
+    echo -e "${GREEN}No stale remote branches to prune${NC}"
+  fi
 
   local heads
   local branches=()
+  local removed_count=0
+  local kept_count=0
 
   # Collect local branches safely into an array
   while IFS= read -r branch; do
@@ -80,11 +92,20 @@ git_clean() {
     if ! echo "$heads" | grep -q -F "$branch"; then
       echo -e "Looking for '$branch'... ${RED}not found remotely → removing${NC}"
       git branch -D "$branch" || true
+      ((removed_count++))
     else
       echo -e "Looking for '$branch'... ${BLUE}found remotely → keeping${NC}"
+      ((kept_count++))
     fi
   done
+
+  echo
+  echo -e "${GREEN}Summary:${NC}"
+  echo -e "  Local branches removed: ${RED}$removed_count${NC}"
+  echo -e "  Local branches kept:    ${BLUE}$kept_count${NC}"
+  echo -e "  Remote branches pruned: ${GREEN}$pruned_count${NC}"
 }
+
 
 # Docker
 alias dc="docker"
