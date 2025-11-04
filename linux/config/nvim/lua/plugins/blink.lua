@@ -13,6 +13,8 @@ return {
         function(cmp)
           if not cmp.snippet_active() then
             return cmp.select_and_accept()
+          else
+            return false
           end
         end,
         "select_next",

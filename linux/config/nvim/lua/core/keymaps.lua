@@ -4,7 +4,7 @@ vim.g.mapleader = " "
 local function map(keycode, instruction)
   vim.keymap.set("n", keycode, instruction, {
     noremap = true,
-    silent = true
+    silent = true,
   })
 end
 
