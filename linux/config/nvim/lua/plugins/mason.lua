@@ -17,6 +17,7 @@ local servers = {
   "slint_lsp",
   "tailwindcss",
   "vimls",
+  "gopls"
 }
 
 return {
