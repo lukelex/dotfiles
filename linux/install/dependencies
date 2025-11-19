@@ -24,7 +24,7 @@ case $answer in
     yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
       qt5-wayland qt6-wayland wofi sox \
-      xdg-desktop-portal-hyprland-git
+      xdg-desktop-portal-hyprland
     ;;
   * ) ;;
 esac
@@ -43,10 +43,10 @@ case $answer in
 esac
 
 # non-essentials
-yay -S --needed --noconfirm light ddcutil dropbox \
+yay -S --needed --noconfirm light ddcutil \
   1password spotify cups ghostscript kbt cameractrls \
   zeal vlc zip unzip unrar btop \
-  pantheon-calculator gsimplecal tldr docker docker-compose \
+  pantheon-calculator tldr docker docker-buildx docker-compose \
   rubygems npm fastfetch blanket sxiv postbird \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
   system-config-printer \

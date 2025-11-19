@@ -3,7 +3,9 @@
 set -a
 
 source "$HOME/dotfiles/linux/variables.env"
-source "$HOME/Dropbox/secrets.env"
+if [[ -f "$HOME/Dropbox/secrets.env" ]]; then
+  source "$HOME/Dropbox/secrets.env" 2&> /dev/null
+fi
 
 touch /tmp/wired.log
 

@@ -3,7 +3,9 @@
 set -a
 
 source "$HOME/dotfiles/linux/variables.env"
-source "$HOME/Dropbox/secrets.env"
+if [[ -f "$HOME/Dropbox/secrets.env" ]]; then
+  source "$HOME/Dropbox/secrets.env"
+fi
 
 if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
   eval "`ssh-agent -s`" > /dev/null
