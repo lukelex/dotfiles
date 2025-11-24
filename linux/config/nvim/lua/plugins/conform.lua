@@ -11,9 +11,11 @@ return {
           mustache = { "djlint" },
           markdown = { "prettierd" },
           json = { "prettierd" },
+          jsonc = { "prettierd" },
           bash = { "beautysh" },
           sh = { "beautysh" },
           zsh = { "beautysh" },
+          yaml = { "yamlfmt" },
         },
         formatters = {
           beautysh = {
