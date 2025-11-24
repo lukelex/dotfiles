@@ -4,9 +4,22 @@
   //"spacing": 0,
 
   // Choose the order of the modules
-  "modules-left": ["custom/power", "custom/clock", "custom/date", "custom/spotify"],
+  "modules-left": [
+    "custom/power",
+    "custom/clock",
+    "custom/date",
+    "custom/spotify"
+  ],
   "modules-center": ["hyprland/workspaces", "hyprland/submap"],
-  "modules-right": ["idle_inhibitor", "pulseaudio", "memory", "backlight", "bluetooth", "network", "battery", "tray"],
+  "modules-right": [
+    "idle_inhibitor",
+    "pulseaudio",
+    "memory",
+    "backlight",
+    "bluetooth",
+    "network",
+    "tray"
+  ],
 
   // Modules configuration
   "hyprland/workspaces": {
@@ -15,7 +28,7 @@
     "warp-on-scroll": false,
     "show-special": true,
     "persistent-workspaces": {
-      "*": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ],
+      "*": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     },
     "format": "{icon}",
     "format-icons": {
@@ -45,12 +58,12 @@
   "custom/clock": {
     "format": "<big></big> {} ",
     "interval": 5,
-    "exec": "date +%H:%M",
+    "exec": "date +%H:%M"
   },
   "custom/date": {
     "format": "<big></big> {}",
     "interval": 5,
-    "exec": "date '+%d %b - %A'",
+    "exec": "date '+%d %b - %A'"
   },
   "memory": {
     "format": "{used:0.0f}/{total:0.0f}G ",
@@ -76,14 +89,14 @@
     "format-icons": ["", "", "", "", ""]
   },
   "bluetooth": {
-	"format": "",
-	"format-connected": "{device_alias} ",
-	"format-connected-battery": "{device_alias} {device_battery_percentage}% ",
-	// "format-device-preference": [ "device1", "device2" ], // preference list deciding the displayed device
-	"tooltip-format": "({status}) {controller_alias}\t{controller_address}\n\n{num_connections} connected",
-	"tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
-	"tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
-	"tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%"
+    "format": "",
+    "format-connected": "{device_alias} ",
+    "format-connected-battery": "{device_alias} {device_battery_percentage}% ",
+    // "format-device-preference": [ "device1", "device2" ], // preference list deciding the displayed device
+    "tooltip-format": "({status}) {controller_alias}\t{controller_address}\n\n{num_connections} connected",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%"
   },
   "network": {
     "format-wifi": "<big></big>",
