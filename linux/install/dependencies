@@ -45,7 +45,7 @@ esac
 # non-essentials
 yay -S --needed --noconfirm light ddcutil \
   1password spotify cups ghostscript kbt cameractrls \
-  zeal vlc zip unzip unrar btop \
+  zeal vlc zip unzip unrar btop seadrive-gui \
   pantheon-calculator tldr docker docker-buildx docker-compose \
   rubygems npm fastfetch blanket sxiv postbird \
   sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \

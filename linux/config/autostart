@@ -10,6 +10,7 @@ kmonad "$HOME/dotfiles/linux/config/kmonad/thinkpad.kbd" &
 dropbox start -i &
 playerctld daemon &
 udiskie -a &
+seadrive-gui &
 
 case "$XDG_SESSION_TYPE" in
   wayland)
