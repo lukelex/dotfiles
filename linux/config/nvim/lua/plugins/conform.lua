@@ -9,6 +9,7 @@ return {
           javascript = { "prettierd", stop_after_first = true },
           typescript = { "prettierd", stop_after_first = true },
           mustache = { "djlint" },
+          svelte = { "prettierd" },
           markdown = { "prettierd" },
           json = { "prettierd" },
           jsonc = { "prettierd" },
