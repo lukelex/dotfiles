@@ -4,7 +4,7 @@ source "$HOME/dotfiles/linux/variables.env"
 
 systemctl enable --now docker bluetooth NetworkManager sddm avahi-daemon cups
 
-# systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
+systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
 systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
 
 sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
