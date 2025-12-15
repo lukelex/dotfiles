@@ -100,11 +100,12 @@
   },
   "network": {
     "format-wifi": "<big></big>",
-    "format-ethernet": "{ipaddr}/{cidr} <big></big>",
+    "format-ethernet": "<big></big>",
     "tooltip-format": "{essid} ({signalStrength}%) | {ifname} via {gwaddr} <big></big>",
     "format-linked": "{ifname} (No IP) <big></big>",
     "format-disconnected": "<big></big>",
-    "format-alt": "{ifname}: {ipaddr}/{cidr}"
+    "format-alt": "{ifname}: {ipaddr}/{cidr}",
+    "tooltip-format-ethernet": "{ipaddr}/{cidr}"
   },
   "pulseaudio": {
     "format": "{volume}% <big>{icon}</big> {format_source}",
