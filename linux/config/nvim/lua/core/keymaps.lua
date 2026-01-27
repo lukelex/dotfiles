@@ -34,3 +34,24 @@ map("gi", vim.lsp.buf.implementation)
 
 map("gdn", vim.diagnostic.goto_next)
 map("gdp", vim.diagnostic.goto_prev)
+
+function ToggleDashUnderscoreOrCase()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_get_current_line()
+  local ch = line:sub(col + 1, col + 1)
+
+  if ch == "-" then
+    vim.api.nvim_set_current_line(
+      line:sub(1, col) .. "_" .. line:sub(col + 2)
+    )
+  elseif ch == "_" then
+    vim.api.nvim_set_current_line(
+      line:sub(1, col) .. "-" .. line:sub(col + 2)
+    )
+  else
+    -- fall back to Vim's built-in ~ behavior
+    vim.cmd("normal! ~")
+  end
+end
+
+map("~", ":lua ToggleDashUnderscoreOrCase()<CR>")
