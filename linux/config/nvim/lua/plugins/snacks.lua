@@ -5,7 +5,7 @@ return {
   keys = {
     {
       "<leader>f",
-      function() Snacks.picker.smart() end,
+      function() Snacks.picker.files() end,
       desc = "Open file in workspace",
       noremap = true,
       silent = true,
