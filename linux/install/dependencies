@@ -23,7 +23,7 @@ case $answer in
     echo 'Installing Wayland dependencies...'
     yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
-      qt5-wayland qt6-wayland wofi sox \
+      qt5-wayland qt6-wayland wofi sox slurp wf-recorder \
       xdg-desktop-portal-hyprland
     ;;
   * ) ;;
