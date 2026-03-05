@@ -4,20 +4,6 @@ return {
   priority = 999,
   keys = {
     {
-      "<leader>f",
-      function() Snacks.picker.files() end,
-      desc = "Open file in workspace",
-      noremap = true,
-      silent = true,
-    },
-    {
-      "<leader>b",
-      function() Snacks.picker.buffers() end,
-      desc = "Open buffers",
-      noremap = true,
-      silent = true,
-    },
-    {
       "<leader>gd",
       function() Snacks.picker.diagnostics() end,
       desc = "Diagnostics",
@@ -33,36 +19,6 @@ return {
       "<leader>lr",
       function() Snacks.picker.lsp_references() end,
       desc = "References",
-      noremap = true,
-    },
-    {
-      "<leader>gs",
-      function() Snacks.picker.grep() end,
-      desc = "Live Grep",
-      noremap = true,
-    },
-    {
-      "<leader>gw",
-      function() Snacks.picker.grep_word() end,
-      desc = "Grep Word",
-      noremap = true,
-    },
-    {
-      "<leader>s",
-      function() Snacks.picker.spelling() end,
-      desc = "Spell Suggestions",
-      noremap = true,
-    },
-    {
-      "<leader>q",
-      function() Snacks.picker.qflist() end,
-      desc = "Quickfix List",
-      noremap = true,
-    },
-    {
-      "<leader>r",
-      function() Snacks.picker.resume() end,
-      desc = "Resume Last Picker",
       noremap = true,
     },
     {
