@@ -4,22 +4,6 @@ return {
   priority = 999,
   dependencies = { "nvim-tree/nvim-web-devicons" },
   keys = {
-    -- {
-    --   "<leader>g",
-    --   function()
-    --     local fzf = require("fzf-lua")
-    --     local smart_open = require("utils.smart_open")
-    --     fzf.files({
-    --       actions = {
-    --         ["default"] = function(selected)
-    --           if not selected or not selected[1] then return end
-    --           smart_open.open(selected[1])
-    --         end
-    --       }
-    --     })
-    --   end,
-    --   desc = "Smart files",
-    -- },
     {
       "<leader>f",
       function() FzfLua.files() end,
@@ -83,6 +67,11 @@ return {
           ["ctrl-t"] = fzf.actions.file_tabedit,
         },
       },
+      winopts = {
+        preview = {
+          layout = "vertical"
+        }
+      }
     })
   end,
 }
