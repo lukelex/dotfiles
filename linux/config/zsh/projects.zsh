@@ -17,7 +17,7 @@ function projects-search() {
 
   local selection=$(
     printf "%s\n" "${directories[@]}" \
-      | fzf -i --no-sort --nth 1 \
+      | fzf -i --extended --nth 1 \
       | awk '{print $2"/"$1}'
   )
 
