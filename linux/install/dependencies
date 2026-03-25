@@ -24,7 +24,7 @@ case $answer in
     yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
       qt5-wayland qt6-wayland tofi sox slurp wf-recorder \
-      xdg-desktop-portal-hyprland
+      xdg-desktop-portal-hyprland kooha
     ;;
   * ) ;;
 esac
