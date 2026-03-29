@@ -8,10 +8,9 @@ case $1 in
   load)
     case "$XDG_SESSION_TYPE" in
       x11) xwallpaper --zoom "$WALLPAPER_PATH" ;;
-      wayland) swww img "$WALLPAPER_PATH" --resize crop --transition-type wipe ;;
+      wayland) awww img "$WALLPAPER_PATH" --resize crop --transition-type wipe ;;
     esac ;;
   update|change)
-    rm -rf "$WALLPAPER_PATH"
     cp "$2" "$WALLPAPER_PATH"
     $0 load ;;
   random)

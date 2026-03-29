@@ -16,7 +16,7 @@ case "$XDG_SESSION_TYPE" in
   wayland)
     waybar -c "$HOME/dotfiles/linux/config/waybar/config.json" -s "$HOME/dotfiles/linux/config/waybar/style.css" &
     kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
-    swww-daemon &
+    awww-daemon &
 
     hypridle &
     ;;

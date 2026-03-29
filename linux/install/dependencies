@@ -21,7 +21,7 @@ read -rp 'Would you like to install Hyprland? [Y/n] ' answer
 case $answer in
   [Yy]* | "")
     echo 'Installing Wayland dependencies...'
-    yay -S --needed --noconfirm hyprland wdisplays cliphist swww \
+    yay -S --needed --noconfirm hyprland wdisplays cliphist awww \
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
       qt5-wayland qt6-wayland tofi sox slurp wf-recorder \
       xdg-desktop-portal-hyprland kooha
