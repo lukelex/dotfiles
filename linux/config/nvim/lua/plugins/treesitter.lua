@@ -9,7 +9,8 @@ return {
     config = function()
       -- require("nvim-treesitter.configs").setup(opts)
 
-      vim.opt.smartindent = false
+      vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      vim.opt.smartindent = true
       require("nvim-treesitter.configs").setup {
         ensure_installed = {
           "ruby",
