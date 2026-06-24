@@ -10,6 +10,7 @@ return {
           typescript = { "prettierd", stop_after_first = true },
           mustache = { "djlint" },
           svelte = { "prettierd" },
+          ["yaml.ghaction"] = { "yamlfmt" },
           markdown = { "prettierd" },
           json = { "prettierd" },
           jsonc = { "prettierd" },

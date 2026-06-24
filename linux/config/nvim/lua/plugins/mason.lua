@@ -18,7 +18,8 @@ local servers = {
   "tailwindcss",
   "vimls",
   "gopls",
-  "hyprls"
+  "hyprls",
+  "yamlls"
 }
 
 return {
@@ -53,6 +54,19 @@ return {
           formatting = false
         }
       },
+    })
+
+    vim.lsp.config("yamlls", {
+      settings = {
+        yaml = {
+          customTags = {
+            "!Equals sequence",
+            "!FindInMap sequence", "!GetAtt scalar", "!GetAZs scalar", "!ImportValue scalar", "!Join sequence scalar",
+            "!Ref scalar", "!Select sequence", "!Split sequence", "!Sub scalar", "!And sequence", "!Not sequence",
+            "!Equals sequence", "!Sub sequence", "!ImportValue scalar", "!If sequence"
+          }
+        }
+      }
     })
 
     vim.lsp.enable(servers)
