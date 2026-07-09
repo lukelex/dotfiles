@@ -43,67 +43,97 @@ alias grl="git reflog"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
 git_clean() {
-  # Don't kill the whole shell on error
-  set -u
-  set +e
+  local remote="${1:-origin}"
 
-  # ANSI colors
-  RED='\033[0;31m'
-  BLUE='\033[0;34m'
-  GREEN='\033[0;32m'
-  NC='\033[0m' # No Color
-
-  # Ensure we are in a git repo
-  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-    echo "Not inside a git repository."
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    printf "Not inside a git repository.\n"
     return 0
   fi
 
-  # Prune origin and count how many were removed
-  local prune_output
-  prune_output=$(git remote prune origin 2>/dev/null)
-  local pruned_count=0
-  if [[ -n "$prune_output" ]]; then
-    pruned_count=$(echo "$prune_output" | grep -c "pruned")
-    echo -e "${GREEN}Pruned $pruned_count stale remote branch(es) from origin${NC}"
+  # Colors only when stdout is a terminal
+  local RED BLUE GREEN YELLOW BOLD NC
+  if [[ -t 1 ]]; then
+    RED=$'\033[0;31m'
+    BLUE=$'\033[0;34m'
+    GREEN=$'\033[0;32m'
+    YELLOW=$'\033[0;33m'
+    BOLD=$'\033[1m'
+    NC=$'\033[0m'
   else
-    echo -e "${GREEN}No stale remote branches to prune${NC}"
+    RED=""
+    BLUE=""
+    GREEN=""
+    YELLOW=""
+    BOLD=""
+    NC=""
   fi
 
-  local heads
-  local branches=()
+  local current_branch
+  current_branch="$(git branch --show-current)"
+
+  local protected_branches=("main" "master" "development" "$current_branch")
+
+  is_protected_branch() {
+    local branch="$1"
+    local protected
+
+    for protected in "${protected_branches[@]}"; do
+      [[ "$branch" == "$protected" ]] && return 0
+    done
+
+    return 1
+  }
+
+  printf "${BOLD}Cleaning Git branches${NC}\n\n"
+
+  local prune_output pruned_count
+  prune_output="$(git remote prune "$remote" 2>/dev/null)"
+  pruned_count="$(grep -c '^\s*\* \[pruned\]' <<< "$prune_output")"
+
+  declare -A remote_branches=()
+
+  local remote_branch
+  while IFS= read -r remote_branch; do
+    remote_branch="${remote_branch#"$remote"/}"
+    [[ "$remote_branch" == "HEAD" ]] && continue
+    remote_branches["$remote_branch"]=1
+  done < <(git for-each-ref --format="%(refname:short)" "refs/remotes/$remote")
+
   local removed_count=0
   local kept_count=0
+  local skipped_count=0
+  local branch
+  local removed_branches=()
 
-  # Collect local branches safely into an array
   while IFS= read -r branch; do
-    # strip leading * and spaces
-    branch="${branch##\* }"
-    branch="${branch## }"
-    # skip protected ones
-    if [[ "$branch" != "main" && "$branch" != "development" ]]; then
-      branches+=("$branch")
+    if is_protected_branch "$branch"; then
+      ((skipped_count++))
+      continue
     fi
-  done < <(git branch --format="%(refname:short)")
 
-  heads=$(git ls-remote --heads -q) || true
-
-  for branch in "${branches[@]}"; do
-    if ! echo "$heads" | grep -q -F "$branch"; then
-      echo -e "Looking for '$branch'... ${RED}not found remotely → removing${NC}"
-      git branch -D "$branch" || true
-      ((removed_count++))
+    if [[ -z "${remote_branches[$branch]:-}" ]]; then
+      if git branch -D "$branch" >/dev/null 2>&1; then
+        removed_branches+=("$branch")
+        ((removed_count++))
+      else
+        printf "${YELLOW}Could not remove:${NC} %s\n" "$branch"
+      fi
     else
-      echo -e "Looking for '$branch'... ${BLUE}found remotely → keeping${NC}"
       ((kept_count++))
     fi
-  done
+  done < <(git for-each-ref --format="%(refname:short)" refs/heads)
 
-  echo
-  echo -e "${GREEN}Summary:${NC}"
-  echo -e "  Local branches removed: ${RED}$removed_count${NC}"
-  echo -e "  Local branches kept:    ${BLUE}$kept_count${NC}"
-  echo -e "  Remote branches pruned: ${GREEN}$pruned_count${NC}"
+  if (( removed_count > 0 )); then
+    printf "${RED}Removed local branches:${NC}\n"
+    printf "  %s\n" "${removed_branches[@]}"
+    printf "\n"
+  fi
+
+  printf "${BOLD}Summary${NC}\n"
+  printf "  ${RED}Removed:${NC} %d local branch(es)\n" "$removed_count"
+  printf "  ${BLUE}Kept:${NC}    %d local branch(es) still on %s\n" "$kept_count" "$remote"
+  printf "  ${YELLOW}Skipped:${NC} %d protected/current branch(es)\n" "$skipped_count"
+  printf "  ${GREEN}Pruned:${NC}  %d stale remote branch(es)\n" "$pruned_count"
 }
 
 
