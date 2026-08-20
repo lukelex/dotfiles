@@ -1,3 +1,9 @@
+-- 1. If target is already in a buffer in the current window, switch focus to it.
+-- 2. If target is in a buffer on another window, focus that buffer in that window.
+-- 3. If target buffer exists but is not visible, open it in a new vertical split in the current window.
+-- 4. If target file exists on disk, open it in a new vertical split.
+-- 5. If target file does not exist, open a named unsaved buffer in a new vertical split.
+
 local M = {}
 
 local function normalize_path(path)
