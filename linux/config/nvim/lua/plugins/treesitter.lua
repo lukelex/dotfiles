@@ -1,62 +1,47 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    lazy = false,
     build = ":TSUpdate",
     dependencies = {
       "RRethy/nvim-treesitter-endwise",
       "nvim-treesitter/nvim-treesitter-textobjects"
     },
     config = function()
-      -- require("nvim-treesitter.configs").setup(opts)
-
-      vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       vim.opt.smartindent = true
-      require("nvim-treesitter.configs").setup {
-        ensure_installed = {
-          "ruby",
-          "javascript",
-          "typescript",
-          "yaml",
-          "markdown",
-          "css",
-          "html",
-          "bash",
-        },
-        sync_install = false,
-        auto_install = true,
-        indent = true,
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = false,
-        },
-        endwise = {
-          enable = false,
-        },
-        textobjects = {
-          select = {
-            enable = true,
-            -- Automatically jump forward to closest text object
-            lookahead = true,
-            keymaps = {
-              ["ac"] = { query = "@class.outer", desc = "Select around class" },
-              ["ic"] = { query = "@class.inner", desc = "Select inside class" },
+      local languages = { "ruby", "javascript", "typescript", "yaml", "markdown", "css", "html", "bash" }
 
-              ["ar"] = { query = "@ruby.outer", desc = "Select around Ruby structure" },
-              ["ir"] = { query = "@ruby.inner", desc = "Select inside Ruby structure" },
+      require("nvim-treesitter").install(languages)
 
-              ["am"] = { query = "@function.outer", desc = "Select around a method/function definition" },
-              ["im"] = { query = "@function.inner", desc = "Select inside a method/function definition" },
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = languages,
+        callback = function()
+          vim.treesitter.start()
+          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end,
+      })
 
-              ["af"] = { query = "@function.outer", desc = "Select around a method/function definition" },
-              ["if"] = { query = "@function.inner", desc = "Select inside a method/function definition" },
-            }
-          }
-        }
+      require("nvim-treesitter-textobjects").setup {
+        select = {
+          lookahead = true,
+        },
       }
+
+      local select = require("nvim-treesitter-textobjects.select")
+      local function textobject(lhs, query, desc)
+        vim.keymap.set({ "x", "o" }, lhs, function()
+          select.select_textobject(query, "textobjects")
+        end, { desc = desc })
+      end
+
+      textobject("ac", "@class.outer", "Select around class")
+      textobject("ic", "@class.inner", "Select inside class")
+      textobject("ar", "@ruby.outer", "Select around Ruby structure")
+      textobject("ir", "@ruby.inner", "Select inside Ruby structure")
+      textobject("am", "@function.outer", "Select around a method/function definition")
+      textobject("im", "@function.inner", "Select inside a method/function definition")
+      textobject("af", "@function.outer", "Select around a method/function definition")
+      textobject("if", "@function.inner", "Select inside a method/function definition")
     end
   },
-  {
-    "nvim-treesitter/playground",
-    event = { "BufRead" },
-  }
 }
