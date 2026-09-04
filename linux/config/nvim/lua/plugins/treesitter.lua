@@ -41,6 +41,9 @@ return {
               ["ac"] = { query = "@class.outer", desc = "Select around class" },
               ["ic"] = { query = "@class.inner", desc = "Select inside class" },
 
+              ["ar"] = { query = "@ruby.outer", desc = "Select around Ruby structure" },
+              ["ir"] = { query = "@ruby.inner", desc = "Select inside Ruby structure" },
+
               ["am"] = { query = "@function.outer", desc = "Select around a method/function definition" },
               ["im"] = { query = "@function.inner", desc = "Select inside a method/function definition" },
 
