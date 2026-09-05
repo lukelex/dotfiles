@@ -31,7 +31,7 @@ return {
     },
     {
       "<leader>q",
-      function() FzfLua.qflist() end,
+      function() FzfLua.quickfix() end,
       desc = "Quickfix List",
       noremap = true,
     },
@@ -60,10 +60,21 @@ return {
     fzf.setup({
       actions = {
         files = {
-          ["default"] = smart_open.files,
+          ["default"] = function(selected, opts)
+            if #selected > 1 then
+              fzf.actions.file_sel_to_qf(selected, opts)
+            else
+              smart_open.files(selected, opts)
+            end
+          end,
           ["ctrl-s"] = fzf.actions.file_split,
           ["ctrl-v"] = fzf.actions.file_vsplit,
           ["ctrl-t"] = fzf.actions.file_tabedit,
+          ["ctrl-q"] = {
+            fn = fzf.actions.file_sel_to_qf,
+            prefix = "select-all",
+          },
+          ["ctrl-Q"] = fzf.actions.file_sel_to_ll,
         },
       },
       winopts = {

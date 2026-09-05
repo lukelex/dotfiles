@@ -47,6 +47,11 @@ function M.files(selected, opts)
     -- Rule 1 & 4: Not visible anywhere? Open in current window
     vim.cmd.edit(vim.fn.fnameescape(entry.path))
   end
+
+  -- 4. Jump to the entry's location (set for pickers like the quickfix list)
+  if entry.line and entry.line > 0 then
+    vim.api.nvim_win_set_cursor(0, { entry.line, math.max(entry.col or 0, 1) - 1 })
+  end
 end
 
 return M
