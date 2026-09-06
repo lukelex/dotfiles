@@ -1,3 +1,6 @@
+(defpoll display_info :interval "10s" :initial "" `u_monitors brightness xrandr | tr '\n' ' '`)
+(defpoll ddc_count :interval "10s" :initial "no DDC displays" `u_monitors brightness list`)
+
 (defwindow displays :monitor 0
                     :stacking "fg"
                     :wm-ignore true
@@ -9,20 +12,21 @@
          :class "panel"
          :orientation "vertical"
          :space-evenly false
+      (label :class "title text"
+             :text "Displays")
+      (label :class "text"
+             :text display_info)
+      (label :class "text subdued"
+             :text "DDC/CI buses: ${ddc_count}")
       (box :spacing SPACING
            :orientation "horizontal"
-        (quick-action
-          :icon "brightness"
-          :script ""
-          :enabled false
-          :text "Auto Brightness"
-        )
-        (quick-action
-          :icon "moon"
-          :script ""
-          :enabled false
-          :text "Extend vertically"
-        )
+        (button :class "button"
+                :onclick "xrandr --auto &"
+                :timeout "5s"
+          (label :text "Autodetect"))
+        (button :class "button"
+                :onclick "arandr &"
+          (label :text "Arandr"))
       )
     )
   )

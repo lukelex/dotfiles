@@ -1,42 +1,93 @@
 #!/usr/bin/bash
+set -eu
 
-function get {
-  echo $(cat /sys/class/leds/tpacpi::kbd_backlight/brightness)
+## Keyboard backlight control.
+## Detects the device and its number of steps: most keyboards expose a few
+## discrete levels (e.g. 0..2) rather than fine brightness control. Tools
+## below report and operate in "steps" for those, and in percent otherwise.
+
+KBD_DIR="/sys/class/leds/tpacpi::kbd_backlight"
+
+if [[ ! -w "$KBD_DIR/brightness" ]]; then
+  for dir in /sys/class/leds/*kbd*/; do
+    if [[ -w "$dir/brightness" ]] && [[ -r "$dir/max_brightness" ]]; then
+      KBD_DIR="${dir%/}"
+      break
+    fi
+  done
+fi
+
+raw_max() { cat "$KBD_DIR/max_brightness"; }
+raw_cur() { cat "$KBD_DIR/brightness"; }
+
+## Round $1 / $2 to nearest integer.
+round() {
+  echo $(( ( $1 * 2 + $2 ) / ( $2 * 2 ) ))
 }
 
-function show {
-  value=$(get)
-  percentage=$(echo $((50 * $value)))
-  bar=$(seq -s "─" $(echo $((percentage / 4))) | sed 's/[0-9]//g')
+clamp() { # value min max
+  local v=$1
+  (( v < $2 )) && v=$2
+  (( v > $3 )) && v=$3
+  echo "$v"
+}
 
+percent() {
+  local m
+  m=$(raw_max)
+  round "$(( $(raw_cur) * 100 ))" "$m"
+}
+
+level_to_percent() {
+  local m
+  m=$(raw_max)
+  round "$(( $1 * 100 ))" "$m"
+}
+
+percent_to_level() {
+  local m
+  m=$(raw_max)
+  clamp "$(round "$(( $1 * m ))" 100)" 0 "$m"
+}
+
+set_raw() { # level
+  local n
+  n=$(clamp "$1" 0 "$(raw_max)")
+  if [[ "$(raw_cur)" != "$n" ]]; then
+    printf '%s' "$n" > "$KBD_DIR/brightness"
+  fi
+  echo "$n"
+}
+
+show() {
+  local pct
+  pct=$(percent)
   notify-send -a System \
     -i notification-keyboard-brightness \
     -h string:wired-tag:system \
     -u low \
-    "$percentage%" "$bar"
-}
-
-function increase_by {
-  echo $(($(get) + $1)) | sudo tee /sys/class/leds/tpacpi::kbd_backlight/brightness
-  show
-}
-
-function decrease_by {
-  echo $(($(get) - $1)) | sudo tee /sys/class/leds/tpacpi::kbd_backlight/brightness
-  show
+    "$pct%  ($(raw_cur)/$(raw_max))"
 }
 
 case $1 in
-  inc)
-    increase_by 1
+  steps)       raw_max ;;
+  level)       raw_cur ;;
+  type)
+    if (( $(raw_max) <= 15 )); then echo stepped; else echo continuous; fi
     ;;
-  dec)
-    decrease_by 1
-    ;;
-  show)
-    show
-    ;;
-  toggle)
-    show
+  stepped)     echo "$((( $(raw_max) <= 15 )) && echo true || echo false)" ;;
+  continuous)  echo "$((( $(raw_max) > 15 )) && echo true || echo false)" ;;
+  get)         percent ;;
+  set)         set_raw "$(percent_to_level "$2")" ;;
+  set-step)    set_raw "$2" ; if [[ "${3:-}" != quiet ]]; then show; fi ;;
+  inc)         set_raw "$(( $(raw_cur) + 1 ))" >/dev/null; show ;;
+  dec)         set_raw "$(( $(raw_cur) - 1 ))" >/dev/null; show ;;
+  toggle)      if (( $(raw_cur) > 0 )); then set_raw 0 >/dev/null; else set_raw "$(raw_max)" >/dev/null; fi; show ;;
+  icon)
+    if (( $(raw_cur) > 0 )); then
+      echo ""
+    else
+      echo "%{F#666666}%{F-}"
+    fi
     ;;
 esac

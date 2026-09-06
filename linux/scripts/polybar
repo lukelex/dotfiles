@@ -4,7 +4,7 @@ HOSTNAME=$(hostname -s)
 
 # killall -q polybar
 
-while pgrep -u $UID -x polybar > /dev/null; do sleep 1; done
+while pgrep -x polybar 2>/dev/null | grep -vw -F "$$" > /dev/null; do sleep 1; done
 
 primary=$(polybar -m | grep primary | sed -e 's/:.*$//g')
 

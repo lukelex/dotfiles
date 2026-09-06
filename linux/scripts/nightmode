@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+set -eu
+
+## Night-mode control: a master on/off switch for the gammastep user service.
+## gammastep watches the config in ~/.config/gammastep/config.ini and applies
+## the warm night temperature between the configured dusk and dawn times.
+
+is_active() {
+  systemctl --user is-active gammastep 2>/dev/null || true
+}
+
+case $1 in
+  on)
+    command -v gammastep &>/dev/null || exit 1
+    systemctl --user start gammastep
+    ;;
+  off)
+    systemctl --user stop gammastep 2>/dev/null || true
+    command -v gammastep &>/dev/null && gammastep -x 2>/dev/null || true
+    ;;
+  toggle)
+    if [[ "$(is_active)" == active ]]; then
+      "$0" off
+    else
+      "$0" on
+    fi
+    ;;
+  get)
+    echo "$([[ "$(is_active)" == active ]] && echo true || echo false)"
+    ;;
+  *)
+    exit 1
+    ;;
+esac

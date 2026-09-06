@@ -22,6 +22,11 @@ XF86MonBrightnessUp
 XF86MonBrightnessDown
   u_backlight dec
 
+XF86KbdBrightnessUp
+  u_keeb-backlight inc
+XF86KbdBrightnessDown
+  u_keeb-backlight dec
+
 super + shift + q
   xkill
 

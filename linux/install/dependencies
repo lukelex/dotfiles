@@ -43,7 +43,7 @@ case $answer in
 esac
 
 # non-essentials
-yay -S --needed --noconfirm light ddcutil \
+yay -S --needed --noconfirm light ddcutil gammastep \
   1password spotify cups ghostscript kbt cameractrls \
   zeal vlc zip unzip unrar btop seadrive-gui \
   pantheon-calculator tldr docker docker-buildx docker-compose \

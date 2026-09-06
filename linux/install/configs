@@ -41,6 +41,9 @@ ln -fvs "$DOT_CONFIG/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
 mkdir -p "$XDG_CONFIG_HOME/wired"
 ln -fvs "$DOT_CONFIG/wired/config.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
 
+mkdir -p "$XDG_CONFIG_HOME/gammastep"
+ln -fvs "$DOT_CONFIG/gammastep/config.ini" "$XDG_CONFIG_HOME/gammastep/config.ini"
+
 rm -rf "$XDG_CONFIG_HOME/kitty"
 ln -fvs "$DOT_CONFIG/kitty" "$XDG_CONFIG_HOME/kitty"
 

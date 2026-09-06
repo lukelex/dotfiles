@@ -1,0 +1,14 @@
+[Unit]
+Description=Screen temperature adjustment (gammastep)
+Documentation=https://gitlab.com/chadmed/gammastep
+After=graphical.target
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/gammastep
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=%h/dotfiles/linux/variables.env

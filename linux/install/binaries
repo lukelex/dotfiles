@@ -7,5 +7,5 @@ source "$HOME/dotfiles/linux/variables.env"
 files=$(find "$DOTFILES/linux/scripts/" -maxdepth 1 -type f -perm 755)
 
 for script in $files; do
-  sudo ln -fvs "$script" "/usr/local/bin/u_$(basename $script)"
+  sudo ln -fvs "$script" "/usr/local/bin/u_$(basename "$script")"
 done

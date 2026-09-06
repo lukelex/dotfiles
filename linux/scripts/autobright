@@ -1,0 +1,109 @@
+#!/usr/bin/bash
+set -eu
+
+## Auto brightness daemon: uses the built-in webcam as an ambient light meter.
+##
+## The exposure time the camera picks for a scene is a proxy for how bright
+## the room is (dimmer scene -> longer exposure). Calling this script's
+## `daemon` mode runs a loop that reads the exposure control and glides the
+## panel brightness toward a matching level. No ALS hardware required.
+
+CAMERA="${CAMERA:-/dev/video0}"
+POLL=${POLL:-2}
+
+STATE_DIR="$HOME/.cache/autobright"
+STATE_FILE="$STATE_DIR/state"
+PID_FILE="$STATE_DIR/pid"
+
+EXPOSURE_MIN=2
+EXPOSURE_MAX=1250
+MIN_BRIGHTNESS=15
+
+## Ambient index 0..1 (1 = bright room) from current exposure time.
+ambient() {
+  local auto exp
+  auto=$(v4l2-ctl -d "$CAMERA" --get-ctrl auto_exposure 2>/dev/null | grep -oP ':\s+\K\d+' || true)
+  exp=$(v4l2-ctl -d "$CAMERA" --get-ctrl exposure_time_absolute 2>/dev/null | grep -oP ':\s+\K\d+' || true)
+
+  ## Manual exposure is not a light meter; nothing useful to report.
+  [[ -n "$auto" && -n "$exp" && "$auto" != "1" ]] || { echo -1; return; }
+
+  (( exp < EXPOSURE_MIN )) && exp=$EXPOSURE_MIN
+  (( exp > EXPOSURE_MAX )) && exp=$EXPOSURE_MAX
+
+  echo "scale=4; 1 - ($exp - $EXPOSURE_MIN) / ($EXPOSURE_MAX - $EXPOSURE_MIN)" | bc -l
+}
+
+daemon() {
+  mkdir -p "$STATE_DIR"
+  echo 1 > "$STATE_FILE"
+  echo $$ > "$PID_FILE"
+  trap 'rm -f "$STATE_FILE" "$PID_FILE"; exit 0' TERM INT HUP
+
+  while :; do
+    local idx target current delta percent
+    idx=0
+    if [[ "$(ambient)" != -1 ]]; then
+      idx=$(ambient)
+      target=$(echo "($MIN_BRIGHTNESS + $idx * (100 - $MIN_BRIGHTNESS)) / 1" | bc)
+      current=$(u_backlight get 2>/dev/null || echo 0)
+      delta=$(( target - current ))
+      (( delta < 0 )) && delta=$(( -delta ))
+      if (( delta > 3 )); then
+        if (( target > current )); then
+          percent=$(( current + 3 ))
+        else
+          percent=$(( current - 3 ))
+        fi
+        (( percent < 5 )) && percent=5
+        (( percent > 100 )) && percent=100
+        light -S "$percent"
+      fi
+    fi
+    sleep "$POLL"
+  done
+}
+
+running() {
+  [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
+case $1 in
+  ambient)
+    amb=$(ambient)
+    [[ "$amb" == -1 ]] && exit 1
+    echo "$amb"
+    ;;
+  start)
+    if running; then
+      echo 1 > "$STATE_FILE"
+      exit 0
+    fi
+    setsid nohup "$0" daemon >/dev/null 2>&1 &
+    disown
+    sleep 1
+    echo 1 > "$STATE_FILE"
+    ;;
+  stop)
+    if running; then
+      kill "$(cat "$PID_FILE")" 2>/dev/null || true
+    fi
+    rm -f "$STATE_FILE" "$PID_FILE"
+    ;;
+  toggle)
+    if [[ "$(cat "$STATE_FILE" 2>/dev/null || echo 0)" == 1 ]]; then
+      "$0" stop
+    else
+      "$0" start
+    fi
+    ;;
+  get)
+    grep -q 1 "$STATE_FILE" 2>/dev/null && echo true || echo false
+    ;;
+  daemon)
+    daemon
+    ;;
+  *)
+    exit 1
+    ;;
+esac

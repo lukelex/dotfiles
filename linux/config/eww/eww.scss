@@ -43,6 +43,12 @@ box.component {
       padding: $magic-number * 2;
     }
   }
+
+  &.on {
+    .body .button {
+      background-color: $i3-active;
+    }
+  }
 }
 
 .quick-toggler {

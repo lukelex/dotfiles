@@ -23,6 +23,32 @@
   )
 )
 
+(defwidget toggle-action [?text icon script enabled]
+  (box :class "quick-action ${enabled ? "on" : ""}"
+       :orientation "vertical"
+       :space-evenly false
+         :hexpand false
+    (box :class "body"
+         :hexpand false
+         :space-evenly false
+         :halign "center"
+         :orientation "vertical"
+      (box :space-evenly false
+           :halign "center"
+        (pointer :active true
+                 :hexpand false
+          (button :class "button"
+                  :onclick "${script} &"
+                  :timeout "1s"
+            (icon-small :name icon)
+          )
+        )
+      )
+      (label :class "text" :text text)
+    )
+  )
+)
+
 (defwidget quick-toggler [script ?tooltip ?enabled ?close]
   (box :class "quick-toggler ${enabled ? "on" : "off"}"
        :orientation "vertical"
@@ -95,7 +121,7 @@
              :max 100
              :onchange "${script} {} &"
              :tooltip tooltip
-             :timeout "5")
+             :timeout "150ms")
     )
   )
 )

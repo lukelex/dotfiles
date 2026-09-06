@@ -1,5 +1,4 @@
 #!/usr/bin/bash
-
 set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
@@ -7,17 +6,19 @@ source "$HOME/dotfiles/linux/variables.env"
 HIGH=
 LOW=
 
+LINK_FILE="$HOME/.cache/link-devices"
+
 get_value() {
-  echo "$(light -G 2>&- | cut -f1 -d '.')"
+  light -G 2>&- | cut -f1 -d .
 }
 
 icon() {
-  if [[ 1 -eq $(echo "$1 > 75" | bc -l) ]]; then
+  if (( $1 > 75 )); then
     echo "%{F#FF0000}$HIGH%{F-}"
-  elif [[ 1 -eq $(echo "$1 > 25" | bc -l) ]]; then
-    echo $HIGH
+  elif (( $1 > 25 )); then
+    echo "$HIGH"
   else
-    echo $LOW
+    echo "$LOW"
   fi
 }
 
@@ -33,13 +34,35 @@ show() {
     "Brightness"
 }
 
+link_state() {
+  if [[ -f "$LINK_FILE" ]]; then echo true; else echo false; fi
+}
+
+link_toggle() {
+  if [[ -f "$LINK_FILE" ]]; then
+    rm -f "$LINK_FILE"
+  else
+    mkdir -p "$(dirname "$LINK_FILE")"
+    : > "$LINK_FILE"
+  fi
+  link_state
+}
+
+## When "link devices" is on, dragging the laptop slider also drives the
+## keyboard and any DDC-capable external displays at the same percentage.
+maybe_link() {
+  [[ "$(link_state)" == true ]] || return 0
+  local pct=$1
+  u_keeb-backlight set "$pct" quiet &> /dev/null &
+  u_monitors brightness set "$pct" quiet &> /dev/null &
+}
+
 case $1 in
-  if) light -L 2>&- | grep auto ;;
-  icon) icon get_value ;;
-  get) echo "$VALUE" ;;
-  set) light -S "$2" ;;
+  icon)       echo "$(icon "$(get_value)")" ;;
+  polybar)    echo "$(icon "$(get_value)")" ;;
+  get)        get_value ;;
+  set)        maybe_link "$2"; light -S "$2" ;;
   dim)
-    # light -O && light -T 0.25
     light -O -s sysfs/leds/tpacpi::kbd_backlight
     light -S 0 -s sysfs/leds/tpacpi::kbd_backlight
     ;;
@@ -47,7 +70,7 @@ case $1 in
     light -I
     light -I -s sysfs/leds/tpacpi::kbd_backlight
     ;;
-  show) show ;;
+  show)       show ;;
   inc)
     light -A 2 2>&-
     audio_tick &
@@ -56,4 +79,8 @@ case $1 in
     light -U 2 2>&-
     audio_tick &
     show ;;
+  link-get)   link_state ;;
+  link-toggle) link_toggle ;;
+  if)
+    light -L 2>&- | grep -q auto && echo true || echo false ;;
 esac
