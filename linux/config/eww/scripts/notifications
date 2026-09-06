@@ -57,7 +57,7 @@ module Icon
       in_name?(icon, entry) ||
         in_app_name?(icon, entry) ||
         in_body?(icon, entry)
-    end&.fetch(:icon, "bell")
+    end&.fetch(:icon, "bell") || "bell"
   end
 
   private

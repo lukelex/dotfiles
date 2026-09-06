@@ -51,6 +51,15 @@ get() {
   echo "$state | $charge | $time"
 }
 
+shorten_time() {
+  case "$1" in
+    *hours)   echo "${1% hours} hr" ;;
+    *minutes) echo "${1% minutes} min" ;;
+    *seconds) echo "${1% seconds} sec" ;;
+    *)        echo "$1 left" ;;
+  esac
+}
+
 show_battery() {
   local state
   local charge
@@ -61,9 +70,9 @@ show_battery() {
   time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
 
   if [[ -z $time ]]; then
-    message="Fully charged!"
+    message="Full"
   else
-    message="$time left"
+    message=$(shorten_time "$time")
   fi
 
   notify-send -a System \

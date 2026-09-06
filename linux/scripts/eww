@@ -1,5 +1,29 @@
 #!/usr/bin/bash
 
+source "$HOME/dotfiles/linux/variables.env"
+
+## Regenerate eww's icon paths from $FONT_AWESOME_PATH.
+## Eww's .yuck cannot expand environment variables and cannot load SVG,
+## so we point it at the PNG tree that lives next to $FONT_AWESOME_PATH.
+prepare() {
+  local fa_root
+  fa_root=$(dirname "$FONT_AWESOME_PATH")
+
+  cat > "$DOT_CONFIG/eww/paths.yuck" <<YUCK
+(defvar ICONS_PATH "$fa_root/pngs/solid")
+(defvar BRANDS_ICONS_PATH "$fa_root/pngs/brands")
+YUCK
+}
+
+case $1 in
+  prepare)
+    prepare
+    exit 0
+    ;;
+esac
+
+prepare
+
 ## Run eww daemon if not running already
 if [[ ! $(pidof eww) ]]; then
   eww daemon
@@ -8,11 +32,11 @@ fi
 
 toggle() {
   window=$1
-  closed=$(eww list-windows | grep -v '^\*')
+  open=$(eww active-windows | grep ": $window$")
   eww close-all
 
-  if [[ $(echo "$closed" | grep "$window") ]]; then
-    eww open "$1"
+  if [[ -z "$open" ]]; then
+    eww open "$window"
   fi
 }
 
