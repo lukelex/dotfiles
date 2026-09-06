@@ -71,6 +71,7 @@ show() {
 
 case $1 in
   steps)       raw_max ;;
+  stages)      jq -nc --argjson m "$(raw_max)" '[range(1; $m + 1)]' ;;
   level)       raw_cur ;;
   type)
     if (( $(raw_max) <= 15 )); then echo stepped; else echo continuous; fi

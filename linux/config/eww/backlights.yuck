@@ -1,6 +1,7 @@
 (defpoll brightness_value :interval "1s" :initial 50 `u_backlight get`)
 (defpoll keeb_level     :interval "1s" :initial 1 `u_keeb-backlight level`)
 (defpoll keeb_steps     :interval "2s" :initial 2 `u_keeb-backlight steps`)
+(defpoll keeb_stages    :interval "2s" :initial "[1,2]" `u_keeb-backlight stages`)
 (defpoll keeb_pct       :interval "1s" :initial 100 `u_keeb-backlight get`)
 (defpoll keeb_stepped   :interval "2s" :initial true `u_keeb-backlight stepped`)
 (defpoll keeb_continuous :interval "2s" :initial false `u_keeb-backlight continuous`)
@@ -9,6 +10,41 @@
 (defpoll night_state    :interval "3s" :initial false `u_nightmode get`)
 (defpoll auto_state     :interval "3s" :initial false `u_autobright get`)
 (defpoll link_state     :interval "3s" :initial false `u_backlight link-get`)
+
+(defwidget keeb-stage [n]
+  (eventbox :cursor "pointer"
+            :hexpand true
+            :onclick "u_keeb-backlight set-step ${n} quiet"
+            :class "keeb-stage ${keeb_level >= n ? "on" : "off"} ${n == 1 ? "first" : ""} ${n == keeb_steps ? "last" : ""}"
+    (box)
+  )
+)
+
+(defwidget stepped-kbd []
+  (box :spacing SPACING
+       :orientation "horizontal"
+       :space-evenly false
+       :visible { keeb_stepped }
+    (pointer :active true
+      (button :class "big-button"
+              :onclick "u_keeb-backlight toggle"
+              :tooltip "Keyboard backlight on / off"
+              :timeout "1s"
+        (icon-small :name "keyboard-brightness")
+      )
+    )
+    (box :class "keeb-track"
+         :orientation "horizontal"
+         :spacing 2
+         :space-evenly false
+         :hexpand true
+         :valign "center"
+      (for step in keeb_stages
+        (keeb-stage :n step)
+      )
+    )
+  )
+)
 
 (defwindow backlights :monitor 0
                       :stacking "fg"
@@ -50,6 +86,7 @@
                        :script "u_monitors brightness set"
                        :value external_value)
       )
+      (stepped-kbd)
       (box :spacing SPACING
            :orientation "horizontal"
            :space-evenly false

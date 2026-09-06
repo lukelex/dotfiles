@@ -123,6 +123,38 @@ scale trough {
   }
 }
 
+.keeb-track {
+  background-color: $component-bg;
+  border-radius: $radius;
+  min-height: 28px;
+  min-width: 240px;
+  padding: 5px;
+}
+
+.keeb-stage {
+  all: unset;
+  background-color: #DCDCDC;
+  border-radius: $radius * 0.75;
+
+  &.on {
+    background-color: black;
+  }
+
+  &:hover {
+    background-color: $i3-active;
+  }
+
+  &.first {
+    border-top-left-radius: $radius;
+    border-bottom-left-radius: $radius;
+  }
+
+  &.last {
+    border-top-right-radius: $radius;
+    border-bottom-right-radius: $radius;
+  }
+}
+
 .title {
   font-size: 20px;
 }
