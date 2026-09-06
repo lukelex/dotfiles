@@ -1,69 +1,123 @@
 #!/bin/env ruby
 
-_pipewire, audio_raw, video_raw, _settings = `wpctl status`.split("\n\n")
+require "json"
 
-module PATTERNS
-  PARAGRAPH = /(.+?\d\..+\n)+\s│/
-  DEVICE = /(?<default>\*)?\s+(?<id>\d+)\.\s(?<name>.+?)(?<metadata>\s*\[.+?\])?\n/
+def active_default(source)
+  key = source ? "default.audio.source" : "default.audio.sink"
+  meta = `pw-metadata -n default`.to_s
+  json = meta[/key:'#{Regexp.escape(key)}' value:'([^']*)'/, 1]
+
+  JSON.parse(json)["name"] if json
 end
 
-Audio = Struct.new(:text) do
-  def input
-    Device.parse text.match(/Sources:\n#{PATTERNS::PARAGRAPH}/).to_s
-  end
+def node_ids
+  nodes = JSON.parse(`pw-dump`)
 
-  def output
-    Device.parse text.match(/Sinks:\n#{PATTERNS::PARAGRAPH}/).to_s
-  end
-end
+  nodes.each_with_object({}) do |node, map|
+    next unless node["type"] == "PipeWire:Interface:Node"
 
-Video = Struct.new(:text) do
-  def to_a
-    Device.parse(text.match(/Sources:\n#{PATTERNS::PARAGRAPH}/).to_s)
+    name = node.dig("info", "props", "node.name")
+    map[name] = node["id"] if name
   end
 end
 
-Device = Struct.new(:default, :id, :name, :metadata) do
-  def self.parse(text)
-    text.scan(PATTERNS::DEVICE).map do |entry|
-      new(*entry)
+def pactl_blocks(kind)
+  blocks = []
+  current = []
+
+  `pactl list #{kind}s`.each_line do |line|
+    if line =~ /^(Sink|Source) #\d+/
+      blocks << current.join if current.any?
+      current = [line]
+    else
+      current << line
     end
   end
 
-  def to_h
-    super.merge(icon: Icon.for(self), default: !default.nil?, id: id.to_i)
+  blocks << current.join if current.any?
+  blocks
+end
+
+def parse_device(block)
+  {
+    id: block[/^(?:Sink|Source) #(\d+)/, 1].to_i,
+    name: block[/^\tName: (.+)/, 1],
+    description: block[/^\tDescription: (.+)/, 1],
+    api: block[/device\.api\s*=\s*"([^"]+)"/, 1],
+    profile: block[/device\.profile\.name\s*=\s*"([^"]+)"/, 1]
+  }
+end
+
+def icon_for(device, input)
+  if device[:name].to_s.start_with?("bluez_") || device[:api] == "bluez5"
+    ["bluetooth", "Bluetooth"]
+  elsif input
+    ["microphone", "Microphone"]
+  elsif device[:description].to_s =~ /hdmi|displayport/i || device[:profile].to_s =~ /hdmi/i
+    ["tv-music", "HDMI"]
+  elsif device[:description].to_s =~ /headset|headphone/i
+    ["headset", "Headset"]
+  elsif device[:description].to_s =~ /usb|dac/i
+    ["headphones", "External"]
+  else
+    ["speakers", "Speakers"]
   end
 end
 
-module Icon
-  extend self
+def audio_devices(kind, source)
+  default = active_default(source)
+  ids = node_ids
 
-  ICONS = {
-    "DAC" => "headphones",
-    "HDMI" => "tv-music",
-    "headset" => "headset",
-    "speakers" => "speakers"
-  }.freeze
-  FALLBACK_ICONS = {
-    "output" => "speakers",
-    "input" => "microphone",
-    "video" => "camera-web",
-  }.freeze
+  pactl_blocks(kind).filter_map do |block|
+    device = parse_device(block)
+    next unless device[:name]
+    next if source && device[:name].end_with?(".monitor")
 
-  def for(entry)
-    ICONS[entry.name] ||
-      ICONS.find { |key, _value| entry.name.include?(key) }&.last ||
-      FALLBACK_ICONS[ARGV.first]
+    icon = icon_for(device, source)
+    wpctl_id = ids[device[:name]]
+    metadata_key = source ? "default.audio.source" : "default.audio.sink"
+
+    cmd = if wpctl_id
+            "wpctl set-default #{wpctl_id} ; pw-metadata -n default 0 #{metadata_key} '#{JSON.generate(name: device[:name])}' >/dev/null"
+          else
+            ""
+          end
+
+    {
+      id: device[:id],
+      default: device[:name] == default,
+      name: device[:description] || device[:name],
+      icon: icon[0],
+      kind: icon[1],
+      cmd: cmd
+    }
   end
 end
 
-require "json"
-print JSON.dump \
+def video_devices
+  raw = `wpctl status`.split("\n\n")[2].to_s
+  paragraph = raw[/Sources:\n(.*?)(?=\n\s*[├└]─)/m, 1].to_s
+
+  paragraph
+    .scan(/^\s*[│|]?\s*(\*)?\s*(\d+)\.\s+(.*?)\s*$/)
+    .filter_map do |default, id, name|
+      next if name.empty?
+
+      {
+        id: id.to_i,
+        default: !default.nil?,
+        name: name,
+        icon: "camera-web",
+        kind: "Camera",
+        cmd: ""
+      }
+    end
+    .uniq { |device| device[:name] }
+end
+
+puts JSON.dump \
   case ARGV.first
-  when "output"
-    Audio.new(audio_raw).output.map(&:to_h)
-  when "input"
-    Audio.new(audio_raw).input.map(&:to_h)
-  when "video"
-    Video.new(video_raw).to_a.map(&:to_h)
+  when "output" then audio_devices("sink", false)
+  when "input" then audio_devices("source", true)
+  when "video" then video_devices
   end

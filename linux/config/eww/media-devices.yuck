@@ -9,22 +9,43 @@
                                              :y "66px"
                                              :anchor "top right")
   (v-window
-    (media-devices-header)
-
-    (media-devices-body :devices output_devices)
-    (media-devices-body :devices input_devices)
-    (media-devices-body :devices video_devices)
+    (box :orientation "vertical"
+         :space-evenly false
+         :spacing SPACING
+         :style "min-width: 500px"
+      (devices-module :title "Audio Output"
+                      :icon "speakers"
+                      :devices output_devices)
+      (devices-module :title "Audio Input"
+                      :icon "microphone"
+                      :devices input_devices)
+      (devices-module :title "Video"
+                      :icon "camera-web"
+                      :devices video_devices)
+    )
   )
 )
 
-(defwidget media-devices-header []
-  (box :class "panel"
+(defwidget devices-module [title icon devices]
+  (box :class "media-device-panel panel"
+       :hexpand true
+       :spacing SPACING
+       :orientation "vertical"
+       :space-evenly false
+       :visible { arraylength(devices) != 0 }
     (box :orientation "horizontal"
+         :hexpand true
+         :valign "center"
       (box :halign "start"
-        (title :text "Media Devices")
+           :space-evenly false
+           :spacing SPACING
+        (icon-small :name icon)
+        (title :text title)
       )
 
       (box :halign "end"
+           :space-evenly false
+           :spacing SPACING
         (pointer :active true
           (button :class "button" :onclick "pavucontrol & u_eww close &"
             (icon-small :name "gear")
@@ -32,29 +53,48 @@
         )
       )
     )
-  )
-)
 
-(defwidget media-devices-body [devices]
-  (box :class "media-device-panel panel" :spacing SPACING
-       :orientation "vertical" :space-evenly false
-       :visible { arraylength(devices) != 0 }
     (box :orientation "vertical"
-      (for entry in devices
-        (media-devices-entry :entry entry)
+         :style "border: 2px solid grey; padding: 4px; border-radius: 4px;"
+         :spacing SPACING
+      (for device in devices
+        (device-entry :device device)
       )
     )
   )
 )
 
-(defwidget media-devices-entry [entry]
+(defwidget device-entry [device]
   (pointer :active true
-    (button :class "button" :onclick "wpctl set-default ${entry.id} && u_eww close &"
-      (line
-        (icon-small :name { entry.icon })
-        (label :class "text"
-               :limit-width 30
-               :text { entry.name }
+    (button :class "button" :onclick { device.cmd }
+      (box :orientation "horizontal"
+           :hexpand true
+           :spacing SPACING
+           :space-evenly false
+        (box :halign "start"
+             :hexpand true
+             :space-evenly false
+             :spacing SPACING
+          (icon-small :name { device.icon })
+          (box :orientation "vertical"
+            (label :class "text"
+                   :halign "start"
+                   :text { device.name }
+                   :limit-width 40
+            )
+            (label :class "text"
+                   :halign "start"
+                   :text { device.kind }
+            )
+          )
+        )
+
+        (box :halign "end"
+             :space-evenly false
+             :style "min-width: ${ICON_SIZE_SMALL}px"
+          (box :visible { device.default }
+            (icon-small :name "circle-check")
+          )
         )
       )
     )

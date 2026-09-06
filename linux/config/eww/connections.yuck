@@ -149,7 +149,9 @@
 (defwidget bluetooth-device [device]
   (box :orientation "horizontal"
        :hexpand true
+       :space-evenly false
     (box :halign "start"
+         :hexpand true
          :space-evenly false
          :spacing SPACING
       (icon-small :name "arrows-to-dotted-line")
@@ -161,10 +163,12 @@
     (box :halign "end"
          :space-evenly false
          :spacing SPACING
-         :visible { strlength(device.battery) != 0 }
-      (icon-small :name "battery-half")
+         :style "min-width: ${ICON_SIZE_SMALL}px"
+      (box :visible { strlength(device.battery) != 0 }
+        (icon-small :name "battery-half")
+      )
       (label :class "text"
-             :text { device.battery }
+             :text { strlength(device.battery) != 0 ? device.battery : "" }
       )
     )
   )
