@@ -9,7 +9,7 @@ return {
     },
     config = function()
       vim.opt.smartindent = true
-      local languages = { "ruby", "javascript", "typescript", "yaml", "markdown", "css", "html", "bash" }
+      local languages = { "ruby", "javascript", "typescript", "yaml", "markdown", "css", "html", "bash", "yuck" }
 
       require("nvim-treesitter").install(languages)
 

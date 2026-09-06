@@ -18,6 +18,7 @@ return {
     { "mustache/vim-mustache-handlebars",            event = { "BufRead" } },
     { "isobit/vim-caddyfile",                        event = { "BufRead" } },
     { "terrastruct/d2-vim",                          event = { "BufRead" } },
+    { "jorgelman07/nvim-yuck",                       event = { "BufRead" } },
     { "JoosepAlviste/nvim-ts-context-commentstring", event = { "BufRead" } }
   }
 }
