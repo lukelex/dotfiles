@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+set -u
+
+curl -4 -Ls --max-time 5 http://ipwho.is | jq -r .ip

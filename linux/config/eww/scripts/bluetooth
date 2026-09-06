@@ -3,23 +3,27 @@
 require "json"
 
 def battery(info)
-  return "~" if info["Connected"] == "no"
-
-  info["Battery Percentage"].to_s.match(/(?<=\().+?(?=\))/).to_s + "%"
+  raw = info["Battery Percentage"].to_s
+  match = raw[/\(([^)]+)\)/]
+  match ? match[1] : ""
 end
 
-devices = `bluetoothctl paired-devices | awk '{ print $2 }'`.split("\n").map do |uid|
-  info = `bluetoothctl info #{uid} | grep -Ev '^Device|UUID|Modalias'`
+devices = `bluetoothctl devices Connected`.lines.filter_map do |line|
+  next unless line.start_with?("Device ")
+
+  _tag, uid, *name = line.split
+
+  info = `bluetoothctl info #{uid}`
     .split("\n")
-    .map { |device| device.split(":").map(&:strip) }
+    .map { |entry| entry.split(":", 2).map(&:strip) }
+    .select { |key, _val| key == "Name" || key == "Battery Percentage" }
     .to_h
 
-  info.merge(
-    {
-      "uid" => uid,
-      "Battery Percentage" => battery(info)
-    }
-  )
+  {
+    "uid" => uid,
+    "name" => info["Name"] || name.join(" "),
+    "battery" => battery(info)
+  }
 end
 
 puts devices.to_json

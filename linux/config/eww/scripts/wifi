@@ -1,0 +1,56 @@
+#!/usr/bin/bash
+
+set -u
+
+CACHE_DIR="$HOME/.cache/eww"
+CACHE_FILE="$CACHE_DIR/wifi-traffic"
+mkdir -p "$CACHE_DIR"
+
+iface=$(nmcli -t -f DEVICE,TYPE,STATE dev status | awk -F: '$2 == "wifi" && $3 == "connected" { print $1; exit }')
+
+if [[ -n "$iface" ]]; then
+  ssid=$(nmcli -t -f active,ssid dev wifi | grep '^yes:' | cut -d: -f2-)
+  rate=$(nmcli -t -f active,rate dev wifi | grep '^yes:' | cut -d: -f2-)
+  signal=$(awk 'NR == 3 { printf "%d dBm", $4 }' /proc/net/wireless)
+  ip_local=$(ip -4 -o addr show dev "$iface" 2>/dev/null | awk '{ print $4 }' | cut -d/ -f1 | head -1)
+else
+  ssid=""
+  rate=""
+  signal=""
+  ip_local=""
+fi
+
+down="0.00 MB/s"
+up="0.00 MB/s"
+
+if [[ -n "$iface" ]]; then
+  rx_now=$(awk -v i="$iface" '$1 == i":" { print $2 }' /proc/net/dev)
+  tx_now=$(awk -v i="$iface" '$1 == i":" { print $10 }' /proc/net/dev)
+  now=$(date +%s.%N)
+
+  prev=$(cat "$CACHE_FILE" 2>/dev/null)
+  if [[ -n "$prev" ]]; then
+    set -- $prev
+    p_time=$1
+    p_rx=$2
+    p_tx=$3
+    dt=$(awk -v a="$now" -v b="$p_time" 'BEGIN { print a - b }')
+
+    if awk -v dt="$dt" 'BEGIN { exit !(dt > 0) }'; then
+      down=$(awk -v dr="$((rx_now - p_rx))" -v dt="$dt" 'BEGIN { printf "%.2f MB/s", dr / 1000000 / dt }')
+      up=$(awk -v ut="$((tx_now - p_tx))" -v dt="$dt" 'BEGIN { printf "%.2f MB/s", ut / 1000000 / dt }')
+    fi
+  fi
+
+  tmp="$CACHE_FILE.tmp"
+  echo "$now $rx_now $tx_now" > "$tmp" && mv "$tmp" "$CACHE_FILE"
+fi
+
+jq -cn \
+  --arg ssid "$ssid" \
+  --arg signal "$signal" \
+  --arg rate "$rate" \
+  --arg down "$down" \
+  --arg up "$up" \
+  --arg ip "$ip_local" \
+  '{ssid: $ssid, signal: $signal, rate: $rate, down: $down, up: $up, ip: $ip}'

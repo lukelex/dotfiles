@@ -54,7 +54,11 @@ $light-accent-text: #00232c;
     }
 
     &.on .button.first {
-      background-color: lightblue;
+      background-color: $i3-active;
+
+      &:hover {
+        background-color: #A36029;
+      }
     }
 
     &.off .button.second {

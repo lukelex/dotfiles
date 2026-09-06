@@ -23,7 +23,7 @@
   )
 )
 
-(defwidget quick-toggler [script ?tooltip ?enabled]
+(defwidget quick-toggler [script ?tooltip ?enabled ?close]
   (box :class "quick-toggler ${enabled ? "on" : "off"}"
        :orientation "vertical"
        :space-evenly false
@@ -31,14 +31,14 @@
          :space-evenly true
       (pointer :active true
         (button :class "first button"
-                :onclick "${script} on & u_eww close &"
+                :onclick { close == false ? "${script} on &" : "${script} on & u_eww close &" }
                 :tooltip tooltip
           (label :class "text" :text "On")
         )
       )
       (pointer :active true
         (button :class "second button"
-                :onclick "${script} off & u_eww close &"
+                :onclick { close == false ? "${script} off &" : "${script} off & u_eww close &" }
                 :tooltip "Go to settings"
           (label :class "text" :text "Off")
         )

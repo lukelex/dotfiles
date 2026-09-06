@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+set -u
+
+iface=$(nmcli -t dev status | awk -F: '$2 == "ethernet" && $1 !~ /^veth/ && $1 !~ /^br-/ && $1 != "docker0" { print $1; exit }')
+ip=""
+
+if [[ -n "$iface" ]]; then
+  ip=$(ip -4 -o addr show dev "$iface" 2>/dev/null | awk '{ print $4 }' | cut -d/ -f1 | head -1)
+fi
+
+if [[ -n "$ip" ]]; then
+  jq -cn --arg iface "$iface" --arg ip "$ip" '{connected: true, name: $iface, ip: $ip}'
+else
+  echo '{"connected": false, "name": "", "ip": ""}'
+fi
