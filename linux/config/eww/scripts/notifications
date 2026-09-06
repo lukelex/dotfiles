@@ -13,7 +13,8 @@ HIDE_LIST = [
   "package manager",
   "networkmanager applet",
   "microphone",
-  "notify-send"
+  "notify-send",
+  "system"
 ].freeze
 
 def enrich(entry)
