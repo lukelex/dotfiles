@@ -2,10 +2,6 @@ setopt PROMPT_SUBST
 
 ICON=λ
 INPUT_ICON=»
-zmodload zsh/complist
-
-zstyle ':completion:*' menu select
-zstyle ':completion:*' list-colors '=*=32'
 
 autoload -Uz vcs_info
 precmd() { vcs_info }
