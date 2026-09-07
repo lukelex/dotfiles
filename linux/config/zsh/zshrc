@@ -7,7 +7,6 @@ source "$DOTFILES/linux/config/zsh/history.zsh"
 source "$DOTFILES/linux/config/zsh/branches.zsh"
 source "$DOTFILES/linux/config/zsh/doc-search.zsh"
 source "$DOTFILES/linux/config/zsh/projects.zsh"
-source "$DOTFILES/linux/config/zsh/work.zsh"
 
 bindkey "^[[1;5C" forward-word      # Ctrl+right
 bindkey "^[[1;5D" backward-word     # Ctrl+left
