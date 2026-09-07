@@ -10,6 +10,8 @@ source "$DOTFILES/linux/config/zsh/branches.zsh"
 source "$DOTFILES/linux/config/zsh/doc-search.zsh"
 source "$DOTFILES/linux/config/zsh/projects.zsh"
 
+source "$DOTFILES/linux/config/aliases"
+
 bindkey "^[[1;5C" forward-word      # Ctrl+right
 bindkey "^[[1;5D" backward-word     # Ctrl+left
 bindkey "^[[H"    beginning-of-line # Ctrl+a
