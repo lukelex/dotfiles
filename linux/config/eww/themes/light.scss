@@ -93,6 +93,16 @@ $light-accent-text: #00232c;
   }
 
   .display-entry {
+    &.unavailable {
+      &:hover {
+        background-color: unset;
+      }
+
+      &.layout-tile:hover {
+        background-color: $light-background-4;
+      }
+    }
+
     &.layout-tile {
       background-color: $light-background-3;
 
@@ -104,7 +114,7 @@ $light-accent-text: #00232c;
         background-color: $light-accent-background;
       }
 
-      &:hover, &.active:hover, &.unavailable:hover {
+      &:hover, &.active:hover {
         background-color: #abddfc;
       }
     }
@@ -113,6 +123,22 @@ $light-accent-text: #00232c;
   .button, .big-button {
     &:hover {
       background-color: $light-background-4;
+    }
+  }
+
+  .power-action {
+    background-color: $light-background-3;
+
+    &.selected {
+      background-color: $light-accent-background;
+    }
+
+    &:hover {
+      background-color: #abddfc;
+    }
+
+    &.selected:hover {
+      background-color: $light-accent-background;
     }
   }
 

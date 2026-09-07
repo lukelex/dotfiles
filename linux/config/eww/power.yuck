@@ -1,39 +1,29 @@
+(defvar power_cursor 0)
+
+(defwidget power-action [index icon cmd label]
+  (pointer :active true
+    (button :class "button power-action ${power_cursor == index ? "selected" : ""}"
+            :onclick { "${cmd} & u_eww close &" }
+            :tooltip label
+      (icon-large :name icon)
+    )
+  )
+)
+
 (defwindow power :monitor 0
                  :stacking "fg"
                  :wm-ignore true
-                 :geometry (geometry :x "-20px"
-                                     :y "66px"
-                                     :anchor "top right")
+                 :geometry (geometry :anchor "center")
   (v-window
-    (box :class "panel"
-         :orientation "vertical"
-         :space-evenly true
-         :spacing SPACING
-      (pointer :active true
-        (button :class "button" :onclick "u_exit lock" :tooltip "Lock"
-          (icon :name "lock")
-        )
-      )
-      (pointer :active true
-        (button :class "button" :onclick "u_exit suspend" :tooltip "Suspend"
-          (icon :name "snooze")
-        )
-      )
-      (pointer :active true
-        (button :class "button" :onclick "u_exit logout" :tooltip "Logout"
-          (icon :name "right-from-bracket")
-        )
-      )
-      (pointer :active true
-        (button :class "button" :onclick "u_exit reboot" :tooltip "Reboot"
-          (icon :name "arrows-rotate")
-        )
-      )
-      (pointer :active true
-        (button :class "button" :onclick "u_exit shutdown" :tooltip "Shutdown"
-          (icon :name "power-off")
-        )
-      )
+    (box :class "panel power-menu"
+         :orientation "horizontal"
+         :spacing (SPACING * 2)
+         :space-evenly false
+      (power-action :index 0 :icon "lock"            :cmd "u_exit lock"     :label "Lock (l)")
+      (power-action :index 1 :icon "snooze"           :cmd "u_exit suspend"  :label "Suspend (s)")
+      (power-action :index 2 :icon "right-from-bracket" :cmd "u_exit logout" :label "Logout (o)")
+      (power-action :index 3 :icon "arrows-rotate"    :cmd "u_exit reboot"   :label "Reboot (r)")
+      (power-action :index 4 :icon "power-off"        :cmd "u_exit shutdown" :label "Shutdown (p)")
     )
   )
 )

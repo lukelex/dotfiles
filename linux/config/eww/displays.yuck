@@ -2,7 +2,7 @@
 (defpoll layout_rows  :interval "3s" :initial "[]" `u_displays layouts`)
 
 (defwidget profile-entry [profile]
-  (pointer :active true
+  (pointer :active { profile.available }
     (button :class "button display-entry ${profile.available ? "" : "unavailable"} ${profile.active ? "active" : ""}"
             :onclick { profile.available ? "u_displays load ${profile.name} &" : "" }
       (box :orientation "horizontal"
@@ -32,10 +32,10 @@
 )
 
 (defwidget layout-tile [layout]
-  (pointer :active true
+  (pointer :active { layout.available }
     (button :class "button display-entry layout-tile ${layout.available ? "" : "unavailable"} ${layout.active ? "active" : ""}"
             :onclick { layout.available ? "u_displays load ${layout.name} &" : "" }
-            :tooltip { layout.label }
+            :tooltip { layout.available ? layout.label : "" }
       (icon-medium :name { layout.icon })
     )
   )

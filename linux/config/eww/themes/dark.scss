@@ -42,6 +42,16 @@ $dark-accent-text: #00232c;
   }
 
   .display-entry {
+    &.unavailable {
+      &:hover {
+        background-color: unset;
+      }
+
+      &.layout-tile:hover {
+        background-color: $dark-background-4;
+      }
+    }
+
     &.layout-tile {
       background-color: $dark-background-3;
 
@@ -53,7 +63,7 @@ $dark-accent-text: #00232c;
         background-color: $dark-accent-background;
       }
 
-      &:hover, &.active:hover, &.unavailable:hover {
+      &:hover, &.active:hover {
         background-color: #7fd9d2;
       }
     }
@@ -90,6 +100,22 @@ $dark-accent-text: #00232c;
 
     slider {
       color: #ffffff;
+    }
+  }
+
+  .power-action {
+    background-color: $dark-background-3;
+
+    &.selected {
+      background-color: $dark-accent-background;
+    }
+
+    &:hover {
+      background-color: #7fd9d2;
+    }
+
+    &.selected:hover {
+      background-color: $dark-accent-background;
     }
   }
 

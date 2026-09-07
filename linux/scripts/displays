@@ -124,7 +124,7 @@ layouts() {
       row=(); count=0
     fi
   done <<'EOF'
-off	Off	display-slash	1
+off	Off	display-slash	2
 common	Mirror	clone	2
 clone-largest	Clone largest	expand	2
 horizontal	Horizontal	arrows-left-right	2

@@ -93,6 +93,7 @@ box.component {
 .display-entry {
   &.unavailable {
     color: $disabled-color;
+    opacity: 0.45;
 
     .text {
       color: $disabled-color;
@@ -131,6 +132,20 @@ box.component {
   image {
     min-width: $image-size;
     min-height: $image-size;
+  }
+}
+
+.power-menu {
+  border-radius: $radius;
+  padding: $magic-number * 2;
+}
+
+.power-action {
+  border-radius: $radius * 0.6;
+  padding: $magic-number * 2;
+
+  image {
+    transition: 200ms ease;
   }
 }
 
