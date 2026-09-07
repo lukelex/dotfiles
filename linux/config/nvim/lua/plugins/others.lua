@@ -1,8 +1,8 @@
 return {
   {
     -- Editor improvements
-    "DataWraith/auto_mkdir",
-    "schickling/vim-bufonly",
+    { "DataWraith/auto_mkdir",              event = { "BufWritePre" } },
+    { "schickling/vim-bufonly",             cmd = { "BufOnly" } },
     { "danro/rename.vim",                            event = { "BufRead" } },
     { "tpope/vim-commentary",                        event = { "BufRead" } },
     { "tpope/vim-repeat",                            event = { "BufRead" } },

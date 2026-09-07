@@ -1,6 +1,6 @@
 return {
-  { "echasnovski/mini.pairs",      opts = {} },
-  { "echasnovski/mini.cursorword", opts = { delay = 50 } },
+  { "echasnovski/mini.pairs",      opts = {}, event = { "InsertEnter" } },
+  { "echasnovski/mini.cursorword", opts = { delay = 50 }, event = { "BufRead" } },
   {
     "echasnovski/mini.indentscope",
     opts = {},
