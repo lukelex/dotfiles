@@ -59,6 +59,40 @@ $dark-accent-text: #00232c;
     }
   }
 
+  .quick-action {
+    .body .button {
+      border-color: #93a1a1;
+    }
+  }
+
+  .keeb-track {
+    background-color: $dark-background-3;
+  }
+
+  .keeb-stage {
+    background-color: $dark-background-4;
+
+    &.on {
+      background-color: $dark-accent-background;
+    }
+
+    &:hover {
+      background-color: $dark-accent-background;
+    }
+  }
+
+  scale trough {
+    background-color: $dark-background-3;
+
+    highlight {
+      background-color: $dark-accent-background;
+    }
+
+    slider {
+      color: #ffffff;
+    }
+  }
+
   .notification-panel {
     .body {
       .entry {
