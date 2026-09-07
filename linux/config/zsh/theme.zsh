@@ -1,5 +1,3 @@
-#!/usr/bin/zsh
-
 setopt PROMPT_SUBST
 
 ICON=λ

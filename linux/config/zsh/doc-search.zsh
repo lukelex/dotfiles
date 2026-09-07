@@ -1,5 +1,3 @@
-#!/usr/bin/zsh
-
 function search-man() {
   local selection=$(
     man -k . \
