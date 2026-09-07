@@ -1,6 +1,5 @@
 return {
   "saghen/blink.cmp",
-  lazy = false,
   event = { "BufRead" },
   version = "1.*",
   opts = {
