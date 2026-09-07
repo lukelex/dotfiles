@@ -85,9 +85,12 @@ return {
       local cap = math.max(1, math.floor((width - head_w - 2) / pivot_w))
 
       local start = offset
-      -- Recenter the window on the current tab whenever it's out of view.
       local end_idx = math.min(start + cap - 1, total - 1)
-      if current_idx > end_idx then
+      -- Always show the first tab (and its contents) fully when it is active.
+      if current_idx == 0 then
+        start = 0
+      elseif current_idx > end_idx then
+        -- Shift the window forward so the current tab comes back into view.
         start = current_idx - (end_idx - start)
       elseif current_idx < start then
         start = current_idx
