@@ -33,6 +33,12 @@ box.component {
   padding: $magic-number * 2;
 }
 
+.bordered-section {
+  border: 2px solid grey;
+  padding: 4px;
+  border-radius: 4px;
+}
+
 .quick-action {
   .body {
     border-radius: 50%;

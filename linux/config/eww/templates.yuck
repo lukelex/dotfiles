@@ -126,6 +126,44 @@
   )
 )
 
+(defwidget module-section [icon title ?settings]
+  (box :class "media-device-panel panel"
+       :hexpand true
+       :spacing SPACING
+       :orientation "vertical"
+       :space-evenly false
+    (box :orientation "horizontal"
+         :hexpand true
+         :valign "center"
+      (box :halign "start"
+           :space-evenly false
+           :spacing SPACING
+        (icon-small :name icon)
+        (title :text title)
+      )
+
+      (box :halign "end"
+           :space-evenly false
+           :spacing SPACING
+           :visible { settings != "" }
+        (pointer :active true
+          (button :class "button"
+                  :onclick { settings }
+            (icon-small :name "gear")
+          )
+        )
+      )
+    )
+
+    (box :class "bordered-section"
+         :orientation "vertical"
+         :space-evenly false
+         :spacing SPACING
+      (children)
+    )
+  )
+)
+
 
 
 ; (defwidget keyboard_brightness [?active]

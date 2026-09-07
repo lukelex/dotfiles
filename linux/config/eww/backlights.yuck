@@ -54,47 +54,52 @@
                                           :anchor "top right")
   (v-window
     (box :spacing SPACING
-         :class "panel"
          :orientation "vertical"
          :space-evenly false
-      (box :spacing SPACING
-           :orientation "horizontal"
-        (toggle-action :icon "brightness"
-                       :script "u_autobright toggle"
-                       :enabled auto_state
-                       :text "Auto")
-        (toggle-action :icon "moon"
-                       :script "u_nightmode toggle"
-                       :enabled night_state
-                       :text "Night")
-        (toggle-action :icon "sun"
-                       :script "u_backlight link-toggle"
-                       :enabled link_state
-                       :text "Link")
+      (module-section :icon "sliders"
+                      :title "Modes"
+        (box :spacing SPACING
+             :orientation "horizontal"
+             :space-evenly true
+          (toggle-action :icon "brightness"
+                         :script "u_autobright toggle"
+                         :enabled auto_state
+                         :text "Auto")
+          (toggle-action :icon "moon"
+                         :script "u_nightmode toggle"
+                         :enabled night_state
+                         :text "Night")
+          (toggle-action :icon "sun"
+                         :script "u_backlight link-toggle"
+                         :enabled link_state
+                         :text "Link")
+        )
       )
-      (box :class "h-spacer" :hexpand true)
-      (slider-setter :icon "laptop"
-                     :tooltip "Laptop display (${brightness_value}%)"
-                     :script "u_backlight set"
-                     :value brightness_value)
-      (box :spacing SPACING
-           :orientation "horizontal"
-           :space-evenly false
-           :visible { external_present }
-        (slider-setter :icon "display"
-                       :tooltip "External displays (${external_value}%)"
-                       :script "u_monitors brightness set"
-                       :value external_value)
-      )
-      (stepped-kbd)
-      (box :spacing SPACING
-           :orientation "horizontal"
-           :space-evenly false
-           :visible { keeb_continuous }
-        (slider-setter :icon "keyboard-brightness"
-                       :tooltip "Keyboard brightness (${keeb_pct}%)"
-                       :script "u_keeb-backlight set"
-                       :value keeb_pct)
+      (module-section :icon "sun"
+                      :title "Brightness"
+        (slider-setter :icon "laptop"
+                       :tooltip "Laptop display (${brightness_value}%)"
+                       :script "u_backlight set"
+                       :value brightness_value)
+        (box :spacing SPACING
+             :orientation "horizontal"
+             :space-evenly false
+             :visible { external_present }
+          (slider-setter :icon "display"
+                         :tooltip "External displays (${external_value}%)"
+                         :script "u_monitors brightness set"
+                         :value external_value)
+        )
+        (stepped-kbd)
+        (box :spacing SPACING
+             :orientation "horizontal"
+             :space-evenly false
+             :visible { keeb_continuous }
+          (slider-setter :icon "keyboard-brightness"
+                         :tooltip "Keyboard brightness (${keeb_pct}%)"
+                         :script "u_keeb-backlight set"
+                         :value keeb_pct)
+        )
       )
     )
   )

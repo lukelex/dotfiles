@@ -27,38 +27,16 @@
 )
 
 (defwidget devices-module [title icon devices]
-  (box :class "media-device-panel panel"
-       :hexpand true
-       :spacing SPACING
-       :orientation "vertical"
-       :space-evenly false
-       :visible { arraylength(devices) != 0 }
-    (box :orientation "horizontal"
-         :hexpand true
-         :valign "center"
-      (box :halign "start"
+  (box :visible { arraylength(devices) != 0 }
+    (module-section :icon icon
+                    :title title
+                    :settings "pavucontrol & u_eww close &"
+      (box :orientation "vertical"
            :space-evenly false
            :spacing SPACING
-        (icon-small :name icon)
-        (title :text title)
-      )
-
-      (box :halign "end"
-           :space-evenly false
-           :spacing SPACING
-        (pointer :active true
-          (button :class "button" :onclick "pavucontrol & u_eww close &"
-            (icon-small :name "gear")
-          )
+        (for device in devices
+          (device-entry :device device)
         )
-      )
-    )
-
-    (box :orientation "vertical"
-         :style "border: 2px solid grey; padding: 4px; border-radius: 4px;"
-         :spacing SPACING
-      (for device in devices
-        (device-entry :device device)
       )
     )
   )
