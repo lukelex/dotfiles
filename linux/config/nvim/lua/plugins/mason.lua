@@ -69,6 +69,35 @@ return {
       }
     })
 
-    vim.lsp.enable(servers)
+    local filetypes = {
+      ruby =             { "solargraph", "standardrb" },
+      javascript =       { "ts_ls", "eslint", "tailwindcss" },
+      typescript =       { "ts_ls", "eslint", "tailwindcss" },
+      svelte =           { "svelte", "tailwindcss" },
+      html =             { "html", "tailwindcss" },
+      css =              { "cssls", "tailwindcss" },
+      markdown =         { "marksman" },
+      lua =              { "lua_ls" },
+      sql =              { "sqlls" },
+      dockerfile =       { "dockerls" },
+      docker_compose =   { "docker_compose_language_service" },
+      rust =             { "rust_analyzer" },
+      slint =            { "slint_lsp" },
+      vim =              { "vimls" },
+      go =               { "gopls" },
+      hyprlang =         { "hyprls" },
+      yaml =             { "yamlls" },
+      bash =             { "bashls" },
+      sh =               { "bashls" },
+    }
+
+    vim.api.nvim_create_autocmd("FileType", {
+      callback = function(args)
+        local ft_servers = filetypes[args.match]
+        if ft_servers then
+          vim.lsp.enable(ft_servers)
+        end
+      end,
+    })
   end
 }
