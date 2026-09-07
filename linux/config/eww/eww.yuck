@@ -2,6 +2,7 @@
 (defvar MAGIC_NUMBER 1.6)
 (defvar ICON_SIZE 35)
 (defvar ICON_SIZE_SMALL 21)
+(defvar ICON_SIZE_MEDIUM 42)
 (defvar ICON_SIZE_LARGE 70)
 (defvar THEME "light")
 
@@ -82,6 +83,14 @@
          :image-height ICON_SIZE_LARGE
          :width ICON_SIZE_LARGE
          :height ICON_SIZE_LARGE)
+)
+
+(defwidget icon-medium [name]
+  (image :path "${ICONS_PATH}/${name}.png"
+         :image-width ICON_SIZE_MEDIUM
+         :image-height ICON_SIZE_MEDIUM
+         :width ICON_SIZE_MEDIUM
+         :height ICON_SIZE_MEDIUM)
 )
 
 (defwidget brands-icon [name]

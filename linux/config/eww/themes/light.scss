@@ -92,6 +92,24 @@ $light-accent-text: #00232c;
     background-color: $light-background-3;
   }
 
+  .display-entry {
+    &.layout-tile {
+      background-color: $light-background-3;
+
+      &.unavailable {
+        background-color: $light-background-4;
+      }
+
+      &.active {
+        background-color: $light-accent-background;
+      }
+
+      &:hover, &.active:hover, &.unavailable:hover {
+        background-color: #abddfc;
+      }
+    }
+  }
+
   .button, .big-button {
     &:hover {
       background-color: $light-background-4;

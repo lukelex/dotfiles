@@ -1,5 +1,55 @@
-(defpoll display_info :interval "10s" :initial "" `u_monitors brightness xrandr | tr '\n' ' '`)
-(defpoll ddc_count :interval "10s" :initial "no DDC displays" `u_monitors brightness list`)
+(defpoll profile_list :interval "3s" :initial "[]" `u_displays list`)
+(defpoll layout_rows  :interval "3s" :initial "[]" `u_displays layouts`)
+
+(defwidget profile-entry [profile]
+  (pointer :active true
+    (button :class "button display-entry ${profile.available ? "" : "unavailable"} ${profile.active ? "active" : ""}"
+            :onclick { profile.available ? "u_displays load ${profile.name} &" : "" }
+      (box :orientation "horizontal"
+           :hexpand true
+           :spacing SPACING
+           :space-evenly false
+        (box :halign "start"
+             :hexpand true
+             :space-evenly false
+             :spacing SPACING
+          (label :class "text"
+                 :halign "start"
+                 :text { profile.name }
+          )
+        )
+
+        (box :halign "end"
+             :space-evenly false
+             :style "min-width: ${ICON_SIZE_SMALL}px"
+          (box :visible { profile.active }
+            (icon-small :name "circle-check")
+          )
+        )
+      )
+    )
+  )
+)
+
+(defwidget layout-tile [layout]
+  (pointer :active true
+    (button :class "button display-entry layout-tile ${layout.available ? "" : "unavailable"} ${layout.active ? "active" : ""}"
+            :onclick { layout.available ? "u_displays load ${layout.name} &" : "" }
+            :tooltip { layout.label }
+      (icon-medium :name { layout.icon })
+    )
+  )
+)
+
+(defwidget layout-row [row]
+  (box :spacing SPACING
+       :orientation "horizontal"
+       :space-evenly true
+    (for layout in row
+      (layout-tile :layout layout)
+    )
+  )
+)
 
 (defwindow displays :monitor 0
                     :stacking "fg"
@@ -9,24 +59,28 @@
                                         :anchor "top right")
   (v-window
     (box :spacing SPACING
-         :class "panel"
          :orientation "vertical"
          :space-evenly false
-      (label :class "title text"
-             :text "Displays")
-      (label :class "text"
-             :text display_info)
-      (label :class "text subdued"
-             :text "DDC/CI buses: ${ddc_count}")
-      (box :spacing SPACING
-           :orientation "horizontal"
-        (button :class "button"
-                :onclick "xrandr --auto &"
-                :timeout "5s"
-          (label :text "Autodetect"))
-        (button :class "button"
-                :onclick "arandr &"
-          (label :text "Arandr"))
+         :style "min-width: 400px"
+      (module-section :icon "display"
+                      :title "Profiles"
+        (box :orientation "vertical"
+             :space-evenly false
+             :spacing SPACING
+          (for profile in profile_list
+            (profile-entry :profile profile)
+          )
+        )
+      )
+      (module-section :icon "sliders"
+                      :title "Layouts"
+        (box :spacing SPACING
+             :orientation "vertical"
+             :space-evenly false
+          (for row in layout_rows
+            (layout-row :row row)
+          )
+        )
       )
     )
   )

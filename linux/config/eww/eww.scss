@@ -90,6 +90,38 @@ box.component {
   padding: $magic-number * 1;
 }
 
+.display-entry {
+  &.unavailable {
+    color: $disabled-color;
+
+    .text {
+      color: $disabled-color;
+    }
+
+    &:hover {
+      background-color: unset;
+    }
+  }
+
+  &.active {
+    .text {
+      color: #000000;
+      font-weight: bold;
+    }
+  }
+}
+
+.layout-tile {
+  min-width: $magic-number * 6;
+  min-height: $magic-number * 6;
+  border-radius: $radius * 0.6;
+  padding: $magic-number * 2;
+
+  image {
+    transition: 200ms ease;
+  }
+}
+
 .big-button {
   border-radius: 50%;
   padding: $magic-number * 4;
