@@ -14,14 +14,12 @@
            :space-evenly true
            :hexpand false
         (quick-setter
-          :asd "alexanders"
           :icon "wifi"
           :script "nm-connection-editor"
           :enabled true
           :tooltip "Toggle Wifi"
         )
         (quick-setter
-          :asd "2 devices"
           :icon "bluetooth"
           :script "blueman-manager"
           :enabled true

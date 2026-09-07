@@ -41,6 +41,24 @@ $dark-accent-text: #00232c;
     }
   }
 
+  .display-entry {
+    &.layout-tile {
+      background-color: $dark-background-3;
+
+      &.unavailable {
+        background-color: $dark-background-4;
+      }
+
+      &.active {
+        background-color: $dark-accent-background;
+      }
+
+      &:hover, &.active:hover, &.unavailable:hover {
+        background-color: #7fd9d2;
+      }
+    }
+  }
+
   .notification-panel {
     .body {
       .entry {

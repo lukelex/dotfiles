@@ -7,14 +7,6 @@
     (label :class "title text"
            :text "Recent Notifications"
            :halign "start")
-
-    (box :orientation "horizontal"
-         :halign "end"
-
-      (quick-toggler :script "echo"
-                     :enabled true)
-      ; (notifications-clear)
-    )
   )
 )
 

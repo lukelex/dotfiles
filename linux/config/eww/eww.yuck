@@ -52,7 +52,6 @@
 
 (defwidget icon [name]
   (image :path "${ICONS_PATH}/${name}.png"
-         :tooltip "${ICONS_PATH}/${name}.png"
          :image-width ICON_SIZE
          :image-height ICON_SIZE
          :width ICON_SIZE

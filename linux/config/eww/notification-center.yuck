@@ -15,11 +15,7 @@
 
       (notifications-header)
 
-      (scroll :vscroll true
-              :hscroll false
-              :height 799
-        (notifications-body)
-      )
+      (notifications-body)
 
       (notifications-footer)
     )

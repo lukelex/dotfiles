@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+
+disk_used=$(df -P / | awk 'NR==2 {gsub("%", ""); print $5}')
+
+read -r _ u1 n1 s1 i1 w1 x1 y1 _ < /proc/stat
+sleep 1
+read -r _ u2 n2 s2 i2 w2 x2 y2 _ < /proc/stat
+
+prev_total=$((u1 + n1 + s1 + i1 + w1 + x1 + y1))
+cur_total=$((u2 + n2 + s2 + i2 + w2 + x2 + y2))
+idle_delta=$((i2 - i1))
+total_delta=$((cur_total - prev_total))
+
+if (( total_delta > 0 )); then
+  cpu_avg=$(( (100 * (total_delta - idle_delta)) / total_delta ))
+else
+  cpu_avg=0
+fi
+
+read -r mem_total mem_available < <(free -b | awk '/Mem:/ {print $2, $7}')
+ram_used=$(( (100 * (mem_total - mem_available)) / mem_total))
+
+printf '{"disk":{"used_perc":%s},"cpu":{"avg":%s},"ram":{"used_mem_perc":%s}}\n' \
+  "$disk_used" "$cpu_avg" "$ram_used"
