@@ -65,6 +65,9 @@ vim.filetype.add({
   filename = {
     ['Guardfile'] = 'ruby',
   },
+  pattern = {
+    ['.*/%.github/workflows/.*%.ya?ml'] = 'yaml.ghaction',
+  },
 })
 
 vim.diagnostic.config({
