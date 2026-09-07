@@ -19,6 +19,7 @@ return {
           sh = { "beautysh" },
           zsh = { "beautysh" },
           yaml = { "yamlfmt" },
+          ruby = { lsp_format = "never" },
         },
         formatters = {
           beautysh = {
