@@ -18,15 +18,6 @@
   )
 )
 
-(defwidget h-window []
-  (box :class "window ${THEME}" :orientation "vertical"
-       :halign "center" :valign "center"
-       :space-evenly false :vexpand false
-       :hexpand false :spacing SPACING
-    (children)
-  )
-)
-
 (defwidget column [?class]
   (box :class class :orientation "vertical"
        :halign "start" :valign "center"
