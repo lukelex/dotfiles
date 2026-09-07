@@ -4,7 +4,13 @@ ICON=λ
 INPUT_ICON=»
 
 autoload -Uz vcs_info
-precmd() { vcs_info }
+precmd() {
+  if git rev-parse --is-inside-work-tree &>/dev/null; then
+    vcs_info
+  else
+    vcs_info_msg_0_=""
+  fi
+}
 zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:*' unstagedstr '%F{#DA4939}*%f'
 zstyle ':vcs_info:*' stagedstr '%F{#A5C261}^%f'
