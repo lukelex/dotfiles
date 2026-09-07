@@ -23,7 +23,12 @@ select-word-style bash
 
 # case insensitive autocompletion
 zmodload zsh/complist
-autoload -Uz compinit && compinit
+autoload -Uz compinit
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+  compinit -d ~/.zcompdump
+else
+  compinit -C -d ~/.zcompdump
+fi
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors '=*=32'
