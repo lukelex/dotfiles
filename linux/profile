@@ -6,11 +6,6 @@ if [[ -f "$HOME/Dropbox/secrets.env" ]]; then
   source "$HOME/Dropbox/secrets.env"
 fi
 
-if [[ -z $(echo $SSH_AUTH_SOCK) ]]; then
-  eval "`ssh-agent -s`" > /dev/null
-  ssh-add "$HOME/.ssh/id_ed25519" 2> /dev/null
-fi
-
 if test -f "$HOME/.cargo/env"; then
   source "$HOME/.cargo/env"
 fi
