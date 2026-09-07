@@ -1,6 +1,4 @@
--- space as the leader key
-vim.g.mapleader = " "
-
+-- space as the leader key (set in core.lazy before plugins load)
 local function map(keycode, instruction)
   vim.keymap.set("n", keycode, instruction, {
     noremap = true,
