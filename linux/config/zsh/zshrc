@@ -30,6 +30,4 @@ bindkey '^x^e' edit-command-line
 bindkey '^H' backward-kill-word
 bindkey '\e[3;5~' kill-word
 
-if [[ "$(uname)" == "Linux" ]]; then
-  source "$DOTFILES/linux/env"
-fi
+source "$DOTFILES/linux/env"
