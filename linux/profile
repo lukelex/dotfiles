@@ -2,7 +2,6 @@
 
 set -a
 
-source "$HOME/dotfiles/linux/variables.env"
 if [[ -f "$HOME/Dropbox/secrets.env" ]]; then
   source "$HOME/Dropbox/secrets.env"
 fi
