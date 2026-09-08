@@ -4,7 +4,7 @@
 (defwidget packages []
   (box :class "panel" :orientation "horizontal" :space-evenly false :spacing SPACING
     (box :class "big-button"
-      (icon :name "cubes")
+      (icon :name "boxes")
     )
     (box :orientation "vertical" :valign "center"
       (label :class "text" :text kernel :halign "start")

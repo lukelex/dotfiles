@@ -7,7 +7,7 @@ source "$HOME/dotfiles/linux/variables.env"
 function show_warning {
   case "$XDG_SESSION_TYPE" in
     x11) notify-send -a System \
-        -i "$FONT_AWESOME_PATH/light/user-clock.svg" \
+        -i "$LUCIDE_PATH/alarm-clock.svg" \
         -h string:wired-tag:system \
         "$1 seconds to lock" ;;
     wayland) ;;

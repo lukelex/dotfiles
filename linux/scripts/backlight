@@ -3,8 +3,8 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-HIGH=
-LOW=
+HIGH=$(printf "\ue178")
+LOW=$(printf "\ue299")
 
 LINK_FILE="$HOME/.cache/link-devices"
 
@@ -28,7 +28,7 @@ audio_tick() {
 
 show() {
   notify-send -a System \
-    -i "$FONT_AWESOME_PATH/light/brightness.svg" \
+    -i "$LUCIDE_PATH/sun.svg" \
     -h string:wired-tag:system \
     -h int:value:"$(get_value)" \
     "Brightness"

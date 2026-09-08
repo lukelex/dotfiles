@@ -1,6 +1,6 @@
 * {
-  /* `otf-font-awesome` is required to be installed for icons */
-  font-family: FontAwesome, "Hack Nerd Font Mono", "Noto Sans CJK JP";
+  /* `ttf-lucide-font` is required to be installed for icons */
+  font-family: "lucide", "Hack Nerd Font Mono", "Noto Sans CJK JP";
   font-size: 22px;
 }
 

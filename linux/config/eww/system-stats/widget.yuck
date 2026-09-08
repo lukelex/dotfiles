@@ -24,7 +24,7 @@
       (circular-progress :class "stat low" :thickness 5 :clockwise true
                          :value { system_stats.ram.used_mem_perc }
         (button :class "big-button" :tooltip "RAM ${system_stats.ram.used_mem_perc}%"
-          (icon :name "memory")
+          (icon :name "memory-stick")
         )
       )
     )

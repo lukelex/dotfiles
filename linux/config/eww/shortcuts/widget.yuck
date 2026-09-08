@@ -5,7 +5,7 @@
       (pointer :active true
         (button :class "big-button" :onclick "u_setup-printer & u_eww close"
                 :tooltip "Find and setup IP printer"
-          (icon :name "print")
+          (icon :name "printer")
         )
       )
     )
@@ -21,7 +21,7 @@
       (pointer :active true
         (button :class "big-button" :onclick "u_emoji & u_eww close"
                 :tooltip "Open Emoji selector"
-          (icon :name "face-smile-beam")
+          (icon :name "face-slightly-smiling")
         )
       )
     )

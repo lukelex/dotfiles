@@ -62,7 +62,7 @@
          :orientation "vertical"
          :space-evenly false
          :style "min-width: 400px"
-      (module-section :icon "display"
+      (module-section :icon "monitor"
                       :title "Profiles"
         (box :orientation "vertical"
              :space-evenly false

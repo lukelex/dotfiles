@@ -8,6 +8,6 @@ u_wallpaper load &> /dev/null
 polybar-msg cmd restart &> /dev/null
 
 notify-send -a System \
-            -i "$FONT_AWESOME_PATH/light/display.svg" \
+            -i "$LUCIDE_PATH/monitor.svg" \
             -h string:wired-tag:system \
             "\"$AUTORANDR_CURRENT_PROFILE\""

@@ -124,11 +124,11 @@ layouts() {
       row=(); count=0
     fi
   done <<'EOF'
-off	Off	display-slash	2
-common	Mirror	clone	2
+off	Off	monitor-off	2
+common	Mirror	copy	2
 clone-largest	Clone largest	expand	2
-horizontal	Horizontal	arrows-left-right	2
-vertical	Vertical	arrows-up-down	2
+horizontal	Horizontal	arrow-left-right	2
+vertical	Vertical	arrow-up-down	2
 EOF
   if (( count > 0 )); then
     rows+=("$(printf '[%s]' "$(IFS=,; echo "${row[*]}")")")

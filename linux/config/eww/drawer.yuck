@@ -26,19 +26,19 @@
           :tooltip "Toggle Bluetooth"
         )
         (quick-setter
-          :icon "ethernet"
+          :icon "ethernet-port"
           :script ""
           :enabled false
           :tooltip "Toggle Wired connection"
         )
         (quick-setter
-          :icon "plane-up"
+          :icon "plane"
           :script ""
           :enabled false
           :tooltip "Toggle Flight Mode"
         )
         (quick-setter
-          :icon "nfc-signal"
+          :icon "nfc"
           :script ""
           :enabled false
           :tooltip "Toggle Flight Mode"

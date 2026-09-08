@@ -14,13 +14,13 @@
          :spacing SPACING
          :style "min-width: 500px"
       (devices-module :title "Audio Output"
-                      :icon "speakers"
+                      :icon "speaker"
                       :devices output_devices)
       (devices-module :title "Audio Input"
-                      :icon "microphone"
+                      :icon "mic"
                       :devices input_devices)
       (devices-module :title "Video"
-                      :icon "camera-web"
+                      :icon "webcam"
                       :devices video_devices)
     )
   )

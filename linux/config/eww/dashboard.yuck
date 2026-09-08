@@ -45,7 +45,7 @@
     (pointer :active true
       (button :class "big-button"
               :onclick "u_eww toggle power"
-        (icon :name "power-off")
+        (icon :name "circle-power")
       )
     )
   )

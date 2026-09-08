@@ -23,6 +23,7 @@ check "sudo is available" command -v sudo
 check "running on Arch Linux (pacman found)" command -v pacman
 check "repo located at \$HOME/dotfiles" test "$dotfiles" = "$HOME/dotfiles"
 check "fonts submodule checked out" test -d "$dotfiles/fonts/fa6/svgs"
+check "lucide svgs vendored" test -f "$dotfiles/linux/config/lucide/svg/monitor.svg"
 
 if [ "$failures" -gt 0 ]; then
   echo "preflight: $failures check(s) failed; fix these before installing" >&2

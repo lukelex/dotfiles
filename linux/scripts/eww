@@ -2,16 +2,15 @@
 
 source "$HOME/dotfiles/linux/variables.env"
 
-## Regenerate eww's icon paths from $FONT_AWESOME_PATH.
+## Regenerate eww's icon paths from $LUCIDE_PNG_PATH.
 ## Eww's .yuck cannot expand environment variables and cannot load SVG,
-## so we point it at the PNG tree that lives next to $FONT_AWESOME_PATH.
+## so we rasterize the vendored Lucide SVGs to PNGs and point eww at them.
 prepare() {
-  local fa_root
-  fa_root=$(dirname "$FONT_AWESOME_PATH")
+  "$DOTFILES/linux/scripts/lucide-pngs"
 
   cat > "$DOT_CONFIG/eww/paths.yuck" <<YUCK
-(defvar ICONS_PATH "$fa_root/pngs/solid")
-(defvar BRANDS_ICONS_PATH "$fa_root/pngs/brands")
+(defvar ICONS_PATH "$LUCIDE_PNG_PATH")
+(defvar BRANDS_ICONS_PATH "$LUCIDE_PNG_PATH")
 YUCK
 }
 

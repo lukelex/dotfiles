@@ -33,11 +33,11 @@ module Icon
   ICONS = [
     {
       body: /was saved in/,
-      icon: "key-skeleton"
+      icon: "key"
     },
     {
       name: "Printers",
-      icon: "print"
+      icon: "printer"
     },
     {
       name: "Google Chrome",
@@ -45,7 +45,7 @@ module Icon
     },
     {
       name: ["Telegram Desktop", "discord", "Slack", "WhatsApp"],
-      icon: "messages"
+      icon: "message-square"
     },
     {
       name: "blueman",

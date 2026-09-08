@@ -55,7 +55,7 @@
           (box :halign "start"
                :space-evenly false
                :spacing SPACING
-            (icon-small :name "circle-down")
+            (icon-small :name "circle-arrow-down")
             (label :class "text"
                    :text { wifi_data.down }
             )
@@ -63,7 +63,7 @@
           (box :halign "start"
                :space-evenly false
                :spacing SPACING
-            (icon-small :name "circle-up")
+            (icon-small :name "circle-arrow-up")
             (label :class "text"
                    :text { wifi_data.up }
             )
@@ -74,7 +74,7 @@
           (box :halign "start"
                :space-evenly false
                :spacing SPACING
-            (icon-small :name "network-wired")
+            (icon-small :name "network")
             (label :class "text"
                    :text { wifi_data.ip }
             )
@@ -114,7 +114,7 @@
          :orientation "vertical"
          :space-evenly false
       (toggleable-module :name "Ethernet"
-                         :icon "ethernet"
+                         :icon "ethernet-port"
                          :app "nm-connection-editor"
                          :script "true"
                          :enabled { eth_data.connected }
@@ -124,7 +124,7 @@
           (box :halign "start"
                :space-evenly false
                :spacing SPACING
-            (icon-small :name "ethernet")
+            (icon-small :name "ethernet-port")
             (label :class "text"
                    :text { eth_data.connected ? eth_data.name : "Disconnected" }
                    :limit-width 20
@@ -134,7 +134,7 @@
                :space-evenly false
                :spacing SPACING
                :visible { eth_data.connected }
-            (icon-small :name "network-wired")
+            (icon-small :name "network")
             (label :class "text"
                    :text { eth_data.ip }
             )
@@ -154,7 +154,7 @@
          :hexpand true
          :space-evenly false
          :spacing SPACING
-      (icon-small :name "arrows-to-dotted-line")
+      (icon-small :name "scan-line")
       (label :class "text"
              :text { device.name }
              :limit-width 20
@@ -165,7 +165,7 @@
          :spacing SPACING
          :style "min-width: ${ICON_SIZE_SMALL}px"
       (box :visible { strlength(device.battery) != 0 }
-        (icon-small :name "battery-half")
+        (icon-small :name "battery-medium")
       )
       (label :class "text"
              :text { strlength(device.battery) != 0 ? device.battery : "" }
@@ -201,7 +201,7 @@
         ; )
         ; (pointer :active true
         ;   (button :class "button" :onclick "${app} & u_eww close &"
-        ;     (icon-small :name "gear")
+        ;     (icon-small :name "settings")
         ;   )
         ; )
       )

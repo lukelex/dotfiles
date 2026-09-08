@@ -61,7 +61,7 @@ current_average() {
 show() {
   local value=$1
   notify-send -a System \
-    -i "$FONT_AWESOME_PATH/light/display.svg" \
+    -i "$LUCIDE_PATH/monitor.svg" \
     -h int:value:"$value" \
     -h string:wired-tag:system \
     "$FEATURE_NAME"

@@ -1,3 +1,4 @@
 workspace*.json
 
 linux/config/eww/paths.yuck
+linux/config/lucide/png/

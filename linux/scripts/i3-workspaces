@@ -16,7 +16,7 @@ do
   echo "$workspace on $output"
 
   notify-send -a System \
-    -i "$FONT_AWESOME_PATH/light/display.svg" \
+    -i "$LUCIDE_PATH/monitor.svg" \
     -t 650 \
     -h string:wired-tag:system \
     "$workspace on $output"

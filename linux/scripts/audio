@@ -4,15 +4,15 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-VOL_HIGH=
-VOL_MEDIUM=
-VOL_LOW=
-VOL_MUTE=
+VOL_HIGH=$(printf "\ue1ab")
+VOL_MEDIUM=$(printf "\ue1aa")
+VOL_LOW=$(printf "\ue1a9")
+VOL_MUTE=$(printf "\ue1ac")
 
-MIC_HIGH=
-MIC_MEDIUM=
-MIC_LOW=
-MIC_MUTE=
+MIC_HIGH=$(printf "\ue724")
+MIC_MEDIUM=$(printf "\ue118")
+MIC_LOW=$(printf "\ue118")
+MIC_MUTE=$(printf "\ue119")
 
 function icon_mic {
   value=$(get_volume)
@@ -71,13 +71,13 @@ function show_volume {
 
   if vol_is_mute ; then
     notify-send -a System \
-      -i "$FONT_AWESOME_PATH/light/volume-slash.svg" \
+      -i "$LUCIDE_PATH/volume-x.svg" \
       -h string:wired-tag:system \
       -h int:value:0\
       "Volume"
   else
     notify-send -a System \
-      -i "$FONT_AWESOME_PATH/light/volume.svg" \
+      -i "$LUCIDE_PATH/volume.svg" \
       -h string:wired-tag:system \
       -h int:value:"$volume" \
       "Volume"
@@ -89,13 +89,13 @@ function show_mic {
 
   if mic_is_mute ; then
     notify-send -a System \
-      -i "$FONT_AWESOME_PATH/light/microphone-lines-slash.svg" \
+      -i "$LUCIDE_PATH/mic-off.svg" \
       -h string:wired-tag:system \
       -h int:value:0\
       "Microphone"
   else
     notify-send -a System \
-      -i "$FONT_AWESOME_PATH/light/microphone-lines.svg" \
+      -i "$LUCIDE_PATH/mic-audio-lines.svg" \
       -h string:wired-tag:system \
       -h int:value:"$volume" \
       "Microphone"

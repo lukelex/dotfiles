@@ -149,7 +149,7 @@
         (pointer :active true
           (button :class "button"
                   :onclick { settings }
-            (icon-small :name "gear")
+            (icon-small :name "settings")
           )
         )
       )
@@ -169,7 +169,7 @@
 ; (defwidget keyboard_brightness [?active]
 ;   (box :class "component ${ active ? "" : "disabled" }" :orientation "horizontal" :space-evenly false :spacing SPACING
 ;     (button :class "big-button ${ active ? "" : "disabled" }" :onclick "u_keeb_backlight get"
-;       (icon :name "keyboard-brightness")
+;       (icon :name "keyboard")
 ;     )
 ;     (eventbox :cursor { active ? "grab" : "default" } :hexpand true
 ;       (scale :active {active} :hexpand true :value 2 :min 1 :max 3 :onchange "u_keeb_backlight set {}"

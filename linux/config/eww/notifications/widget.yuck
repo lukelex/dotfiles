@@ -142,7 +142,7 @@
 
       (pointer :active true
         (button :class "settings"
-          (icon-small :name "bars-sort")
+          (icon-small :name "chevrons-down-up")
         )
       )
     )
@@ -156,7 +156,7 @@
 
     (pointer :active true
       (button :class "settings"
-        (icon-small :name "gear")
+        (icon-small :name "settings")
       )
     )
   )

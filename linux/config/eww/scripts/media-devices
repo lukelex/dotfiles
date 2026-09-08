@@ -52,15 +52,15 @@ def icon_for(device, input)
   if device[:name].to_s.start_with?("bluez_") || device[:api] == "bluez5"
     ["bluetooth", "Bluetooth"]
   elsif input
-    ["microphone", "Microphone"]
+    ["mic", "Microphone"]
   elsif device[:description].to_s =~ /hdmi|displayport/i || device[:profile].to_s =~ /hdmi/i
-    ["tv-music", "HDMI"]
+    ["clapperboard", "HDMI"]
   elsif device[:description].to_s =~ /headset|headphone/i
     ["headset", "Headset"]
   elsif device[:description].to_s =~ /usb|dac/i
     ["headphones", "External"]
   else
-    ["speakers", "Speakers"]
+    ["speaker", "Speakers"]
   end
 end
 
@@ -107,7 +107,7 @@ def video_devices
         id: id.to_i,
         default: !default.nil?,
         name: name,
-        icon: "camera-web",
+        icon: "webcam",
         kind: "Camera",
         cmd: ""
       }

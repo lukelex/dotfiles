@@ -86,9 +86,9 @@ case $1 in
   toggle)      if (( $(raw_cur) > 0 )); then set_raw 0 >/dev/null; else set_raw "$(raw_max)" >/dev/null; fi; show ;;
   icon)
     if (( $(raw_cur) > 0 )); then
-      echo ""
+      echo ""
     else
-      echo "%{F#666666}%{F-}"
+      echo "%{F#666666}%{F-}"
     fi
     ;;
 esac

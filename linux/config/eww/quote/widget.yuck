@@ -3,7 +3,7 @@
 (defwidget quote []
   (box :class "panel" :spacing SPACING
        :orientation "horizontal" :space-evenly false
-    (icon :name "comment-quote")
+    (icon :name "message-square-quote")
     (label :class "text" :wrap true
            :halign "center" :text quote)
   )

@@ -8,7 +8,7 @@
                        :value "${EWW_BATTERY.BAT0.capacity}"
                        :thickness 5 :clockwise true
       (button :class "button" :tooltip "${EWW_BATTERY.BAT0.status} (${EWW_BATTERY.BAT0.capacity}%)"
-        (icon :name { EWW_BATTERY.BAT0.status == "Charging" ? "battery-bolt" : "battery-half" })
+        (icon :name { EWW_BATTERY.BAT0.status == "Charging" ? "battery-charging" : "battery-medium" })
       )
     )
     (box :orientation "vertical" :valign "center"

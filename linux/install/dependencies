@@ -24,7 +24,7 @@ fi
 # essentials
 run yay -S --needed --noconfirm ibus openssh \
   polkit polkit-gnome network-manager-applet \
-  man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
+  man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk ttf-lucide-font bc zsh \
   zsh-completions cmake jq tidy yazi pcmanfm \
   imagemagick blueman fragments playerctl inetutils \
   tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
