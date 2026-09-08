@@ -90,7 +90,7 @@ sudo usermod -aG lp "$USER" # printer group
 
 # Kmonad dependencies
 sudo modprobe uinput
-sudo groupadd uinput
+getent group uinput >/dev/null || sudo groupadd uinput
 sudo usermod -aG uinput "$USER"
 sudo cp "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
 # Kmonad dependencies
