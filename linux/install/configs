@@ -81,7 +81,7 @@ ln -fvs "$DOT_CONFIG/mimeapps.conf" ~/.config/mimeapps.list
 
 xset dpms 1200 0 0
 
-sudo rmmod pcspkr 2&> /dev/null
+sudo rmmod pcspkr >/dev/null 2>&1 || true
 
 sudo usermod -aG video "$USER"
 sudo usermod -aG docker "$USER"
