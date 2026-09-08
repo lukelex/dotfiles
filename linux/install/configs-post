@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+xset dpms 1200 0 0
+
+fc-cache -r
+tldr -u
+sudo mandb
+
+timedatectl set-timezone CET

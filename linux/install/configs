@@ -9,6 +9,9 @@ DOT_CONFIG="$DOTFILES/linux/config"
 mkdir -p "$XDG_CONFIG_HOME"
 mkdir -p "$HOME/.ssh"
 mkdir -p "$HOME/screenshots"
+mkdir -p "$HOME/.local/share/applications"
+mkdir -p "$HOME/backup_vim"
+mkdir -p "$HOME/projects"
 
 mkdir -p "$XDG_CONFIG_HOME/i3"
 ln -fvs "$DOT_CONFIG/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
@@ -19,16 +22,9 @@ ln -fvs "$DOT_CONFIG/hypr" "$XDG_CONFIG_HOME/hypr"
 mkdir -p "$XDG_CONFIG_HOME/waybar"
 ln -fvs "$DOT_CONFIG/waybar/config.json" "$XDG_CONFIG_HOME/waybar/config"
 
-sudo mkdir -p "/etc/ly"
-sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
-
 rm -rf "$HOME/.zshrc"
 ln -fvs "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
 
-sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
-
-mkdir -pv "$HOME/backup_vim"
-mkdir -pv "$HOME/projects"
 ln -fvs "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
 
 rm -rf "$XDG_CONFIG_HOME/rofi"
@@ -58,49 +54,14 @@ ln -fvs "$DOTFILES/linux/xprofile" "$HOME/.xprofile"
 ln -fvs "$DOTFILES/linux/xinitrc" "$HOME/.xinitrc"
 ln -fvs "$DOT_CONFIG/eww" "$XDG_CONFIG_HOME/eww"
 ln -fvs "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
-sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
-# sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
-# sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
 
 ln -fvs "$DOT_CONFIG/default-apps.list" "$HOME/.local/share/applications/defaults.list"
 
-sudo mkdir -pv "/usr/share/fonts/OTF"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Duotone-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Duotone-Solid-900.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Light-300.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Light-300.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Regular-400.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Solid-900.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Thin-100.otf"
 mkdir -p "$XDG_CONFIG_HOME/fontconfig/"
 ln -fvs "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
-fc-cache -r
 
 mkdir -p "$XDG_CONFIG_HOME/autorandr/"
 ln -fvs "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
 
-ln -fvs "$DOT_CONFIG/mimeapps.conf" ~/.local/share/applications/mimeapps.list
-ln -fvs "$DOT_CONFIG/mimeapps.conf" ~/.config/mimeapps.list
-
-xset dpms 1200 0 0
-
-sudo rmmod pcspkr >/dev/null 2>&1 || true
-
-sudo usermod -aG video "$USER"
-sudo usermod -aG docker "$USER"
-sudo usermod -aG input "$USER"
-sudo usermod -aG lp "$USER" # printer group
-
-# Kmonad dependencies
-sudo modprobe uinput
-getent group uinput >/dev/null || sudo groupadd uinput
-sudo usermod -aG uinput "$USER"
-sudo cp "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
-# Kmonad dependencies
-
-tldr -u
-
-chsh -s /usr/bin/zsh
-
-sudo mandb
-
-timedatectl set-timezone CET
+ln -fvs "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapps.list"
+ln -fvs "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"

@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+sudo usermod -aG video "$USER"
+sudo usermod -aG docker "$USER"
+sudo usermod -aG input "$USER"
+sudo usermod -aG lp "$USER" # printer group
+
+# Kmonad dependencies
+getent group uinput >/dev/null || sudo groupadd uinput
+sudo usermod -aG uinput "$USER"
+
+chsh -s /usr/bin/zsh
