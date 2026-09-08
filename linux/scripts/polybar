@@ -8,7 +8,7 @@ while pgrep -x polybar 2>/dev/null | grep -vw -F "$$" > /dev/null; do sleep 1; d
 
 primary=$(polybar -m | grep primary | sed -e 's/:.*$//g')
 
-MONITOR=$monitor polybar top -c "$HOME/dotfiles/linux/config/polybar/bars.ini" &
+MONITOR=$primary polybar top -c "$HOME/dotfiles/linux/config/polybar/bars.ini" &
 # MONITOR=$monitor polybar stats -c "$HOME/dotfiles/linux/config/polybar/bars.ini"
 
 echo "Polybar launched..."
