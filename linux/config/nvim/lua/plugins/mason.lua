@@ -87,6 +87,7 @@ return {
       go =               { "gopls" },
       hyprlang =         { "hyprls" },
       yaml =             { "yamlls" },
+      ["yaml.docker-compose"] = { "docker_compose_language_service", "yamlls" },
       bash =             { "bashls" },
       sh =               { "bashls" },
     }
