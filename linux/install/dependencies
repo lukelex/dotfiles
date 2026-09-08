@@ -8,6 +8,10 @@ then
   ( "$install_dir/yay" )
 fi
 
+wm_selection="$HOME/.config/dotfiles/wm-selection"
+mkdir -p "$(dirname "$wm_selection")"
+: > "$wm_selection"
+
 # essentials
 yay -S --needed --noconfirm ibus openssh \
   polkit polkit-gnome network-manager-applet \
@@ -26,6 +30,7 @@ case $answer in
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
       qt5-wayland qt6-wayland tofi sox slurp wf-recorder \
       xdg-desktop-portal-hyprland kooha
+    echo hypr >> "$wm_selection"
     ;;
   * ) ;;
 esac
@@ -39,6 +44,7 @@ case $answer in
       xfce4-power-manager flameshot arandr xclip xdotool wired \
       simplescreenrecorder picom autorandr eww sxhkd \
       rofi rofi-greenclip rofi-bluetooth-git sddm qt6-svg
+    echo i3 >> "$wm_selection"
     ;;
   * ) ;;
 esac

@@ -4,14 +4,24 @@ set -Eeuo pipefail
 
 source "$HOME/dotfiles/linux/variables.env"
 
-systemctl enable --now docker bluetooth NetworkManager sddm avahi-daemon cups
+wm_selection="$HOME/.config/dotfiles/wm-selection"
+wm_profile=""
+[ -f "$wm_selection" ] && wm_profile="$(tr '\n' ' ' < "$wm_selection")"
 
-systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
-systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
+has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
-if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
-  && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
-  sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
+systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
+
+if has_wm i3; then
+  systemctl enable --now sddm
+  systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
+  systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
+
+  if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
+    && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
+    sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
+  fi
+  systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
 fi
-systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
+
 systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"
