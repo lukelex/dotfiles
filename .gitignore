@@ -1,13 +1,3 @@
-vim/.netrwhist
-vim/bundle
-
 workspace*.json
 
-linux/bin/*
-
 linux/config/eww/paths.yuck
-
-linux/config/nvim/backup/
-linux/config/nvim/plugin/
-
-unix/config/zsh/work.zsh
