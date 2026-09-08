@@ -8,12 +8,6 @@ vim.g.shell = "bash"
 -- backup files
 vim.cmd("set noswapfile")
 
--- Tweaks for file browsing
-vim.g.netrw_banner = 0       -- disable annoying banner
-vim.g.netrw_browse_split = 0 -- open in prior window
-vim.g.netrw_altv = 1         -- open split to the right
-vim.g.netrw_liststyle = 3    -- tree view
-
 vim.g.editorconfig = true
 
 vim.opt.backspace = "2"
