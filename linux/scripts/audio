@@ -5,8 +5,8 @@ set -eu
 source "$HOME/dotfiles/linux/variables.env"
 
 VOL_HIGH=$(printf "\ue1ab")
-VOL_MEDIUM=$(printf "\ue1aa")
-VOL_LOW=$(printf "\ue1a9")
+VOL_MEDIUM=$(printf "\ue1ab")
+VOL_LOW=$(printf "\ue1aa")
 VOL_MUTE=$(printf "\ue1ac")
 
 MIC_HIGH=$(printf "\ue724")
@@ -74,6 +74,18 @@ function show_volume {
       -i "$LUCIDE_PATH/volume-x.svg" \
       -h string:wired-tag:system \
       -h int:value:0\
+      "Volume"
+  elif [[ 1 -eq $(echo "$volume > 50" | bc -l) ]]; then
+    notify-send -a System \
+      -i "$LUCIDE_PATH/volume-2.svg" \
+      -h string:wired-tag:system \
+      -h int:value:"$volume" \
+      "Volume"
+  elif [[ 1 -eq $(echo "$volume > 25" | bc -l) ]]; then
+    notify-send -a System \
+      -i "$LUCIDE_PATH/volume-1.svg" \
+      -h string:wired-tag:system \
+      -h int:value:"$volume" \
       "Volume"
   else
     notify-send -a System \
