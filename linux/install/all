@@ -1,11 +1,10 @@
 #!/usr/bin/bash
 
-source ./linux/variables.env
+set -Eeuo pipefail
 
-source ./linux/install/dependencies
-source ./linux/install/binaries
-source ./linux/install/icons
-source ./linux/install/configs
-source ./linux/install/git-config
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source ./linux/install/services
+for stage in dependencies binaries icons configs git-config services; do
+  echo "==> $stage"
+  "$install_dir/$stage"
+done

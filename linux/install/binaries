@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-set -eu
+set -Eeuo pipefail
 
 source "$HOME/dotfiles/linux/variables.env"
 

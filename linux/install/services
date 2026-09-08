@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -Eeuo pipefail
+
 source "$HOME/dotfiles/linux/variables.env"
 
 systemctl enable --now docker bluetooth NetworkManager sddm avahi-daemon cups
