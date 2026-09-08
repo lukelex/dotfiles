@@ -1,0 +1,30 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+dotfiles="$(cd "$install_dir/../.." && pwd)"
+
+failures=0
+
+check() {
+  local desc="$1"
+  shift
+  if "$@"; then
+    echo "ok: $desc"
+  else
+    echo "FAIL: $desc" >&2
+    failures=$((failures + 1))
+  fi
+}
+
+check "not running as root" test "$(id -u)" -ne 0
+check "sudo is available" command -v sudo
+check "running on Arch Linux (pacman found)" command -v pacman
+check "repo located at \$HOME/dotfiles" test "$dotfiles" = "$HOME/dotfiles"
+check "fonts submodule checked out" test -d "$dotfiles/fonts/fa6/svgs"
+
+if [ "$failures" -gt 0 ]; then
+  echo "preflight: $failures check(s) failed; fix these before installing" >&2
+  exit 1
+fi
