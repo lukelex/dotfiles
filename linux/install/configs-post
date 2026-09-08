@@ -8,4 +8,10 @@ fc-cache -r
 tldr -u
 sudo mandb
 
-timedatectl set-timezone CET
+read -rp 'Set system timezone to CET? [Y/n] ' answer
+case $answer in
+  [Yy]* | "")
+    timedatectl set-timezone CET
+    ;;
+  * ) ;;
+esac

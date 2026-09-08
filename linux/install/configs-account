@@ -2,13 +2,25 @@
 
 set -Eeuo pipefail
 
-sudo usermod -aG video "$USER"
-sudo usermod -aG docker "$USER"
-sudo usermod -aG input "$USER"
-sudo usermod -aG lp "$USER" # printer group
+read -rp 'Add your user to device groups (video, docker, input, uinput, lp)? [Y/n] ' answer
+case $answer in
+  [Yy]* | "")
+    sudo usermod -aG video "$USER"
+    sudo usermod -aG docker "$USER"
+    sudo usermod -aG input "$USER"
+    sudo usermod -aG lp "$USER" # printer group
 
-# Kmonad dependencies
-getent group uinput >/dev/null || sudo groupadd uinput
-sudo usermod -aG uinput "$USER"
+    # Kmonad dependencies
+    getent group uinput >/dev/null || sudo groupadd uinput
+    sudo usermod -aG uinput "$USER"
+    ;;
+  * ) ;;
+esac
 
-chsh -s /usr/bin/zsh
+read -rp "Set your login shell to zsh? [Y/n] " answer
+case $answer in
+  [Yy]* | "")
+    chsh -s /usr/bin/zsh
+    ;;
+  * ) ;;
+esac

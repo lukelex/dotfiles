@@ -2,8 +2,14 @@
 
 set -Eeuo pipefail
 
-git config --global user.email "the.lukelex@gmail.com"
-git config --global user.name "Lukas Alexandre"
+read -rp 'Set global Git identity (the.lukelex@gmail.com / "Lukas Alexandre")? [Y/n] ' answer
+case $answer in
+  [Yy]* | "")
+    git config --global user.email "the.lukelex@gmail.com"
+    git config --global user.name "Lukas Alexandre"
+    ;;
+  * ) ;;
+esac
 
 git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
 git config --global color.ui true
