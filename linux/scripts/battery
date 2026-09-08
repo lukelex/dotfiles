@@ -11,22 +11,28 @@ QUARTER=$(printf "\ue056")
 HALF=$(printf "\ue057")
 THREE_QUARTERS=$(printf "\ue057")
 FULL=$(printf "\ue055")
+LOW_BATTERY_THRESHOLD=15
+LOW_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-low-notified"
 
 device=$(upower -e | grep 'BAT' | head -n 1)
 stats=$(upower -i "$(echo $device)" | grep -E "state|to full|percentage|time to empty")
 
 get_percentage() {
-  echo "$(echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//')"
+  echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//'
+}
+
+get_state() {
+  echo "$stats" | grep state | awk '{print $2}'
 }
 
 is_charging() {
-  echo "$(echo "$stats" | grep -E 'state.+?\bcharging\b')"
+  [[ "$(get_state)" == charging ]]
 }
 
 icon() {
   value=$(get_percentage)
 
-  if [[ $(is_charging) ]]; then
+  if is_charging; then
     echo $CHARGING
   elif [[ 1 -eq $(echo "$value < 6" | bc -l) ]]; then
     echo "%{F#FF0000}$CRITICAL%{F-}"
@@ -64,10 +70,17 @@ show_battery() {
   local state
   local charge
   local time
+  local notification_icon
 
-  state=$(echo "$stats" | grep state | awk '{print $2}')
-  charge=$(echo "$stats" | grep percentage | awk '{print $2}')
+  state=$(get_state)
+  charge=$(get_percentage)
   time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
+
+  if [[ $state == charging ]]; then
+    notification_icon="$LUCIDE_PATH/battery-charging.svg"
+  else
+    notification_icon="$LUCIDE_PATH/battery-full.svg"
+  fi
 
   if [[ -z $time ]]; then
     message="Full"
@@ -76,15 +89,31 @@ show_battery() {
   fi
 
   notify-send -a System \
-    -i "$LUCIDE_PATH/battery-full.svg" \
+    -i "$notification_icon" \
     -h string:wired-tag:system \
     -h int:value:"$charge" \
     "$message"
 }
 
 warn() {
-  if [[ "$(icon)" == "$CRITICAL" ]]; then
-    show_battery
+  local state
+  local charge
+
+  state=$(get_state)
+  charge=$(get_percentage)
+
+  if [[ $state == discharging && $charge -le $LOW_BATTERY_THRESHOLD ]]; then
+    if [[ ! -e $LOW_BATTERY_NOTIFICATION_FILE ]]; then
+      mkdir -p "$(dirname "$LOW_BATTERY_NOTIFICATION_FILE")"
+      notify-send -a System \
+        -i "$LUCIDE_PATH/battery-low.svg" \
+        -h string:wired-tag:battery-low \
+        -h int:value:"$charge" \
+        "Battery low" "$charge% remaining"
+      : > "$LOW_BATTERY_NOTIFICATION_FILE"
+    fi
+  else
+    rm -f "$LOW_BATTERY_NOTIFICATION_FILE"
   fi
 }
 
