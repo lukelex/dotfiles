@@ -76,8 +76,8 @@ case $1 in
   type)
     if (( $(raw_max) <= 15 )); then echo stepped; else echo continuous; fi
     ;;
-  stepped)     echo "$((( $(raw_max) <= 15 )) && echo true || echo false)" ;;
-  continuous)  echo "$((( $(raw_max) > 15 )) && echo true || echo false)" ;;
+  stepped)     if (( $(raw_max) <= 15 )); then echo true; else echo false; fi ;;
+  continuous)  if (( $(raw_max) > 15 )); then echo true; else echo false; fi ;;
   get)         percent ;;
   set)         set_raw "$(percent_to_level "$2")" ;;
   set-step)    set_raw "$2" ; if [[ "${3:-}" != quiet ]]; then show; fi ;;
