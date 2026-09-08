@@ -1,11 +1,13 @@
 #!/usr/bin/bash
 
-set -e
+set -Eeuo pipefail
 
-rm -rf yay-git
-git clone https://aur.archlinux.org/yay-git.git
+build_dir="$(mktemp -d)"
+trap 'rm -rf "$build_dir"' EXIT
 
-cd yay-git
+git clone https://aur.archlinux.org/yay-git.git "$build_dir/yay-git"
+cd "$build_dir/yay-git"
+
 makepkg -si
 
-rm -rf yay-git
+rm -rf "$build_dir"

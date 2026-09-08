@@ -4,7 +4,7 @@ set -e
 
 if ! command -v yay &> /dev/null
 then
-  source ./linux/install/yay
+  ( "$HOME/dotfiles/linux/install/yay" )
 fi
 
 # essentials
