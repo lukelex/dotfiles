@@ -6,6 +6,31 @@ source "$HOME/dotfiles/linux/variables.env"
 
 DOT_CONFIG="$DOTFILES/linux/config"
 
+replace_existing=0
+for arg in "$@"; do
+  [ "$arg" = "--replace" ] && replace_existing=1
+done
+
+link_config() {
+  local source="$1"
+  local target="$2"
+  mkdir -p "$(dirname "$target")"
+  if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
+    echo "ok: $target -> $source"
+  elif [ -e "$target" ] || [ -L "$target" ]; then
+    if [ "$replace_existing" = 1 ]; then
+      rm -rf "$target"
+      ln -s "$source" "$target"
+      echo "replaced: $target -> $source"
+    else
+      echo "skipping $target: exists and is not a repo link; rerun with --replace to overwrite" >&2
+    fi
+  else
+    ln -s "$source" "$target"
+    echo "linked: $target -> $source"
+  fi
+}
+
 mkdir -p "$XDG_CONFIG_HOME"
 mkdir -p "$HOME/.ssh"
 mkdir -p "$HOME/screenshots"
@@ -13,55 +38,26 @@ mkdir -p "$HOME/.local/share/applications"
 mkdir -p "$HOME/backup_vim"
 mkdir -p "$HOME/projects"
 
-mkdir -p "$XDG_CONFIG_HOME/i3"
-ln -fvs "$DOT_CONFIG/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
-
-rm -rf "$XDG_CONFIG_HOME/hypr"
-ln -fvs "$DOT_CONFIG/hypr" "$XDG_CONFIG_HOME/hypr"
-
-mkdir -p "$XDG_CONFIG_HOME/waybar"
-ln -fvs "$DOT_CONFIG/waybar/config.json" "$XDG_CONFIG_HOME/waybar/config"
-
-rm -rf "$HOME/.zshrc"
-ln -fvs "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
-
-ln -fvs "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
-
-rm -rf "$XDG_CONFIG_HOME/rofi"
-ln -fvs "$DOT_CONFIG/rofi" "$XDG_CONFIG_HOME/rofi"
-
-mkdir -p "$XDG_CONFIG_HOME/tofi"
-ln -fvs "$DOT_CONFIG/tofi.conf" "$XDG_CONFIG_HOME/tofi/config"
-
-mkdir -p "$XDG_CONFIG_HOME/gsimplecal"
-ln -fvs "$DOT_CONFIG/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
-
-mkdir -p "$XDG_CONFIG_HOME/wired"
-ln -fvs "$DOT_CONFIG/wired/config.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
-
-mkdir -p "$XDG_CONFIG_HOME/gammastep"
-ln -fvs "$DOT_CONFIG/gammastep/config.ini" "$XDG_CONFIG_HOME/gammastep/config.ini"
-
-rm -rf "$XDG_CONFIG_HOME/kitty"
-ln -fvs "$DOT_CONFIG/kitty" "$XDG_CONFIG_HOME/kitty"
-
-mkdir -p "$XDG_CONFIG_HOME/flameshot"
-ln -fvs "$DOT_CONFIG/flameshot.ini" "$XDG_CONFIG_HOME/flameshot/flameshot.ini"
-
-ln -fvs "$DOTFILES/linux/Xresources" "$HOME/.Xresources"
-ln -fvs "$DOTFILES/linux/profile" "$HOME/.profile"
-ln -fvs "$DOTFILES/linux/xprofile" "$HOME/.xprofile"
-ln -fvs "$DOTFILES/linux/xinitrc" "$HOME/.xinitrc"
-ln -fvs "$DOT_CONFIG/eww" "$XDG_CONFIG_HOME/eww"
-ln -fvs "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
-
-ln -fvs "$DOT_CONFIG/default-apps.list" "$HOME/.local/share/applications/defaults.list"
-
-mkdir -p "$XDG_CONFIG_HOME/fontconfig/"
-ln -fvs "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
-
-mkdir -p "$XDG_CONFIG_HOME/autorandr/"
-ln -fvs "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
-
-ln -fvs "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapps.list"
-ln -fvs "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"
+link_config "$DOT_CONFIG/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
+link_config "$DOT_CONFIG/hypr" "$XDG_CONFIG_HOME/hypr"
+link_config "$DOT_CONFIG/waybar/config.json" "$XDG_CONFIG_HOME/waybar/config"
+link_config "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
+link_config "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
+link_config "$DOT_CONFIG/rofi" "$XDG_CONFIG_HOME/rofi"
+link_config "$DOT_CONFIG/tofi.conf" "$XDG_CONFIG_HOME/tofi/config"
+link_config "$DOT_CONFIG/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
+link_config "$DOT_CONFIG/wired/config.ron" "$XDG_CONFIG_HOME/wired/wired.ron"
+link_config "$DOT_CONFIG/gammastep/config.ini" "$XDG_CONFIG_HOME/gammastep/config.ini"
+link_config "$DOT_CONFIG/kitty" "$XDG_CONFIG_HOME/kitty"
+link_config "$DOT_CONFIG/flameshot.ini" "$XDG_CONFIG_HOME/flameshot/flameshot.ini"
+link_config "$DOTFILES/linux/Xresources" "$HOME/.Xresources"
+link_config "$DOTFILES/linux/profile" "$HOME/.profile"
+link_config "$DOTFILES/linux/xprofile" "$HOME/.xprofile"
+link_config "$DOTFILES/linux/xinitrc" "$HOME/.xinitrc"
+link_config "$DOT_CONFIG/eww" "$XDG_CONFIG_HOME/eww"
+link_config "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
+link_config "$DOT_CONFIG/default-apps.list" "$HOME/.local/share/applications/defaults.list"
+link_config "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
+link_config "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
+link_config "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapps.list"
+link_config "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"
