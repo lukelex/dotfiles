@@ -38,8 +38,8 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 
 -- search settings
-vim.cmd("setlocal ignorecase") -- ignore case when searching
-vim.cmd("setlocal smartcase")  -- when searching try to be smart about cases
+vim.opt.ignorecase = true -- ignore case when searching
+vim.opt.smartcase = true  -- when searching try to be smart about cases
 
 -- use 2 spaces instead of tabs
 vim.opt.expandtab = true
