@@ -17,7 +17,12 @@ vim.opt.incsearch = true    -- show search results while typing
 vim.cmd("set shortmess-=S") -- show search count message
 
 -- Make it obvious where 65 characters is on text files
-vim.cmd("autocmd BufRead,BufNewFile *.md set textwidth=65")
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    vim.opt_local.textwidth = 65
+  end,
+})
 vim.cmd("set colorcolumn=+1")
 
 vim.opt.signcolumn = "yes" -- always show sign column so that text doesn't shift
