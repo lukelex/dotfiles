@@ -1,5 +1,5 @@
 local function lsp_count()
-  local clients = vim.lsp.get_active_clients({ bufnr = vim.api.nvim_get_current_buf() })
+  local clients = vim.lsp.get_clients({ bufnr = vim.api.nvim_get_current_buf() })
 
   return #clients
 end
