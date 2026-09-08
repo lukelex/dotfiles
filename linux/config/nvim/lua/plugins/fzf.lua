@@ -70,11 +70,8 @@ return {
           ["ctrl-s"] = fzf.actions.file_split,
           ["ctrl-v"] = fzf.actions.file_vsplit,
           ["ctrl-t"] = fzf.actions.file_tabedit,
-          ["ctrl-q"] = {
-            fn = fzf.actions.file_sel_to_qf,
-            prefix = "select-all",
-          },
-          ["ctrl-Q"] = fzf.actions.file_sel_to_ll,
+          ["ctrl-q"] = { fn = fzf.actions.file_sel_to_qf, prefix = "select-all" },
+          ["alt-Q"] = fzf.actions.file_sel_to_ll,
         },
       },
       winopts = {
