@@ -2,25 +2,29 @@
 
 set -Eeuo pipefail
 
-read -rp 'Add your user to device groups (video, docker, input, uinput, lp)? [Y/n] ' answer
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
+answer="$(ask 'Add your user to device groups (video, docker, input, uinput, lp)? [Y/n] ')"
 case $answer in
   [Yy]* | "")
-    sudo usermod -aG video "$USER"
-    sudo usermod -aG docker "$USER"
-    sudo usermod -aG input "$USER"
-    sudo usermod -aG lp "$USER" # printer group
+    run sudo usermod -aG video "$USER"
+    run sudo usermod -aG docker "$USER"
+    run sudo usermod -aG input "$USER"
+    run sudo usermod -aG lp "$USER" # printer group
 
     # Kmonad dependencies
-    getent group uinput >/dev/null || sudo groupadd uinput
-    sudo usermod -aG uinput "$USER"
+    if ! getent group uinput >/dev/null; then
+      run sudo groupadd uinput
+    fi
+    run sudo usermod -aG uinput "$USER"
     ;;
   * ) ;;
 esac
 
-read -rp "Set your login shell to zsh? [Y/n] " answer
+answer="$(ask "Set your login shell to zsh? [Y/n] ")"
 case $answer in
   [Yy]* | "")
-    chsh -s /usr/bin/zsh
+    run chsh -s /usr/bin/zsh
     ;;
   * ) ;;
 esac

@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 DOT_CONFIG="$DOTFILES/linux/config"
@@ -14,6 +15,20 @@ done
 link_config() {
   local source="$1"
   local target="$2"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
+      echo "ok: $target -> $source"
+    elif [ -e "$target" ] || [ -L "$target" ]; then
+      if [ "$replace_existing" = 1 ]; then
+        echo "dry-run: would replace $target -> $source"
+      else
+        echo "dry-run: would skip $target (not a repo link; --replace to overwrite)"
+      fi
+    else
+      echo "dry-run: would link $target -> $source"
+    fi
+    return 0
+  fi
   mkdir -p "$(dirname "$target")"
   if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
     echo "ok: $target -> $source"
@@ -31,12 +46,12 @@ link_config() {
   fi
 }
 
-mkdir -p "$XDG_CONFIG_HOME"
-mkdir -p "$HOME/.ssh"
-mkdir -p "$HOME/screenshots"
-mkdir -p "$HOME/.local/share/applications"
-mkdir -p "$HOME/backup_vim"
-mkdir -p "$HOME/projects"
+run mkdir -p "$XDG_CONFIG_HOME"
+run mkdir -p "$HOME/.ssh"
+run mkdir -p "$HOME/screenshots"
+run mkdir -p "$HOME/.local/share/applications"
+run mkdir -p "$HOME/backup_vim"
+run mkdir -p "$HOME/projects"
 
 link_config "$DOT_CONFIG/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
 link_config "$DOT_CONFIG/hypr" "$XDG_CONFIG_HOME/hypr"

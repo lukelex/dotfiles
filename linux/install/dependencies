@@ -2,18 +2,27 @@
 
 set -Eeuo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if ! command -v yay &> /dev/null
+wm_selection="$HOME/.config/dotfiles/wm-selection"
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "dry-run: bootstrap yay from AUR if missing"
+elif ! command -v yay &> /dev/null
 then
   ( "$install_dir/yay" )
 fi
 
-wm_selection="$HOME/.config/dotfiles/wm-selection"
-mkdir -p "$(dirname "$wm_selection")"
-: > "$wm_selection"
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "dry-run: reset wm-selection file"
+else
+  mkdir -p "$(dirname "$wm_selection")"
+  : > "$wm_selection"
+fi
 
 # essentials
-yay -S --needed --noconfirm ibus openssh \
+run yay -S --needed --noconfirm ibus openssh \
   polkit polkit-gnome network-manager-applet \
   man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk bc zsh \
   zsh-completions cmake jq tidy yazi pcmanfm \
@@ -22,35 +31,43 @@ yay -S --needed --noconfirm ibus openssh \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
   pipewire-pulse google-chrome dbus udiskie
 
-read -rp 'Would you like to install Hyprland? [Y/n] ' answer
+answer="$(ask 'Would you like to install Hyprland? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing Wayland dependencies...'
-    yay -S --needed --noconfirm hyprland wdisplays cliphist awww \
+    run yay -S --needed --noconfirm hyprland wdisplays cliphist awww \
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
       qt5-wayland qt6-wayland tofi sox slurp wf-recorder \
       xdg-desktop-portal-hyprland kooha
-    echo hypr >> "$wm_selection"
+    if [ "$DRY_RUN" -eq 1 ]; then
+      echo "dry-run: record wm selection: hypr"
+    else
+      echo hypr >> "$wm_selection"
+    fi
     ;;
   * ) ;;
 esac
 
-read -rp 'Would you like to install i3wm? [Y/n] ' answer
+answer="$(ask 'Would you like to install i3wm? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing X.Org dependencies...'
-    yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
+    run yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
       xss-lock xwallpaper xautolock xorg-xkill i3lock polybar \
       xfce4-power-manager flameshot arandr xclip xdotool wired \
       simplescreenrecorder picom autorandr eww sxhkd \
       rofi rofi-greenclip rofi-bluetooth-git sddm qt6-svg
-    echo i3 >> "$wm_selection"
+    if [ "$DRY_RUN" -eq 1 ]; then
+      echo "dry-run: record wm selection: i3"
+    else
+      echo i3 >> "$wm_selection"
+    fi
     ;;
   * ) ;;
 esac
 
 # non-essentials
-yay -S --needed --noconfirm light ddcutil gammastep \
+run yay -S --needed --noconfirm light ddcutil gammastep \
   1password spotify cups ghostscript kbt cameractrls \
   zeal vlc zip unzip unrar btop seadrive-gui \
   pantheon-calculator tldr docker docker-buildx docker-compose \
@@ -59,11 +76,11 @@ yay -S --needed --noconfirm light ddcutil gammastep \
   system-config-printer fprintd downgrade cifs-utils smbclient \
   2> /dev/null
 
-read -rp 'Would you like to be able to sync your iPod? [Y/n] ' answer
+answer="$(ask 'Would you like to be able to sync your iPod? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing iPod dependencies...'
-    yay -S --needed --noconfirm rhythmbox libgpod gvfs
+    run yay -S --needed --noconfirm rhythmbox libgpod gvfs
     ;;
   * ) ;;
 esac
@@ -71,11 +88,11 @@ esac
 # Audio manipulation tools
 # ffmpeg
 
-read -rp 'Would you like to install optional dependencies? [Y/n] ' answer
+answer="$(ask 'Would you like to install optional dependencies? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing optional dependencies...'
-    yay -S --needed --noconfirm kicad curtail birdfont \
+    run yay -S --needed --noconfirm kicad curtail birdfont \
       whatsapp-for-linux telegram-desktop discord via-appimage \
       slack-desktop
     ;;
@@ -83,14 +100,14 @@ case $answer in
 esac
 
 if eval lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'; then
-  read -rp "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] " answer
+  answer="$(ask "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] ")"
   case $answer in
     [Yy]* | "")
-      yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
+      run yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
     * ) ;;
   esac
 fi
 
-rustup default stable
+run rustup default stable
 
-sudo yay -Sc
+run sudo yay -Sc

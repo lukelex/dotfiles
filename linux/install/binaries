@@ -2,10 +2,11 @@
 
 set -Eeuo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 files=$(find "$DOTFILES/linux/scripts/" -maxdepth 1 -type f -perm 755)
 
 for script in $files; do
-  sudo ln -fvs "$script" "/usr/local/bin/u_$(basename "$script")"
+  run sudo ln -fvs "$script" "/usr/local/bin/u_$(basename "$script")"
 done

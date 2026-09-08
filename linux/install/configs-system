@@ -2,29 +2,30 @@
 
 set -Eeuo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 DOT_CONFIG="$DOTFILES/linux/config"
 
-sudo mkdir -p "/etc/ly"
-sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
+run sudo mkdir -p "/etc/ly"
+run sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
 
-sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
+run sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
 
-sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
+run sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
 # sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
 
-sudo mkdir -pv "/usr/share/fonts/OTF"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Duotone-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Duotone-Solid-900.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Light-300.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Light-300.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Regular-400.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Solid-900.otf"
-sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Thin-100.otf"
+run sudo mkdir -pv "/usr/share/fonts/OTF"
+run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
+run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Duotone-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Duotone-Solid-900.otf"
+run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Light-300.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Light-300.otf"
+run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Regular-400.otf"
+run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Solid-900.otf"
+run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Thin-100.otf"
 
-sudo cp "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
+run sudo cp "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
 
 # Kmonad dependencies
-sudo modprobe uinput
-sudo rmmod pcspkr >/dev/null 2>&1 || true
+run sudo modprobe uinput
+run sudo rmmod pcspkr >/dev/null 2>&1 || true

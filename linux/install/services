@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 wm_selection="$HOME/.config/dotfiles/wm-selection"
@@ -10,25 +11,25 @@ wm_profile=""
 
 has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
-systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
+run systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
 
 if has_wm i3; then
-  read -rp 'Enable SDDM as display manager? [Y/n] ' answer
+  answer="$(ask 'Enable SDDM as display manager? [Y/n] ')"
   case $answer in
     [Yy]* | "")
-      systemctl enable --now sddm
+      run systemctl enable --now sddm
       ;;
     * ) ;;
   esac
 
-  systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
-  systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
+  run systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
+  run systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
 
   if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
     && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
-    sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
+    run sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
   fi
-  systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
+  run systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
 fi
 
-systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"
+run systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"

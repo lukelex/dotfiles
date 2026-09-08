@@ -2,26 +2,27 @@
 
 set -Eeuo pipefail
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
-mkdir -p "$HOME/.local/share/icons"
+run mkdir -p "$HOME/.local/share/icons"
 
 icon_sets=$(find "$DOTFILES/icons/" -maxdepth 1 -type d | tail -n +2)
 
 for set in $icon_sets; do
   destination="$HOME/.local/share/icons/$(basename $set)"
-  rm -vrf "$destination"
+  run rm -vrf "$destination"
 
-  sudo ln -fvs "$set" "$destination"
+  run sudo ln -fvs "$set" "$destination"
 done
 
-sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
-sudo mkdir -p "/usr/share/icons/FontAwesome-6/brands/512x512/"
-sudo rm -rf "/usr/share/icons/FontAwesome-6/solid/512x512/all"
-sudo rm -rf "/usr/share/icons/FontAwesome-6/brands/512x512/all"
-sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/solid/512x512/all"
-sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/brands/512x512/all"
+run sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
+run sudo mkdir -p "/usr/share/icons/FontAwesome-6/brands/512x512/"
+run sudo rm -rf "/usr/share/icons/FontAwesome-6/solid/512x512/all"
+run sudo rm -rf "/usr/share/icons/FontAwesome-6/brands/512x512/all"
+run sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/solid/512x512/all"
+run sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/brands/512x512/all"
 
 ## Generate eww's icon paths from $FONT_AWESOME_PATH so eww doesn't depend
 ## on the /usr/share symlinks above (cf. `eww prepare`)
-"$DOTFILES/linux/scripts/eww" prepare
+run "$DOTFILES/linux/scripts/eww" prepare

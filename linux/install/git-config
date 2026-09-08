@@ -2,31 +2,33 @@
 
 set -Eeuo pipefail
 
-read -rp 'Set global Git identity (the.lukelex@gmail.com / "Lukas Alexandre")? [Y/n] ' answer
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
+answer="$(ask 'Set global Git identity (the.lukelex@gmail.com / "Lukas Alexandre")? [Y/n] ')"
 case $answer in
   [Yy]* | "")
-    git config --global user.email "the.lukelex@gmail.com"
-    git config --global user.name "Lukas Alexandre"
+    run git config --global user.email "the.lukelex@gmail.com"
+    run git config --global user.name "Lukas Alexandre"
     ;;
   * ) ;;
 esac
 
-git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
-git config --global color.ui true
+run git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
+run git config --global color.ui true
 
-git config --global color.diff-highlight.oldNormal    "red bold"
-git config --global color.diff-highlight.oldHighlight "red bold 52"
-git config --global color.diff-highlight.newNormal    "green bold"
-git config --global color.diff-highlight.newHighlight "green bold 22"
+run git config --global color.diff-highlight.oldNormal    "red bold"
+run git config --global color.diff-highlight.oldHighlight "red bold 52"
+run git config --global color.diff-highlight.newNormal    "green bold"
+run git config --global color.diff-highlight.newHighlight "green bold 22"
 
-git config --global color.diff.meta       "yellow"
-git config --global color.diff.frag       "magenta bold"
-git config --global color.diff.commit     "yellow bold"
-git config --global color.diff.old        "red bold"
-git config --global color.diff.new        "green bold"
-git config --global color.diff.whitespace "red reverse"
+run git config --global color.diff.meta       "yellow"
+run git config --global color.diff.frag       "magenta bold"
+run git config --global color.diff.commit     "yellow bold"
+run git config --global color.diff.old        "red bold"
+run git config --global color.diff.new        "green bold"
+run git config --global color.diff.whitespace "red reverse"
 
-git config --global init.defaultBranch main
-git config --global rebase.autosquash true
-git config --global push.default current
-git config --global pull.rebase true
+run git config --global init.defaultBranch main
+run git config --global rebase.autosquash true
+run git config --global push.default current
+run git config --global pull.rebase true

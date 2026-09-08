@@ -2,16 +2,18 @@
 
 set -Eeuo pipefail
 
-xset dpms 1200 0 0
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 
-fc-cache -r
-tldr -u
-sudo mandb
+run xset dpms 1200 0 0
 
-read -rp 'Set system timezone to CET? [Y/n] ' answer
+run fc-cache -r
+run tldr -u
+run sudo mandb
+
+answer="$(ask 'Set system timezone to CET? [Y/n] ')"
 case $answer in
   [Yy]* | "")
-    timedatectl set-timezone CET
+    run timedatectl set-timezone CET
     ;;
   * ) ;;
 esac
