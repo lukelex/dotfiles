@@ -141,7 +141,9 @@ case $1 in
       icon) icon_volume ;;
       inc)
         turn_on
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+
+        if [[ 1 -eq $(echo "$(get_volume) < 100" | bc -l) ]]; then
+          wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+
+        fi
         audio_tick
         show_volume ;;
       dec)
@@ -150,7 +152,8 @@ case $1 in
         audio_tick
         show_volume ;;
       set)
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ "$3%"
+        vol=$(echo "$3" | awk '{if ($1 > 100) print 100; else if ($1 < 0) print 0; else print $1}')
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ "$vol%"
         audio_tick
         # show_volume
         ;;
