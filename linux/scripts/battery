@@ -49,6 +49,26 @@ icon() {
   fi
 }
 
+notification_icon() {
+  local value
+
+  value=$(get_percentage)
+
+  if is_charging; then
+    echo "$LUCIDE_PATH/battery-charging.svg"
+  elif [[ $value -lt 6 ]]; then
+    echo "$LUCIDE_PATH/battery-warning.svg"
+  elif [[ $value -lt 26 ]]; then
+    echo "$LUCIDE_PATH/battery-low.svg"
+  elif [[ $value -lt 51 ]]; then
+    echo "$LUCIDE_PATH/battery-medium.svg"
+  elif [[ $value -lt 91 ]]; then
+    echo "$LUCIDE_PATH/battery.svg"
+  else
+    echo "$LUCIDE_PATH/battery-full.svg"
+  fi
+}
+
 get() {
   state=$(echo "$stats" | grep state | awk '{print $2}')
   charge=$(echo "$stats" | grep percentage | awk '{print $2}')
@@ -67,20 +87,13 @@ shorten_time() {
 }
 
 show_battery() {
-  local state
   local charge
   local time
   local notification_icon
 
-  state=$(get_state)
   charge=$(get_percentage)
   time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
-
-  if [[ $state == charging ]]; then
-    notification_icon="$LUCIDE_PATH/battery-charging.svg"
-  else
-    notification_icon="$LUCIDE_PATH/battery-full.svg"
-  fi
+  notification_icon=$(notification_icon)
 
   if [[ -z $time ]]; then
     message="Full"
