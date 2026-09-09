@@ -1,0 +1,23 @@
+#!/usr/bin/bash
+
+set -eu
+
+active_window=$(hyprctl -j activewindow)
+workspace=$(jq -r '.workspace.id' <<< "$active_window")
+floating=$(jq -r '.floating' <<< "$active_window")
+
+if [[ $floating == true ]]; then
+  target_floating=false
+else
+  target_floating=true
+fi
+
+# Focus the most recently used window of the opposite type on this workspace.
+address=$(hyprctl -j clients | jq -r \
+  --argjson workspace "$workspace" \
+  --argjson floating "$target_floating" \
+  '[.[] | select(.workspace.id == $workspace and .floating == $floating)]
+   | sort_by(.focusHistoryID)
+   | .[0].address // empty')
+
+[[ -z $address ]] || hyprctl dispatch focuswindow "address:$address"
