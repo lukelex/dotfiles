@@ -17,6 +17,14 @@ HIDE_LIST = [
   "system"
 ].freeze
 
+WIRED_LOG = ENV.fetch("WIRED_LOG", "/tmp/wired.log").freeze
+
+def valid_entry?(entry)
+  entry.is_a?(Hash) &&
+    %w[app_name summary body].all? { |field| entry[field].is_a?(String) } &&
+    entry["time"].is_a?(Numeric)
+end
+
 def enrich(entry)
   entry.merge(
     {
@@ -76,11 +84,21 @@ module Icon
   end
 end
 
-puts `cat /tmp/wired.log`
-  .split("\n")
-  .map { |entry| JSON.parse(entry) }
+entries = if File.readable?(WIRED_LOG)
+            File.foreach(WIRED_LOG).filter_map do |line|
+              entry = JSON.parse(line)
+              entry if valid_entry?(entry)
+            rescue JSON::ParserError
+              nil
+            end
+          else
+            []
+          end
+
+puts entries
   .select { |entry| (entry.values_at("app_name", "summary").map(&:downcase) & HIDE_LIST).empty? }
-  .sort { |entry, _| entry.fetch("time") }
+  .sort_by { |entry| entry.fetch("time") }
+  .reverse
   .first(25)
   .map(&method(:enrich))
   .to_json
