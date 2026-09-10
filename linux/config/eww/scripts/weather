@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 
+set -euo pipefail
+
 # Collect data
-cache_dir="$HOME/.cache/eww/weather"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/eww/weather"
 cache_weather_stat=${cache_dir}/weather-stat
 cache_weather_temperature=${cache_dir}/weather-temperature
 cache_weather_icon=${cache_dir}/weather-icon
@@ -9,16 +11,38 @@ cache_weather_city=${cache_dir}/weather-city
 cache_weather_country=${cache_dir}/weather-country
 
 # Make cache dir
-if [[ ! -d "$cache_dir" ]]; then
-  mkdir -p ${cache_dir}
-fi
+umask 077
+mkdir -p "$cache_dir"
+
+write_cache() {
+  local target=$1 value=$2 temp
+  temp=$(mktemp "$cache_dir/.weather.XXXXXX")
+  printf '%s\n' "$value" > "$temp"
+  mv -f "$temp" "$target"
+}
+
+unavailable() {
+  write_cache "$cache_weather_stat" "Weather Unavailable"
+  write_cache "$cache_weather_icon" ""
+  write_cache "$cache_weather_temperature" "-"
+  write_cache "$cache_weather_city" ""
+  write_cache "$cache_weather_country" ""
+}
 
 get_weather_data() {
-  local location_data=$(curl -Ls http://ipwho.is)
-  local city=$(echo $location_data | jq -r .city)
+  local location_data city weather
   local unit="metric" # 'metric' or 'imperial'
 
-  local weather=$(curl -s "http://api.openweathermap.org/data/2.5/weather?q=$city&APPID=$OPEN_WEATHER_API_KEY&units=$unit")
+  if ! location_data=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://ipwho.is) \
+    || ! city=$(jq -er '.city' <<< "$location_data") \
+    || ! weather=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
+      --data-urlencode "q=$city" \
+      --data-urlencode "APPID=$OPEN_WEATHER_API_KEY" \
+      --data-urlencode "units=$unit" \
+      https://api.openweathermap.org/data/2.5/weather); then
+    unavailable
+    return
+  fi
 
   if [ ! -z "$weather" ]; then
     local weather_temp=$(echo "$weather" | jq ".main.temp" | cut -d "." -f 1)
@@ -91,20 +115,17 @@ get_weather_data() {
       weather_icon=""
       weather_hex="#A9B1D6"
     fi
-    echo "$weather_icon" >${cache_weather_icon}
-    echo "$weather_city" >${cache_weather_city}
-    echo "$weather_country" >${cache_weather_country}
-    echo "$weather_description" >${cache_weather_stat}
-    echo "$weather_temp""°C" >${cache_weather_temperature}
+    write_cache "$cache_weather_icon" "$weather_icon"
+    write_cache "$cache_weather_city" "$weather_city"
+    write_cache "$cache_weather_country" "$weather_country"
+    write_cache "$cache_weather_stat" "$weather_description"
+    write_cache "$cache_weather_temperature" "${weather_temp}°C"
   else
-    echo "Weather Unavailable" >${cache_weather_stat}
-    echo "" >${cache_weather_icon}
-    echo "-" >${cache_weather_temperature}
-    echo "#A9B1D6" >${tcache_weather_hex}
+    unavailable
   fi
 }
 
-case $1 in
+case ${1:-} in
   --getdata) get_weather_data ;;
   --icon) cat ${cache_weather_icon} ;;
   --city) cat ${cache_weather_city} ;;
