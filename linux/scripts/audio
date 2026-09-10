@@ -15,9 +15,9 @@ MIC_LOW=$(printf "\ue118")
 MIC_MUTE=$(printf "\ue119")
 
 function icon_mic {
-  value=$(get_volume)
+  value=$(get_mic)
 
-  if [[ $(is_mute) ]]; then
+  if mic_is_mute; then
     echo $MIC_MUTE
   elif [[ 1 -eq $(echo "$value > 85" | bc -l) ]]; then
     echo "%{F#FF0000}$MIC_HIGH%{F-}"
