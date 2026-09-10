@@ -2,6 +2,8 @@
 set -euo pipefail
 shopt -s nullglob
 
+source "$HOME/dotfiles/linux/variables.env"
+
 ## Direct PWM control is intentionally temporary: firmware regains control at
 ## reboot, or immediately when the `auto` profile is selected.
 declare -Ar PROFILE_PERCENT=(
@@ -13,7 +15,7 @@ declare -Ar PROFILE_PERCENT=(
 
 usage() {
   cat >&2 <<'EOF'
-Usage: u_fans {if|list|get|profiles|set <auto|quiet|balanced|performance|full>}
+Usage: u_fans {if|icon|list|get|notify <profile>|profiles|set <auto|quiet|balanced|performance|full>}
 
 Profiles are temporary. Run `sudo u_fans set <profile>` when fan controls are
 not writable by the current user.
@@ -60,6 +62,86 @@ manual_control_available() {
 
   # thinkpad_acpi exposes writable PWM files even when manual control is disabled.
   [[ ! -r "$fan_control" || $(<"$fan_control") == Y ]]
+}
+
+controllable() {
+  has_controllers && manual_control_available
+}
+
+fan_status() {
+  local pwm max enable name label rpm value mode percent state
+  local total=0 count=0 auto=0 off=0 manual=0
+
+  while IFS=$'\t' read -r pwm max enable name label rpm; do
+    [[ -n "$pwm" ]] || continue
+    value=$(<"$pwm")
+    percent=$(( (value * 100 + max / 2) / max ))
+    total=$(( total + percent ))
+    (( count += 1 ))
+    if [[ -r "$enable" ]]; then
+      mode=$(<"$enable")
+    else
+      mode=unknown
+    fi
+    case $mode in
+      0) (( off += 1 )) ;;
+      1) (( manual += 1 )) ;;
+      2) (( auto += 1 )) ;;
+      *) : ;;
+    esac
+  done < <(controllers)
+
+  (( count > 0 )) || return 1
+  percent=$(( (total + count / 2) / count ))
+  if (( auto == count )); then
+    state=auto
+  elif (( off == count )); then
+    state=off
+  elif (( manual == count )); then
+    if (( percent < 60 )); then
+      state=low
+    elif (( percent < 85 )); then
+      state=medium
+    else
+      state=high
+    fi
+  else
+    state=unknown
+  fi
+  printf '%s\t%s\n' "$state" "$percent"
+}
+
+fan_icon() {
+  case $1 in
+    auto) printf '󱜝' ;;
+    off) printf '󰠝' ;;
+    low) printf '󱑲' ;;
+    medium) printf '󱑳' ;;
+    high) printf '󱑴' ;;
+    *) printf '󰈐' ;;
+  esac
+}
+
+show_icon() {
+  local state percent
+  IFS=$'\t' read -r state percent < <(fan_status) || return 1
+  fan_icon "$state"
+}
+
+show_notification() {
+  local profile=$1 state percent image
+  command -v notify-send > /dev/null 2>&1 || return 0
+  IFS=$'\t' read -r state percent < <(fan_status) || return 1
+  case $state in
+    auto) image=settings ;;
+    off) image=power-off ;;
+    *) image=gauge ;;
+  esac
+  notify-send -a System \
+    -i "$LUCIDE_PATH/$image.svg" \
+    -h string:wired-tag:fan-profile \
+    -h int:value:"$percent" \
+    "Fan profile: $profile" || true
 }
 
 describe_controllers() {
@@ -129,7 +211,10 @@ valid_profile() {
 
 case ${1:-} in
   if)
-    has_controllers && echo true || echo false
+    controllable && echo true || echo false
+    ;;
+  icon)
+    show_icon
     ;;
   list|get)
     if has_controllers; then
@@ -151,6 +236,13 @@ case ${1:-} in
       exit 2
     fi
     set_profile "$2"
+    ;;
+  notify)
+    if [[ $# -ne 2 ]] || ! valid_profile "$2"; then
+      usage
+      exit 2
+    fi
+    show_notification "$2"
     ;;
   *)
     usage

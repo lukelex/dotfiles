@@ -6,7 +6,7 @@ CHOICES_FILE=/sys/firmware/acpi/platform_profile_choices
 
 usage() {
   cat >&2 <<'EOF'
-Usage: u_performance-profile {if|get|list|next|prev|set <profile>}
+Usage: u_performance-profile {if|get|icon|list|next|prev|set <profile>}
 
 Run `sudo u_performance-profile set <profile>` when the firmware control is
 not writable by the current user.
@@ -28,6 +28,17 @@ available() {
 current() {
   [[ -r "$PROFILE_FILE" ]] || return 1
   tr -d '\n' < "$PROFILE_FILE"
+}
+
+icon() {
+  case $(current) in
+    low-power) printf '󰌪' ;;
+    cool) printf '󰈐' ;;
+    quiet) printf '󰖁' ;;
+    balanced) printf '󰡬' ;;
+    performance) printf '󰓅' ;;
+    *) printf '󰒓' ;;
+  esac
 }
 
 valid_profile() {
@@ -85,6 +96,9 @@ case ${1:-} in
     ;;
   get)
     current
+    ;;
+  icon)
+    icon
     ;;
   list)
     profiles

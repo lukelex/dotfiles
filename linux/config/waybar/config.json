@@ -71,27 +71,27 @@
   },
   "backlight": {
     // "device": "acpi_video1",
-    "format": "{percent}% {icon}",
+    "format": "{icon}",
     "format-icons": ["<span font_family='lucide' rise='-3656'></span>", "<span font_family='lucide' rise='-4383'></span>", "<span font_family='lucide' rise='-4358'></span>"],
     "on-scroll-up": "u_backlight inc",
     "on-scroll-down": "u_backlight dec"
   },
   "custom/fans": {
     "exec-if": "u_fans if | grep -qx true",
-    "exec": "u_fans get | awk -F '[()]' '{ total += $2; count++ } END { if (count) printf \"%d%%\", total / count }'",
+    "exec": "u_fans icon",
     "interval": 2,
-    "format": "󰈐 {}",
+    "format": "{}",
     "tooltip-format": "Left click: balanced\nRight click: firmware auto\nScroll up: performance\nScroll down: quiet",
-    "on-click": "pkexec u_fans set balanced",
-    "on-click-right": "pkexec u_fans set auto",
-    "on-scroll-up": "pkexec u_fans set performance",
-    "on-scroll-down": "pkexec u_fans set quiet"
+    "on-click": "pkexec u_fans set balanced && u_fans notify balanced",
+    "on-click-right": "pkexec u_fans set auto && u_fans notify auto",
+    "on-scroll-up": "pkexec u_fans set performance && u_fans notify performance",
+    "on-scroll-down": "pkexec u_fans set quiet && u_fans notify quiet"
   },
   "custom/performance-profile": {
     "exec-if": "u_performance-profile if | grep -qx true",
-    "exec": "u_performance-profile get",
+    "exec": "u_performance-profile icon",
     "interval": 2,
-    "format": "󰓅 {}",
+    "format": "{}",
     "tooltip-format": "Click: next performance profile\nRight click: previous performance profile",
     "on-click": "pkexec u_performance-profile next",
     "on-click-right": "pkexec u_performance-profile prev"

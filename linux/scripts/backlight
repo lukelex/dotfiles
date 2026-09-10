@@ -3,8 +3,8 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-HIGH=$(printf "\ue178")
-LOW=$(printf "\ue299")
+declare -ar BRIGHTNESS_ICONS=("" "" "")
+declare -ar BRIGHTNESS_IMAGES=(sun-dim sun-medium sun)
 
 LINK_FILE="$HOME/.cache/link-devices"
 
@@ -12,14 +12,21 @@ get_value() {
   light -G 2>&- | cut -f1 -d .
 }
 
-icon() {
-  if (( $1 > 75 )); then
-    echo "%{F#FF0000}$HIGH%{F-}"
-  elif (( $1 > 25 )); then
-    echo "$HIGH"
+brightness_level() {
+  local value=$1
+  if (( value < 34 )); then
+    printf '0'
+  elif (( value < 67 )); then
+    printf '1'
   else
-    echo "$LOW"
+    printf '2'
   fi
+}
+
+icon() {
+  local index
+  index=$(brightness_level "$1")
+  printf '%s\n' "${BRIGHTNESS_ICONS[index]}"
 }
 
 audio_tick() {
@@ -27,10 +34,13 @@ audio_tick() {
 }
 
 show() {
+  local value index
+  value=$(get_value)
+  index=$(brightness_level "$value")
   notify-send -a System \
-    -i "$LUCIDE_PATH/sun.svg" \
+    -i "$LUCIDE_PATH/${BRIGHTNESS_IMAGES[index]}.svg" \
     -h string:wired-tag:system \
-    -h int:value:"$(get_value)" \
+    -h int:value:"$value" \
     "Brightness"
 }
 
