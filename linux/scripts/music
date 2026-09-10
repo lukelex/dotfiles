@@ -5,7 +5,11 @@ trim() {
   local scale_rate=175
   local horizontal_size
 
-  horizontal_size=$(xrandr | grep '\*' | head -n 1 | cut -d 'x' -f 1 | xargs)
+  horizontal_size=$(hyprctl monitors -j 2>/dev/null | jq -r 'map(select(.focused))[0].width // .[0].width' | head -n 1)
+  [ "$horizontal_size" = "null" ] && horizontal_size=""
+  if [ -z "$horizontal_size" ]; then
+    horizontal_size=$(xrandr 2>/dev/null | grep '\*' | head -n 1 | cut -d 'x' -f 1 | xargs)
+  fi
 
   # Maximum length for the title
   max_length=$(echo "$horizontal_size" | xargs -I _ echo "_ / $scale_rate" | bc -l | cut -d '.' -f 1)
