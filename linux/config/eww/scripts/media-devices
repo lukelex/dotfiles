@@ -1,17 +1,26 @@
 #!/bin/env ruby
 
 require "json"
+require "open3"
+require "shellwords"
+
+def command_output(*command)
+  output, status = Open3.capture2(*command)
+  status.success? ? output : ""
+end
 
 def active_default(source)
   key = source ? "default.audio.source" : "default.audio.sink"
-  meta = `pw-metadata -n default`.to_s
+  meta = command_output("pw-metadata", "-n", "default")
   json = meta[/key:'#{Regexp.escape(key)}' value:'([^']*)'/, 1]
 
   JSON.parse(json)["name"] if json
+rescue JSON::ParserError
+  nil
 end
 
 def node_ids
-  nodes = JSON.parse(`pw-dump`)
+  nodes = JSON.parse(command_output("pw-dump"))
 
   nodes.each_with_object({}) do |node, map|
     next unless node["type"] == "PipeWire:Interface:Node"
@@ -19,13 +28,15 @@ def node_ids
     name = node.dig("info", "props", "node.name")
     map[name] = node["id"] if name
   end
+rescue JSON::ParserError
+  {}
 end
 
 def pactl_blocks(kind)
   blocks = []
   current = []
 
-  `pactl list #{kind}s`.each_line do |line|
+  command_output("pactl", "list", "#{kind}s").each_line do |line|
     if line =~ /^(Sink|Source) #\d+/
       blocks << current.join if current.any?
       current = [line]
@@ -77,8 +88,9 @@ def audio_devices(kind, source)
     wpctl_id = ids[device[:name]]
     metadata_key = source ? "default.audio.source" : "default.audio.sink"
 
-    cmd = if wpctl_id
-            "wpctl set-default #{wpctl_id} ; pw-metadata -n default 0 #{metadata_key} '#{JSON.generate(name: device[:name])}' >/dev/null"
+    cmd = if wpctl_id.is_a?(Integer)
+            payload = Shellwords.shellescape(JSON.generate(name: device[:name]))
+            "wpctl set-default #{wpctl_id} && pw-metadata -n default 0 #{Shellwords.shellescape(metadata_key)} #{payload} >/dev/null"
           else
             ""
           end
