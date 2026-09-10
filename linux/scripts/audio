@@ -116,11 +116,13 @@ case $1 in
       get) get_mic ;;
       icon) icon_mic ;;
       set)
-        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$3%"
+        mic=$(echo "$3" | awk '{if ($1 > 100) print 100; else if ($1 < 0) print 0; else print $1}')
+        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$mic%"
         # show_mic
         ;;
       inc)
-        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 2%+
+        mic=$(awk -v current="$(get_mic)" 'BEGIN { print (current > 98 ? 100 : current + 2) }')
+        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$mic%"
         ;;
       dec)
         wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 2%-
