@@ -58,7 +58,7 @@
     "spacing": 10
   },
   "clock": {
-    "format": "<big><span font_family='lucide' rise='-5485'></span></big> {:%H:%M  %d %b - %A}",
+    "format": "<big><span font_family='lucide' rise='-5485'></span></big> {:%H:%M <big><span font_family='lucide' rise='-7285'></span></big> %d %b - %A}",
     "tooltip-format": "{:%A, %d %B %Y}"
   },
   "memory": {
