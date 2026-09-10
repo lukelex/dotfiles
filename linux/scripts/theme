@@ -83,6 +83,29 @@ apply_theme() {
   fi
 }
 
+show_notification() {
+  local theme="$1"
+  local icon summary body
+
+  if [ "$theme" = dark ]; then
+    icon=moon
+    summary="Dark mode enabled"
+    body="Applications will prefer dark colors."
+  else
+    icon=sun
+    summary="Light mode enabled"
+    body="Applications will prefer light colors."
+  fi
+
+  command -v notify-send > /dev/null 2>&1 || return 0
+  notify-send -a System \
+    -i "$LUCIDE_PATH/$icon.svg" \
+    -h string:wired-tag:theme \
+    -u low \
+    -t 3000 \
+    "$summary" "$body" || true
+}
+
 case "${1:-toggle}" in
   get)
     current_theme
@@ -101,7 +124,7 @@ case "${1:-toggle}" in
     mkdir -p "$(dirname "$state_file")"
     printf '%s\n' "$1" > "$state_file"
     apply_theme "$1"
-    command -v notify-send > /dev/null 2>&1 && notify-send "Theme" "Using $1 mode"
+    show_notification "$1"
     ;;
   toggle)
     if [ "$(current_theme)" = dark ]; then
