@@ -77,5 +77,6 @@ link_config "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
 link_config "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
 link_config "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapps.list"
 link_config "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"
+link_config "$DOT_CONFIG/opencode" "$XDG_CONFIG_HOME/opencode"
 
 run update-desktop-database "$HOME/.local/share/applications"
