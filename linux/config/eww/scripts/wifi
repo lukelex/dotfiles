@@ -2,8 +2,9 @@
 
 set -u
 
-CACHE_DIR="$HOME/.cache/eww"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eww"
 CACHE_FILE="$CACHE_DIR/wifi-traffic"
+umask 077
 mkdir -p "$CACHE_DIR"
 
 iface=$(nmcli -t -f DEVICE,TYPE,STATE dev status | awk -F: '$2 == "wifi" && $3 == "connected" { print $1; exit }')
@@ -28,22 +29,25 @@ if [[ -n "$iface" ]]; then
   tx_now=$(awk -v i="$iface" '$1 == i":" { print $10 }' /proc/net/dev)
   now=$(date +%s.%N)
 
-  prev=$(cat "$CACHE_FILE" 2>/dev/null)
-  if [[ -n "$prev" ]]; then
-    set -- $prev
-    p_time=$1
-    p_rx=$2
-    p_tx=$3
+  p_time=""
+  p_rx=""
+  p_tx=""
+  extra=""
+  if read -r p_time p_rx p_tx extra < "$CACHE_FILE" 2> /dev/null && [[ -z "$extra" ]] \
+    && [[ "$p_time" =~ ^[0-9]+([.][0-9]+)?$ && "$p_rx" =~ ^[0-9]+$ && "$p_tx" =~ ^[0-9]+$ ]]; then
     dt=$(awk -v a="$now" -v b="$p_time" 'BEGIN { print a - b }')
 
-    if awk -v dt="$dt" 'BEGIN { exit !(dt > 0) }'; then
+    if [[ "$rx_now" =~ ^[0-9]+$ && "$tx_now" =~ ^[0-9]+$ ]] && awk -v dt="$dt" 'BEGIN { exit !(dt > 0) }'; then
       down=$(awk -v dr="$((rx_now - p_rx))" -v dt="$dt" 'BEGIN { printf "%.2f MB/s", dr / 1000000 / dt }')
       up=$(awk -v ut="$((tx_now - p_tx))" -v dt="$dt" 'BEGIN { printf "%.2f MB/s", ut / 1000000 / dt }')
     fi
   fi
 
-  tmp="$CACHE_FILE.tmp"
-  echo "$now $rx_now $tx_now" > "$tmp" && mv "$tmp" "$CACHE_FILE"
+  tmp=$(mktemp "$CACHE_DIR/wifi-traffic.XXXXXX")
+  trap 'rm -f "$tmp"' EXIT
+  printf '%s %s %s\n' "$now" "$rx_now" "$tx_now" > "$tmp"
+  mv -f "$tmp" "$CACHE_FILE"
+  trap - EXIT
 fi
 
 jq -cn \
