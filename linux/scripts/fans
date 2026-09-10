@@ -55,6 +55,13 @@ has_controllers() {
   [[ -n "$(controllers)" ]]
 }
 
+manual_control_available() {
+  local fan_control=/sys/module/thinkpad_acpi/parameters/fan_control
+
+  # thinkpad_acpi exposes writable PWM files even when manual control is disabled.
+  [[ ! -r "$fan_control" || $(<"$fan_control") == Y ]]
+}
+
 describe_controllers() {
   local pwm max enable name label rpm value percent
   while IFS=$'\t' read -r pwm max enable name label rpm; do
@@ -75,6 +82,10 @@ set_profile() {
     echo 'No controllable PWM fans were found.' >&2
     return 1
   }
+  if [[ "$profile" != auto ]] && ! manual_control_available; then
+    echo 'thinkpad_acpi manual fan control is disabled; set fan_control=1 for the module and reboot.' >&2
+    return 1
+  fi
 
   # Verify every controller before changing any of them.
   while IFS=$'\t' read -r pwm max enable name label rpm; do

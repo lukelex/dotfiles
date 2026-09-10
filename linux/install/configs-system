@@ -13,6 +13,8 @@ run sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
 run sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
 
 run sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
+run sudo mkdir -p "/etc/modprobe.d"
+run sudo ln -fvs "$DOT_CONFIG/thinkpad_acpi.conf" "/etc/modprobe.d/thinkpad_acpi.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
 # sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
 
