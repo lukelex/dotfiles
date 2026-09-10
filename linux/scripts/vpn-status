@@ -4,11 +4,11 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-info=$(sudo nordvpn status)
-tatus=$(echo "$info" | grep Status | awk '{print $4}')
-summary=$(echo "$info" | grep -vE "(Status|server|tech|protocol)")
+info=$(sudo -n nordvpn status)
+status=$(awk -F ': ' '/^Status:/{print $2; exit}' <<< "$info")
+summary=$(grep -viE '^(Status|server|technology|protocol):' <<< "$info" || true)
 
 notify-send -a System \
   -i "$LUCIDE_PATH/globe.svg" \
   -h string:wired-tag:system \
-  "$tatus" "$summary"
+  "$status" "$summary" 2> /dev/null || true
