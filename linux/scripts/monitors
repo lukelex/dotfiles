@@ -81,12 +81,14 @@ set_all_unlocked() { # value
 }
 
 set_all() { # value [quiet]
-  local value=$1 quiet=${2:-}
+  local value=$1 quiet=${2:-} lock_dir
   value=$(clamp_value "$value") || return 1
+  lock_dir=${XDG_RUNTIME_DIR:-"$HOME/.cache"}
+  mkdir -p "$lock_dir"
   if (
     flock -n 9 || exit 75
     set_all_unlocked "$value"
-  ) 9> "${XDG_RUNTIME_DIR:-/tmp}/u_monitors_set.lock"; then
+  ) 9> "$lock_dir/u_monitors_set.lock"; then
     if [[ "$quiet" != quiet ]]; then
       show "$value"
     fi
