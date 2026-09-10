@@ -6,7 +6,7 @@ source "$HOME/dotfiles/linux/variables.env"
 ## Eww's .yuck cannot expand environment variables and cannot load SVG,
 ## so we rasterize the vendored Lucide SVGs to PNGs and point eww at them.
 prepare() {
-  "$DOTFILES/linux/scripts/lucide-pngs"
+  "$DOTFILES/linux/scripts/lucide-pngs" || return $?
 
   cat > "$DOT_CONFIG/eww/paths.yuck" <<YUCK
 (defvar ICONS_PATH "$LUCIDE_PNG_PATH")
@@ -14,14 +14,14 @@ prepare() {
 YUCK
 }
 
-case $1 in
+case ${1:-} in
   prepare)
     prepare
     exit 0
     ;;
 esac
 
-prepare
+prepare || exit $?
 
 ## Run eww daemon if not running already
 if [[ ! $(pidof eww) ]]; then
