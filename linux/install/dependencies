@@ -27,6 +27,7 @@ run yay -S --needed --noconfirm ibus openssh \
   man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk ttf-lucide-font bc zsh \
   zsh-completions cmake jq tidy yazi pcmanfm \
   imagemagick blueman fragments playerctl inetutils \
+  papirus-icon-theme \
   tree v4l-utils neovim fd fzf ripgrep rustup kmonad \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
   pipewire-pulse google-chrome dbus udiskie
@@ -35,7 +36,7 @@ answer="$(ask 'Would you like to install Hyprland? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing Wayland dependencies...'
-    run yay -S --needed --noconfirm hyprland wdisplays cliphist awww \
+    run yay -S --needed --noconfirm hyprland waybar-git wdisplays cliphist awww \
       swhkd hypridle hyprlock hyprpanel-bin hyprshot \
       qt5-wayland qt6-wayland tofi sox slurp wf-recorder \
       xdg-desktop-portal-hyprland kooha

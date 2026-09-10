@@ -32,11 +32,11 @@
     },
     "format": "{icon}",
     "format-icons": {
-      "urgent": "",
-      //"active": "",
-      "default": "",
-      "empty": "",
-      "special": ""
+      "urgent": "<span font_family='lucide' rise='-1949'></span>",
+      //"active": "<span font_family='lucide' rise='-1603'></span>",
+      "default": "<span font_family='lucide' rise='-1603'></span>",
+      "empty": "<span font_family='lucide' rise='-1603'></span>",
+      "special": "<span font_family='lucide' rise='-1248'></span>"
     }
   },
   "hyprland/submap": {
@@ -47,8 +47,8 @@
   "idle_inhibitor": {
     "format": "<big>{icon}</big>",
     "format-icons": {
-      "activated": "",
-      "deactivated": ""
+      "activated": "<span font_family='lucide' rise='-1256'></span>",
+      "deactivated": "<span font_family='lucide' rise='-1248'></span>"
     }
   },
   "tray": {
@@ -56,18 +56,18 @@
     "spacing": 10
   },
   "clock": {
-    "format": "<big></big> {:%H:%M  %d %b - %A}",
+    "format": "<big><span font_family='lucide' rise='-5485'></span></big> {:%H:%M  %d %b - %A}",
     "tooltip-format": "{:%A, %d %B %Y}"
   },
   "memory": {
-    "format": "{used:0.0f}/{total:0.0f}G ",
+    "format": "{used:0.0f}/{total:0.0f}G <span font_family='lucide' rise='-1603'></span>",
     "tooltip": true,
     "tooltip-format": "Swap: {swapUsed}/{swapTotal}G"
   },
   "backlight": {
     // "device": "acpi_video1",
     "format": "{percent}% {icon}",
-    "format-icons": ["", "", ""],
+    "format-icons": ["<span font_family='lucide' rise='-3656'></span>", "<span font_family='lucide' rise='-4383'></span>", "<span font_family='lucide' rise='-4358'></span>"],
     "on-scroll-up": "u_backlight inc",
     "on-scroll-down": "u_backlight dec"
   },
@@ -79,17 +79,17 @@
       "critical": 15
     },
     "format": "{capacity}% <big>{icon}</big>",
-    "format-charging": "{capacity}% ",
-    "format-plugged": "{capacity}% ",
+    "format-charging": "{capacity}% <span font_family='lucide' rise='-1958'></span>",
+    "format-plugged": "{capacity}% <span font_family='lucide' rise='-1603'></span>",
     "format-alt": "{time} {icon}",
-    "format-warning": "{capacity}%  {icon}",
-    "format-critical": "{capacity}%  {icon}",
-    "format-icons": ["", "", "", "", ""]
+    "format-warning": "{capacity}% <span font_family='lucide' rise='-1975'></span> {icon}",
+    "format-critical": "{capacity}% <span font_family='lucide' rise='-1975'></span> {icon}",
+    "format-icons": ["<span font_family='lucide' rise='-1966'></span>", "<span font_family='lucide' rise='-1603'></span>", "<span font_family='lucide' rise='-910'></span>", "<span font_family='lucide' rise='-910'></span>", "<span font_family='lucide' rise='-1958'></span>"]
   },
   "bluetooth": {
-    "format": "",
-    "format-connected": "{device_alias} ",
-    "format-connected-battery": "{device_alias} {device_battery_percentage}% ",
+    "format": "<span font_family='lucide' rise='-1265'></span>",
+    "format-connected": "{device_alias} <span font_family='lucide' rise='-1265'></span>",
+    "format-connected-battery": "{device_alias} {device_battery_percentage}% <span font_family='lucide' rise='-1265'></span>",
     // "format-device-preference": [ "device1", "device2" ], // preference list deciding the displayed device
     "tooltip-format": "({status}) {controller_alias}\t{controller_address}\n\n{num_connections} connected",
     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
@@ -98,30 +98,30 @@
     "on-click": "blueman-manager"
   },
   "network": {
-    "format-wifi": "<big></big>",
-    "format-ethernet": "<big></big>",
-    "tooltip-format": "{essid} ({signalStrength}%) | {ifname} via {gwaddr} <big></big>",
-    "format-linked": "{ifname} (No IP) <big></big>",
-    "format-disconnected": "<big></big>",
+    "format-wifi": "<big><span font_family='lucide' rise='-3588'></span></big>",
+    "format-ethernet": "<big><span font_family='lucide' rise='-3152'></span></big>",
+    "tooltip-format": "{essid} ({signalStrength}%) | {ifname} via {gwaddr} <big><span font_family='lucide' rise='-3152'></span></big>",
+    "format-linked": "{ifname} (No IP) <big><span font_family='lucide' rise='-3152'></span></big>",
+    "format-disconnected": "<big><span font_family='lucide' rise='-2747'></span></big>",
     "format-alt": "{ifname}: {ipaddr}/{cidr}",
     "tooltip-format-ethernet": "{ipaddr}/{cidr}",
     "on-click": "nm-connection-editor"
   },
   "pulseaudio": {
     "format": "{volume}% <big>{icon}</big> {format_source}",
-    "format-bluetooth": "{volume}% {icon}<big></big> {format_source}",
-    "format-bluetooth-muted": " {icon}<big></big> {format_source}",
-    "format-muted": " {format_source}",
-    "format-source": "{volume}% <big></big>",
-    "format-source-muted": "<big></big>",
+    "format-bluetooth": "{volume}% <big>{icon}</big><big><span font_family='lucide' rise='-2747'></span></big> {format_source}",
+    "format-bluetooth-muted": "<span font_family='lucide' rise='-1966'></span> <big>{icon}</big><big><span font_family='lucide' rise='-2747'></span></big> {format_source}",
+    "format-muted": "<span font_family='lucide' rise='-1966'></span> {format_source}",
+    "format-source": "{volume}% <big><span font_family='lucide' rise='-5648'></span></big>",
+    "format-source-muted": "<big><span font_family='lucide' rise='-1459'></span></big>",
     "format-icons": {
-      "headphone": "",
-      "hands-free": "",
-      "headset": "",
-      "phone": "",
-      "portable": "",
-      "car": "",
-      "default": ["", "", ""]
+      "headphone": "<span font_family='lucide' rise='-5603'></span>",
+      "hands-free": "<span font_family='lucide' rise='-5975'></span>",
+      "headset": "<span font_family='lucide' rise='-5975'></span>",
+      "phone": "<span font_family='lucide' rise='-5603'></span>",
+      "portable": "<span font_family='lucide' rise='-5603'></span>",
+      "car": "<span font_family='lucide' rise='-5966'></span>",
+      "default": ["<span font_family='lucide' rise='-5603'></span>", "<span font_family='lucide' rise='-5611'></span>", "<span font_family='lucide' rise='-5256'></span>"]
     },
     "on-click": "pavucontrol",
     "on-click-middle": "u_audio volume toggle",
@@ -130,19 +130,19 @@
   },
   "custom/power": {
     "exec": "echo a",
-    "format": " <big></big> ",
+    "format": " <big><span font_family='lucide' rise='-3152'></span></big> ",
     "on-click": "u_eww toggle power"
   },
   "custom/pomodoro": {
     "exec": "u_dummodoro status",
     "interval": 1,
-    "format": " {}",
+    "format": "<span font_family='lucide' rise='-1603'></span> {}",
     "on-click": "u_dummodoro toggle"
   },
   "custom/spotify": {
     "exec": "u_music show trimmed",
     "interval": 1,
-    "format": "<big></big> {}",
+    "format": "<big><span font_family='lucide' rise='-3152'></span></big> {}",
     "on-click": "u_music toggle"
   }
 }
