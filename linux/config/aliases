@@ -141,4 +141,7 @@ git_clean() {
 alias dc="docker"
 alias dcp="docker-compose"
 
+# Dev tools
+alias oc="opencode"
+
 [ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
