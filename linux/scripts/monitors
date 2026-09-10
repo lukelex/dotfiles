@@ -16,6 +16,7 @@ FEATURE_NAME="Brightness"
 displays() {
   local current=""
   while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"
     case "$line" in
       "Display "*) current=valid ;;
       "Invalid display"*) current=invalid ;;
@@ -29,14 +30,15 @@ displays() {
 }
 
 getvcp() { # bus
-  ddcutil --bus="$1" getvcp "$FEATURE" 2>/dev/null \
+  local bus=${1##*-}
+  ddcutil --bus="$bus" getvcp "$FEATURE" 2>/dev/null \
     | grep -oP 'current\s+value\s*=\s*\K\d+' || true
 }
 
 setvcp() { # bus value
-  ## -n: skip if another set is still in flight, so rapid slider updates
-  ## queue as few ddcutil calls as possible.
-  flock -n /tmp/u_monitors_set.lock sh -c "ddcutil --bus='$1' setvcp '$FEATURE' '$2' &>/dev/null" || true
+  local bus=${1##*-}
+  [[ "$bus" =~ ^[0-9]+$ ]] || return 1
+  ddcutil --bus="$bus" setvcp "$FEATURE" "$2" &> /dev/null
 }
 
 current_average() {
@@ -64,41 +66,64 @@ show() {
     -i "$LUCIDE_PATH/monitor.svg" \
     -h int:value:"$value" \
     -h string:wired-tag:system \
-    "$FEATURE_NAME"
+    "$FEATURE_NAME" 2> /dev/null || true
+}
+
+set_all_unlocked() { # value
+  local bus applied=false
+  while IFS= read -r bus; do
+    [[ -n "$bus" ]] || continue
+    if setvcp "$bus" "$1"; then
+      applied=true
+    fi
+  done <<< "$(displays)"
+  [[ "$applied" == true ]]
 }
 
 set_all() { # value [quiet]
   local value=$1 quiet=${2:-}
-  value=$(clamp_value "$value")
-  local bus
-  while IFS= read -r bus; do
-    [[ -n "$bus" ]] || continue
-    setvcp "$bus" "$value"
-  done <<< "$(displays)"
-  if [[ "$quiet" != quiet ]]; then
-    show "$value"
+  value=$(clamp_value "$value") || return 1
+  if (
+    flock -n 9 || exit 75
+    set_all_unlocked "$value"
+  ) 9> "${XDG_RUNTIME_DIR:-/tmp}/u_monitors_set.lock"; then
+    if [[ "$quiet" != quiet ]]; then
+      show "$value"
+    fi
   fi
 }
 
 clamp_value() { # value -> 0..100
   local v=$1
+  [[ "$v" =~ ^-?[0-9]+$ ]] || return 1
   (( v < 0 )) && v=0
   (( v > 100 )) && v=100
   echo "$v"
 }
 
-case $1 in
+usage() {
+  echo "Usage: u_monitors brightness {if|get|set <0-100>|inc|dec|reset|list|xrandr}" >&2
+}
+
+case ${1:-} in
   brightness|display)
     ;;
   *)
-    exit 1
+    usage
+    exit 2
     ;;
 esac
 
-case $2 in
+case ${2:-} in
   if)   echo "$([[ -n "$(displays)" ]] && echo true || echo false)" ;;
   get)  current_average ;;
-  set)  set_all "${3:--1}" ;;
+  set)
+    if [[ $# -lt 3 ]]; then
+      usage
+      exit 2
+    fi
+    set_all "$3"
+    ;;
   inc)  set_all "$(( $(current_average) + 5 ))" ;;
   dec)  set_all "$(( $(current_average) - 5 ))" ;;
   reset) set_all 0 ;;
@@ -107,5 +132,9 @@ case $2 in
     ;;
   xrandr)
     xrandr 2>/dev/null | grep -E '\bconnected' || true
+    ;;
+  *)
+    usage
+    exit 2
     ;;
 esac
