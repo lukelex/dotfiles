@@ -11,3 +11,5 @@ hyprctl setcursor "$CURSOR_THEME" "$CURSOR_SIZE"
 
 gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
 gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE"
+
+"$DOTFILES/linux/scripts/theme" apply

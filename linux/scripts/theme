@@ -1,0 +1,117 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$HOME/dotfiles/linux/variables.env"
+
+state_file="$THEME_STATE_FILE"
+
+current_theme() {
+  local theme
+
+  if [ -r "$state_file" ]; then
+    read -r theme < "$state_file"
+  else
+    theme=dark
+  fi
+
+  case "$theme" in
+    dark|light) printf '%s\n' "$theme" ;;
+    *) printf 'dark\n' ;;
+  esac
+}
+
+write_gtk_settings() {
+  local theme="$1"
+  local gtk_theme prefer_dark
+
+  if [ "$theme" = dark ]; then
+    gtk_theme=Colloid-Teal-Dark
+    prefer_dark=1
+  else
+    gtk_theme=Colloid-Teal-Light
+    prefer_dark=0
+  fi
+
+  for gtk_version in gtk-3.0 gtk-4.0; do
+    mkdir -p "$XDG_CONFIG_HOME/$gtk_version"
+    cat > "$XDG_CONFIG_HOME/$gtk_version/settings.ini" <<EOF
+[Settings]
+gtk-application-prefer-dark-theme=$prefer_dark
+gtk-theme-name=$gtk_theme
+gtk-icon-theme-name=Papirus-Dark
+EOF
+  done
+
+  cat > "$HOME/.gtkrc-2.0" <<EOF
+gtk-theme-name = "$gtk_theme"
+gtk-icon-theme-name = "Papirus-Dark"
+EOF
+}
+
+set_gsetting() {
+  local schema="$1"
+  local key="$2"
+  local value="$3"
+
+  if command -v gsettings > /dev/null 2>&1 && [ "$(gsettings writable "$schema" "$key" 2> /dev/null)" = true ]; then
+    gsettings set "$schema" "$key" "$value" || true
+  fi
+}
+
+apply_theme() {
+  local theme="$1"
+  local gtk_theme color_scheme kvantum_theme
+
+  if [ "$theme" = dark ]; then
+    gtk_theme=Colloid-Teal-Dark
+    color_scheme=prefer-dark
+    kvantum_theme=KvGnomeDark
+  else
+    gtk_theme=Colloid-Teal-Light
+    color_scheme=prefer-light
+    kvantum_theme=KvGnome
+  fi
+
+  write_gtk_settings "$theme"
+  set_gsetting org.gnome.desktop.interface color-scheme "'$color_scheme'"
+  set_gsetting org.gnome.desktop.interface gtk-theme "'$gtk_theme'"
+  set_gsetting org.gnome.desktop.interface icon-theme "'Papirus-Dark'"
+
+  if command -v kvantummanager > /dev/null 2>&1; then
+    kvantummanager --set "$kvantum_theme" || true
+  fi
+}
+
+case "${1:-toggle}" in
+  get)
+    current_theme
+    ;;
+  apply)
+    apply_theme "$(current_theme)"
+    ;;
+  init)
+    if [ ! -r "$state_file" ]; then
+      mkdir -p "$(dirname "$state_file")"
+      printf 'dark\n' > "$state_file"
+    fi
+    apply_theme "$(current_theme)"
+    ;;
+  dark|light)
+    mkdir -p "$(dirname "$state_file")"
+    printf '%s\n' "$1" > "$state_file"
+    apply_theme "$1"
+    command -v notify-send > /dev/null 2>&1 && notify-send "Theme" "Using $1 mode"
+    ;;
+  toggle)
+    if [ "$(current_theme)" = dark ]; then
+      "$0" light
+    else
+      "$0" dark
+    fi
+    ;;
+  *)
+    printf 'Usage: %s [dark|light|toggle|get|apply|init]\n' "$0" >&2
+    exit 2
+    ;;
+esac

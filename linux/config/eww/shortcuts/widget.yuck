@@ -19,6 +19,14 @@
     )
     (box :space-evenly false :halign "center"
       (pointer :active true
+        (button :class "big-button" :onclick "u_theme toggle &"
+                :tooltip "Toggle light and dark mode"
+          (icon :name { THEME == "dark" ? "sun" : "moon" })
+        )
+      )
+    )
+    (box :space-evenly false :halign "center"
+      (pointer :active true
         (button :class "big-button" :onclick "u_emoji & u_eww close"
                 :tooltip "Open Emoji selector"
           (icon :name "face-slightly-smiling")
@@ -35,4 +43,3 @@
     )
   )
 )
-
