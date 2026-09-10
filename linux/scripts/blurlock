@@ -1,116 +1,96 @@
 #!/usr/bin/bash
 
-# Constants
-DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dimensions
-PARAMS="-colorspace sRGB" # ensure that images are created in sRGB colorspace, to avoid greyscale output
-DEFAULT_CACHE_FOLDER="$HOME"/.cache/i3lock/img/ # Cache folder
+set -euo pipefail
+
+DISPLAY_RE='([0-9]+)x([0-9]+)\+([0-9]+)\+([0-9]+)'
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+CACHE_FOLDER="${XDG_CACHE_HOME:-$HOME/.cache}/i3lock/img"
 DEFAULT_IMAGE="$HOME/wallpaper.png"
 
-# Use XDG cache folder if that variable is set.
-if [ -z "$XDG_CACHE_HOME" ]
-then
-  CACHE_FOLDER=$DEFAULT_CACHE_FOLDER
-else
-  CACHE_FOLDER=$XDG_CACHE_HOME
-fi
+mkdir -p "$CACHE_FOLDER"
 
-if ! [[ "$CACHE_FOLDER" == "*/" ]]; then
-  CACHE_FOLDER="$CACHE_FOLDER/"
-fi
-
-# Create the cache folder if it does not exist
-if ! [ -e $CACHE_FOLDER ]; then
-  mkdir -p $CACHE_FOLDER
-fi
-
-# Passed arguments
+arg_image=""
+dry_run=false
+lock_args=()
 while getopts ":i:a:d:" opt; do
   case $opt in
-    i) arg_image="$OPTARG"
-      ;;
-    a) lock_args="$OPTARG"
-      ;;
-    d) lock_cmd=":"
-      arg_image="$OPTARG"
-      ;;
-    \?) echo "Invalid option -$OPTARG" >&2 && exit 1
-      ;;
+    i) arg_image=$OPTARG ;;
+    a) read -r -a lock_args <<< "$OPTARG" ;;
+    d) arg_image=$OPTARG; dry_run=true ;;
+    \?) echo "Invalid option -$OPTARG" >&2; exit 2 ;;
   esac
 done
 
-# Image paths
-if [ "$arg_image" ]; then
-  BKG_IMG="$arg_image"  # Passed image
-elif [ -f "$HOME/wallpaper.png" ]; then
-  BKG_IMG=$DEFAULT_IMAGE
-else
-  BKG_IMG="$(dirname "$BASH_SOURCE")/img/background.png"  # Fallback to current folder
-fi
-
-echo $BKG_IMG
-if ! [ -e "$BKG_IMG" ]; then
-  echo "No background image! Exiting..."
-  exit 2
-fi
-
-MD5_BKG_IMG=$(md5sum $BKG_IMG | cut -c 1-10)
-MD5_SCREEN_CONFIG=$(xrandr | md5sum - | cut -c 1-32) # Hash of xrandr output
-OUTPUT_IMG="$CACHE_FOLDER""$MD5_SCREEN_CONFIG"."$MD5_BKG_IMG".png # Path of final image
-OUTPUT_IMG_WIDTH=0 # Decide size to cover all screens
-OUTPUT_IMG_HEIGHT=0 # Decide size to cover all screens
-
-# i3lock command
-if [ "$lock_cmd" ]; then
-  LOCK_BASE_CMD="$lock_cmd"
-else
-  LOCK_BASE_CMD="i3lock --image $OUTPUT_IMG"
-fi
-
-if [ "$lock_args" ]; then
-  LOCK_ARGS="$lock_args"
-else
-  LOCK_ARGS="--tiling --ignore-empty-password --show-failed-attempts --nofork"
-fi
-LOCK_CMD="$LOCK_BASE_CMD $LOCK_ARGS"
-
-if [ -e $OUTPUT_IMG ]
-then
-  $LOCK_CMD
-  exit 0
-fi
-
-#Execute xrandr to get information about the monitors:
-while read LINE
-do
-  #If we are reading the line that contains the position information:
-  if [[ $LINE =~ $DISPLAY_RE ]]; then
-    #Extract information and append some parameters to the ones that will be given to ImageMagick:
-    SCREEN_WIDTH=${BASH_REMATCH[1]}
-    SCREEN_HEIGHT=${BASH_REMATCH[2]}
-    SCREEN_X=${BASH_REMATCH[3]}
-    SCREEN_Y=${BASH_REMATCH[4]}
-
-    CACHE_IMG="$CACHE_FOLDER""$SCREEN_WIDTH"x"$SCREEN_HEIGHT"."$MD5_BKG_IMG".png
-    ## if cache for that screensize doesnt exist
-    if ! [ -e $CACHE_IMG ]
-    then
-      # Create image for that screensize
-      eval convert '$BKG_IMG' '-resize' '${SCREEN_WIDTH}X${SCREEN_HEIGHT}^' '-gravity' 'Center' '-crop' '${SCREEN_WIDTH}X${SCREEN_HEIGHT}+0+0' '+repage' '$CACHE_IMG'
-    fi
-
-    # Decide size of output image
-    if (( $OUTPUT_IMG_WIDTH < $SCREEN_WIDTH+$SCREEN_X )); then OUTPUT_IMG_WIDTH=$(($SCREEN_WIDTH+$SCREEN_X)); fi;
-      if (( $OUTPUT_IMG_HEIGHT < $SCREEN_HEIGHT+$SCREEN_Y )); then OUTPUT_IMG_HEIGHT=$(( $SCREEN_HEIGHT+$SCREEN_Y )); fi;
-
-        PARAMS="$PARAMS -type TrueColor $CACHE_IMG -geometry +$SCREEN_X+$SCREEN_Y -composite "
+if [[ -z "$arg_image" ]]; then
+  if [[ -r "$DEFAULT_IMAGE" ]]; then
+    arg_image=$DEFAULT_IMAGE
+  else
+    arg_image="$SCRIPT_DIR/img/background.png"
   fi
-done <<<"`xrandr`"
+fi
 
-#Execute ImageMagick:
-eval convert -size ${OUTPUT_IMG_WIDTH}x${OUTPUT_IMG_HEIGHT} 'xc:black' $OUTPUT_IMG
-eval convert $OUTPUT_IMG $PARAMS $OUTPUT_IMG
+if (( ${#lock_args[@]} == 0 )); then
+  lock_args=(--tiling --ignore-empty-password --show-failed-attempts --nofork)
+fi
 
-#Lock the screen:
-$LOCK_CMD
+lock_black() {
+  exec i3lock --color 000000 "${lock_args[@]}"
+}
 
-exit 0
+build_image() {
+  local screen_config md5_background md5_screens output_img line
+  local screen_width screen_height screen_x screen_y cache_img
+  local output_width=0 output_height=0 screens=0
+  local -a compose_args
+
+  [[ -r "$arg_image" ]] || return 1
+  screen_config=$(xrandr --query) || return 1
+  md5_background=$(md5sum "$arg_image" | cut -c 1-10) || return 1
+  md5_screens=$(md5sum <<< "$screen_config" | cut -c 1-32) || return 1
+  output_img="$CACHE_FOLDER/$md5_screens.$md5_background.png"
+
+  if [[ -s "$output_img" ]]; then
+    printf '%s\n' "$output_img"
+    return 0
+  fi
+
+  while IFS= read -r line; do
+    if [[ $line =~ $DISPLAY_RE ]]; then
+      screen_width=${BASH_REMATCH[1]}
+      screen_height=${BASH_REMATCH[2]}
+      screen_x=${BASH_REMATCH[3]}
+      screen_y=${BASH_REMATCH[4]}
+      cache_img="$CACHE_FOLDER/${screen_width}x${screen_height}.$md5_background.png"
+
+      if [[ ! -s "$cache_img" ]]; then
+        convert "$arg_image" -resize "${screen_width}x${screen_height}^" \
+          -gravity Center -crop "${screen_width}x${screen_height}+0+0" \
+          +repage "$cache_img" || return 1
+      fi
+
+      if (( output_width < screen_width + screen_x )); then
+        output_width=$(( screen_width + screen_x ))
+      fi
+      if (( output_height < screen_height + screen_y )); then
+        output_height=$(( screen_height + screen_y ))
+      fi
+      compose_args+=(-colorspace sRGB -type TrueColor "$cache_img" -geometry "+${screen_x}+${screen_y}" -composite)
+      (( screens += 1 ))
+    fi
+  done <<< "$screen_config"
+
+  (( screens > 0 )) || return 1
+  convert -size "${output_width}x${output_height}" xc:black "$output_img" || return 1
+  convert "$output_img" "${compose_args[@]}" "$output_img" || return 1
+  [[ -s "$output_img" ]] || return 1
+  printf '%s\n' "$output_img"
+}
+
+if output_img=$(build_image); then
+  if [[ "$dry_run" == true ]]; then
+    exit 0
+  fi
+  exec i3lock --image "$output_img" "${lock_args[@]}"
+fi
+
+lock_black
