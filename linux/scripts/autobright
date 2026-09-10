@@ -14,6 +14,8 @@ POLL=${POLL:-2}
 STATE_DIR="$HOME/.cache/autobright"
 STATE_FILE="$STATE_DIR/state"
 PID_FILE="$STATE_DIR/pid"
+LOCK_FILE="$STATE_DIR/control.lock"
+SCRIPT_NAME=$(basename "$0")
 
 EXPOSURE_MIN=2
 EXPOSURE_MAX=1250
@@ -65,30 +67,63 @@ daemon() {
 }
 
 running() {
-  [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+  local pid cmdline
+  [[ -s "$PID_FILE" ]] || return 1
+  read -r pid < "$PID_FILE"
+  [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2> /dev/null || return 1
+  cmdline=$(tr '\0' ' ' < "/proc/$pid/cmdline")
+  [[ "$cmdline" == *"$SCRIPT_NAME daemon"* ]]
 }
 
-case $1 in
+start() {
+  mkdir -p "$STATE_DIR"
+  if (
+    flock -n 9 || exit 0
+    if running; then
+      echo 1 > "$STATE_FILE"
+      exit 0
+    fi
+
+    rm -f "$PID_FILE"
+    setsid nohup "$0" daemon > /dev/null 2>&1 &
+    for _ in {1..10}; do
+      sleep 0.1
+      if running; then
+        echo 1 > "$STATE_FILE"
+        exit 0
+      fi
+    done
+    exit 1
+  ) 9> "$LOCK_FILE"; then
+    return 0
+  fi
+  return 1
+}
+
+stop() {
+  mkdir -p "$STATE_DIR"
+  (
+    flock -n 9 || exit 0
+    if running; then
+      local pid
+      read -r pid < "$PID_FILE"
+      kill "$pid" 2> /dev/null || true
+    fi
+    rm -f "$STATE_FILE" "$PID_FILE"
+  ) 9> "$LOCK_FILE"
+}
+
+case ${1:-} in
   ambient)
     amb=$(ambient)
     [[ "$amb" == -1 ]] && exit 1
     echo "$amb"
     ;;
   start)
-    if running; then
-      echo 1 > "$STATE_FILE"
-      exit 0
-    fi
-    setsid nohup "$0" daemon >/dev/null 2>&1 &
-    disown
-    sleep 1
-    echo 1 > "$STATE_FILE"
+    start
     ;;
   stop)
-    if running; then
-      kill "$(cat "$PID_FILE")" 2>/dev/null || true
-    fi
-    rm -f "$STATE_FILE" "$PID_FILE"
+    stop
     ;;
   toggle)
     if [[ "$(cat "$STATE_FILE" 2>/dev/null || echo 0)" == 1 ]]; then
