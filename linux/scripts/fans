@@ -1,0 +1,148 @@
+#!/usr/bin/bash
+set -euo pipefail
+shopt -s nullglob
+
+## Direct PWM control is intentionally temporary: firmware regains control at
+## reboot, or immediately when the `auto` profile is selected.
+declare -Ar PROFILE_PERCENT=(
+  [quiet]=50
+  [balanced]=70
+  [performance]=85
+  [full]=100
+)
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: u_fans {if|list|get|profiles|set <auto|quiet|balanced|performance|full>}
+
+Profiles are temporary. Run `sudo u_fans set <profile>` when fan controls are
+not writable by the current user.
+EOF
+}
+
+read_value() {
+  local value
+  IFS= read -r value < "$1"
+  printf '%s' "$value"
+}
+
+controllers() {
+  local hwmon pwm name index max enable label fan label_value fan_value
+  for hwmon in /sys/class/hwmon/hwmon*; do
+    [[ -r "$hwmon/name" ]] || continue
+    name=$(<"$hwmon/name")
+    for pwm in "$hwmon"/pwm*; do
+      [[ "${pwm##*/}" =~ ^pwm([0-9]+)$ ]] || continue
+      index=${BASH_REMATCH[1]}
+      max=255
+      [[ -r "${pwm}_max" ]] && max=$(<"${pwm}_max")
+      [[ "$max" =~ ^[1-9][0-9]*$ ]] || continue
+      enable="${pwm}_enable"
+      label="${pwm}_label"
+      fan="$hwmon/fan${index}_input"
+      label_value=""
+      fan_value=""
+      if [[ -r "$label" ]]; then label_value=$(read_value "$label"); fi
+      if [[ -r "$fan" ]]; then fan_value=$(read_value "$fan"); fi
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "$pwm" "$max" "$enable" "$name" \
+        "$label_value" "$fan_value"
+    done
+  done
+}
+
+has_controllers() {
+  [[ -n "$(controllers)" ]]
+}
+
+describe_controllers() {
+  local pwm max enable name label rpm value percent
+  while IFS=$'\t' read -r pwm max enable name label rpm; do
+    [[ -n "$pwm" ]] || continue
+    value=$(<"$pwm")
+    percent=$(( (value * 100 + max / 2) / max ))
+    printf '%s: %s%s: %s/%s (%s%%)' \
+      "$name" "${label:+$label }" "${pwm##*/}" "$value" "$max" "$percent"
+    [[ -r "$enable" ]] && printf ', mode %s' "$(<"$enable")"
+    [[ -n "$rpm" ]] && printf ', %s RPM' "$rpm"
+    printf '\n'
+  done < <(controllers)
+}
+
+set_profile() {
+  local profile=$1 pwm max enable name label rpm value
+  has_controllers || {
+    echo 'No controllable PWM fans were found.' >&2
+    return 1
+  }
+
+  # Verify every controller before changing any of them.
+  while IFS=$'\t' read -r pwm max enable name label rpm; do
+    [[ -n "$pwm" ]] || continue
+    if [[ "$profile" == auto ]]; then
+      [[ -w "$enable" ]] || {
+        echo "${pwm}: firmware auto mode is not writable; run with sudo if appropriate." >&2
+        return 1
+      }
+    else
+      [[ -w "$pwm" && -w "$enable" ]] || {
+        echo "${pwm}: fan control is not writable; run with sudo if appropriate." >&2
+        return 1
+      }
+    fi
+  done < <(controllers)
+
+  while IFS=$'\t' read -r pwm max enable name label rpm; do
+    [[ -n "$pwm" ]] || continue
+    if [[ "$profile" == auto ]]; then
+      printf '2' > "$enable"
+    else
+      # hwmon value 1 selects manual PWM control; 2 returns to firmware control.
+      printf '1' > "$enable"
+      value=$(( (max * PROFILE_PERCENT[$profile] + 50) / 100 ))
+      (( value < 1 )) && value=1
+      printf '%s' "$value" > "$pwm"
+    fi
+  done < <(controllers)
+
+  printf 'Fan profile: %s\n' "$profile"
+  describe_controllers
+}
+
+valid_profile() {
+  case $1 in
+    auto|quiet|balanced|performance|full) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+case ${1:-} in
+  if)
+    has_controllers && echo true || echo false
+    ;;
+  list|get)
+    if has_controllers; then
+      describe_controllers
+    else
+      echo 'No controllable PWM fans were found.'
+    fi
+    ;;
+  profiles)
+    printf '%s\n' 'auto: return control to firmware' \
+      'quiet: 50% PWM' \
+      'balanced: 70% PWM' \
+      'performance: 85% PWM' \
+      'full: 100% PWM'
+    ;;
+  set)
+    if [[ $# -ne 2 ]] || ! valid_profile "$2"; then
+      usage
+      exit 2
+    fi
+    set_profile "$2"
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac

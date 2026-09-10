@@ -17,6 +17,7 @@
     "battery",
     "memory",
     "backlight",
+    "custom/fans",
     "bluetooth",
     "network",
     "tray"
@@ -71,6 +72,17 @@
     "format-icons": ["<span font_family='lucide' rise='-3656'></span>", "<span font_family='lucide' rise='-4383'></span>", "<span font_family='lucide' rise='-4358'></span>"],
     "on-scroll-up": "u_backlight inc",
     "on-scroll-down": "u_backlight dec"
+  },
+  "custom/fans": {
+    "exec-if": "u_fans if | grep -qx true",
+    "exec": "u_fans get | awk -F '[()]' '{ total += $2; count++ } END { if (count) printf \"%d%%\", total / count }'",
+    "interval": 2,
+    "format": "󰈐 {}",
+    "tooltip-format": "Left click: balanced\nRight click: firmware auto\nScroll up: performance\nScroll down: quiet",
+    "on-click": "pkexec u_fans set balanced",
+    "on-click-right": "pkexec u_fans set auto",
+    "on-scroll-up": "pkexec u_fans set performance",
+    "on-scroll-down": "pkexec u_fans set quiet"
   },
   "battery": {
     "weighted-average": true,
