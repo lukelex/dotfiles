@@ -1,27 +1,32 @@
 #!/usr/bin/bash
 
-mkdir /tmp/quotes 2> /dev/null
+set -euo pipefail
 
-CACHE_DIR='/tmp/quotes'
+umask 077
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/quotes"
 DATE=$(date -u +%Y-%m-%d)
-CACHE_FILE=$CACHE_DIR/$DATE
+CACHE_FILE="$CACHE_DIR/$DATE"
 LANGUAGE='en'
 QUOTES_URL="https://quotes.rest/qod.json?category=inspire&language=$LANGUAGE"
 
-mkdir -p $CACHE_DIR
+mkdir -p "$CACHE_DIR"
 
 get_quote() {
-  local response
+  local response quote temp_file
 
-  if [[ ! -f $CACHE_FILE ]]; then
-    response=$(curl -Ls -H "Authorization: Bearer $QUOTES_API_KEY" "$QUOTES_URL")
+  if [[ ! -s "$CACHE_FILE" ]]; then
+    response=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 \
+      -H "Authorization: Bearer $QUOTES_API_KEY" "$QUOTES_URL")
+    quote=$(jq -er '.contents.quotes[0].quote' <<< "$response")
 
-    echo "$response" | jq -r '.contents.quotes[0].quote' > "$CACHE_FILE"
+    temp_file=$(mktemp "$CACHE_DIR/$DATE.XXXXXX")
+    printf '%s\n' "$quote" > "$temp_file"
+    mv -f "$temp_file" "$CACHE_FILE"
   fi
 
   cat "$CACHE_FILE"
 }
 
-case $1 in
+case ${1:-} in
   get) get_quote ;;
 esac
