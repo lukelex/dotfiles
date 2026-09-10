@@ -51,7 +51,7 @@ function get_volume {
 }
 
 function get_mic {
-  amixer -D pulse get Capture | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+  bc <<< "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | awk '{print $2}') * 100"
 }
 
 function vol_is_mute {
@@ -59,7 +59,7 @@ function vol_is_mute {
 }
 
 function mic_is_mute {
-  amixer -D pulse get Capture | grep '%' | grep -oE '[^ ]+$' | grep off
+  wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED
 }
 
 function show_volume {
@@ -116,13 +116,18 @@ case $1 in
       get) get_mic ;;
       icon) icon_mic ;;
       set)
-        amixer -D pulse sset Capture "$3%" > /dev/null
+        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$3%"
         # show_mic
+        ;;
+      inc)
+        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 2%+
+        ;;
+      dec)
+        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 2%-
         ;;
       show) show_mic ;;
       toggle)
-        amixer -D pulse set Capture 1+ toggle > /dev/null
-        show_mic
+        wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
         ;;
     esac
     ;;
@@ -131,7 +136,7 @@ case $1 in
       get) get_volume ;;
       icon) icon_volume ;;
       inc)
-        wpctl --limit 1 set-volume @DEFAULT_AUDIO_SINK@ 2%+ ;;
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ ;;
       dec)
         wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%- ;;
       set)

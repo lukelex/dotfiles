@@ -13,6 +13,7 @@
   "modules-right": [
     "idle_inhibitor",
     "pulseaudio",
+    "custom/microphone",
     "battery",
     "memory",
     "backlight",
@@ -108,12 +109,10 @@
     "on-click": "nm-connection-editor"
   },
   "pulseaudio": {
-    "format": "{volume}% <big>{icon}</big> {format_source}",
-    "format-bluetooth": "{volume}% <big>{icon}</big><big><span font_family='lucide' rise='-2747'></span></big> {format_source}",
-    "format-bluetooth-muted": "<span font_family='lucide' rise='-1966'></span> <big>{icon}</big><big><span font_family='lucide' rise='-2747'></span></big> {format_source}",
-    "format-muted": "<span font_family='lucide' rise='-1966'></span> {format_source}",
-    "format-source": "{volume}% <big><span font_family='lucide' rise='-5648'></span></big>",
-    "format-source-muted": "<big><span font_family='lucide' rise='-1459'></span></big>",
+    "format": "{volume}% <big>{icon}</big>",
+    "format-bluetooth": "{volume}% <big>{icon}</big><big><span font_family='lucide' rise='-2747'></span></big>",
+    "format-bluetooth-muted": "<span font_family='lucide' rise='-1966'></span> <big>{icon}</big><big><span font_family='lucide' rise='-2747'></span></big>",
+    "format-muted": "<span font_family='lucide' rise='-1966'></span>",
     "format-icons": {
       "headphone": "<span font_family='lucide' rise='-5603'></span>",
       "hands-free": "<span font_family='lucide' rise='-5975'></span>",
@@ -127,6 +126,14 @@
     "on-click-middle": "u_audio volume toggle",
     "on-scroll-up": "u_audio volume inc",
     "on-scroll-down": "u_audio volume dec"
+  },
+  "custom/microphone": {
+    "exec": "u_audio microphone get | cut -d. -f1",
+    "interval": 2,
+    "format": "{}% <big><span font_family='lucide' rise='-5648'></span></big>",
+    "on-click": "u_audio microphone toggle",
+    "on-scroll-up": "u_audio microphone inc",
+    "on-scroll-down": "u_audio microphone dec"
   },
   "custom/power": {
     "exec": "echo a",
