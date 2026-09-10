@@ -20,7 +20,9 @@ trim() {
 }
 
 get_title() {
-  echo "$(playerctl -p spotify metadata --format '{{ title }}')"
+  local title
+  title=$(playerctl -p spotify metadata --format '{{ title }}')
+  printf '%s\n' "${title//%\{/\{}"
 }
 
 case $1 in
