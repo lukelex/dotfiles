@@ -1,0 +1,103 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+PROFILE_FILE=/sys/firmware/acpi/platform_profile
+CHOICES_FILE=/sys/firmware/acpi/platform_profile_choices
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: u_performance-profile {if|get|list|next|prev|set <profile>}
+
+Run `sudo u_performance-profile set <profile>` when the firmware control is
+not writable by the current user.
+EOF
+}
+
+profiles() {
+  [[ -r "$CHOICES_FILE" ]] || return 1
+  tr ' ' '\n' < "$CHOICES_FILE" | tr -d '[]' | while IFS= read -r profile; do
+    [[ -n "$profile" ]] && printf '%s\n' "$profile"
+  done
+}
+
+available() {
+  [[ -r "$PROFILE_FILE" ]] || return 1
+  [[ $(profiles | wc -l) -gt 1 ]]
+}
+
+current() {
+  [[ -r "$PROFILE_FILE" ]] || return 1
+  tr -d '\n' < "$PROFILE_FILE"
+}
+
+valid_profile() {
+  local requested=$1 profile
+  while IFS= read -r profile; do
+    [[ "$profile" == "$requested" ]] && return 0
+  done < <(profiles)
+  return 1
+}
+
+set_profile() {
+  local profile=$1
+  available || {
+    echo 'No selectable firmware performance profiles were found.' >&2
+    return 1
+  }
+  valid_profile "$profile" || {
+    echo "Unknown performance profile: $profile" >&2
+    return 2
+  }
+  [[ -w "$PROFILE_FILE" ]] || {
+    echo 'Performance profile control is not writable; run with sudo if appropriate.' >&2
+    return 1
+  }
+  printf '%s' "$profile" > "$PROFILE_FILE"
+  current
+}
+
+cycle_profile() {
+  local direction=$1 current_profile index=-1 next_index
+  local -a choices
+  available || {
+    echo 'No selectable firmware performance profiles were found.' >&2
+    return 1
+  }
+  current_profile=$(current)
+  mapfile -t choices < <(profiles)
+
+  for i in "${!choices[@]}"; do
+    [[ "${choices[i]}" == "$current_profile" ]] && index=$i
+  done
+  (( index >= 0 )) || return 1
+
+  if [[ "$direction" == next ]]; then
+    next_index=$(( (index + 1) % ${#choices[@]} ))
+  else
+    next_index=$(( (index - 1 + ${#choices[@]}) % ${#choices[@]} ))
+  fi
+  set_profile "${choices[next_index]}"
+}
+
+case ${1:-} in
+  if)
+    if available; then echo true; else echo false; fi
+    ;;
+  get)
+    current
+    ;;
+  list)
+    profiles
+    ;;
+  next|prev)
+    cycle_profile "$1"
+    ;;
+  set)
+    [[ $# -eq 2 ]] || { usage; exit 2; }
+    set_profile "$2"
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac

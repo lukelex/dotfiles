@@ -18,6 +18,7 @@
     "custom/memory",
     "backlight",
     "custom/fans",
+    "custom/performance-profile",
     "bluetooth",
     "network",
     "tray"
@@ -85,6 +86,15 @@
     "on-click-right": "pkexec u_fans set auto",
     "on-scroll-up": "pkexec u_fans set performance",
     "on-scroll-down": "pkexec u_fans set quiet"
+  },
+  "custom/performance-profile": {
+    "exec-if": "u_performance-profile if | grep -qx true",
+    "exec": "u_performance-profile get",
+    "interval": 2,
+    "format": "󰓅 {}",
+    "tooltip-format": "Click: next performance profile\nRight click: previous performance profile",
+    "on-click": "pkexec u_performance-profile next",
+    "on-click-right": "pkexec u_performance-profile prev"
   },
   "battery": {
     "weighted-average": true,
