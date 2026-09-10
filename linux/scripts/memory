@@ -1,0 +1,68 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+usage() {
+  printf 'Usage: %s [positive number] | %s notify [positive number]\n' "$0" "$0" >&2
+  exit 64
+}
+
+mode=json
+limit=5
+case $# in
+  0) ;;
+  1)
+    if [ "$1" = "notify" ]; then
+      mode=notify
+    else
+      limit=$1
+    fi
+    ;;
+  2)
+    [ "$1" = "notify" ] || usage
+    mode=notify
+    limit=$2
+    ;;
+  *) usage ;;
+esac
+
+if ! [[ "$limit" =~ ^[1-9][0-9]*$ ]]; then
+  usage
+fi
+
+read -r total_kib available_kib < <(
+  awk '
+    /^MemTotal:/ { total = $2 }
+    /^MemAvailable:/ { available = $2 }
+    END { print total, available }
+  ' /proc/meminfo
+)
+
+used_kib=$((total_kib - available_kib))
+text=$(awk -v used="$used_kib" -v total="$total_kib" 'BEGIN {
+  printf "%.0f/%.0fG", used / 1048576, total / 1048576
+}')
+
+consumers=$(ps -eo pid=,rss=,comm= --sort=-rss | awk -v limit="$limit" '
+  NR <= limit {
+    if ($2 >= 1048576) {
+      usage = sprintf("%.1f GiB", $2 / 1048576)
+    } else {
+      usage = sprintf("%.0f MiB", $2 / 1024)
+    }
+    printf "%-24s %s\n", $3 " (" $1 ")", usage
+  }
+')
+
+if [ "$mode" = notify ]; then
+  notify-send -a System -h string:wired-tag:ram-consumers -t 10000 \
+    "Top $limit RAM consumers" "$consumers" 2> /dev/null || true
+  exit 0
+fi
+
+tooltip=$(printf 'Top %s RAM consumers\n\n%s' "$limit" "$consumers")
+
+jq -cn \
+  --arg text "$text <span font_family='lucide' rise='-3603'></span>" \
+  --arg tooltip "$tooltip" \
+  '{text: $text, tooltip: $tooltip}'

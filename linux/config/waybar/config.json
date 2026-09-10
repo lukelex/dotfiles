@@ -15,7 +15,7 @@
     "pulseaudio",
     "custom/microphone",
     "battery",
-    "memory",
+    "custom/memory",
     "backlight",
     "custom/fans",
     "bluetooth",
@@ -61,10 +61,12 @@
     "format": "<big><span font_family='lucide' rise='-5485'></span></big> {:%H:%M <big><span font_family='lucide' rise='-7285'></span></big> %d %b - %A}",
     "tooltip-format": "{:%A, %d %B %Y}"
   },
-  "memory": {
-    "format": "{used:0.0f}/{total:0.0f}G <span font_family='lucide' rise='-1603'></span>",
-    "tooltip": true,
-    "tooltip-format": "Swap: {swapUsed}/{swapTotal}G"
+  "custom/memory": {
+    "exec": "u_memory 10",
+    "return-type": "json",
+    "interval": 5,
+    "format": "{text}",
+    "tooltip": true
   },
   "backlight": {
     // "device": "acpi_video1",
