@@ -46,10 +46,6 @@ function icon_volume {
   fi
 }
 
-function turn_on {
-  wpctl set-mute @DEFAULT_AUDIO_SINK@ 0
-}
-
 function get_volume {
   bc <<< "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print $2}') * 100"
 }
@@ -74,25 +70,25 @@ function show_volume {
       -i "$LUCIDE_PATH/volume-x.svg" \
       -h string:wired-tag:system \
       -h int:value:0\
-      "Volume"
+      "Volume" 2> /dev/null || true
   elif [[ 1 -eq $(echo "$volume > 50" | bc -l) ]]; then
     notify-send -a System \
       -i "$LUCIDE_PATH/volume-2.svg" \
       -h string:wired-tag:system \
       -h int:value:"$volume" \
-      "Volume"
+      "Volume" 2> /dev/null || true
   elif [[ 1 -eq $(echo "$volume > 25" | bc -l) ]]; then
     notify-send -a System \
       -i "$LUCIDE_PATH/volume-1.svg" \
       -h string:wired-tag:system \
       -h int:value:"$volume" \
-      "Volume"
+      "Volume" 2> /dev/null || true
   else
     notify-send -a System \
       -i "$LUCIDE_PATH/volume.svg" \
       -h string:wired-tag:system \
       -h int:value:"$volume" \
-      "Volume"
+      "Volume" 2> /dev/null || true
   fi
 }
 
@@ -104,18 +100,14 @@ function show_mic {
       -i "$LUCIDE_PATH/mic-off.svg" \
       -h string:wired-tag:system \
       -h int:value:0\
-      "Microphone"
+      "Microphone" 2> /dev/null || true
   else
     notify-send -a System \
       -i "$LUCIDE_PATH/mic-audio-lines.svg" \
       -h string:wired-tag:system \
       -h int:value:"$volume" \
-      "Microphone"
+      "Microphone" 2> /dev/null || true
   fi
-}
-
-audio_tick() {
-  play "$HOME/dotfiles/sounds/audio-volume-change.oga" vol 0.35 &> /dev/null &
 }
 
 case $1 in
@@ -125,7 +117,6 @@ case $1 in
       icon) icon_mic ;;
       set)
         amixer -D pulse sset Capture "$3%" > /dev/null
-        audio_tick
         # show_mic
         ;;
       show) show_mic ;;
@@ -140,27 +131,17 @@ case $1 in
       get) get_volume ;;
       icon) icon_volume ;;
       inc)
-        turn_on
-        if [[ 1 -eq $(echo "$(get_volume) < 100" | bc -l) ]]; then
-          wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+
-        fi
-        audio_tick
-        show_volume ;;
+        wpctl --limit 1 set-volume @DEFAULT_AUDIO_SINK@ 2%+ ;;
       dec)
-        turn_on
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-
-        audio_tick
-        show_volume ;;
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%- ;;
       set)
         vol=$(echo "$3" | awk '{if ($1 > 100) print 100; else if ($1 < 0) print 0; else print $1}')
         wpctl set-volume @DEFAULT_AUDIO_SINK@ "$vol%"
-        audio_tick
         # show_volume
         ;;
       show) show_volume ;;
       default) wpctl set-default "$3" ;;
       toggle)
-        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
-        show_volume ;;
+        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
     esac
 esac

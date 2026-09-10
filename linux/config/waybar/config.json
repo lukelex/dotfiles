@@ -6,14 +6,14 @@
   // Choose the order of the modules
   "modules-left": [
     "custom/power",
-    "custom/clock",
-    "custom/date",
+    "clock",
     "custom/spotify"
   ],
   "modules-center": ["hyprland/workspaces", "hyprland/submap"],
   "modules-right": [
     "idle_inhibitor",
     "pulseaudio",
+    "battery",
     "memory",
     "backlight",
     "bluetooth",
@@ -55,15 +55,9 @@
     "icon-size": 24,
     "spacing": 10
   },
-  "custom/clock": {
-    "format": "<big></big> {} ",
-    "interval": 5,
-    "exec": "date +%H:%M"
-  },
-  "custom/date": {
-    "format": "<big></big> {}",
-    "interval": 5,
-    "exec": "date '+%d %b - %A'"
+  "clock": {
+    "format": "<big></big> {:%H:%M  %d %b - %A}",
+    "tooltip-format": "{:%A, %d %B %Y}"
   },
   "memory": {
     "format": "{used:0.0f}/{total:0.0f}G ",
@@ -73,7 +67,9 @@
   "backlight": {
     // "device": "acpi_video1",
     "format": "{percent}% {icon}",
-    "format-icons": ["", "", ""]
+    "format-icons": ["", "", ""],
+    "on-scroll-up": "u_backlight inc",
+    "on-scroll-down": "u_backlight dec"
   },
   "battery": {
     "weighted-average": true,
@@ -98,7 +94,8 @@
     "tooltip-format": "({status}) {controller_alias}\t{controller_address}\n\n{num_connections} connected",
     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
-    "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%"
+    "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+    "on-click": "blueman-manager"
   },
   "network": {
     "format-wifi": "<big></big>",
@@ -107,7 +104,8 @@
     "format-linked": "{ifname} (No IP) <big></big>",
     "format-disconnected": "<big></big>",
     "format-alt": "{ifname}: {ipaddr}/{cidr}",
-    "tooltip-format-ethernet": "{ipaddr}/{cidr}"
+    "tooltip-format-ethernet": "{ipaddr}/{cidr}",
+    "on-click": "nm-connection-editor"
   },
   "pulseaudio": {
     "format": "{volume}% <big>{icon}</big> {format_source}",
@@ -125,7 +123,10 @@
       "car": "",
       "default": ["", "", ""]
     },
-    "on-click": "pavucontrol"
+    "on-click": "pavucontrol",
+    "on-click-middle": "u_audio volume toggle",
+    "on-scroll-up": "u_audio volume inc",
+    "on-scroll-down": "u_audio volume dec"
   },
   "custom/power": {
     "exec": "echo a",
