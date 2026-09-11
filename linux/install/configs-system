@@ -15,6 +15,8 @@ run sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/
 run sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
 run sudo mkdir -p "/etc/modprobe.d"
 run sudo ln -fvs "$DOT_CONFIG/thinkpad_acpi.conf" "/etc/modprobe.d/thinkpad_acpi.conf"
+run sudo mkdir -p "/etc/modules-load.d"
+run sudo ln -fvs "$DOT_CONFIG/uinput.conf" "/etc/modules-load.d/uinput.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
 # sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
 
@@ -26,8 +28,11 @@ run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/shar
 run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Solid-900.otf"
 run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Thin-100.otf"
 
-run sudo cp "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
+run sudo install -Dm644 "$DOTFILES/linux/udev/40-input.rules" "/etc/udev/rules.d/40-input.rules"
 
 # Kmonad dependencies
 run sudo modprobe uinput
+run sudo udevadm control --reload-rules
+run sudo udevadm trigger --action=add --subsystem-match=misc --sysname-match=uinput
+run sudo udevadm settle
 run sudo rmmod pcspkr >/dev/null 2>&1 || true

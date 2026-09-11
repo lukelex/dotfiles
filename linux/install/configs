@@ -78,6 +78,7 @@ link_config "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/posts
 link_config "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapps.list"
 link_config "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"
 link_config "$DOT_CONFIG/opencode" "$XDG_CONFIG_HOME/opencode"
+link_config "$DOT_CONFIG/kmonad/kmonad.service" "$XDG_CONFIG_HOME/systemd/user/kmonad.service"
 
 run "$DOTFILES/linux/scripts/theme" init
 run update-desktop-database "$HOME/.local/share/applications"

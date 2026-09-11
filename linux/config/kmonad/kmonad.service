@@ -1,12 +1,17 @@
 [Unit]
-Description=Kmonad Keyboard Config
+Description=KMonad ThinkPad keyboard configuration
+Documentation=https://github.com/kmonad/kmonad
+ConditionPathExists=/dev/input/by-path/platform-i8042-serio-0-event-kbd
+StartLimitIntervalSec=30
+StartLimitBurst=5
 
 [Service]
-Restart=always
-RestartSec=3
-ExecStart=/usr/bin/kmonad %h/linux/config/kmonad/mini-m.kbd
-Nice=-20
+Type=simple
+ExecStart=/usr/bin/kmonad %h/dotfiles/linux/config/kmonad/thinkpad.kbd
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
-DefaultInstance=config
 WantedBy=default.target

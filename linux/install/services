@@ -33,3 +33,4 @@ if has_wm i3; then
 fi
 
 run systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"
+run systemctl enable --user "$DOTFILES/linux/config/kmonad/kmonad.service"
