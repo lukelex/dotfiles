@@ -10,7 +10,7 @@ return {
     },
     config = function()
       vim.opt.smartindent = true
-      local languages = { "ruby", "javascript", "typescript", "svelte", "yaml", "markdown", "css", "html", "bash", "yuck" }
+      local languages = { "ruby", "javascript", "typescript", "svelte", "yaml", "markdown", "css", "html", "vim", "bash", "yuck" }
 
       require("nvim-treesitter").setup {
         install_dir = vim.fn.stdpath("data") .. "/site",
