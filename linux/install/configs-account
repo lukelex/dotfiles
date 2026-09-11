@@ -4,14 +4,6 @@ set -Eeuo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 
-# Kmonad needs read access to physical keyboards and write access to uinput.
-if ! getent group uinput >/dev/null; then
-  run sudo groupadd uinput
-fi
-run sudo usermod -aG input "$USER"
-run sudo usermod -aG uinput "$USER"
-printf '%s\n' 'Kmonad group changes take effect after you log out and back in.'
-
 answer="$(ask 'Add your user to device groups (video, docker, lp)? [Y/n] ')"
 case $answer in
   [Yy]* | "")

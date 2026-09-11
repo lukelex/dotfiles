@@ -1,0 +1,38 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+source "$HOME/dotfiles/linux/variables.env"
+
+repo_url="https://github.com/lukelex/kmonad-device-manager.git"
+repo_dir="$HOME/.local/share/kmonad-device-manager"
+service_link="$HOME/.config/systemd/user/kmonad-device-manager.service"
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  printf 'dry-run: clone %s to %s if needed\n' "$repo_url" "$repo_dir"
+  printf 'dry-run: install KMonad device manager with %s\n' "$DOT_CONFIG/kmonad"
+  exit 0
+fi
+
+mkdir -p "$(dirname "$repo_dir")"
+if [ -L "$service_link" ]; then
+  service_source="$(readlink -f "$service_link" || true)"
+  if [ -n "$service_source" ]; then
+    existing_repo="$(dirname "$(dirname "$service_source")")"
+    if [ -d "$existing_repo/.git" ] && [ -x "$existing_repo/install.sh" ]; then
+      repo_dir="$existing_repo"
+    fi
+  fi
+fi
+
+if [ -d "$repo_dir/.git" ]; then
+  :
+elif [ -e "$repo_dir" ]; then
+  printf 'KMonad device manager path exists but is not a git repository: %s\n' "$repo_dir" >&2
+  exit 1
+else
+  git clone "$repo_url" "$repo_dir"
+fi
+
+"$repo_dir/install.sh" --config-dir "$DOT_CONFIG/kmonad"

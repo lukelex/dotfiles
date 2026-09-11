@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-for stage in preflight dependencies binaries icons configs configs-system configs-account configs-post git-config services; do
+for stage in preflight dependencies binaries icons configs configs-system configs-account kmonad-device-manager configs-post git-config services; do
   echo "==> $stage"
   "$install_dir/$stage" "$@"
 done
