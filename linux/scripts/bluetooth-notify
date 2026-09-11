@@ -1,0 +1,45 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$HOME/dotfiles/linux/variables.env"
+
+device_path=""
+connected_property=0
+
+notify_connected() {
+  local address name tag
+  address="${device_path##*/dev_}"
+  address="${address//_/:}"
+  name="$(bluetoothctl info "$address" | awk -F': ' '/Alias:/ { print $2; exit }')"
+  name="${name:-Bluetooth device}"
+  tag="bluetooth-${address//:/-}"
+
+  printf 'bluetooth-notify: connected %s\n' "$name" >&2
+  notify-send -a System \
+    -h "string:image-path:$LUCIDE_PNG_PATH/bluetooth-connected.png" \
+    -h "string:wired-tag:$tag" \
+    -u low \
+    -t 5000 \
+    "Bluetooth device connected" "$name" || true
+}
+
+stdbuf --output=L dbus-monitor --system \
+  "type='signal',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',arg0='org.bluez.Device1'" |
+  while IFS= read -r line; do
+    case "$line" in
+      signal\ *path=/org/bluez/*)
+        device_path="${line#*path=}"
+        device_path="${device_path%%;*}"
+        connected_property=0
+        ;;
+      *'string "Connected"'*) connected_property=1 ;;
+      *'boolean true'*)
+        if [ "$connected_property" -eq 1 ] && [ -n "$device_path" ]; then
+          notify_connected
+        fi
+        connected_property=0
+        ;;
+      *'boolean false'*) connected_property=0 ;;
+    esac
+  done

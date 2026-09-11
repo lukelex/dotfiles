@@ -1,0 +1,69 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$HOME/dotfiles/linux/variables.env"
+
+action=""
+devpath=""
+devtype=""
+model=""
+vendor=""
+
+reset_event() {
+  action=""
+  devpath=""
+  devtype=""
+  model=""
+  vendor=""
+}
+
+notify_event() {
+  [ "$devtype" = usb_device ] || return
+  [ "$action" = add ] || [ "$action" = remove ] || return
+
+  # Root hubs are USB devices too, but they are not user-connected peripherals.
+  [[ "$devpath" =~ /usb[0-9]+$ ]] && return
+
+  local name icon summary tag
+  model="${model//_/ }"
+  name="${vendor:+$vendor }${model:-USB device}"
+  tag="usb-${devpath//[^[:alnum:]]/-}"
+
+  if [ "$action" = add ]; then
+    icon="$LUCIDE_PNG_PATH/usb.png"
+    summary="USB device connected"
+  else
+    icon="$LUCIDE_PNG_PATH/unplug.png"
+    summary="USB device disconnected"
+  fi
+
+  printf 'usb-notify: %s %s\n' "$action" "$name" >&2
+  notify-send -a System \
+    -h "string:image-path:$icon" \
+    -h "string:wired-tag:$tag" \
+    -u low \
+    -t 5000 \
+    "$summary" "$name" || true
+}
+
+# udevadm writes to a pipe here, so force line buffering for prompt notifications.
+stdbuf --output=L udevadm monitor --udev --property --subsystem-match=usb |
+  while IFS= read -r line; do
+    case "$line" in
+      "UDEV "*)
+        notify_event
+        reset_event
+        ;;
+      ACTION=*) action="${line#ACTION=}" ;;
+      DEVPATH=*) devpath="${line#DEVPATH=}" ;;
+      DEVTYPE=*) devtype="${line#DEVTYPE=}" ;;
+      ID_MODEL_FROM_DATABASE=*) model="${line#ID_MODEL_FROM_DATABASE=}" ;;
+      ID_MODEL=*) [ -n "$model" ] || model="${line#ID_MODEL=}" ;;
+      ID_VENDOR_FROM_DATABASE=*) vendor="${line#ID_VENDOR_FROM_DATABASE=}" ;;
+      "")
+        notify_event
+        reset_event
+        ;;
+    esac
+  done

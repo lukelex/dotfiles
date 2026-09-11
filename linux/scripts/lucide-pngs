@@ -39,7 +39,7 @@ for icon in \
   headphones headset speaker box boxes message-square user trash arrow-right \
   arrow-up arrow-down arrow-left-right arrow-up-down ethernet-port network \
   router signal nfc wifi plane send clapperboard disc bell key key-round \
-  circle-check expand monitor-off copy message-square-quote
+  circle-check expand monitor-off copy message-square-quote usb unplug
 do
   require "$icon"
 done

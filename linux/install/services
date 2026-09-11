@@ -34,3 +34,5 @@ fi
 
 run systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"
 run systemctl enable --user "$DOTFILES/linux/config/kmonad/kmonad.service"
+run systemctl enable --user --now "$DOTFILES/linux/config/usb-notify/usb-notify.service"
+run systemctl enable --user --now "$DOTFILES/linux/config/bluetooth-notify/bluetooth-notify.service"

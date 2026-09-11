@@ -79,6 +79,8 @@ link_config "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapp
 link_config "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"
 link_config "$DOT_CONFIG/opencode" "$XDG_CONFIG_HOME/opencode"
 link_config "$DOT_CONFIG/kmonad/kmonad.service" "$XDG_CONFIG_HOME/systemd/user/kmonad.service"
+link_config "$DOT_CONFIG/usb-notify/usb-notify.service" "$XDG_CONFIG_HOME/systemd/user/usb-notify.service"
+link_config "$DOT_CONFIG/bluetooth-notify/bluetooth-notify.service" "$XDG_CONFIG_HOME/systemd/user/bluetooth-notify.service"
 
 run "$DOTFILES/linux/scripts/theme" init
 run update-desktop-database "$HOME/.local/share/applications"
