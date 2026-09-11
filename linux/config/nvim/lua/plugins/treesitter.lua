@@ -1,16 +1,20 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
     lazy = false,
     build = ":TSUpdate",
     dependencies = {
       "RRethy/nvim-treesitter-endwise",
-      "nvim-treesitter/nvim-treesitter-textobjects"
+      { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" }
     },
     config = function()
       vim.opt.smartindent = true
       local languages = { "ruby", "javascript", "typescript", "svelte", "yaml", "markdown", "css", "html", "bash", "yuck" }
 
+      require("nvim-treesitter").setup {
+        install_dir = vim.fn.stdpath("data") .. "/site",
+      }
       require("nvim-treesitter").install(languages)
 
       vim.api.nvim_create_autocmd("FileType", {
