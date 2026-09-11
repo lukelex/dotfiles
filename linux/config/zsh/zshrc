@@ -23,6 +23,9 @@ select-word-style bash
 
 # case insensitive autocompletion
 zmodload zsh/complist
+if [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" ]]; then
+  fpath=("${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" $fpath)
+fi
 autoload -Uz compinit
 if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
   compinit -d ~/.zcompdump
