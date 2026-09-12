@@ -29,18 +29,22 @@ XF86AudioNext
 XF86AudioMicMute
   u_audio mic toggle
 XF86AudioMute
-  u_audio vol toggle
+  u_audio vol toggle; u_audio vol show
 XF86AudioRaiseVolume
-  u_audio vol inc
+  u_audio vol inc; u_audio vol show
 XF86AudioLowerVolume
-  u_audio vol dec
+  u_audio vol dec; u_audio vol show
 XF86AudioPlay
   u_music toggle
 
 XF86MonBrightnessUp
-  u_backlight inc
+  "$HOME/dotfiles/linux/scripts/x86bright" inc
+@XF86MonBrightnessUp
+  "$HOME/dotfiles/linux/scripts/x86bright" stop inc
 XF86MonBrightnessDown
-  u_backlight dec
+  "$HOME/dotfiles/linux/scripts/x86bright" dec
+@XF86MonBrightnessDown
+  "$HOME/dotfiles/linux/scripts/x86bright" stop dec
 
 XF86KbdBrightnessUp
   u_keeb-backlight inc
@@ -60,7 +64,7 @@ super + Return
   kitty
 
 super + shift + p
-  polybar-msg cmd restart
+  systemctl --user restart quickshell.service
 
 Print
   flameshot gui -c -p "$HOME/screenshots"

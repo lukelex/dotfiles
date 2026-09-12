@@ -5,7 +5,6 @@ set -eu
 source "$HOME/dotfiles/linux/variables.env"
 
 u_wallpaper load &> /dev/null
-polybar-msg cmd restart &> /dev/null
 
 notify-send -a System \
             -i "$LUCIDE_PATH/monitor.svg" \

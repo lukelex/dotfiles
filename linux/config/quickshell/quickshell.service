@@ -1,0 +1,13 @@
+[Unit]
+Description=Quickshell shell (bar, control center, notifications)
+Documentation=https://quickshell.outfoxxed.me
+After=graphical.target
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/dotfiles/linux/scripts/quickshell
+Restart=always
+RestartSec=5

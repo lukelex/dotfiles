@@ -7,6 +7,7 @@ declare -ar BRIGHTNESS_ICONS=("" "" "")
 declare -ar BRIGHTNESS_IMAGES=(sun-dim sun-medium sun)
 
 LINK_FILE="$HOME/.cache/link-devices"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/u_backlight.lock"
 
 get_value() {
   light -G 2>&- | cut -f1 -d .
@@ -69,9 +70,8 @@ maybe_link() {
 
 case $1 in
   icon)       echo "$(icon "$(get_value)")" ;;
-  polybar)    echo "$(icon "$(get_value)")" ;;
   get)        get_value ;;
-  set)        maybe_link "$2"; light -S "$2" ;;
+  set)        maybe_link "$2"; flock "$LOCK_FILE" light -S "$2" ;;
   dim)
     light -O -s sysfs/leds/tpacpi::kbd_backlight
     light -S 0 -s sysfs/leds/tpacpi::kbd_backlight
@@ -82,12 +82,12 @@ case $1 in
     ;;
   show)       show ;;
   inc)
-    light -A 2 2>&-
-    audio_tick &
+    flock "$LOCK_FILE" light -A 2 2>&-
+    [[ "${2:-}" == "quiet" ]] || audio_tick
     show ;;
   dec)
-    light -U 2 2>&-
-    audio_tick &
+    flock "$LOCK_FILE" light -U 2 2>&-
+    [[ "${2:-}" == "quiet" ]] || audio_tick
     show ;;
   link-get)   link_state ;;
   link-toggle) link_toggle ;;

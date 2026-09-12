@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -eu
+
+SCRIPT_PATH="$(readlink -f "$0")"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/x86bright.lock"
+WORKER_PATTERN="^bash ${SCRIPT_PATH} worker"
+
+stop_workers() {
+  pkill -f "$WORKER_PATTERN" 2>/dev/null || true
+}
+
+start() {
+  local direction="$1"
+
+  exec 9>"$LOCK_FILE"
+  flock 9
+  pgrep -f "$WORKER_PATTERN" > /dev/null && return
+  "$SCRIPT_PATH" worker "$direction" >/dev/null 2>&1 &
+}
+
+stop() {
+  exec 9>"$LOCK_FILE"
+  flock 9
+  stop_workers
+}
+
+worker() {
+  local direction="$1"
+
+  exec 9>&-
+  trap 'exit 0' INT TERM
+  for _ in {1..50}; do
+    u_backlight "$direction" quiet
+    sleep 0.06
+  done
+}
+
+case "${1:-}" in
+  inc|dec) start "$1" ;;
+  stop) stop ;;
+  worker) worker "${2:-}" ;;
+  *) exit 1 ;;
+esac

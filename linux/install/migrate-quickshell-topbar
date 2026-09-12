@@ -1,0 +1,52 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+source "$HOME/dotfiles/linux/variables.env"
+
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+quickshell_config="$config_home/quickshell"
+quickshell_service="$config_home/systemd/user/quickshell.service"
+
+link_config() {
+  local source="$1"
+  local target="$2"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "dry-run: link $target -> $source"
+    return
+  fi
+
+  mkdir -p "$(dirname "$target")"
+  if [ -e "$target" ] && [ ! -L "$target" ]; then
+    mv "$target" "$target.pre-quickshell-topbar"
+  fi
+  ln -sfn "$source" "$target"
+}
+
+packages=()
+for package in quickshell qt6-svg; do
+  pacman -Q "$package" > /dev/null 2>&1 || packages+=("$package")
+done
+if [ "${#packages[@]}" -gt 0 ]; then
+  run yay -S --needed --noconfirm "${packages[@]}"
+fi
+
+if pacman -Q polybar > /dev/null 2>&1; then
+  run yay -Rns --noconfirm polybar
+fi
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "dry-run: stop Polybar and remove its user configuration"
+else
+  pkill -x polybar || true
+  rm -rf "$config_home/polybar"
+fi
+
+link_config "$DOTFILES/linux/config/quickshell" "$quickshell_config"
+link_config "$DOTFILES/linux/config/quickshell/quickshell.service" "$quickshell_service"
+
+run systemctl --user daemon-reload
+run systemctl --user enable --now quickshell.service
+run systemctl --user restart quickshell.service

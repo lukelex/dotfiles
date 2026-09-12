@@ -29,7 +29,7 @@ if has_wm i3; then
     && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
     run sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
   fi
-  run systemctl enable --user --now "$DOTFILES/linux/config/wired/wired.service"
+  run systemctl enable --user --now "$DOTFILES/linux/config/quickshell/quickshell.service"
 fi
 
 run systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"

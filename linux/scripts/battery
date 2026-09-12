@@ -12,7 +12,9 @@ HALF=$(printf "\ue057")
 THREE_QUARTERS=$(printf "\ue057")
 FULL=$(printf "\ue055")
 LOW_BATTERY_THRESHOLD=15
+CRITICAL_BATTERY_THRESHOLD=5
 LOW_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-low-notified"
+CRITICAL_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-critical-notified"
 
 device=$(upower -e | grep 'BAT' | head -n 1)
 stats=$(upower -i "$(echo $device)" | grep -E "state|to full|percentage|time to empty")
@@ -115,7 +117,23 @@ warn() {
   state=$(get_state)
   charge=$(get_percentage)
 
-  if [[ $state == discharging && $charge -le $LOW_BATTERY_THRESHOLD ]]; then
+  if [[ $state != discharging ]]; then
+    rm -f "$LOW_BATTERY_NOTIFICATION_FILE"
+    rm -f "$CRITICAL_BATTERY_NOTIFICATION_FILE"
+    return
+  fi
+
+  if [[ $charge -le $CRITICAL_BATTERY_THRESHOLD ]]; then
+    if [[ ! -e $CRITICAL_BATTERY_NOTIFICATION_FILE ]]; then
+      mkdir -p "$(dirname "$CRITICAL_BATTERY_NOTIFICATION_FILE")"
+      notify-send -u critical -t 86400000 -a System \
+        -i "$LUCIDE_PATH/battery-warning.svg" \
+        -h string:wired-tag:battery-critical \
+        -h int:value:"$charge" \
+        "Battery critical" "$charge% remaining - plug in now"
+      : > "$CRITICAL_BATTERY_NOTIFICATION_FILE"
+    fi
+  elif [[ $charge -le $LOW_BATTERY_THRESHOLD ]]; then
     if [[ ! -e $LOW_BATTERY_NOTIFICATION_FILE ]]; then
       mkdir -p "$(dirname "$LOW_BATTERY_NOTIFICATION_FILE")"
       notify-send -a System \
@@ -127,6 +145,7 @@ warn() {
     fi
   else
     rm -f "$LOW_BATTERY_NOTIFICATION_FILE"
+    rm -f "$CRITICAL_BATTERY_NOTIFICATION_FILE"
   fi
 }
 

@@ -4,6 +4,41 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/weather"
+CACHE_TTL=1200
+
+umask 077
+mkdir -p "$CACHE_DIR"
+exec 9>"$CACHE_DIR/weather.lock"
+flock 9
+
+cache_fresh() {
+  local path=$1
+
+  [[ -s $path ]] && [[ $(( $(date +%s) - $(stat -c %Y "$path") )) -lt $CACHE_TTL ]]
+}
+
+fetch_cached() {
+  local path=$1
+  local temp
+
+  shift
+
+  if cache_fresh "$path"; then
+    cat "$path"
+    return
+  fi
+
+  temp=$(mktemp "$CACHE_DIR/.weather.XXXXXX")
+  if "$@" > "$temp"; then
+    mv -f "$temp" "$path"
+    cat "$path"
+  else
+    rm -f "$temp"
+    [[ -s $path ]] && cat "$path"
+  fi
+}
+
 declare -A ICON_LIST=(
   ["01d"]="󰖙"
   ["01n"]="󰖔"
@@ -29,16 +64,14 @@ declare -A ICON_LIST=(
 SYSTEM="metric" # Unit system {imperial or metric}
 UNIT="°C" # Units of measurement.
 
-LOCATION_DATA=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://ipwho.is)
+LOCATION_DATA=$(fetch_cached "$CACHE_DIR/location.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://ipwho.is)
 CITY=$(jq -er '.city' <<< "$LOCATION_DATA")
 
-FORECAST=$(
-  curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
+FORECAST=$(fetch_cached "$CACHE_DIR/current.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
     --data-urlencode "q=$CITY" \
     --data-urlencode "units=$SYSTEM" \
     --data-urlencode "appid=$OPEN_WEATHER_API_KEY" \
-    "https://api.openweathermap.org/data/2.5/weather"
-)
+    "https://api.openweathermap.org/data/2.5/weather")
 ICON=${ICON_LIST[$(jq -er '.weather[0].icon' <<< "$FORECAST")]}
 
 function show {
@@ -59,7 +92,42 @@ EOM
     "$SUMMARY $TEMP$UNIT" "$DESCRIPTION" 2> /dev/null || true
 }
 
+function details {
+  jq -r '[
+    (.main.temp | round),
+    .weather[0].description,
+    .name,
+    .sys.country,
+    (.main.feels_like | round),
+    (.main.temp_min | round),
+    (.main.temp_max | round),
+    .main.humidity,
+    (.wind.speed | round)
+  ] | join("|")' <<< "$FORECAST"
+}
+
+function forecast {
+  local forecast
+
+  forecast=$(fetch_cached "$CACHE_DIR/forecast.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
+    --data-urlencode "q=$CITY" \
+    --data-urlencode "units=$SYSTEM" \
+    --data-urlencode "appid=$OPEN_WEATHER_API_KEY" \
+    "https://api.openweathermap.org/data/2.5/forecast")
+
+  jq -r --arg today "$(date +%F)" '[
+    .list
+    | group_by(.dt_txt[0:10])[]
+    | select(.[0].dt_txt[0:10] != $today)
+    | (map(select(.dt_txt[11:16] == "12:00")) | .[0] // .[0])
+    | [(.dt_txt[0:10]), (.main.temp | round), .weather[0].main]
+    | join("~")
+  ] | .[:3] | join("|")' <<< "$forecast"
+}
+
 case $1 in
   icon) echo "$ICON" ;;
-  show) show
+  show) show ;;
+  details) details ;;
+  forecast) forecast ;;
 esac

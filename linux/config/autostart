@@ -29,7 +29,6 @@ case "$XDG_SESSION_TYPE" in
     greenclip daemon &
 
     u_i3-workspaces &
-    $(sleep 1 && u_polybar) &
     ;;
 esac
 

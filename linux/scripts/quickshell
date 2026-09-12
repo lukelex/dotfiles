@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+
+# Launch quickshell with the i3 IPC socket path in its environment.
+
+set -Eeuo pipefail
+
+if [[ -z "${I3SOCK:-}" ]]; then
+  for _ in $(seq 1 30); do
+    if I3SOCK="$(i3 --get-socketpath 2>/dev/null)"; then
+      break
+    fi
+    sleep 1
+  done
+  if [[ -z "${I3SOCK:-}" ]]; then
+    echo "quickshell: could not resolve an i3 IPC socket path" >&2
+    exit 1
+  fi
+  export I3SOCK
+fi
+
+exec quickshell --path "$HOME/dotfiles/linux/config/quickshell/shell.qml" "$@"

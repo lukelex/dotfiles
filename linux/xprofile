@@ -7,7 +7,5 @@ if [[ -f "$HOME/Dropbox/secrets.env" ]]; then
   source "$HOME/Dropbox/secrets.env" 2&> /dev/null
 fi
 
-touch /tmp/wired.log
-
 source "$DOTFILES/linux/config/keyboard" &
 source "$DOTFILES/linux/config/autostart" 2&> /dev/null
