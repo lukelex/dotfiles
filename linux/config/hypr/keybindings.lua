@@ -87,5 +87,5 @@ hl.bind("XF86AudioNext", hl.dsp.exec_cmd("u_music next"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("u_music previous"), { locked = true })
 
 -- System
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("u_backlight inc &"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("u_backlight dec &"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("u_backlight inc"), { locked = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("u_backlight dec"), { locked = true })

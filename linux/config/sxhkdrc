@@ -18,13 +18,9 @@ XF86AudioPlay
   u_music toggle
 
 XF86MonBrightnessUp
-  "$HOME/dotfiles/linux/scripts/x86bright" inc
-@XF86MonBrightnessUp
-  "$HOME/dotfiles/linux/scripts/x86bright" stop inc
+  u_backlight inc
 XF86MonBrightnessDown
-  "$HOME/dotfiles/linux/scripts/x86bright" dec
-@XF86MonBrightnessDown
-  "$HOME/dotfiles/linux/scripts/x86bright" stop dec
+  u_backlight dec
 
 XF86KbdBrightnessUp
   u_keeb-backlight inc

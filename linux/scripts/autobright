@@ -59,7 +59,7 @@ daemon() {
         fi
         (( percent < 5 )) && percent=5
         (( percent > 100 )) && percent=100
-        light -S "$percent"
+        u_backlight set "$percent"
       fi
     fi
     sleep "$POLL"

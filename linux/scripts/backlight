@@ -8,9 +8,24 @@ declare -ar BRIGHTNESS_IMAGES=(sun-dim sun-medium sun)
 
 LINK_FILE="$HOME/.cache/link-devices"
 LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/u_backlight.lock"
+STEP=5
 
 get_value() {
   light -G 2>&- | cut -f1 -d .
+}
+
+adjust() { # inc|dec
+  local direction=$1 current target
+  current=$(get_value)
+  case "$direction" in
+    inc) target=$(( (current / STEP + 1) * STEP )) ;;
+    dec) target=$(( ((current + STEP - 1) / STEP - 1) * STEP )) ;;
+  esac
+  (( target < 0 )) && target=0
+  (( target > 100 )) && target=100
+  (( target == current )) && return 1
+
+  flock -n "$LOCK_FILE" light -S "$target" 2>&-
 }
 
 brightness_level() {
@@ -82,11 +97,11 @@ case $1 in
     ;;
   show)       show ;;
   inc)
-    flock "$LOCK_FILE" light -A 2 2>&-
+    adjust inc || exit 0
     [[ "${2:-}" == "quiet" ]] || audio_tick
     show ;;
   dec)
-    flock "$LOCK_FILE" light -U 2 2>&-
+    adjust dec || exit 0
     [[ "${2:-}" == "quiet" ]] || audio_tick
     show ;;
   link-get)   link_state ;;
