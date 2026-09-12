@@ -26,7 +26,6 @@ Scope {
   property real audioVolume: 0
   property bool audioMuted: false
   property bool audioAvailable: false
-  property string i3Mode: "default"
   property string batteryState: ""
   property int batteryPercentage: 0
   property string batteryTime: ""
@@ -92,14 +91,6 @@ Scope {
     if (root.batteryPercentage <= 66)
       return "battery-medium"
     return "battery-full"
-  }
-
-  function modeIcon() {
-    if (root.i3Mode === "resize")
-      return "expand"
-    if (root.i3Mode === "move")
-      return "arrow-up-down"
-    return "scan-line"
   }
 
   function refreshControlStatus() {
@@ -214,34 +205,6 @@ Scope {
     watchChanges: true
     onFileChanged: reload()
     onLoaded: root.syncTheme()
-  }
-
-  Process {
-    id: modeStatus
-
-    command: ["i3-msg", "-t", "get_binding_state"]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        try {
-          root.i3Mode = JSON.parse(this.text).name || "default"
-        } catch (error) {
-          root.i3Mode = "default"
-        }
-      }
-    }
-  }
-
-  I3IpcListener {
-    subscriptions: ["mode"]
-
-    onIpcEvent: event => {
-      try {
-        root.i3Mode = JSON.parse(event.data).change || "default"
-      } catch (error) {
-        root.i3Mode = "default"
-      }
-    }
   }
 
   Process {
@@ -534,21 +497,13 @@ Scope {
 
         Item {
           height: 26
-          visible: root.i3Mode !== "default"
-          width: visible ? 26 : 0
+          width: 26
 
-          Rectangle {
-            anchors.fill: parent
-            color: root.controlActive
-            radius: 8
-          }
-
-          LucideIcon {
+          Image {
             anchors.centerIn: parent
-            color: root.controlActiveIcon
-            height: 16
-            source: root.icon(root.modeIcon())
-            width: 16
+            height: 22
+            source: "file:///usr/share/icons/Papirus/24x24/apps/tux.svg"
+            width: 22
           }
         }
 
