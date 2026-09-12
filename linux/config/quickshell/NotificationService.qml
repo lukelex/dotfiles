@@ -291,8 +291,7 @@ QtObject {
       service.osd = null
     }
     service.history = service.history.filter(record => record.id !== id)
-    for (const group of service.historyGroups)
-      group.records = group.records.filter(record => record.id !== id)
+    service.historyGroups = service.groupHistory(service.history)
     service.historyRecordDismissed(id)
     service.saveHistory()
     if (!preservePopupLayout)
