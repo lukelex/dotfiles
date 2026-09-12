@@ -60,6 +60,15 @@ PopupWindow {
   Item {
     anchors.fill: parent
 
+    HoverHandler {
+      onHoveredChanged: {
+        if (hovered)
+          popup.controller.cancelHoverClose()
+        else
+          popup.controller.requestHoverClose(3, 600)
+      }
+    }
+
     Rectangle {
       anchors.fill: parent
       border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"

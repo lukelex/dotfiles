@@ -121,8 +121,9 @@ Scope {
     root.hoverCloseCandidate = 0
   }
 
-  function requestHoverClose(kind) {
+  function requestHoverClose(kind, delay) {
     root.hoverCloseCandidate = kind
+    root.hoverCloseTimer.interval = delay || 250
     root.hoverCloseTimer.start()
   }
 
@@ -132,6 +133,8 @@ Scope {
       root.notificationCenterTarget.requestClose()
     } else if (root.hoverCloseCandidate === 2) {
       root.controlCenterTarget.requestClose()
+    } else if (root.hoverCloseCandidate === 3) {
+      root.dateTimeCenterTarget.visible = false
     }
     root.hoverCloseCandidate = 0
   }
@@ -524,7 +527,7 @@ Scope {
               anchors.centerIn: parent
               color: workspace.urgent ? root.urgent : root.foreground
               font.family: root.fontFamily
-              font.pixelSize: 15
+              font.pixelSize: 17
               text: workspace.number
             }
 
@@ -571,7 +574,7 @@ Scope {
             Text {
               color: root.foreground
               font.family: root.fontFamily
-              font.pixelSize: 15
+              font.pixelSize: 17
               text: Qt.formatTime(clock.date, "HH:mm")
             }
           }
@@ -579,11 +582,20 @@ Scope {
           MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: {
+              controlCenter.requestClose()
+              notificationCenter.requestClose()
+              root.notificationCenterOpen = false
+              dateTimeCenter.visible = true
+              root.cancelHoverClose()
+            }
+            onExited: root.requestHoverClose(3, 600)
             onClicked: {
               controlCenter.requestClose()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
-              dateTimeCenter.visible = !dateTimeCenter.visible
+              dateTimeCenter.visible = true
             }
           }
         }
@@ -607,7 +619,7 @@ Scope {
             Text {
               color: root.foreground
               font.family: root.fontFamily
-              font.pixelSize: 15
+              font.pixelSize: 17
               text: Qt.formatDate(clock.date, "dd MMM - dddd")
             }
           }
@@ -615,11 +627,20 @@ Scope {
           MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: {
+              controlCenter.requestClose()
+              notificationCenter.requestClose()
+              root.notificationCenterOpen = false
+              dateTimeCenter.visible = true
+              root.cancelHoverClose()
+            }
+            onExited: root.requestHoverClose(3, 600)
             onClicked: {
               controlCenter.requestClose()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
-              dateTimeCenter.visible = !dateTimeCenter.visible
+              dateTimeCenter.visible = true
             }
           }
         }
