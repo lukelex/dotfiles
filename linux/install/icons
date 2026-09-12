@@ -22,7 +22,3 @@ run sudo rm -rf "/usr/share/icons/FontAwesome-6/solid/512x512/all"
 run sudo rm -rf "/usr/share/icons/FontAwesome-6/brands/512x512/all"
 run sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/solid" "/usr/share/icons/FontAwesome-6/solid/512x512/all"
 run sudo ln -fvs "$DOTFILES/fonts/fa6/pngs/brands" "/usr/share/icons/FontAwesome-6/brands/512x512/all"
-
-## Generate eww's icon paths from $FONT_AWESOME_PATH so eww doesn't depend
-## on the /usr/share symlinks above (cf. `eww prepare`)
-run "$DOTFILES/linux/scripts/eww" prepare

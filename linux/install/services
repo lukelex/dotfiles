@@ -23,7 +23,6 @@ if has_wm i3; then
   esac
 
   run systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
-  run systemctl enable --user --now "$DOTFILES/linux/config/eww/eww.service"
 
   if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
     && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then

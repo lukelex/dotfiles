@@ -8,8 +8,8 @@ usage() {
   cat >&2 <<'EOF'
 Usage: u_performance-profile {if|get|icon|list|next|prev|set <profile>}
 
-Run `sudo u_performance-profile set <profile>` when the firmware control is
-not writable by the current user.
+Run the system configuration installer and sign in again when the firmware
+control is not writable by the current user.
 EOF
 }
 
@@ -60,7 +60,7 @@ set_profile() {
     return 2
   }
   [[ -w "$PROFILE_FILE" ]] || {
-    echo 'Performance profile control is not writable; run with sudo if appropriate.' >&2
+    echo 'Performance profile control is not writable; sign in again after installing the platform-profile access rule.' >&2
     return 1
   }
   printf '%s' "$profile" > "$PROFILE_FILE"

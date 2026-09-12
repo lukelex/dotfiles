@@ -2,7 +2,6 @@
 
 function reset_ui {
   u_music pause 2&> /dev/null
-  u_eww close 2&> /dev/null
   qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible 2&> /dev/null
 }
 

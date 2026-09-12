@@ -7,6 +7,14 @@ source "$HOME/dotfiles/linux/variables.env"
 
 DOT_CONFIG="$DOTFILES/linux/config"
 
+if ! getent group platform-profile >/dev/null; then
+  run sudo groupadd --system platform-profile
+fi
+run sudo usermod -aG platform-profile "$USER"
+
+run sudo ln -fvs "$DOT_CONFIG/tmpfiles.d/platform-profile.conf" "/etc/tmpfiles.d/platform-profile.conf"
+run sudo systemd-tmpfiles --create "/etc/tmpfiles.d/platform-profile.conf"
+
 run sudo mkdir -p "/etc/ly"
 run sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
 

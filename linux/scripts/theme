@@ -59,11 +59,6 @@ set_gsetting() {
   fi
 }
 
-sync_eww_theme() {
-  command -v eww > /dev/null 2>&1 || return 0
-  eww update "THEME=$1" > /dev/null 2>&1 || true
-}
-
 apply_theme() {
   local theme="$1"
   local gtk_theme color_scheme kvantum_theme
@@ -86,7 +81,6 @@ apply_theme() {
   if command -v kvantummanager > /dev/null 2>&1; then
     kvantummanager --set "$kvantum_theme" || true
   fi
-  sync_eww_theme "$theme"
 }
 
 show_notification() {

@@ -1,25 +1,5 @@
 XF86PowerOff
-  u_eww toggle power
-
-# Power menu keyboard navigation (after the power key)
-XF86PowerOff; Left
-  u_power prev
-XF86PowerOff; Right
-  u_power next
-XF86PowerOff; Return
-  u_power select
-XF86PowerOff; Escape
-  u_eww close
-XF86PowerOff; l
-  u_power run lock
-XF86PowerOff; s
-  u_power run suspend
-XF86PowerOff; o
-  u_power run logout
-XF86PowerOff; r
-  u_power run reboot
-XF86PowerOff; p
-  u_power run shutdown
+  u_exit lock
 
 XF86AudioPrev
   u_music previous

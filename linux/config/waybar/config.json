@@ -93,8 +93,8 @@
     "interval": 2,
     "format": "{}",
     "tooltip-format": "Click: next performance profile\nRight click: previous performance profile",
-    "on-click": "pkexec u_performance-profile next",
-    "on-click-right": "pkexec u_performance-profile prev"
+    "on-click": "u_performance-profile next",
+    "on-click-right": "u_performance-profile prev"
   },
   "battery": {
     "weighted-average": true,
@@ -162,7 +162,7 @@
   "custom/power": {
     "exec": "echo a",
     "format": " <big><span font_family='lucide' rise='-3152'></span></big> ",
-    "on-click": "u_eww toggle power"
+    "on-click": "u_exit lock"
   },
   "custom/pomodoro": {
     "exec": "u_dummodoro status",

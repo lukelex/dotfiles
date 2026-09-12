@@ -33,14 +33,21 @@ if [ "${#packages[@]}" -gt 0 ]; then
   run yay -S --needed --noconfirm "${packages[@]}"
 fi
 
-if pacman -Q polybar > /dev/null 2>&1; then
-  run yay -Rns --noconfirm polybar
+remove_packages=()
+for package in eww polybar; do
+  pacman -Q "$package" > /dev/null 2>&1 && remove_packages+=("$package")
+done
+if [ "${#remove_packages[@]}" -gt 0 ]; then
+  run yay -Rns --noconfirm "${remove_packages[@]}"
 fi
 
 if [ "$DRY_RUN" -eq 1 ]; then
-  echo "dry-run: stop Polybar and remove its user configuration"
+  echo "dry-run: stop Eww and Polybar and remove their user configuration"
 else
+  systemctl --user disable --now eww.service 2> /dev/null || true
+  pkill -x eww || true
   pkill -x polybar || true
+  rm -rf "$config_home/eww"
   rm -rf "$config_home/polybar"
 fi
 
