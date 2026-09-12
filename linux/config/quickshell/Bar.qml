@@ -647,11 +647,30 @@ Scope {
           source: root.icon(root.batteryIcon())
         }
 
-        LucideIcon {
+        Item {
           height: 18
-          source: root.icon("bell")
           width: 18
-          color: root.doNotDisturb ? root.urgent : root.foreground
+
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon("bell")
+            color: root.doNotDisturb ? root.urgent : root.foreground
+          }
+
+          Rectangle {
+            anchors {
+              right: parent.right
+              top: parent.top
+            }
+            border.color: root.darkMode ? "#3A4654" : "#D4DAE1"
+            border.width: 1
+            color: root.urgent
+            height: 6
+            radius: 3
+            visible: root.notificationService.history.length > 0
+            width: 6
+            z: 1
+          }
 
           MouseArea {
             anchors.fill: parent
