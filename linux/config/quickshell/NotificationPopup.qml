@@ -10,6 +10,7 @@ PopupWindow {
   required property var service
 
   property int wiggleMargin: 6
+  property var popupStacks: null
 
   anchor.window: panel
   anchor.rect.x: parentWindow.width - width - 12 + wiggleMargin
@@ -20,6 +21,59 @@ PopupWindow {
   surfaceFormat.opaque: false
 
   visible: service.popup.length > 0 && !controller.notificationCenterOpen
+
+  ListModel {
+    id: popupGroupModel
+
+    dynamicRoles: true
+  }
+
+  function addPopupRecord(record) {
+    const lastStack = popup.popupStacks ? popup.popupStacks.itemAt(popup.popupStacks.count - 1) : null
+    if (lastStack && lastStack.canAddRecord(record)) {
+      lastStack.addRecord(record)
+      return
+    }
+
+    popupGroupModel.append({ popupGroup: { records: [record] } })
+  }
+
+  function removePopupRecord(id) {
+    if (!popup.popupStacks)
+      return
+
+    for (let index = 0; index < popup.popupStacks.count; index++) {
+      const stack = popup.popupStacks.itemAt(index)
+      if (stack && stack.expireRecord(id))
+        return
+    }
+  }
+
+  function removeStack(stack) {
+    for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
+      if (popup.popupStacks.itemAt(index) === stack) {
+        popupGroupModel.remove(index)
+        return
+      }
+    }
+  }
+
+  Component.onCompleted: {
+    for (const group of service.popupGroups)
+      popupGroupModel.append({ popupGroup: group })
+  }
+
+  Connections {
+    target: popup.service
+
+    function onPopupRecordAdded(record) {
+      popup.addPopupRecord(record)
+    }
+
+    function onPopupRecordRemoved(id) {
+      popup.removePopupRecord(id)
+    }
+  }
 
   component NotificationToast: Item {
     id: toast
@@ -350,10 +404,11 @@ PopupWindow {
     id: stack
 
     required property var controller
-    required property var group
+    required property var popupGroup
     required property var service
 
-    property var records: group.records
+    property var records: popupGroup.records
+    property var removeHandler: null
     readonly property int layerCount: Math.min(records.length - 1, 2)
     readonly property var latestRecord: records[records.length - 1]
     readonly property bool grouped: records.length > 1
@@ -361,6 +416,7 @@ PopupWindow {
     readonly property bool hasCritical: records.some(record => record.urgency === "critical")
     property real bellAngle: 0
     property bool expanded: false
+    property bool expiring: false
     property real expandedHeight: 0
     property bool reflowing: false
 
@@ -376,6 +432,9 @@ PopupWindow {
       },
       Translate {
         id: stackTranslate
+      },
+      Translate {
+        id: expiryTranslate
       }
     ]
     clip: !reflowing
@@ -385,6 +444,13 @@ PopupWindow {
 
     Behavior on height {
       NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+    }
+
+    Behavior on y {
+      YAnimator {
+        duration: 180
+        easing.type: Easing.OutCubic
+      }
     }
 
     Component.onCompleted: {
@@ -402,6 +468,17 @@ PopupWindow {
       to: 0
       duration: 280
       easing.type: Easing.OutCubic
+    }
+
+    ParallelAnimation {
+      id: expiryAnimation
+
+      NumberAnimation { target: expiryTranslate; property: "x"; to: popup.width; duration: 240; easing.type: Easing.InCubic }
+      OpacityAnimator { target: stack; to: 0; duration: 180; easing.type: Easing.InQuad }
+      onStopped: {
+        if (stack.expiring && stack.removeHandler)
+          stack.removeHandler(stack)
+      }
     }
 
     SequentialAnimation {
@@ -574,9 +651,15 @@ PopupWindow {
       stack.service.dismissRecord(id, true)
     }
 
-    function addRecord(record) {
+    function canAddRecord(record) {
       const latestRecord = stack.records[stack.records.length - 1]
-      if (!latestRecord || stack.service.appKey(record) !== stack.service.appKey(latestRecord))
+      return latestRecord
+        && stack.service.appKey(record) === stack.service.appKey(latestRecord)
+        && record.time - latestRecord.time <= stack.service.popupGroupWindow
+    }
+
+    function addRecord(record) {
+      if (!stack.canAddRecord(record))
         return
 
       stack.records = stack.records.concat([record])
@@ -592,6 +675,37 @@ PopupWindow {
       } else {
         Qt.callLater(() => latestToast.playEntry())
       }
+    }
+
+    function expireRecord(id) {
+      const index = stack.records.findIndex(record => record.id === id)
+      if (index < 0)
+        return false
+
+      const visualIndex = recordModel.count - index - 1
+      const removedCard = expandedCards.itemAt(visualIndex)
+      const removedHeight = removedCard ? removedCard.height : latestToast.height
+
+      if (stack.records.length === 1) {
+        stack.expiring = true
+        expiryAnimation.start()
+        return true
+      }
+
+      stack.records = stack.records.filter(record => record.id !== id)
+      recordModel.remove(visualIndex)
+
+      if (stack.showingExpanded) {
+        const reflowDistance = removedHeight + expandedColumn.spacing
+        for (let cardIndex = visualIndex + 1; cardIndex < expandedCards.count; cardIndex++) {
+          const card = expandedCards.itemAt(cardIndex)
+          if (card)
+            card.moveDown(reflowDistance)
+        }
+        Qt.callLater(() => stack.expandedHeight = expandedColumn.contentHeight)
+      }
+
+      return true
     }
 
     Connections {
@@ -613,16 +727,18 @@ PopupWindow {
     spacing: 10
     width: parent.width - popup.wiggleMargin * 2
 
+    Component.onCompleted: popup.popupStacks = stackRepeater
+
     Repeater {
-      model: service.popupGroups
+        id: stackRepeater
 
-      delegate: PopupStack {
-        required property var modelData
+        model: popupGroupModel
 
-        controller: popup.controller
-        group: modelData
-        service: popup.service
+        delegate: PopupStack {
+          controller: popup.controller
+          removeHandler: stack => popup.removeStack(stack)
+          service: popup.service
+        }
       }
-    }
   }
 }

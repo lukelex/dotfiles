@@ -90,6 +90,15 @@ PopupWindow {
     width: parent.width
     height: card.contentHeight
 
+    Behavior on y {
+      enabled: !card.dismissing && !card.groupDismissing
+
+      YAnimator {
+        duration: 180
+        easing.type: Easing.OutCubic
+      }
+    }
+
     SequentialAnimation {
       id: urgentWiggle
 
@@ -407,7 +416,7 @@ PopupWindow {
     SequentialAnimation {
       id: groupDismissAnimation
 
-      PauseAnimation { duration: card.groupDismissDelay }
+      PauseAnimation { duration: Math.max(0, card.groupDismissDelay) }
       NumberAnimation {
         target: card
         property: "groupDismissOffset"
@@ -447,9 +456,9 @@ PopupWindow {
     required property var service
 
     property var records: group.records
-    readonly property bool grouped: records.length > 1
-    readonly property var icon: service.iconFor(records[0])
-    property bool expanded: false
+    readonly property bool grouped: recordModel.count > 1
+    readonly property var icon: recordModel.count > 0 ? service.iconFor(recordModel.get(0).notification) : ({ kind: "lucide", source: "bell" })
+    readonly property bool expanded: popup.expandedGroupKey === group.key
     property bool dismissing: false
     property real headerDismissOffset: 0
 
@@ -473,17 +482,10 @@ PopupWindow {
     }
 
     Timer {
-      id: collapseTimer
-
-      interval: 250
-      onTriggered: notificationGroup.expanded = false
-    }
-
-    Timer {
       id: groupDismissTimer
 
-      interval: 320 + (notificationGroup.records.length - 1) * 70
-      onTriggered: notificationGroup.service.dismissRecords(notificationGroup.records)
+      interval: 320 + Math.max(0, recordModel.count - 1) * 70
+      onTriggered: notificationGroup.service.dismissRecords(notificationGroup.recordsForDismissal())
     }
 
     NumberAnimation {
@@ -496,18 +498,6 @@ PopupWindow {
       easing.type: Easing.InCubic
     }
 
-    HoverHandler {
-      enabled: notificationGroup.grouped
-      onHoveredChanged: {
-        if (hovered) {
-          collapseTimer.stop()
-          notificationGroup.expanded = true
-        } else {
-          collapseTimer.restart()
-        }
-      }
-    }
-
     Item {
       id: groupHeader
 
@@ -516,6 +506,13 @@ PopupWindow {
       transform: Translate { x: notificationGroup.headerDismissOffset }
       visible: notificationGroup.grouped
       width: parent.width
+
+      MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: notificationGroup.toggleExpanded()
+        z: -1
+      }
 
       Rectangle {
         anchors.fill: parent
@@ -569,7 +566,7 @@ PopupWindow {
           elide: Text.ElideRight
           font.family: notificationGroup.controller.fontFamily
           font.pixelSize: 12
-          text: notificationGroup.records[0].appName
+          text: recordModel.count > 0 ? recordModel.get(0).notification.appName : ""
           width: parent.width
         }
 
@@ -577,7 +574,7 @@ PopupWindow {
           color: notificationGroup.controller.controlSecondaryText
           font.family: notificationGroup.controller.fontFamily
           font.pixelSize: 10
-          text: notificationGroup.records.length + " notifications"
+          text: recordModel.count + " notifications"
         }
       }
 
@@ -627,7 +624,7 @@ PopupWindow {
 
           controller: notificationGroup.controller
           groupDismissing: notificationGroup.dismissing
-          groupDismissDelay: 60 + index * 70
+          groupDismissDelay: 60 + Math.max(0, index) * 70
           groupDismissOffset: 0
           opacity: !notificationGroup.grouped || notificationGroup.expanded ? 1 : 0
           record: notification
@@ -636,7 +633,7 @@ PopupWindow {
 
           Behavior on opacity {
             SequentialAnimation {
-              PauseAnimation { duration: notificationGroup.expanded ? index * 70 : 0 }
+              PauseAnimation { duration: notificationGroup.expanded ? Math.max(0, index) * 70 : 0 }
               NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
             }
           }
@@ -653,20 +650,35 @@ PopupWindow {
       groupDismissTimer.start()
     }
 
+    function toggleExpanded() {
+      if (!notificationGroup.grouped)
+        return
+      popup.expandedGroupKey = notificationGroup.expanded ? "" : notificationGroup.group.key
+    }
+
+    function recordsForDismissal() {
+      const currentRecords = []
+      for (let index = 0; index < recordModel.count; index++)
+        currentRecords.push(recordModel.get(index).notification)
+      return currentRecords
+    }
+
     Connections {
       target: notificationGroup.service
 
       function onHistoryRecordDismissed(id) {
-        const index = notificationGroup.records.findIndex(record => record.id === id)
-        if (index < 0)
-          return
-        notificationGroup.records = notificationGroup.records.filter(record => record.id !== id)
-        recordModel.remove(index)
+        for (let index = 0; index < recordModel.count; index++) {
+          if (String(recordModel.get(index).notification.id) === String(id)) {
+            recordModel.remove(index)
+            return
+          }
+        }
       }
     }
   }
 
   property bool closePending: false
+  property string expandedGroupKey: ""
 
   function requestOpen() {
     if (popup.visible && !closeAnim.running)
@@ -730,6 +742,7 @@ PopupWindow {
       openAnim.stop()
       closeAnim.stop()
       popup.closePending = false
+      popup.expandedGroupKey = ""
       content.opacity = 1
       content.y = 0
     }

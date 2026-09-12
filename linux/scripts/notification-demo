@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+if ! command -v notify-send > /dev/null 2>&1; then
+  echo "notification-demo: notify-send is required" >&2
+  exit 1
+fi
+
+image_path="${NOTIFICATION_DEMO_IMAGE:-/usr/share/icons/hicolor/128x128/apps/firefox.png}"
+image_hint=()
+if [[ -r "$image_path" ]]; then
+  image_hint=(-h "string:image-path:$image_path")
+fi
+
+icon() {
+  if [[ -r "$1" ]]; then
+    printf '%s' "$1"
+  else
+    printf '%s' "$2"
+  fi
+}
+
+teams_icon="$(icon /usr/share/pixmaps/teams.png teams)"
+ghostty_icon="$(icon /usr/share/icons/hicolor/128x128/apps/com.mitchellh.ghostty.png terminal)"
+firefox_icon="$(icon /usr/share/icons/hicolor/128x128/apps/firefox.png firefox)"
+spotify_icon="$(icon /usr/share/icons/hicolor/128x128/apps/spotify.png spotify)"
+flameshot_icon="$(icon /usr/share/icons/hicolor/128x128/apps/org.flameshot.Flameshot.png flameshot)"
+yazi_icon="$(icon /usr/share/icons/hicolor/128x128/apps/yazi.png folder)"
+neovim_icon="$(icon /usr/share/icons/hicolor/128x128/apps/nvim.png nvim)"
+writer_icon="$(icon /usr/share/icons/hicolor/128x128/apps/libreoffice-writer.png libreoffice-writer)"
+zathura_icon="$(icon /usr/share/icons/hicolor/128x128/apps/org.pwmt.zathura.png zathura)"
+power_manager_icon="$(icon /usr/share/icons/hicolor/128x128/apps/org.xfce.powermanager.png xfce4-power-manager)"
+cmake_icon="$(icon /usr/share/icons/hicolor/128x128/apps/CMakeSetup.png cmake)"
+
+send_action() {
+  notify-send -a "$1" -i "$2" -t 30000 -A open=Open -A snooze=Snooze "$3" "$4" > /dev/null &
+}
+
+notify-send -a "Microsoft Teams" -i "$teams_icon" "Mira" "Can you review the release notes?"
+notify-send -a "Microsoft Teams" -i "$teams_icon" "Noah" "I added the API examples."
+notify-send -a "Microsoft Teams" -i "$teams_icon" "Mira" "The design review starts in 10 minutes."
+
+notify-send -a "Ghostty" -i "$ghostty_icon" "Build #842 started" "Running unit and integration tests."
+notify-send -a "Ghostty" -i "$ghostty_icon" -h int:value:48 "Build #842" "48% complete: frontend tests passed."
+send_action "Ghostty" "$ghostty_icon" "Build #842 failed" "Two visual-regression snapshots need approval."
+
+notify-send -a "LibreOffice Writer" -i "$writer_icon" "Design review agenda" "Today at 16:30 in the Atlas room."
+notify-send -a "Spotify" -i "$spotify_icon" "Now playing" "Kelela - Washed Away"
+notify-send -a "Yazi" -i "$yazi_icon" "Download complete" "quickshell-preview.tar.gz is ready."
+
+notify-send -a "Firefox" -i "$firefox_icon" "${image_hint[@]}" "Article shared with you" "A visual reference for notification center motion."
+notify-send -a "Flameshot" -i "$flameshot_icon" "${image_hint[@]}" "New screenshot" "Captured from the current workspace."
+
+send_action "LibreOffice Writer" "$writer_icon" "Invoice needs approval" "The September invoice is due tomorrow."
+send_action "Neovim" "$neovim_icon" "Three tasks are overdue" "Review the release checklist and assign owners."
+
+notify-send -a "Zathura" -i "$zathura_icon" -h int:value:72 "Backup in progress" "72% complete, about 9 minutes remaining."
+notify-send -a "Xfce Power Manager" -u critical -i "$power_manager_icon" -t 30000 "Disk space is low" "Only 3.2 GB remains on the home volume."
+
+notify-send -a "CMake Setup" -i "$cmake_icon" -h string:wired-tag:demo-deploy "Deploying staging" "Preparing the release."
+sleep 1
+notify-send -a "CMake Setup" -i "$cmake_icon" -h string:wired-tag:demo-deploy -h int:value:67 "Deploying staging" "67% complete."
+sleep 1
+notify-send -a "CMake Setup" -i "$cmake_icon" -h string:wired-tag:demo-deploy "Staging deployment complete" "Release 2026.09.12 is available for review."
+
+echo "notification-demo: sent grouped, image, action, progress, critical, and replacement notifications"

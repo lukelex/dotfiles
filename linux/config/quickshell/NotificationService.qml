@@ -23,6 +23,7 @@ QtObject {
   property var historyGroups: []
   readonly property var popupGroups: service.groupPopup(service.popupReversed)
   signal popupRecordAdded(var record)
+  signal popupRecordRemoved(var id)
   signal historyRecordDismissed(string id)
 
   property Process desktopEntryLauncher: Process {
@@ -129,8 +130,9 @@ QtObject {
     }
 
     service.addHistory(record)
-    if (!service.appendToPopupGroup(record))
-      service.syncPopup()
+    service.syncPopup()
+    if (service.popup.some(entry => entry.id === record.id))
+      service.popupRecordAdded(record)
   }
 
   function isSystemOsd(record) {
@@ -189,7 +191,7 @@ QtObject {
       return 0
     if (notification.expireTimeout > 0)
       return Date.now() + notification.expireTimeout
-    return Date.now() + 3000
+    return Date.now() + 5000
   }
 
   function addHistory(record) {
@@ -219,23 +221,16 @@ QtObject {
 
   function syncPopup() {
     const cutoff = Date.now()
-    service.popup = service.history.filter(record => (record.urgency === "critical" || record.expiresAt > cutoff) && service.live[record.id]).slice(0, service.popupLimit)
+    const previousPopup = service.popup
+    const nextPopup = service.history.filter(record => (record.urgency === "critical" || record.expiresAt > cutoff) && service.live[record.id]).slice(0, service.popupLimit)
+
+    for (const record of previousPopup) {
+      if (!nextPopup.some(entry => entry.id === record.id))
+        service.popupRecordRemoved(record.id)
+    }
+
+    service.popup = nextPopup
     service.popupReversed = service.popup.slice().reverse()
-  }
-
-  function appendToPopupGroup(record) {
-    if (service.popup.length >= service.popupLimit)
-      return false
-
-    const latestRecord = service.popupReversed[service.popupReversed.length - 1]
-    if (!latestRecord || service.appKey(latestRecord) !== service.appKey(record))
-      return false
-    if (record.time - latestRecord.time > service.popupGroupWindow)
-      return false
-
-    service.popup = [record].concat(service.popup)
-    service.popupRecordAdded(record)
-    return true
   }
 
   function appKey(record) {
@@ -291,7 +286,8 @@ QtObject {
       service.osd = null
     }
     service.history = service.history.filter(record => record.id !== id)
-    service.historyGroups = service.groupHistory(service.history)
+    for (const group of service.historyGroups)
+      group.records = group.records.filter(record => record.id !== id)
     service.historyRecordDismissed(id)
     service.saveHistory()
     if (!preservePopupLayout)
