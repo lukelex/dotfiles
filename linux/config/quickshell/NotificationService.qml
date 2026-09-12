@@ -390,6 +390,9 @@ QtObject {
   }
 
   function timeAgo(record) {
+    if (!record)
+      return ""
+
     const seconds = Math.floor(Math.max(0, service.now / 1000 - record.time))
     if (seconds < 60)
       return "now"
@@ -444,6 +447,9 @@ QtObject {
   }
 
   function iconFor(record) {
+    if (!record)
+      return { kind: "lucide", source: "bell" }
+
     const appIcon = service.resolveIcon(record.appIcon)
     const image = service.resolveIcon(record.image)
     const desktopIcon = service.desktopEntryIcon(record.desktopEntry)

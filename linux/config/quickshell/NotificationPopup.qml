@@ -11,6 +11,15 @@ PopupWindow {
 
   property int wiggleMargin: 6
   property var popupStacks: null
+  readonly property var emptyRecord: ({
+    id: "",
+    appName: "",
+    summary: "",
+    body: "",
+    urgency: "normal",
+    value: -1,
+    actions: []
+  })
 
   anchor.window: panel
   anchor.rect.x: parentWindow.width - width - 12 + wiggleMargin
@@ -302,7 +311,7 @@ PopupWindow {
           font.pixelSize: 10
           text: toast.countLabel
           visible: toast.countLabel.length > 0
-          width: visible ? implicitWidth : 0
+          width: visible ? contentWidth : 0
         }
 
         Text {
@@ -409,7 +418,7 @@ PopupWindow {
 
     property var records: popupGroup.records
     property var removeHandler: null
-    readonly property int layerCount: Math.min(records.length - 1, 2)
+    readonly property int layerCount: Math.max(0, Math.min(records.length - 1, 2))
     readonly property var latestRecord: records[records.length - 1]
     readonly property bool grouped: records.length > 1
     readonly property bool showingExpanded: expanded && records.length > 0
@@ -566,7 +575,7 @@ PopupWindow {
       bellAngle: stack.bellAngle
       countLabel: stack.records.length > 1 ? "+" + (stack.records.length - 1) : ""
       interactive: !stack.showingExpanded
-      record: stack.latestRecord
+      record: stack.latestRecord || popup.emptyRecord
       service: stack.service
       urgentAttention: stack.hasCritical
       visible: !stack.showingExpanded
@@ -614,13 +623,13 @@ PopupWindow {
 
           controller: stack.controller
           bellAngle: stack.bellAngle
-          enterFromRight: notification.entering === true
+          enterFromRight: notification && notification.entering === true
           interactive: stack.showingExpanded
           opacity: stack.showingExpanded ? 1 : 0
           dismissHandler: (id, height) => stack.dismissRecord(id, height)
-          record: notification
+          record: notification || popup.emptyRecord
           service: stack.service
-          urgentAttention: notification.urgency === "critical"
+          urgentAttention: notification && notification.urgency === "critical"
           y: expandedColumn.cardY(index, height)
 
           Behavior on opacity {
