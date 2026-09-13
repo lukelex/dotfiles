@@ -16,6 +16,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Minimalism means fewer decisions and less distraction, not missing feedback, ambiguous icons, tiny hit targets, or hidden errors.
 - Keep one UI and one source of state per capability. Multiple entry points should open the same panel, not become competing implementations.
 - Connectivity owns Wi-Fi, Bluetooth, and VPN controls. Control Center owns local device adjustments: volume/mute and brightness/night mode first, battery and power profile together, then session locking. Do not reintroduce network shortcut tiles there.
+- Date/time is calendar-first, with weather as supporting information, not a profile dashboard. Keep month navigation, a Today action when browsing away, a stable Monday-first six-week grid, and a distinct today highlight. Reset to the current month on a fresh opening, not while the user is browsing. Do not imply date selection or events without an actual action/integration.
 - Do not add widgets, settings, abstractions, or configurable options merely because they might be useful later.
 
 ## Visual Language
@@ -59,12 +60,16 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 
 - `shell.qml` composes the shell. `Bar.qml` owns shared visual tokens and per-screen panel wiring.
 - `*Center.qml` files own panel presentation and interaction. `NotificationService.qml` and `ConnectivityService.qml` own backend state and lifecycle; do not duplicate their state through independent polling in a panel.
+- `WeatherService.qml` owns one shared weather snapshot from `u_weather snapshot`; retain the helper's existing CLI modes for other consumers. The helper validates payloads before replacing its 20-minute cache, preserves valid cached data on failure, and bounds requests with a cooldown. Expose loading, freshness, update time, and errors honestly; a retry button must indicate when cooldown prevents action.
+- Forecast low/high values aggregate complete three-hourly coverage of each of the next three city-local dates, using the provider's UTC offset. Do not label noon samples as daily ranges or silently fill gaps with later days. Use condition-specific icons and display partial/stale data as such.
+- Weather credentials come from `OPEN_WEATHER_API_KEY`, with the existing `~/Dropbox/secrets.env` as fallback when absent from the desktop service environment. Never embed or log the key. Weather tests use isolated fixture caches and mocked requests, not the user's secrets or live cache.
 - Prefer native, event-driven Quickshell modules when available. Connectivity uses `Quickshell.Networking` over NetworkManager and `Quickshell.Bluetooth` over BlueZ. Do not bypass NetworkManager by controlling its iwd backend directly.
 - Activate saved Wi-Fi profiles without an explicit disconnect first. Keep available saved networks active-first, then in stable name/device order, not constantly changing signal-strength order.
 - Enable Wi-Fi scanning only while the connectivity panel is open. Do not continuously discover Bluetooth devices just to show connected-device batteries.
 - Bluetooth battery and native Wi-Fi strength values are fractions (0-1). Check `batteryAvailable`; unavailable battery data is not 0%.
 - Delegate advanced networking and pairing to `nm-connection-editor` and `blueman-manager`. Release popup grabs before opening another application.
 - On Quickshell 0.3.1/X11, `PopupWindow.grabFocus` alone does not reliably implement keyboard/pointer grabs. `ConnectivityCenter.qml` uses a non-grabbing hover preview and `Controls.Popup.Window` for the pinned view, sharing one content item. Preserve this distinction unless a replacement is live-verified.
+- DateTimeCenter uses that same preview/pinned distinction with a screen-local 600ms close timer. Both bar date/time entry points must route to the actual screen's instance; do not restore the old primary-screen delayed-close shortcut. At narrow widths, stack weather below the calendar and constrain height with scrolling.
 - Prefer the smallest correct change. Extract shared code when there is actual reuse, not to build a generic widget framework. Do not add compatibility fallbacks without a concrete supported consumer.
 
 ## Validation And Safe Development

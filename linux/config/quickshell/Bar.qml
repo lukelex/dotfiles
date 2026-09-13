@@ -13,6 +13,13 @@ Scope {
   property var dateTimeCenterTarget: null
   property var connectivityTarget: null
 
+  WeatherService { id: weatherService }
+
+  function closeDateTime() {
+    if (root.dateTimeCenterTarget)
+      root.dateTimeCenterTarget.requestClose()
+  }
+
   ConnectivityService {
     id: connectivity
     wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
@@ -52,22 +59,7 @@ Scope {
   readonly property bool vpnBusy: vpnToggle.running
   property bool powerProfileAvailable: false
   property string powerProfile: ""
-  property bool weatherAvailable: false
-  property string weatherTemperature: ""
-  property string weatherDescription: ""
-  property string weatherCity: ""
-  property string weatherCountry: ""
-  property string weatherFeelsLike: ""
-  property string weatherLow: ""
-  property string weatherHigh: ""
-  property string weatherHumidity: ""
-  property string weatherWind: ""
-  property var weatherForecast: []
-  property string profileName: "lukas"
-  property string profileImage: ""
   readonly property date currentDate: clock.date
-  readonly property string timezoneName: Qt.formatDateTime(new Date(), "tt")
-  readonly property int weekNumber: Math.ceil((Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 1)) / 86400000) + new Date(new Date().getFullYear(), 0, 1).getDay() + 1) / 7)
 
   readonly property color controlActive: root.darkMode ? "#3E5978" : "#C9E1F7"
   readonly property color controlActiveIcon: root.darkMode ? "#8CAED8" : "#5C94C8"
@@ -108,18 +100,13 @@ Scope {
     controlStatus.running = true
   }
 
-  function refreshDateTimeStatus() {
-    weatherStatus.running = true
-    weatherForecastStatus.running = true
-  }
-
   function openNotificationCenter() {
     if (root.notificationCenterTarget === null)
       return
 
     root.cancelHoverClose()
     root.closeConnectivity()
-    root.dateTimeCenterTarget.visible = false
+    root.closeDateTime()
     root.controlCenterTarget.requestClose()
     if (root.notificationCenterOpen)
       root.notificationCenterTarget.requestClose()
@@ -145,8 +132,6 @@ Scope {
       root.notificationCenterTarget.requestClose()
     } else if (root.hoverCloseCandidate === 2) {
       root.controlCenterTarget.requestClose()
-    } else if (root.hoverCloseCandidate === 3) {
-      root.dateTimeCenterTarget.visible = false
     }
     root.hoverCloseCandidate = 0
   }
@@ -306,75 +291,11 @@ Scope {
     }
   }
 
-  Process {
-    id: weatherStatus
-    command: ["u_weather", "details"]
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const output = this.text.trim().split("|")
-        if (output.length !== 9)
-          return
-
-        root.weatherTemperature = output[0]
-        root.weatherDescription = output[1]
-        root.weatherCity = output[2]
-        root.weatherCountry = output[3]
-        root.weatherFeelsLike = output[4]
-        root.weatherLow = output[5]
-        root.weatherHigh = output[6]
-        root.weatherHumidity = output[7]
-        root.weatherWind = output[8]
-        root.weatherAvailable = true
-      }
-    }
-  }
-
-  Process {
-    id: weatherForecastStatus
-    command: ["u_weather", "forecast"]
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const entries = this.text.trim().split("|").filter(entry => entry.length > 0)
-        root.weatherForecast = entries.map(entry => {
-          const values = entry.split("~")
-          return {
-            day: Qt.formatDate(new Date(values[0] + "T12:00:00"), "ddd"),
-            temperature: values[1],
-            condition: values[2]
-          }
-        }).filter(entry => entry.day && entry.temperature && entry.condition)
-      }
-    }
-  }
-
-  Process {
-    id: profileStatus
-    command: ["sh", "-c", "image=''; for path in \"$HOME/.face\" \"$HOME/.face.icon\" \"/var/lib/AccountsService/icons/$USER\"; do [ -r \"$path\" ] && { image=\"file://$path\"; break; }; done; printf '%s\\n%s\\n' \"$USER\" \"$image\""]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const output = this.text.trim().split("\n")
-        root.profileName = output[0] || root.profileName
-        root.profileImage = output[1] || ""
-      }
-    }
-  }
-
   Timer {
     interval: 1000
     running: true
     repeat: true
     onTriggered: audioStatus.running = true
-  }
-
-  Timer {
-    interval: 1200000
-    running: true
-    repeat: true
-    onTriggered: {
-      weatherStatus.running = true
-      weatherForecastStatus.running = true
-    }
   }
 
   Timer {
@@ -422,6 +343,18 @@ Scope {
 
       required property var modelData
 
+      function openDateTime(pin = false) {
+        root.cancelHoverClose()
+        root.closeConnectivity()
+        if (root.dateTimeCenterTarget !== dateTimeCenter)
+          root.closeDateTime()
+        root.dateTimeCenterTarget = dateTimeCenter
+        controlCenter.requestClose()
+        notificationCenter.requestClose()
+        root.notificationCenterOpen = false
+        dateTimeCenter.requestOpen(pin)
+      }
+
       function openConnectivity(pin = false) {
         root.cancelHoverClose()
         if (root.connectivityTarget !== connectivityCenter)
@@ -429,7 +362,7 @@ Scope {
         root.connectivityTarget = connectivityCenter
         controlCenter.requestClose()
         notificationCenter.requestClose()
-        dateTimeCenter.visible = false
+        root.closeDateTime()
         root.notificationCenterOpen = false
         connectivityCenter.requestOpen(pin)
       }
@@ -483,13 +416,13 @@ Scope {
         id: dateTimeCenter
         controller: root
         panel: panel
+        weather: weatherService
       }
 
       Component.onCompleted: {
         if (root.controlCenterTarget === null || (modelData.x === 0 && modelData.y === 0)) {
           root.controlCenterTarget = controlCenter
           root.notificationCenterTarget = notificationCenter
-          root.dateTimeCenterTarget = dateTimeCenter
         }
       }
 
@@ -588,22 +521,9 @@ Scope {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: {
-              root.closeConnectivity()
-              controlCenter.requestClose()
-              notificationCenter.requestClose()
-              root.notificationCenterOpen = false
-              dateTimeCenter.visible = true
-              root.cancelHoverClose()
-            }
-            onExited: root.requestHoverClose(3, 600)
-            onClicked: {
-              root.closeConnectivity()
-              controlCenter.requestClose()
-              notificationCenter.requestClose()
-              root.notificationCenterOpen = false
-              dateTimeCenter.visible = true
-            }
+            onEntered: panel.openDateTime()
+            onExited: dateTimeCenter.scheduleClose()
+            onClicked: panel.openDateTime(true)
           }
         }
 
@@ -635,22 +555,9 @@ Scope {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: {
-              root.closeConnectivity()
-              controlCenter.requestClose()
-              notificationCenter.requestClose()
-              root.notificationCenterOpen = false
-              dateTimeCenter.visible = true
-              root.cancelHoverClose()
-            }
-            onExited: root.requestHoverClose(3, 600)
-            onClicked: {
-              root.closeConnectivity()
-              controlCenter.requestClose()
-              notificationCenter.requestClose()
-              root.notificationCenterOpen = false
-              dateTimeCenter.visible = true
-            }
+            onEntered: panel.openDateTime()
+            onExited: dateTimeCenter.scheduleClose()
+            onClicked: panel.openDateTime(true)
           }
         }
       }
@@ -744,7 +651,7 @@ Scope {
             onEntered: {
               root.closeConnectivity()
               controlCenter.requestClose()
-              dateTimeCenter.visible = false
+              root.closeDateTime()
               notificationCenter.requestOpen()
               root.notificationCenterOpen = true
               root.cancelHoverClose()
@@ -766,7 +673,7 @@ Scope {
             hoverEnabled: true
             onEntered: {
               root.closeConnectivity()
-              dateTimeCenter.visible = false
+              root.closeDateTime()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
               controlCenter.requestOpen()

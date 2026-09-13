@@ -1,454 +1,621 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell
 import QtQuick
+import QtQuick.Controls.Basic as Controls
 
-PopupWindow {
+Scope {
   id: popup
 
   required property var controller
   required property var panel
-
+  required property var weather
+  property bool pinned: false
+  property bool closing: false
+  property bool closeImmediately: false
+  property bool detailsExpanded: false
+  readonly property bool visible: preview.visible || pinnedPopup.visible
   readonly property date today: controller.currentDate
-  readonly property int firstWeekday: (new Date(today.getFullYear(), today.getMonth(), 1).getDay() + 6) % 7
-  readonly property int daysInMonth: new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  property date displayedMonth: new Date(today.getFullYear(), today.getMonth(), 1, 12)
+  readonly property bool currentMonth: displayedMonth.getFullYear() === today.getFullYear() && displayedMonth.getMonth() === today.getMonth()
+  readonly property real width: Math.max(1, Math.min(584, (panel.screen ? panel.screen.width : panel.width) - 24))
+  readonly property bool stacked: width < 520
+  readonly property real availableHeight: Math.max(1, (panel.screen ? panel.screen.height : 768) - panel.height - 24)
+  readonly property real height: Math.min(availableHeight, sections.implicitHeight + 32)
 
-  anchor.window: panel
-  anchor.rect.x: (parentWindow.width - width) / 2
-  anchor.rect.y: parentWindow.height + 12
-  color: "transparent"
-  grabFocus: true
-  implicitHeight: 430
-  implicitWidth: 584
-  surfaceFormat.opaque: false
-
-  component Surface: Rectangle {
-    required property var controller
-
-    border.color: controller.darkMode ? "#33404D" : "#D7DCE3"
-    border.width: 1
-    color: controller.controlSurface
-    radius: 18
+  function resetMonth() {
+    popup.displayedMonth = new Date(popup.today.getFullYear(), popup.today.getMonth(), 1, 12)
   }
 
-  component WeatherMetric: Item {
-    required property var controller
-    required property string title
-    required property string value
+  function changeMonth(delta) {
+    popup.requestOpen(true)
+    popup.displayedMonth = new Date(popup.displayedMonth.getFullYear(), popup.displayedMonth.getMonth() + delta, 1, 12)
+  }
 
-    height: 29
+  function goToday() {
+    popup.requestOpen(true)
+    popup.resetMonth()
+  }
 
-    Column {
-      anchors.fill: parent
-      spacing: 2
+  function calendarDate(index) {
+    const year = popup.displayedMonth.getFullYear()
+    const month = popup.displayedMonth.getMonth()
+    const offset = (new Date(year, month, 1, 12).getDay() + 6) % 7
+    return new Date(year, month, index - offset + 1, 12)
+  }
 
-      Text {
-        color: controller.controlSecondaryText
-        font.family: controller.fontFamily
-        font.letterSpacing: 0.8
-        font.pixelSize: 9
-        text: title.toUpperCase()
+  function isToday(date) {
+    return date.getFullYear() === popup.today.getFullYear() && date.getMonth() === popup.today.getMonth() && date.getDate() === popup.today.getDate()
+  }
+
+  function forecastDate(value) {
+    // This date denotes the city's day, not a UTC instant. Parse at local noon.
+    const parts = value.split("-")
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12)
+  }
+
+  function updatedText() {
+    if (!popup.weather.updatedAt)
+      return ""
+    const minutes = Math.max(0, Math.floor((popup.today.getTime() / 1000 - popup.weather.updatedAt) / 60))
+    return minutes < 1 ? "Updated just now" : minutes < 60 ? "Updated " + minutes + " min ago" : minutes < 1440 ? "Updated " + Math.floor(minutes / 60) + " h ago" : "Updated " + Math.floor(minutes / 1440) + " d ago"
+  }
+
+  function requestOpen(pin = false) {
+    if (!pin && popup.closing && popup.pinned)
+      return
+    const fresh = !popup.visible && !popup.pinned
+    popup.cancelClose()
+    closeAnim.stop()
+    popup.closing = false
+    popup.closeImmediately = false
+    if (fresh) {
+      popup.resetMonth()
+      popup.detailsExpanded = false
+      scroll.contentY = 0
+      popup.weather.refresh()
+    }
+    if (pin || popup.pinned) {
+      popup.pinned = true
+      // Finish the pointer event before taking native popup grabs.
+      Qt.callLater(function () {
+        if (popup.pinned && !popup.closing)
+          pinnedPopup.open()
+      })
+    } else {
+      preview.visible = true
+      if (content.opacity < 1 && !openAnim.running)
+        openAnim.start()
+    }
+  }
+
+  function requestClose(immediate = false) {
+    popup.closing = true
+    popup.cancelClose()
+    openAnim.stop()
+    popup.closeImmediately = immediate
+    if (pinnedPopup.visible)
+      pinnedPopup.close()
+    else
+      popup.pinned = false
+    if (immediate) {
+      closeAnim.stop()
+      preview.visible = false
+    } else if (preview.visible && !closeAnim.running) {
+      closeAnim.start()
+    }
+  }
+
+  function scheduleClose() {
+    if (!popup.pinned)
+      closeTimer.restart()
+  }
+
+  function cancelClose() {
+    closeTimer.stop()
+  }
+
+  onVisibleChanged: {
+    if (!visible) {
+      closeTimer.stop()
+      openAnim.stop()
+      closeAnim.stop()
+      content.opacity = 0
+      content.y = 10
+    }
+  }
+
+  PopupWindow {
+    id: preview
+    anchor.window: popup.panel
+    anchor.rect.x: Math.max(0, (popup.panel.width - popup.width) / 2)
+    anchor.rect.y: popup.panel.height + 12
+    implicitWidth: popup.width
+    implicitHeight: popup.height
+    color: "transparent"
+    surfaceFormat.opaque: false
+    grabFocus: false
+  }
+
+  Controls.Popup {
+    id: pinnedPopup
+    parent: popup.panel.contentItem
+    popupType: Controls.Popup.Window
+    x: Math.max(0, (popup.panel.width - popup.width) / 2)
+    y: popup.panel.height + 12
+    width: popup.width
+    height: popup.height
+    padding: 0
+    margins: -1
+    background: null
+    focus: true
+    modal: false
+    dim: false
+    closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
+    enter: null
+    exit: Transition {
+      enabled: !popup.closeImmediately
+      ParallelAnimation {
+        NumberAnimation {
+          target: content
+          property: "opacity"
+          to: 0
+          duration: 120
+          easing.type: Easing.InCubic
+        }
+        NumberAnimation {
+          target: content
+          property: "y"
+          to: 6
+          duration: 120
+          easing.type: Easing.InCubic
+        }
       }
+    }
+    onOpened: {
+      // Keep the preview visible until the native popup is ready; promotion is not a new entrance.
+      preview.visible = false
+      content.forceActiveFocus()
+      if (content.opacity < 1 && !openAnim.running)
+        openAnim.start()
+    }
+    onAboutToHide: {
+      popup.closing = true
+      popup.cancelClose()
+      openAnim.stop()
+    }
+    onClosed: popup.pinned = false
+  }
 
-      Text {
-        color: controller.controlPrimaryText
-        font.family: controller.fontFamily
-        font.pixelSize: 12
-        text: value
+  Timer {
+    id: closeTimer
+    interval: 600
+    onTriggered: {
+      if (!popup.pinned)
+        popup.requestClose()
+    }
+  }
+
+  ParallelAnimation {
+    id: openAnim
+    NumberAnimation {
+      target: content
+      property: "opacity"
+      to: 1
+      duration: 160
+      easing.type: Easing.OutCubic
+    }
+    NumberAnimation {
+      target: content
+      property: "y"
+      to: 0
+      duration: 160
+      easing.type: Easing.OutCubic
+    }
+  }
+
+  ParallelAnimation {
+    id: closeAnim
+    NumberAnimation {
+      target: content
+      property: "opacity"
+      to: 0
+      duration: 120
+      easing.type: Easing.InCubic
+    }
+    NumberAnimation {
+      target: content
+      property: "y"
+      to: 6
+      duration: 120
+      easing.type: Easing.InCubic
+    }
+    onFinished: preview.visible = false
+  }
+
+  component Label: Text {
+    color: popup.controller.controlSecondaryText
+    font.family: popup.controller.fontFamily
+    font.pixelSize: 11
+    textFormat: Text.PlainText
+    elide: Text.ElideRight
+  }
+
+  component Action: Controls.AbstractButton {
+    id: action
+    property string iconName: ""
+    implicitWidth: iconName ? 32 : Math.max(56, actionLabel.implicitWidth + 16)
+    implicitHeight: 32
+    opacity: enabled ? 1 : 0.55
+    hoverEnabled: true
+    focusPolicy: popup.pinned ? Qt.StrongFocus : Qt.NoFocus
+    Accessible.name: text
+    background: Rectangle {
+      radius: 8
+      color: action.hovered || action.down ? popup.controller.controlSurface : "transparent"
+      border.width: action.visualFocus ? 1 : 0
+      border.color: popup.controller.controlActiveIcon
+    }
+    contentItem: Item {
+      Label {
+        id: actionLabel
+        anchors.centerIn: parent
+        visible: !action.iconName
+        text: action.text
+        color: popup.controller.controlPrimaryText
+      }
+      LucideIcon {
+        anchors.centerIn: parent
+        width: 16
+        height: 16
+        visible: action.iconName !== ""
+        source: action.iconName ? popup.controller.icon(action.iconName) : ""
+        color: popup.controller.controlSecondaryText
+      }
+    }
+    Controls.ToolTip {
+      parent: action
+      x: action.width - implicitWidth
+      y: -implicitHeight - 6
+      visible: action.hovered && action.iconName !== ""
+      delay: 600
+      padding: 8
+      contentItem: Label {
+        text: action.text
+        color: popup.controller.controlPrimaryText
+      }
+      background: Rectangle {
+        color: popup.controller.controlSurface
+        border.color: popup.controller.controlSecondaryText
+        radius: 7
       }
     }
   }
 
-  Item {
-    anchors.fill: parent
+  FocusScope {
+    id: content
+    parent: pinnedPopup.visible ? pinnedPopup.contentItem : preview.contentItem
+    width: popup.width
+    height: popup.height
+    opacity: 0
+    y: 10
+    focus: popup.pinned
+    Keys.onEscapePressed: popup.requestClose()
+    Keys.onLeftPressed: function (event) {
+      event.accepted = popup.pinned
+      if (popup.pinned)
+        popup.changeMonth(-1)
+    }
+    Keys.onRightPressed: function (event) {
+      event.accepted = popup.pinned
+      if (popup.pinned)
+        popup.changeMonth(1)
+    }
 
     HoverHandler {
       onHoveredChanged: {
         if (hovered)
-          popup.controller.cancelHoverClose()
+          popup.cancelClose()
         else
-          popup.controller.requestHoverClose(3, 600)
+          popup.scheduleClose()
       }
     }
 
     Rectangle {
       anchors.fill: parent
-      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
-      border.width: 1
-      color: popup.controller.controlBackground
       radius: 26
+      color: popup.controller.controlBackground
+      border.width: 1
+      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
     }
 
-    Column {
-      anchors {
-        fill: parent
-        margins: 16
+    Flickable {
+      id: scroll
+      x: 16
+      y: 16
+      width: Math.max(1, parent.width - 32)
+      height: Math.max(1, parent.height - 32)
+      contentWidth: width
+      contentHeight: sections.implicitHeight
+      clip: true
+      boundsBehavior: Flickable.StopAtBounds
+      flickableDirection: Flickable.VerticalFlick
+      Controls.ScrollBar.vertical: Controls.ScrollBar {
+        policy: Controls.ScrollBar.AsNeeded
       }
-      spacing: 12
 
-      Surface {
-        controller: popup.controller
-        height: 64
-        width: parent.width
+      Column {
+        id: sections
+        width: scroll.width - (scroll.contentHeight > scroll.height ? 12 : 0)
+        spacing: 16
 
         Row {
-          anchors {
-            fill: parent
-            margins: 10
-          }
-          spacing: 12
-
-          Item {
-            height: parent.height
-            width: parent.width - dateSummary.width - parent.spacing
-
-            Rectangle {
-              anchors {
-                left: parent.left
-                verticalCenter: parent.verticalCenter
-              }
-              color: popup.controller.controlActive
-              clip: true
-              height: 44
-              radius: 22
-              width: 44
-
-              Image {
-                id: profileImage
-
-                anchors.fill: parent
-                anchors.margins: 1
-                asynchronous: true
-                fillMode: Image.PreserveAspectCrop
-                source: popup.controller.profileImage
-                visible: status === Image.Ready
-              }
-
-              LucideIcon {
-                anchors.centerIn: parent
-                color: popup.controller.controlPrimaryText
-                height: 20
-                source: popup.controller.icon("user")
-                visible: !profileImage.visible
-                width: 20
-              }
-            }
-
-            Column {
-              anchors {
-                left: parent.left
-                leftMargin: 56
-                right: parent.right
-                verticalCenter: parent.verticalCenter
-              }
-              spacing: 2
-
-              Text {
-                color: popup.controller.controlPrimaryText
-                elide: Text.ElideRight
-                font.family: popup.controller.fontFamily
-                font.pixelSize: 14
-                text: popup.controller.profileName
-                width: parent.width
-              }
-
-              Text {
-                color: popup.controller.controlSecondaryText
-                font.family: popup.controller.fontFamily
-                font.pixelSize: 10
-                text: "Current user"
-              }
-            }
-          }
-
-          Rectangle {
-            anchors.verticalCenter: parent.verticalCenter
-            color: popup.controller.darkMode ? "#3C4653" : "#D4DAE1"
-            height: 34
-            width: 1
-          }
-
+          width: parent.width
+          height: 36
+          spacing: 8
           Column {
-            id: dateSummary
-
+            width: parent.width - 40
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
-            width: 186
-
-            Text {
-              color: popup.controller.controlSecondaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 10
-              text: Qt.formatDate(popup.today, "dddd") + "  ·  " + Qt.formatTime(popup.today, "HH:mm")
+            spacing: 3
+            Label {
+              width: parent.width
+              text: Qt.formatDate(popup.today, "dddd") + " / " + Qt.formatTime(popup.today, "HH:mm")
             }
-
-            Text {
-              color: popup.controller.controlPrimaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 15
+            Label {
+              width: parent.width
               text: Qt.formatDate(popup.today, "d MMMM yyyy")
-            }
-          }
-        }
-      }
-
-      Row {
-        height: 322
-        spacing: 12
-        width: parent.width
-
-        Surface {
-          controller: popup.controller
-          height: parent.height
-          width: 304
-
-          Column {
-            anchors {
-              fill: parent
-              margins: 16
-            }
-            spacing: 14
-
-            Text {
-              color: popup.controller.controlPrimaryText
-              font.family: popup.controller.fontFamily
               font.pixelSize: 15
-              text: Qt.formatDate(popup.today, "MMMM yyyy")
+              color: popup.controller.controlPrimaryText
             }
-
-            Row {
-              spacing: 0
-              width: parent.width
-
-              Repeater {
-                model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
-                delegate: Text {
-                  required property string modelData
-
-                  color: popup.controller.controlSecondaryText
-                  font.family: popup.controller.fontFamily
-                  font.pixelSize: 10
-                  horizontalAlignment: Text.AlignHCenter
-                  text: modelData
-                  width: parent.width / 7
-                }
-              }
-            }
-
-            Grid {
-              columns: 7
-              rowSpacing: 6
-              width: parent.width
-
-              Repeater {
-                model: 42
-
-                delegate: Item {
-                  required property int index
-
-                  readonly property int day: index - popup.firstWeekday + 1
-                  height: 29
-                  opacity: day > 0 && day <= popup.daysInMonth ? 1 : 0
-                  width: parent.width / 7
-
-                  Rectangle {
-                    anchors.centerIn: parent
-                    color: parent.day === popup.today.getDate() ? popup.controller.controlActive : "transparent"
-                    height: 27
-                    radius: 14
-                    width: 27
-                  }
-
-                  Text {
-                    anchors.centerIn: parent
-                    color: parent.day === popup.today.getDate() ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
-                    font.family: popup.controller.fontFamily
-                    font.pixelSize: 12
-                    text: parent.day
-                  }
-                }
-              }
-            }
+          }
+          Action {
+            text: "Close"
+            iconName: "x"
+            onClicked: popup.requestClose()
           }
         }
 
-        Column {
-          height: parent.height
-          spacing: 12
-          width: parent.width - 316
+        Rectangle {
+          width: parent.width
+          height: columns.implicitHeight + 24
+          color: popup.controller.controlSurface
+          radius: 18
 
-          Surface {
-            controller: popup.controller
-            height: 178
-            width: parent.width
+          Grid {
+            id: columns
+            x: 12
+            y: 12
+            width: parent.width - 24
+            columns: popup.stacked ? 1 : 2
+            columnSpacing: 20
+            rowSpacing: 20
 
             Column {
-              anchors {
-                fill: parent
-                margins: 16
-              }
+              id: calendar
+              width: popup.stacked ? columns.width : (columns.width - columns.columnSpacing) * 0.57
               spacing: 10
 
               Row {
-                height: 48
-                spacing: 10
-
-                Rectangle {
-                  color: popup.controller.controlActive
-                  height: 44
-                  radius: 22
-                  width: 44
-
-                  LucideIcon {
-                    anchors.centerIn: parent
-                    color: popup.controller.controlPrimaryText
-                    height: 22
-                    source: popup.controller.icon("cloud-sun")
-                    width: 21
-                  }
-                }
-
-                Column {
+                width: parent.width
+                spacing: 4
+                Label {
+                  width: parent.width - 72
                   anchors.verticalCenter: parent.verticalCenter
-                  spacing: 2
-
-                  Text {
-                    color: popup.controller.controlPrimaryText
-                    font.family: popup.controller.fontFamily
-                    font.pixelSize: 23
-                    text: popup.controller.weatherAvailable ? popup.controller.weatherTemperature + "°C" : "--°C"
-                  }
-
-                  Text {
-                    color: popup.controller.controlSecondaryText
-                    elide: Text.ElideRight
-                    font.family: popup.controller.fontFamily
-                    font.pixelSize: 11
-                    text: popup.controller.weatherAvailable ? popup.controller.weatherDescription : "Weather unavailable"
-                    width: 148
-                  }
-
-                  Text {
-                    color: popup.controller.controlSecondaryText
-                    elide: Text.ElideRight
-                    font.family: popup.controller.fontFamily
-                    font.pixelSize: 10
-                    text: popup.controller.weatherAvailable ? popup.controller.weatherCity + ", " + popup.controller.weatherCountry : "Check your connection"
-                    width: 148
-                  }
+                  text: Qt.formatDate(popup.displayedMonth, "MMMM yyyy")
+                  color: popup.controller.controlPrimaryText
+                  font.pixelSize: 14
+                }
+                Action {
+                  text: "Previous month"
+                  iconName: "chevron-left"
+                  onClicked: popup.changeMonth(-1)
+                }
+                Action {
+                  text: "Next month"
+                  iconName: "chevron-right"
+                  onClicked: popup.changeMonth(1)
                 }
               }
 
-              Rectangle {
-                color: popup.controller.darkMode ? "#27303A" : "#DDE2E8"
-                height: 1
+              Row {
                 width: parent.width
+                Repeater {
+                  model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                  delegate: Label {
+                    required property string modelData
+                    width: calendar.width / 7
+                    horizontalAlignment: Text.AlignHCenter
+                    font.pixelSize: 10
+                    text: modelData
+                  }
+                }
               }
 
               Grid {
-                columnSpacing: 12
-                columns: 2
-                rowSpacing: 9
                 width: parent.width
-
-                WeatherMetric {
-                  controller: popup.controller
-                  title: "Feels like"
-                  value: popup.controller.weatherAvailable ? popup.controller.weatherFeelsLike + "°C" : "--"
-                  width: (parent.width - parent.columnSpacing) / 2
+                columns: 7
+                rowSpacing: 4
+                Repeater {
+                  model: 42
+                  delegate: Item {
+                    id: dayCell
+                    required property int index
+                    readonly property date date: popup.calendarDate(index)
+                    readonly property bool today: popup.isToday(date)
+                    readonly property bool inMonth: date.getMonth() === popup.displayedMonth.getMonth()
+                    width: calendar.width / 7
+                    height: 30
+                    Rectangle {
+                      anchors.centerIn: parent
+                      width: Math.min(30, parent.width)
+                      height: 30
+                      radius: 15
+                      color: dayCell.today ? popup.controller.controlActive : "transparent"
+                    }
+                    Label {
+                      anchors.centerIn: parent
+                      text: dayCell.date.getDate()
+                      font.pixelSize: 12
+                      font.bold: dayCell.today
+                      opacity: dayCell.inMonth || dayCell.today ? 1 : 0.5
+                      color: dayCell.today || dayCell.inMonth ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
+                    }
+                  }
                 }
+              }
 
-                WeatherMetric {
-                  controller: popup.controller
-                  title: "Humidity"
-                  value: popup.controller.weatherAvailable ? popup.controller.weatherHumidity + "%" : "--"
-                  width: (parent.width - parent.columnSpacing) / 2
-                }
-
-                WeatherMetric {
-                  controller: popup.controller
-                  title: "Range"
-                  value: popup.controller.weatherAvailable ? popup.controller.weatherLow + "° - " + popup.controller.weatherHigh + "°" : "--"
-                  width: (parent.width - parent.columnSpacing) / 2
-                }
-
-                WeatherMetric {
-                  controller: popup.controller
-                  title: "Wind"
-                  value: popup.controller.weatherAvailable ? popup.controller.weatherWind + " m/s" : "--"
-                  width: (parent.width - parent.columnSpacing) / 2
+              Item {
+                width: parent.width
+                height: 32
+                Action {
+                  anchors.right: parent.right
+                  visible: !popup.currentMonth
+                  text: "Today"
+                  onClicked: popup.goToday()
                 }
               }
             }
-          }
-
-          Surface {
-            controller: popup.controller
-            height: 132
-            width: parent.width
 
             Column {
-              anchors {
-                fill: parent
-                margins: 16
-              }
-              spacing: 10
+              id: weatherColumn
+              width: popup.stacked ? columns.width : columns.width - calendar.width - columns.columnSpacing
+              spacing: 8
 
-              Text {
-                color: popup.controller.controlPrimaryText
-                font.family: popup.controller.fontFamily
-                font.pixelSize: 13
-                text: "Next 3 days"
+              Label {
+                text: "Weather"
+                font.pixelSize: 12
               }
 
-              Row {
-                spacing: 0
+              Column {
                 width: parent.width
+                spacing: 7
+                visible: popup.weather.available
+                Row {
+                  width: parent.width
+                  spacing: 10
+                  LucideIcon {
+                    width: 30
+                    height: 30
+                    source: popup.controller.icon(popup.weather.conditionIcon)
+                    color: popup.controller.controlActiveIcon
+                  }
+                  Label {
+                    width: parent.width - 40
+                    text: Math.round(popup.weather.temperature) + "\u00b0C"
+                    font.pixelSize: 24
+                    color: popup.controller.controlPrimaryText
+                  }
+                }
+                Label {
+                  width: parent.width
+                  text: [popup.weather.city, popup.weather.country].filter(value => value !== "").join(", ")
+                  color: popup.controller.controlPrimaryText
+                  wrapMode: Text.Wrap
+                  elide: Text.ElideNone
+                }
+                Label {
+                  width: parent.width
+                  text: popup.weather.description
+                  wrapMode: Text.Wrap
+                  elide: Text.ElideNone
+                }
+                Label {
+                  width: parent.width
+                  text: "Feels like " + Math.round(popup.weather.feelsLike) + "\u00b0C"
+                }
+              }
 
+              Column {
+                width: parent.width
+                spacing: 4
+                visible: popup.weather.available && popup.weather.forecast.length > 0
+                Label {
+                  text: "Forecast / low - high"
+                  font.pixelSize: 10
+                }
                 Repeater {
-                  model: popup.controller.weatherForecast
-
-                  delegate: Column {
+                  model: popup.weather.available ? popup.weather.forecast.slice(0, 3) : []
+                  delegate: Row {
+                    id: forecastRow
                     required property var modelData
-
-                    spacing: 4
-                    width: parent.width / 3
-
-                    Text {
-                      color: popup.controller.controlSecondaryText
-                      font.family: popup.controller.fontFamily
-                      font.pixelSize: 10
-                      horizontalAlignment: Text.AlignHCenter
-                      text: modelData.day
-                      width: parent.width
+                    width: weatherColumn.width
+                    height: 28
+                    spacing: 8
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: Qt.formatDate(popup.forecastDate(modelData.date), "dddd") + ", " + modelData.condition + ", low " + modelData.low + ", high " + modelData.high
+                    Label {
+                      width: 32
+                      anchors.verticalCenter: parent.verticalCenter
+                      text: Qt.formatDate(popup.forecastDate(forecastRow.modelData.date), "ddd")
                     }
-
                     LucideIcon {
-                      anchors.horizontalCenter: parent.horizontalCenter
-                      color: popup.controller.controlActiveIcon
-                      height: 18
-                      source: popup.controller.icon("cloud-sun")
                       width: 18
-                    }
-
-                    Text {
-                      color: popup.controller.controlPrimaryText
-                      font.family: popup.controller.fontFamily
-                      font.pixelSize: 12
-                      horizontalAlignment: Text.AlignHCenter
-                      text: modelData.temperature + "°"
-                      width: parent.width
-                    }
-
-                    Text {
+                      height: 18
+                      anchors.verticalCenter: parent.verticalCenter
+                      source: popup.controller.icon(forecastRow.modelData.icon)
                       color: popup.controller.controlSecondaryText
-                      elide: Text.ElideRight
-                      font.family: popup.controller.fontFamily
-                      font.pixelSize: 9
-                      horizontalAlignment: Text.AlignHCenter
-                      text: modelData.condition
-                      width: parent.width
+                    }
+                    Label {
+                      width: parent.width - 66
+                      anchors.verticalCenter: parent.verticalCenter
+                      horizontalAlignment: Text.AlignRight
+                      text: Math.round(forecastRow.modelData.low) + "\u00b0 / " + Math.round(forecastRow.modelData.high) + "\u00b0"
+                      color: popup.controller.controlPrimaryText
                     }
                   }
+                }
+              }
+
+              Label {
+                width: parent.width
+                text: popup.weather.loading ? (popup.weather.available ? "Refreshing..." : "Loading weather...") : !popup.weather.available ? "No weather data" : popup.weather.stale ? "Stale weather data" : ""
+                visible: text !== ""
+                wrapMode: Text.Wrap
+                elide: Text.ElideNone
+              }
+              Label {
+                width: parent.width
+                text: popup.updatedText()
+                visible: text !== ""
+              }
+              Label {
+                width: parent.width
+                text: popup.weather.error
+                visible: text !== ""
+                color: popup.controller.urgent
+                wrapMode: Text.Wrap
+                elide: Text.ElideNone
+              }
+              Action {
+                text: popup.weather.loading ? "Refreshing..." : popup.weather.retryAfter > 0 ? "Retry in " + popup.weather.retryAfter + "s" : "Retry"
+                enabled: !popup.weather.loading && !(popup.weather.retryAfter > 0)
+                visible: !popup.weather.available || popup.weather.stale || popup.weather.error !== ""
+                onClicked: {
+                  popup.requestOpen(true)
+                  popup.weather.refresh(true)
+                }
+              }
+              Action {
+                text: popup.detailsExpanded ? "Hide details" : "Details"
+                visible: popup.weather.available && (popup.weather.humidity !== null || popup.weather.wind !== null)
+                onClicked: {
+                  popup.requestOpen(true)
+                  popup.detailsExpanded = !popup.detailsExpanded
+                }
+              }
+              Column {
+                width: parent.width
+                spacing: 6
+                visible: popup.weather.available && popup.detailsExpanded
+                Label {
+                  width: parent.width
+                  visible: popup.weather.humidity !== null
+                  text: "Humidity " + popup.weather.humidity + "%"
+                }
+                Label {
+                  width: parent.width
+                  visible: popup.weather.wind !== null
+                  text: "Wind " + popup.weather.wind + " m/s"
                 }
               }
             }
@@ -456,10 +623,5 @@ PopupWindow {
         }
       }
     }
-  }
-
-  onVisibleChanged: {
-    if (visible)
-      controller.refreshDateTimeStatus()
   }
 }
