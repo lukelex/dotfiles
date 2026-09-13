@@ -19,6 +19,7 @@ Scope {
   readonly property real width: Math.max(1, Math.min(432, (popup.panel.screen ? popup.panel.screen.width : popup.panel.width) - 24))
   readonly property real height: sections.implicitHeight + 32
   signal shown()
+  onShown: popup.controller.refreshControlStatus()
 
   function requestOpen(pin = false) {
     if (!pin && popup.closing && popup.pinned)
@@ -398,6 +399,22 @@ Scope {
             text: popup.service.wifiEnabled ? "No saved networks in range" : "Turn on Wi-Fi to see saved networks"
             verticalAlignment: Text.AlignVCenter
           }
+        }
+      }
+
+      Action {
+        width: parent.width
+        title: "NordVPN"
+        iconName: "globe"
+        radioSwitch: true
+        active: popup.controller.vpnConnected
+        enabled: popup.controller.nordVpnInstalled && !popup.controller.vpnBusy
+        subtitle: !popup.controller.nordVpnInstalled ? "Not installed"
+          : popup.controller.vpnBusy ? "Updating connection..."
+          : popup.controller.vpnConnected ? "Connected" : "Disconnected"
+        onActivated: {
+          popup.requestOpen(true)
+          popup.controller.toggleVpn()
         }
       }
 

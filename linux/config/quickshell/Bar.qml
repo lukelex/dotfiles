@@ -12,7 +12,6 @@ Scope {
   property var notificationCenterTarget: null
   property var dateTimeCenterTarget: null
   property var connectivityTarget: null
-  readonly property var connectivityService: connectivity
 
   ConnectivityService {
     id: connectivity
@@ -24,9 +23,6 @@ Scope {
       root.connectivityTarget.requestClose()
   }
 
-  function openConnectivity(panel) {
-    panel.openConnectivity(true)
-  }
   property int hoverCloseCandidate: 0
 
   property Timer hoverCloseTimer: Timer {
@@ -47,15 +43,13 @@ Scope {
   property int batteryPercentage: 0
   property string batteryTime: ""
   property bool batteryAvailable: false
-  readonly property bool bluetoothEnabled: connectivity.bluetoothEnabled
   readonly property bool doNotDisturb: root.notificationService.doNotDisturb
   property int brightness: 0
   property bool darkMode: true
   property bool nightModeEnabled: false
-  readonly property bool wifiEnabled: connectivity.wifiEnabled
-  readonly property string wifiSsid: connectivity.wifiSsid
   property bool nordVpnInstalled: false
   property bool vpnConnected: false
+  readonly property bool vpnBusy: vpnToggle.running
   property bool powerProfileAvailable: false
   property string powerProfile: ""
   property bool weatherAvailable: false
@@ -157,16 +151,12 @@ Scope {
     root.hoverCloseCandidate = 0
   }
 
-  function toggleWifi() {
-    connectivity.setWifiEnabled(!root.wifiEnabled)
-  }
-
   function toggleDoNotDisturb() {
     root.notificationService.setDoNotDisturb(!root.notificationService.doNotDisturb)
   }
 
   function toggleVpn() {
-    if (!root.nordVpnInstalled)
+    if (!root.nordVpnInstalled || root.vpnBusy)
       return
 
     vpnToggle.command = ["nordvpn", root.vpnConnected ? "disconnect" : "connect"]
@@ -180,10 +170,6 @@ Scope {
 
     powerProfileNext.running = true
     controlRefreshTimer.restart()
-  }
-
-  function toggleBluetooth() {
-    connectivity.setBluetoothEnabled(!root.bluetoothEnabled)
   }
 
   function toggleNightMode() {
@@ -248,6 +234,7 @@ Scope {
   Process {
     id: vpnToggle
     command: []
+    onExited: root.refreshControlStatus()
   }
 
   Process {

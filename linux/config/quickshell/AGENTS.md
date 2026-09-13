@@ -15,6 +15,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Use progressive disclosure: overview first, common actions next, advanced setup in existing system tools. Avoid tabs or extra clicks for the primary use case.
 - Minimalism means fewer decisions and less distraction, not missing feedback, ambiguous icons, tiny hit targets, or hidden errors.
 - Keep one UI and one source of state per capability. Multiple entry points should open the same panel, not become competing implementations.
+- Connectivity owns Wi-Fi, Bluetooth, and VPN controls. Control Center owns local device adjustments: volume/mute and brightness/night mode first, battery and power profile together, then session locking. Do not reintroduce network shortcut tiles there.
 - Do not add widgets, settings, abstractions, or configurable options merely because they might be useful later.
 
 ## Visual Language

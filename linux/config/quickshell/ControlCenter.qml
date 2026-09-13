@@ -8,12 +8,12 @@ PopupWindow {
   required property var panel
 
   anchor.window: panel
-  anchor.rect.x: parentWindow.width - width - 12
-  anchor.rect.y: parentWindow.height + 12
+  anchor.rect.x: Math.max(0, panel.width - width - 12)
+  anchor.rect.y: panel.height + 12
   color: "transparent"
   grabFocus: true
-  implicitHeight: 504
-  implicitWidth: 432
+  implicitHeight: sections.implicitHeight + 32
+  implicitWidth: Math.min(432, panel.screen.width - 24)
 
   surfaceFormat.opaque: false
 
@@ -26,6 +26,8 @@ PopupWindow {
     required property string subtitle
     required property string title
     signal activated()
+
+    opacity: enabled ? 1 : 0.55
 
     Rectangle {
       anchors.fill: parent
@@ -128,6 +130,8 @@ PopupWindow {
         font.family: action.controller.fontFamily
         font.pixelSize: 12
         text: action.title
+        width: parent.width - 25
+        elide: Text.ElideRight
       }
     }
 
@@ -144,14 +148,44 @@ PopupWindow {
     required property string iconName
     required property var controller
     required property real value
+    required property string title
+    required property string toggleTitle
+    required property string toggleIcon
+    required property bool toggleActive
     signal valueChangedByUser(real value)
+    signal toggleRequested()
 
-    height: 34
+    height: 72
+    opacity: enabled ? 1 : 0.55
+
+    Text {
+      height: 30
+      width: parent.width - toggle.width - 12
+      verticalAlignment: Text.AlignVCenter
+      color: slider.controller.controlPrimaryText
+      font.family: slider.controller.fontFamily
+      font.pixelSize: 12
+      text: slider.title
+      elide: Text.ElideRight
+    }
+
+    QuickAction {
+      id: toggle
+      anchors.right: parent.right
+      height: 30
+      width: 116
+      active: slider.toggleActive
+      controller: slider.controller
+      iconName: slider.toggleIcon
+      title: slider.toggleTitle
+      onActivated: slider.toggleRequested()
+    }
 
     LucideIcon {
       anchors {
         left: parent.left
         verticalCenter: parent.verticalCenter
+        verticalCenterOffset: 16
       }
       color: slider.controller.controlSliderFill
       height: 18
@@ -168,6 +202,7 @@ PopupWindow {
         right: valueLabel.left
         rightMargin: 10
         verticalCenter: parent.verticalCenter
+        verticalCenterOffset: 16
       }
       color: slider.controller.controlSliderTrack
       height: 8
@@ -182,6 +217,8 @@ PopupWindow {
 
       MouseArea {
         anchors.fill: parent
+        anchors.topMargin: -12
+        anchors.bottomMargin: -12
         cursorShape: Qt.PointingHandCursor
         onPositionChanged: function(mouse) {
           if (pressed)
@@ -199,11 +236,14 @@ PopupWindow {
       anchors {
         right: parent.right
         verticalCenter: parent.verticalCenter
+        verticalCenterOffset: 16
       }
       color: slider.controller.controlSecondaryText
       font.family: slider.controller.fontFamily
       font.pixelSize: 11
       text: Math.round(slider.value) + "%"
+      width: 44
+      horizontalAlignment: Text.AlignRight
     }
   }
 
@@ -212,10 +252,13 @@ PopupWindow {
   function requestOpen() {
     if (popup.visible && !closeAnim.running)
       return
-    popup.visible = true
     popup.closePending = false
-    content.opacity = 0
-    content.y = 10
+    closeAnim.stop()
+    if (!popup.visible) {
+      content.opacity = 0
+      content.y = 10
+      popup.visible = true
+    }
     openAnim.start()
   }
 
@@ -290,11 +333,11 @@ PopupWindow {
     }
 
     Column {
-      anchors {
-        fill: parent
-        margins: 16
-      }
-      spacing: 12
+      id: sections
+      x: 16
+      y: 16
+      width: parent.width - 32
+      spacing: 16
 
       Text {
         color: popup.controller.controlPrimaryText
@@ -303,109 +346,28 @@ PopupWindow {
         text: "Control Center"
       }
 
-      Row {
-        height: 70
-        spacing: 10
+      Rectangle {
+        height: adjustments.implicitHeight + 28
         width: parent.width
-
-        ControlTile {
-          active: popup.controller.wifiEnabled
-          controller: popup.controller
-          height: parent.height
-          iconName: "wifi"
-          subtitle: popup.controller.wifiEnabled ? popup.controller.wifiSsid || "Not connected" : "Off"
-          title: "Wi-Fi"
-          width: (parent.width - parent.spacing) / 2
-          onActivated: popup.controller.openConnectivity(popup.panel)
-        }
-
-        ControlTile {
-          active: popup.controller.bluetoothEnabled
-          controller: popup.controller
-          height: parent.height
-          iconName: "bluetooth"
-          subtitle: popup.controller.bluetoothEnabled ? "On" : "Off"
-          title: "Bluetooth"
-          width: (parent.width - parent.spacing) / 2
-          onActivated: popup.controller.openConnectivity(popup.panel)
-        }
-      }
-
-      Row {
-        height: 46
-        spacing: 10
-        width: parent.width
-
-        QuickAction {
-          active: popup.controller.vpnConnected
-          controller: popup.controller
-          height: parent.height
-          iconName: "globe"
-          title: popup.controller.nordVpnInstalled ? popup.controller.vpnConnected ? "NordVPN Connected" : "NordVPN" : "NordVPN unavailable"
-          width: parent.width
-          onActivated: popup.controller.toggleVpn()
-        }
-      }
-
-      Row {
-        height: 46
-        spacing: 10
-        width: parent.width
-
-        QuickAction {
-          active: popup.controller.nightModeEnabled
-          controller: popup.controller
-          height: parent.height
-          iconName: "moon-star"
-          title: "Night Shift"
-          width: (parent.width - parent.spacing) / 2
-          onActivated: popup.controller.toggleNightMode()
-        }
-
-        QuickAction {
-          active: popup.controller.audioMuted
-          controller: popup.controller
-          height: parent.height
-          iconName: popup.controller.audioMuted ? "volume-x" : "volume-2"
-          title: popup.controller.audioMuted ? "Muted" : "Sound"
-          width: (parent.width - parent.spacing) / 2
-          onActivated: popup.controller.toggleAudio()
-        }
-      }
-
-      ControlTile {
-        active: popup.controller.powerProfile === "performance"
-        controller: popup.controller
-        height: 70
-        iconName: "gauge"
-        subtitle: popup.controller.powerProfileAvailable ? "Click to switch profile" : "No firmware profiles available"
-        title: popup.controller.powerProfileAvailable ? "Power: " + popup.controller.powerProfile : "Power profile"
-        width: parent.width
-        onActivated: popup.controller.cyclePowerProfile()
-      }
-
-      Item {
-        height: 102
-        width: parent.width
-
-        Rectangle {
-          anchors.fill: parent
-          border.color: popup.controller.darkMode ? "#33404D" : "#D7DCE3"
-          border.width: 1
-          color: popup.controller.controlSurface
-          radius: 18
-        }
+        color: popup.controller.controlSurface
+        radius: 18
 
         Column {
-          anchors {
-            fill: parent
-            margins: 14
-          }
-          spacing: 10
+          id: adjustments
+          x: 14
+          y: 14
+          width: parent.width - 28
+          spacing: 12
 
           SliderControl {
             controller: popup.controller
+            enabled: popup.controller.audioAvailable
+            title: !popup.controller.audioAvailable ? "Audio unavailable" : popup.controller.audioMuted ? "Volume / muted" : "Volume"
             iconName: popup.controller.audioIcon()
+            toggleTitle: popup.controller.audioMuted ? "Unmute" : "Mute"
+            toggleIcon: "volume-x"
+            toggleActive: popup.controller.audioMuted
+            onToggleRequested: popup.controller.toggleAudio()
             value: popup.controller.audioVolume
             width: parent.width
             onValueChangedByUser: function(value) {
@@ -415,7 +377,12 @@ PopupWindow {
 
           SliderControl {
             controller: popup.controller
+            title: "Brightness"
             iconName: "sun"
+            toggleTitle: popup.controller.nightModeEnabled ? "Night on" : "Night off"
+            toggleIcon: "moon-star"
+            toggleActive: popup.controller.nightModeEnabled
+            onToggleRequested: popup.controller.toggleNightMode()
             value: popup.controller.brightness
             width: parent.width
             onValueChangedByUser: function(value) {
@@ -425,66 +392,74 @@ PopupWindow {
         }
       }
 
-      Row {
-        height: 44
+      Column {
         spacing: 10
         width: parent.width
+        visible: popup.controller.batteryAvailable || popup.controller.powerProfileAvailable
 
-        QuickAction {
-          active: false
+        Row {
+          width: parent.width
+          height: 24
+          spacing: 8
+          visible: popup.controller.batteryAvailable
+
+          LucideIcon {
+            id: powerIcon
+            anchors.verticalCenter: parent.verticalCenter
+            height: 18
+            width: 18
+            source: popup.controller.icon(popup.controller.batteryIcon())
+            color: popup.controller.batteryAvailable && popup.controller.batteryPercentage <= 5
+              ? popup.controller.urgent : popup.controller.controlSecondaryText
+          }
+
+          Text {
+            id: batterySummary
+            anchors.verticalCenter: parent.verticalCenter
+            color: popup.controller.controlPrimaryText
+            font.family: popup.controller.fontFamily
+            font.pixelSize: 12
+            text: popup.controller.batteryAvailable ? "Battery " + popup.controller.batteryPercentage + "%" : "Power"
+          }
+
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width - powerIcon.width - batterySummary.width - parent.spacing * 2
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+            color: popup.controller.controlSecondaryText
+            font.family: popup.controller.fontFamily
+            font.pixelSize: 11
+            text: !popup.controller.batteryAvailable ? ""
+              : popup.controller.batteryTime ? popup.controller.batteryTime
+                + (popup.controller.batteryState === "charging" ? " until full" : " remaining")
+              : popup.controller.batteryState === "charging" ? "Charging" : ""
+          }
+        }
+
+        ControlTile {
+          active: popup.controller.powerProfile === "performance"
+          enabled: popup.controller.powerProfileAvailable
+          visible: popup.controller.powerProfileAvailable
           controller: popup.controller
-          height: parent.height
-          iconName: "lock"
-          title: "Lock Screen"
-          width: 134
-          onActivated: popup.controller.lockScreen()
+          height: 64
+          iconName: "gauge"
+          subtitle: "Click to switch profile"
+          title: "Power: " + popup.controller.powerProfile
+          width: parent.width
+          onActivated: popup.controller.cyclePowerProfile()
         }
+      }
 
-        Item {
-          height: parent.height
-          width: parent.width - 144
-
-          Rectangle {
-            anchors.fill: parent
-            border.color: popup.controller.darkMode ? "#33404D" : "#D7DCE3"
-            border.width: 1
-            color: popup.controller.controlSurface
-            radius: 14
-          }
-
-          Row {
-            anchors {
-              fill: parent
-              leftMargin: 12
-              rightMargin: 12
-            }
-            spacing: 8
-
-            LucideIcon {
-              anchors.verticalCenter: parent.verticalCenter
-              color: popup.controller.batteryAvailable && popup.controller.batteryPercentage <= 5 ? popup.controller.urgent : popup.controller.batteryAvailable ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
-              height: 18
-              width: 18
-              source: popup.controller.icon(popup.controller.batteryIcon())
-            }
-
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              color: popup.controller.controlPrimaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 12
-              text: popup.controller.batteryAvailable ? popup.controller.batteryPercentage + "%" : "Unavailable"
-            }
-
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              color: popup.controller.controlSecondaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 11
-              text: popup.controller.batteryAvailable ? popup.controller.batteryTime ? popup.controller.batteryState === "charging" ? popup.controller.batteryTime + " until full" : popup.controller.batteryTime + " remaining" : popup.controller.batteryState === "charging" ? "Charging" : "Battery" : ""
-            }
-          }
-        }
+      QuickAction {
+        anchors.right: parent.right
+        active: false
+        controller: popup.controller
+        height: 40
+        width: 144
+        iconName: "lock"
+        title: "Lock Screen"
+        onActivated: popup.controller.lockScreen()
       }
     }
   }
