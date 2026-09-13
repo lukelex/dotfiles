@@ -4,13 +4,46 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
+# The systemd-launched shell does not inherit the interactive profile's secrets.
+if [[ -z ${OPEN_WEATHER_API_KEY:-} && -r $HOME/Dropbox/secrets.env ]]; then
+  source "$HOME/Dropbox/secrets.env" >/dev/null 2>&1
+fi
+
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/weather"
 CACHE_TTL=1200
+RETRY_TTL=60
+FORCE=false
+[[ ${2:-} == --refresh ]] && FORCE=true
 
 umask 077
 mkdir -p "$CACHE_DIR"
 exec 9>"$CACHE_DIR/weather.lock"
-flock 9
+flock -w 35 9 || exit 1
+
+valid_json() {
+  local kind=$1
+  jq -es --arg kind "$kind" '
+    def number: type == "number";
+    def text: type == "string" and length > 0;
+    def weather: (.weather[0] | (.id | number) and (.main | text)
+      and (.description | text) and (.icon | type == "string" and test("^(01|02|03|04|09|10|11|13|50)[dn]$")));
+    length == 1 and (.[0] | if $kind == "location" then
+      .success != false and (.city | text)
+    elif $kind == "current" then
+      (.cod | tostring) == "200" and (.name | text) and (.sys.country | text)
+      and (.timezone | number) and (.dt | number) and (.main.temp | number)
+      and (.main.feels_like | number) and (.main.temp_min | number)
+      and (.main.temp_max | number) and (.main.humidity | number)
+      and (.wind.speed | number) and weather
+    else
+      (.cod | tostring) == "200" and (.city.timezone | number)
+      and (.list | type == "array" and length > 0)
+      and all(.list[]; (.dt | number) and (.main.temp | number)
+        and (.main.temp_min | number) and (.main.temp_max | number)
+        and .main.temp_min <= .main.temp_max and weather)
+    end)
+  ' >/dev/null 2>&1
+}
 
 cache_fresh() {
   local path=$1
@@ -20,23 +53,33 @@ cache_fresh() {
 
 fetch_cached() {
   local path=$1
-  local temp
+  local temp kind
+  kind=$(basename "$path" .json)
 
   shift
 
-  if cache_fresh "$path"; then
+  if ! $FORCE && [[ ! -f $path.failed ]] && cache_fresh "$path" && valid_json "$kind" < "$path"; then
     cat "$path"
     return
   fi
 
+  if [[ -f $path.failed ]] && [[ $(( $(date +%s) - $(stat -c %Y "$path.failed") )) -lt $RETRY_TTL ]]; then
+    if [[ -s $path ]] && valid_json "$kind" < "$path"; then cat "$path"; fi
+    return 0
+  fi
+
   temp=$(mktemp "$CACHE_DIR/.weather.XXXXXX")
-  if "$@" > "$temp"; then
+  if [[ $kind == location || -n ${OPEN_WEATHER_API_KEY:-} ]] \
+      && "$@" > "$temp" 2>/dev/null && valid_json "$kind" < "$temp"; then
     mv -f "$temp" "$path"
+    rm -f "$path.failed"
     cat "$path"
   else
     rm -f "$temp"
-    [[ -s $path ]] && cat "$path"
+    touch "$path.failed"
+    if [[ -s $path ]] && valid_json "$kind" < "$path"; then cat "$path"; fi
   fi
+  return 0
 }
 
 declare -A ICON_LIST=(
@@ -65,14 +108,84 @@ SYSTEM="metric" # Unit system {imperial or metric}
 UNIT="°C" # Units of measurement.
 
 LOCATION_DATA=$(fetch_cached "$CACHE_DIR/location.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://ipwho.is)
-CITY=$(jq -er '.city' <<< "$LOCATION_DATA")
+CITY=$(jq -r '.city // empty' <<< "$LOCATION_DATA")
 
 FORECAST=$(fetch_cached "$CACHE_DIR/current.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
     --data-urlencode "q=$CITY" \
     --data-urlencode "units=$SYSTEM" \
-    --data-urlencode "appid=$OPEN_WEATHER_API_KEY" \
+    --data-urlencode "appid=${OPEN_WEATHER_API_KEY:-}" \
     "https://api.openweathermap.org/data/2.5/weather")
-ICON=${ICON_LIST[$(jq -er '.weather[0].icon' <<< "$FORECAST")]}
+ICON=${ICON_LIST[$(jq -r '.weather[0].icon // "null"' <<< "${FORECAST:-null}")]}
+
+fetch_forecast() {
+  fetch_cached "$CACHE_DIR/forecast.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
+    --data-urlencode "q=$CITY" \
+    --data-urlencode "units=$SYSTEM" \
+    --data-urlencode "appid=${OPEN_WEATHER_API_KEY:-}" \
+    "https://api.openweathermap.org/data/2.5/forecast"
+}
+
+snapshot() {
+  local daily now current_at=0 forecast_at=0 location_at=0 stale=false error="" kind
+  daily=$(fetch_forecast)
+  now=$(date +%s)
+  for kind in location current forecast; do
+    if [[ -f $CACHE_DIR/$kind.json.failed ]]; then
+      error="Weather refresh failed."
+      stale=true
+    fi
+    if ! cache_fresh "$CACHE_DIR/$kind.json"; then stale=true; fi
+  done
+  if [[ -z ${OPEN_WEATHER_API_KEY:-} ]]; then
+    error="Weather API key is not configured."
+    stale=true
+  fi
+  [[ -n $LOCATION_DATA ]] && location_at=$(stat -c %Y "$CACHE_DIR/location.json")
+  [[ -n $FORECAST ]] && current_at=$(stat -c %Y "$CACHE_DIR/current.json")
+  [[ -n $daily ]] && forecast_at=$(stat -c %Y "$CACHE_DIR/forecast.json")
+  jq -n --argjson current "${FORECAST:-null}" --argjson daily "${daily:-null}" \
+    --argjson location "${LOCATION_DATA:-null}" --argjson now "$now" \
+    --argjson updatedAt "$current_at" --argjson forecastUpdatedAt "$forecast_at" \
+    --argjson locationUpdatedAt "$location_at" --argjson stale "$stale" --arg error "$error" '
+    def icon:
+      if .id >= 200 and .id < 300 then "cloud-lightning"
+      elif .id >= 300 and .id < 400 then "cloud-drizzle"
+      elif .id >= 500 and .id < 600 then "cloud-rain"
+      elif .id >= 600 and .id < 700 then "cloud-snow"
+      elif .id >= 700 and .id < 800 then "cloud-fog"
+      elif .id == 800 then (if .icon | endswith("n") then "moon" else "sun" end)
+      elif .id == 801 then (if .icon | endswith("n") then "cloud-moon" else "cloud-sun" end)
+      else "cloud" end;
+    ($daily.city.timezone // $current.timezone // 0) as $offset |
+    (($now + $offset) | strftime("%Y-%m-%d")) as $today |
+    (($now + $offset + 3 * 86400) | strftime("%Y-%m-%d")) as $lastDay |
+    {available: ($current != null), loading: false, stale: ($stale or $current == null or $daily == null),
+      error: $error, updatedAt: $updatedAt, forecastUpdatedAt: $forecastUpdatedAt,
+      locationUpdatedAt: $locationUpdatedAt, fetchedAt: $now, cacheTtl: 1200, retryCooldown: 60,
+      location: $location, city: ($current.name // $location.city // ""), country: ($current.sys.country // ""),
+      timezoneOffset: ($current.timezone // $offset), temperature: $current.main.temp,
+      feelsLike: $current.main.feels_like, description: ($current.weather[0].description // ""),
+      humidity: $current.main.humidity, wind: $current.wind.speed,
+      conditionCode: $current.weather[0].id, icon: ($current.weather[0].icon // ""),
+      isDay: (if $current == null then null else ($current.weather[0].icon | endswith("d")) end),
+      conditionIcon: ($current.weather[0] | icon),
+      forecast: [($daily.list // []) | map(. + {date: ((.dt + $offset) | strftime("%Y-%m-%d"))})
+        | group_by(.date)[] | select(.[0].date > $today and .[0].date <= $lastDay)
+        | sort_by(.dt)
+        # Eight distinct, consecutive three-hour slots cover a city-local day.
+        | select(length == 8)
+        | . as $day | select(all(range(1; 8); $day[.].dt - $day[. - 1].dt == 10800))
+        | . as $slots
+        | (sort_by(((.dt + $offset) % 86400 - 43200) | fabs) | .[0]) as $representative
+        | {date: .[0].date, low: ($slots | map(.main.temp_min) | min),
+          high: ($slots | map(.main.temp_max) | max),
+          icon: ($representative.weather[0] | icon), condition: $representative.weather[0].main}][:3]}
+    | if (.forecast | length) < 3 then
+        .stale = true | .error = ([.error, "Incomplete forecast."]
+          | map(select(length > 0)) | join(" "))
+      else . end
+  '
+}
 
 function show {
   SUMMARY=$(jq -er '.weather[0].main' <<< "$FORECAST")
@@ -109,23 +222,22 @@ function details {
 function forecast {
   local forecast
 
-  forecast=$(fetch_cached "$CACHE_DIR/forecast.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
-    --data-urlencode "q=$CITY" \
-    --data-urlencode "units=$SYSTEM" \
-    --data-urlencode "appid=$OPEN_WEATHER_API_KEY" \
-    "https://api.openweathermap.org/data/2.5/forecast")
+  forecast=$(fetch_forecast)
 
-  jq -r --arg today "$(date +%F)" '[
-    .list
-    | group_by(.dt_txt[0:10])[]
-    | select(.[0].dt_txt[0:10] != $today)
-    | (map(select(.dt_txt[11:16] == "12:00")) | .[0] // .[0])
-    | [(.dt_txt[0:10]), (.main.temp | round), .weather[0].main]
+  jq -r --argjson now "$(date +%s)" '
+    .city.timezone as $offset |
+    (($now + $offset) | strftime("%Y-%m-%d")) as $today | [
+    .list | map(. + {date: ((.dt + $offset) | strftime("%Y-%m-%d"))})
+    | group_by(.date)[]
+    | select(.[0].date > $today)
+    | (sort_by(((.dt + $offset) % 86400 - 43200) | fabs) | .[0])
+    | [.date, (.main.temp | round), .weather[0].main]
     | join("~")
   ] | .[:3] | join("|")' <<< "$forecast"
 }
 
-case $1 in
+case ${1:-} in
+  snapshot) snapshot ;;
   icon) echo "$ICON" ;;
   show) show ;;
   details) details ;;
