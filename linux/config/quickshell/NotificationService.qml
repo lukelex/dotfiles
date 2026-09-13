@@ -75,7 +75,7 @@ QtObject {
       if (notification)
         notification.expire()
       delete service.live[record.id]
-      if (record.tag)
+      if (record.tag && service.tagMap[record.tag] === notification)
         delete service.tagMap[record.tag]
       service.osd = null
     }
@@ -100,7 +100,31 @@ QtObject {
   }
 
   function saveHistory() {
-    settings.historyJson = JSON.stringify(service.history.slice(0, service.historyLimit))
+    historySaveTimer.restart()
+  }
+
+  property Timer historySaveTimer: Timer {
+    interval: 250
+    onTriggered: settings.historyJson = JSON.stringify(service.history.slice(0, service.historyLimit))
+  }
+
+  property Timer historyGroupTimer: Timer {
+    interval: 33
+    onTriggered: service.historyGroups = service.groupHistory(service.history)
+  }
+
+  property var pendingPopupRecords: []
+  property Timer popupUpdateTimer: Timer {
+    interval: 16
+    onTriggered: {
+      const pending = service.pendingPopupRecords
+      service.pendingPopupRecords = []
+      service.syncPopup()
+      for (const record of pending) {
+        if (service.popup.some(entry => entry.id === record.id))
+          service.popupRecordAdded(record)
+      }
+    }
   }
 
   function handleNotification(notification) {
@@ -113,15 +137,25 @@ QtObject {
 
     if (tag && service.tagMap[tag]) {
       const previous = service.tagMap[tag]
-      previous.expire()
       delete service.tagMap[tag]
       delete service.live[previous.id]
+      previous.expire()
     }
 
     notification.tracked = true
     service.live[notification.id] = notification
     if (tag)
       service.tagMap[tag] = notification
+
+    const id = notification.id
+    notification.closed.connect(() => {
+      if (service.live[id] === notification)
+        delete service.live[id]
+      if (tag && service.tagMap[tag] === notification)
+        delete service.tagMap[tag]
+      delete service.hovered[id]
+      Qt.callLater(service.syncPopup)
+    })
 
     const record = service.buildRecord(notification, tag, value)
     if (service.isSystemOsd(record)) {
@@ -131,9 +165,9 @@ QtObject {
     }
 
     service.addHistory(record)
-    service.syncPopup()
-    if (service.popup.some(entry => entry.id === record.id))
-      service.popupRecordAdded(record)
+    service.pendingPopupRecords = service.pendingPopupRecords
+      .filter(entry => entry.id !== record.id).concat([record]).slice(-service.popupLimit)
+    popupUpdateTimer.start()
   }
 
   function isSystemOsd(record) {
@@ -188,7 +222,7 @@ QtObject {
   }
 
   function computeExpiry(notification, urgency) {
-    if (urgency === "critical")
+    if (urgency === "critical" || notification.expireTimeout === 0)
       return 0
     if (notification.expireTimeout > 0)
       return Date.now() + notification.expireTimeout
@@ -199,7 +233,7 @@ QtObject {
     const next = service.history.filter(entry => entry.id !== record.id && (record.tag === "" || entry.tag !== record.tag))
     next.unshift(record)
     service.history = next.slice(0, service.historyLimit)
-    service.historyGroups = service.groupHistory(service.history)
+    historyGroupTimer.start()
     service.saveHistory()
   }
 
@@ -207,7 +241,7 @@ QtObject {
     let changed = false
     for (let index = service.popup.length - 1; index >= 0; index--) {
       const record = service.popup[index]
-      if (record.urgency === "critical" || record.expiresAt > service.now || service.hovered[record.id])
+      if (record.expiresAt === 0 || record.expiresAt > service.now || service.hovered[record.id])
         continue
       changed = true
       const notification = service.live[record.id]
@@ -220,13 +254,17 @@ QtObject {
       service.syncPopup()
   }
 
-  function syncPopup() {
+  function syncPopup(suppressRemovalId) {
     const cutoff = Date.now()
     const previousPopup = service.popup
-    const nextPopup = service.history.filter(record => (record.urgency === "critical" || record.expiresAt > cutoff) && service.live[record.id]).slice(0, service.popupLimit)
+    const candidates = service.history.filter(record => (record.expiresAt === 0 || record.expiresAt > cutoff || service.hovered[record.id]) && service.live[record.id])
+    // Incoming traffic must not evict a card the user is reading or clicking.
+    const pinned = candidates.filter(record => service.hovered[record.id])
+    const selected = pinned.concat(candidates.filter(record => !service.hovered[record.id]).slice(0, Math.max(0, service.popupLimit - pinned.length)))
+    const nextPopup = candidates.filter(record => selected.includes(record))
 
     for (const record of previousPopup) {
-      if (!nextPopup.some(entry => entry.id === record.id))
+      if (record.id !== suppressRemovalId && !nextPopup.some(entry => entry.id === record.id))
         service.popupRecordRemoved(record.id)
     }
 
@@ -240,17 +278,15 @@ QtObject {
 
   function groupHistory(records) {
     const groups = []
-    const groupsByApp = ({})
 
     for (const record of records) {
-      const key = service.appKey(record)
-      let group = groupsByApp[key]
-      if (!group) {
-        group = { key: key, records: [] }
-        groupsByApp[key] = group
-        groups.push(group)
-      }
-      group.records.push(record)
+      const previousGroup = groups[groups.length - 1]
+      const previousRecord = previousGroup ? previousGroup.records[previousGroup.records.length - 1] : null
+      if (previousRecord && service.appKey(previousRecord) === service.appKey(record)
+          && previousRecord.urgency === record.urgency)
+        previousGroup.records.push(record)
+      else
+        groups.push({ key: String(record.id), records: [record] })
     }
 
     return groups
@@ -291,9 +327,9 @@ QtObject {
     for (const group of service.historyGroups)
       group.records = group.records.filter(record => record.id !== id)
     service.historyRecordDismissed(id)
+    service.historyGroups = service.historyGroups.filter(group => group.records.length > 0)
     service.saveHistory()
-    if (!preservePopupLayout)
-      service.syncPopup()
+    service.syncPopup(preservePopupLayout ? id : undefined)
   }
 
   function dismissRecords(records) {
@@ -301,7 +337,7 @@ QtObject {
 
     for (const record of records) {
       ids[record.id] = true
-      if (record.tag)
+      if (record.tag && service.tagMap[record.tag] === service.live[record.id])
         delete service.tagMap[record.tag]
 
       const notification = service.live[record.id]

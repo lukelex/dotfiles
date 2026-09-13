@@ -29,7 +29,7 @@ PopupWindow {
   implicitHeight: column.height
   surfaceFormat.opaque: false
 
-  visible: service.popup.length > 0 && !controller.notificationCenterOpen
+  visible: popupGroupModel.count > 0 && !controller.notificationCenterOpen
 
   ListModel {
     id: popupGroupModel
@@ -98,6 +98,7 @@ PopupWindow {
     property string countLabel: ""
     property real bellAngle: 0
     property bool dismissing: false
+    property var dismissingRecordId: null
     property bool interactive: true
     property bool animateReflow: false
     property bool urgentAttention: false
@@ -133,6 +134,7 @@ PopupWindow {
       if (toast.dismissing)
         return
       toast.dismissing = true
+      toast.dismissingRecordId = toast.record.id
       toast.service.activateRecord(toast.record.id)
       dismissAnimation.start()
     }
@@ -155,9 +157,9 @@ PopupWindow {
       }
       onStopped: {
         if (toast.dismissHandler)
-          toast.dismissHandler(toast.record.id, toast.height)
+          toast.dismissHandler(toast.dismissingRecordId, toast.height)
         else
-          toast.service.dismissRecord(toast.record.id)
+          toast.service.dismissRecord(toast.dismissingRecordId)
       }
     }
 
@@ -407,8 +409,6 @@ PopupWindow {
       enabled: toast.interactive
       hoverEnabled: true
       onClicked: toast.activate()
-      onEntered: service.setHovered(toast.record.id, true)
-      onExited: service.setHovered(toast.record.id, false)
       z: -1
     }
   }
@@ -435,7 +435,7 @@ PopupWindow {
     property bool expanded: false
     property bool expiring: false
     property int expiringLayerIndex: -1
-    property string expiringStackRecordId: ""
+    property var expiringStackRecordId: ""
     property var pendingStackExpiryIds: []
     property real expandedHeight: 0
     property bool reflowing: false
@@ -554,13 +554,14 @@ PopupWindow {
     }
 
     HoverHandler {
-      enabled: stack.grouped || stack.expanded
+      id: stackHover
       onHoveredChanged: {
         if (hovered) {
           collapseTimer.stop()
-          if (!stack.expanded)
+          if (!stack.expanded && stack.grouped)
             stack.expandedHeight = expandedColumn.contentHeight
-          stack.expanded = true
+          if (stack.grouped)
+            stack.expanded = true
           stack.service.setRecordsHovered(stack.records, true)
         } else {
           stack.service.setRecordsHovered(stack.records, false)
@@ -692,11 +693,15 @@ PopupWindow {
       stack.records = stack.records.filter(record => record.id !== id)
       recordModel.remove(visualIndex)
       stack.service.dismissRecord(id, true)
+      if (stack.records.length === 0)
+        stack.removeHandler(stack)
+      else if (stack.showingExpanded)
+        Qt.callLater(stack.updateExpandedHeight)
     }
 
     function canAddRecord(record) {
       const latestRecord = stack.records[stack.records.length - 1]
-      return latestRecord
+      return !stack.expiring && !latestToast.dismissing && latestRecord
         && stack.service.appKey(record) === stack.service.appKey(latestRecord)
         && record.urgency === latestRecord.urgency
         && record.time - latestRecord.time <= stack.service.popupGroupWindow
@@ -707,18 +712,20 @@ PopupWindow {
         return
 
       stack.records = stack.records.concat([record])
+      if (stackHover.hovered)
+        stack.service.setHovered(record.id, true)
       record.entering = true
-      recordModel.append({ notification: record })
+      recordModel.insert(0, { notification: record })
 
       if (stack.showingExpanded) {
-        Qt.callLater(() => {
-          const card = expandedCards.itemAt(expandedCards.count - 1)
-          if (card)
-            stack.expandedHeight += card.height + expandedColumn.spacing
-        })
+        Qt.callLater(stack.updateExpandedHeight)
       } else {
-        Qt.callLater(() => latestToast.playEntry())
+        Qt.callLater(latestToast.playEntry)
       }
+    }
+
+    function updateExpandedHeight() {
+      stack.expandedHeight = expandedColumn.contentHeight
     }
 
     function expireRecord(id) {
@@ -766,22 +773,20 @@ PopupWindow {
     }
 
     function finishStackExpiry() {
-      const id = stack.expiringStackRecordId
-      const index = stack.records.findIndex(record => record.id === id)
-      if (index < 0)
-        return
-
-      const visualIndex = recordModel.count - index - 1
-      stack.records = stack.records.filter(record => record.id !== id)
-      recordModel.remove(visualIndex)
+      // One exit animation covers a burst; do not build a serial removal backlog.
+      const ids = stack.pendingStackExpiryIds.concat([stack.expiringStackRecordId])
+      for (let index = recordModel.count - 1; index >= 0; index--) {
+        if (ids.includes(recordModel.get(index).notification.id))
+          recordModel.remove(index)
+      }
+      stack.records = stack.records.filter(record => !ids.includes(record.id))
       stack.expiringLayerIndex = -1
       stack.expiringStackRecordId = ""
-
-      if (stack.pendingStackExpiryIds.length > 0) {
-        const nextId = stack.pendingStackExpiryIds[0]
-        stack.pendingStackExpiryIds = stack.pendingStackExpiryIds.slice(1)
-        Qt.callLater(() => stack.expireRecord(nextId))
-      }
+      stack.pendingStackExpiryIds = []
+      if (stack.showingExpanded)
+        Qt.callLater(stack.updateExpandedHeight)
+      if (stack.records.length === 0)
+        stack.removeHandler(stack)
     }
 
   }

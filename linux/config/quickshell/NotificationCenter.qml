@@ -679,14 +679,46 @@ PopupWindow {
 
   property bool closePending: false
   property string expandedGroupKey: ""
+  property var clearingRecords: []
+  property var clearingGroups: []
+
+  ParallelAnimation {
+    id: clearAllAnimation
+
+    NumberAnimation {
+      target: clearAllTranslate
+      property: "x"
+      to: popup.width
+      duration: 240
+      easing.type: Easing.InCubic
+    }
+    NumberAnimation {
+      target: notificationList
+      property: "opacity"
+      to: 0
+      duration: 180
+      easing.type: Easing.InQuad
+    }
+    onFinished: {
+      popup.service.dismissRecords(popup.clearingRecords)
+      popup.clearingRecords = []
+      popup.clearingGroups = []
+      popup.expandedGroupKey = ""
+      clearAllTranslate.x = 0
+      notificationList.opacity = 1
+    }
+  }
 
   function requestOpen() {
     if (popup.visible && !closeAnim.running)
       return
-    popup.visible = true
     popup.closePending = false
-    content.opacity = 0
-    content.y = 10
+    closeAnim.stop()
+    if (!popup.visible) {
+      content.opacity = 0
+      content.y = 10
+      popup.visible = true
+    }
     openAnim.start()
   }
 
@@ -814,7 +846,12 @@ PopupWindow {
             verticalCenter: parent.verticalCenter
           }
           iconName: "trash"
-          onClicked: service.clearHistory()
+          enabled: !clearAllAnimation.running
+          onClicked: {
+            popup.clearingRecords = service.history.slice()
+            popup.clearingGroups = service.historyGroups.slice()
+            clearAllAnimation.start()
+          }
           visible: service.history.length > 0
         }
       }
@@ -833,11 +870,13 @@ PopupWindow {
           Column {
             id: notificationList
 
+            enabled: !clearAllAnimation.running
+            transform: Translate { id: clearAllTranslate }
             spacing: 10
             width: parent.width
 
             Repeater {
-              model: service.historyGroups
+              model: popup.visible ? (clearAllAnimation.running ? popup.clearingGroups : service.historyGroups) : []
 
               delegate: NotificationGroup {
                 required property var modelData
