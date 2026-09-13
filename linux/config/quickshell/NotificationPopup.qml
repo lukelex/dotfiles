@@ -434,6 +434,9 @@ PopupWindow {
     property real bellAngle: 0
     property bool expanded: false
     property bool expiring: false
+    property int expiringLayerIndex: -1
+    property string expiringStackRecordId: ""
+    property var pendingStackExpiryIds: []
     property real expandedHeight: 0
     property bool reflowing: false
 
@@ -543,6 +546,13 @@ PopupWindow {
       onTriggered: stack.reflowing = false
     }
 
+    Timer {
+      id: stackedExpiryTimer
+
+      interval: 180
+      onTriggered: stack.finishStackExpiry()
+    }
+
     HoverHandler {
       enabled: stack.grouped || stack.expanded
       onHoveredChanged: {
@@ -569,12 +579,26 @@ PopupWindow {
         border.width: 1
         color: stack.controller.controlSurface
         height: latestToast.height
-        opacity: 0.72 + index * 0.12
+        opacity: index === stack.expiringLayerIndex ? 0 : 0.72 + index * 0.12
         radius: 18
+        scale: index === stack.expiringLayerIndex ? 0.9 : 1
+        transformOrigin: Item.Center
         visible: !stack.expanded
         width: stack.width - (stack.layerCount - index) * stack.collapsedLayerInset * 2
         x: (stack.layerCount - index) * stack.collapsedLayerInset
-        y: index * stack.collapsedLayerOffset
+        y: index * stack.collapsedLayerOffset - (index === stack.expiringLayerIndex ? 6 : 0)
+
+        Behavior on opacity {
+          NumberAnimation { duration: 180; easing.type: Easing.InQuad }
+        }
+
+        Behavior on scale {
+          NumberAnimation { duration: 180; easing.type: Easing.InQuad }
+        }
+
+        Behavior on y {
+          YAnimator { duration: 180; easing.type: Easing.InQuad }
+        }
       }
     }
 
@@ -712,6 +736,19 @@ PopupWindow {
         return true
       }
 
+      if (!stack.showingExpanded) {
+        if (stack.expiringStackRecordId !== "") {
+          if (!stack.pendingStackExpiryIds.includes(id))
+            stack.pendingStackExpiryIds = stack.pendingStackExpiryIds.concat([id])
+          return true
+        }
+
+        stack.expiringStackRecordId = id
+        stack.expiringLayerIndex = Math.min(index, stack.layerCount - 1)
+        stackedExpiryTimer.restart()
+        return true
+      }
+
       stack.records = stack.records.filter(record => record.id !== id)
       recordModel.remove(visualIndex)
 
@@ -726,6 +763,25 @@ PopupWindow {
       }
 
       return true
+    }
+
+    function finishStackExpiry() {
+      const id = stack.expiringStackRecordId
+      const index = stack.records.findIndex(record => record.id === id)
+      if (index < 0)
+        return
+
+      const visualIndex = recordModel.count - index - 1
+      stack.records = stack.records.filter(record => record.id !== id)
+      recordModel.remove(visualIndex)
+      stack.expiringLayerIndex = -1
+      stack.expiringStackRecordId = ""
+
+      if (stack.pendingStackExpiryIds.length > 0) {
+        const nextId = stack.pendingStackExpiryIds[0]
+        stack.pendingStackExpiryIds = stack.pendingStackExpiryIds.slice(1)
+        Qt.callLater(() => stack.expireRecord(nextId))
+      }
     }
 
   }
