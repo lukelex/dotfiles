@@ -476,9 +476,22 @@ PopupWindow {
       NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
     }
 
-    Component.onCompleted: {
-      for (const record of notificationGroup.records)
-        recordModel.append({ notification: record })
+    Component.onCompleted: syncRecords(notificationGroup.records)
+
+    function syncRecords(records) {
+      popup.reconcileModel(recordModel, records, "notification", "id")
+    }
+
+    function readingEntries() {
+      const entries = []
+      for (let index = 0; index < recordModel.count; index++) {
+        const item = notificationGroup.grouped && !notificationGroup.expanded
+          ? notificationGroup : historyCards.itemAt(index)
+        if (item)
+          entries.push({ id: recordModel.get(index).notification.id,
+            y: item.mapToItem(notificationList, 0, 0).y, height: item.height })
+      }
+      return entries
     }
 
     Timer {
@@ -616,6 +629,7 @@ PopupWindow {
       y: notificationGroup.grouped ? groupHeader.height + 8 : 0
 
       Repeater {
+        id: historyCards
         model: recordModel
 
         delegate: NotificationCard {
@@ -663,24 +677,102 @@ PopupWindow {
       return currentRecords
     }
 
-    Connections {
-      target: notificationGroup.service
-
-      function onHistoryRecordDismissed(id) {
-        for (let index = 0; index < recordModel.count; index++) {
-          if (String(recordModel.get(index).notification.id) === String(id)) {
-            recordModel.remove(index)
-            return
-          }
-        }
-      }
-    }
   }
 
   property bool closePending: false
   property string expandedGroupKey: ""
   property var clearingRecords: []
-  property var clearingGroups: []
+  property var readingAnchor: null
+
+  ListModel {
+    id: centerModel
+    dynamicRoles: true
+  }
+
+  function reconcileModel(model, values, role, key) {
+    for (let index = 0; index < values.length; index++) {
+      let existing = index
+      while (existing < model.count && model.get(existing)[role][key] !== values[index][key])
+        existing++
+      if (existing === model.count) {
+        const row = {}
+        row[role] = values[index]
+        model.insert(index, row)
+      } else {
+        if (existing !== index)
+          model.move(existing, index, 1)
+        model.setProperty(index, role, values[index])
+      }
+    }
+    if (model.count > values.length)
+      model.remove(values.length, model.count - values.length)
+  }
+
+  function readingEntries() {
+    let entries = []
+    for (let index = 0; index < historyGroups.count; index++) {
+      const group = historyGroups.itemAt(index)
+      if (group)
+        entries = entries.concat(group.readingEntries())
+    }
+    return entries
+  }
+
+  function syncHistory() {
+    if (!popup.visible || clearAllAnimation.running)
+      return
+    const groups = service.historyGroups
+    const survivingIds = new Set()
+    for (const group of groups) {
+      for (const record of group.records)
+        survivingIds.add(record.id)
+    }
+    const entries = popup.readingEntries().filter(entry => survivingIds.has(entry.id))
+    const anchor = entries.find(entry => entry.y + entry.height > historyView.contentY)
+      || entries[entries.length - 1]
+    if (!popup.readingAnchor || !survivingIds.has(popup.readingAnchor.id))
+      popup.readingAnchor = anchor ? { id: anchor.id, offset: anchor.y - historyView.contentY } : null
+
+    for (let index = 0; index < centerModel.count; index++) {
+      const previous = centerModel.get(index).historyGroup
+      if (previous.key === popup.expandedGroupKey) {
+        const next = groups.find(group => group.records.some(record =>
+          previous.records.some(entry => entry.id === record.id)))
+        popup.expandedGroupKey = next ? next.key : ""
+        break
+      }
+    }
+    popup.reconcileModel(centerModel, groups, "historyGroup", "key")
+    for (let index = 0; index < historyGroups.count; index++)
+      historyGroups.itemAt(index).syncRecords(groups[index].records)
+    notificationList.forceLayout()
+    Qt.callLater(popup.restoreReadingPosition)
+    anchorRelease.restart()
+  }
+
+  function restoreReadingPosition() {
+    if (!popup.readingAnchor)
+      return
+    const entry = popup.readingEntries().find(entry => entry.id === popup.readingAnchor.id)
+    if (entry)
+      historyView.contentY = Math.max(0, Math.min(entry.y - popup.readingAnchor.offset,
+        historyView.contentHeight - historyView.height))
+  }
+
+  // Keep the same card in place through height animations, but never fight scrolling.
+  Timer {
+    id: anchorRelease
+    interval: 220
+    onTriggered: {
+      popup.restoreReadingPosition()
+      popup.readingAnchor = null
+    }
+  }
+
+  Connections {
+    target: popup.service
+    function onHistoryGroupsChanged() { popup.syncHistory() }
+  }
 
   ParallelAnimation {
     id: clearAllAnimation
@@ -702,7 +794,6 @@ PopupWindow {
     onFinished: {
       popup.service.dismissRecords(popup.clearingRecords)
       popup.clearingRecords = []
-      popup.clearingGroups = []
       popup.expandedGroupKey = ""
       clearAllTranslate.x = 0
       notificationList.opacity = 1
@@ -770,7 +861,12 @@ PopupWindow {
   }
 
   onVisibleChanged: {
-    if (!popup.visible) {
+    if (popup.visible) {
+      popup.syncHistory()
+    } else {
+      popup.readingAnchor = null
+      anchorRelease.stop()
+      centerModel.clear()
       openAnim.stop()
       closeAnim.stop()
       popup.closePending = false
@@ -849,7 +945,6 @@ PopupWindow {
           enabled: !clearAllAnimation.running
           onClicked: {
             popup.clearingRecords = service.history.slice()
-            popup.clearingGroups = service.historyGroups.slice()
             clearAllAnimation.start()
           }
           visible: service.history.length > 0
@@ -861,11 +956,19 @@ PopupWindow {
         width: parent.width
 
         Flickable {
+          id: historyView
           anchors.fill: parent
           clip: true
           contentHeight: notificationList.height
           contentWidth: width
           boundsBehavior: Flickable.StopAtBounds
+          onMovementStarted: popup.readingAnchor = null
+          onContentHeightChanged: {
+            if (popup.readingAnchor) {
+              Qt.callLater(popup.restoreReadingPosition)
+              anchorRelease.restart()
+            }
+          }
 
           Column {
             id: notificationList
@@ -874,15 +977,17 @@ PopupWindow {
             transform: Translate { id: clearAllTranslate }
             spacing: 10
             width: parent.width
+            onPositioningComplete: popup.restoreReadingPosition()
 
             Repeater {
-              model: popup.visible ? (clearAllAnimation.running ? popup.clearingGroups : service.historyGroups) : []
+              id: historyGroups
+              model: centerModel
 
               delegate: NotificationGroup {
-                required property var modelData
+                required property var historyGroup
 
                 controller: popup.controller
-                group: modelData
+                group: historyGroup
                 service: popup.service
                 width: notificationList.width
               }
