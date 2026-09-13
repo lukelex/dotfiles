@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick
 import QtQml
+import QtQuick.Controls.Basic as Controls
 
 PopupWindow {
   id: popup
@@ -61,6 +62,85 @@ PopupWindow {
     }
   }
 
+  component DismissButton: Item {
+    id: button
+
+    required property string description
+    property string label: ""
+    property bool emphasized: false
+    signal clicked()
+
+    width: label ? buttonLabel.implicitWidth + 20 : 28
+    height: 28
+    activeFocusOnTab: enabled && visible
+    opacity: button.emphasized || area.containsMouse || activeFocus ? 1 : 0.45
+    Accessible.role: Accessible.Button
+    Accessible.name: description
+    Accessible.onPressAction: { if (enabled) clicked() }
+    Keys.onSpacePressed: event => { if (!event.isAutoRepeat) clicked() }
+    Keys.onReturnPressed: event => { if (!event.isAutoRepeat) clicked() }
+    Keys.onEnterPressed: event => { if (!event.isAutoRepeat) clicked() }
+    Controls.ToolTip {
+      parent: button
+      x: button.width - implicitWidth
+      y: -implicitHeight - 6
+      visible: button.enabled && (area.containsMouse || button.activeFocus)
+      delay: 500
+      padding: 8
+      contentItem: Text {
+        text: button.description
+        textFormat: Text.PlainText
+        color: popup.controller.controlPrimaryText
+        font.family: popup.controller.fontFamily
+        font.pixelSize: 11
+      }
+      background: Rectangle {
+        color: popup.controller.controlSurface
+        border.color: popup.controller.controlSecondaryText
+        radius: 7
+      }
+    }
+
+    Behavior on opacity {
+      NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+    }
+
+    Rectangle {
+      anchors.fill: parent
+      radius: 7
+      color: area.containsMouse || button.activeFocus ? popup.controller.controlSliderTrack : "transparent"
+      border.width: button.activeFocus ? 1 : 0
+      border.color: popup.controller.controlSecondaryText
+    }
+
+    LucideIcon {
+      anchors.centerIn: parent
+      width: 14
+      height: 14
+      visible: !button.label
+      source: popup.controller.icon("x")
+      color: popup.controller.controlSecondaryText
+    }
+
+    Text {
+      id: buttonLabel
+      anchors.centerIn: parent
+      text: button.label
+      visible: button.label !== ""
+      color: popup.controller.controlSecondaryText
+      font.family: popup.controller.fontFamily
+      font.pixelSize: 11
+    }
+
+    MouseArea {
+      id: area
+      anchors.fill: parent
+      hoverEnabled: true
+      cursorShape: Qt.PointingHandCursor
+      onClicked: button.clicked()
+    }
+  }
+
   component NotificationCard: Item {
     id: card
 
@@ -72,7 +152,6 @@ PopupWindow {
     readonly property var icon: service.iconFor(card.record)
     readonly property real contentHeight: textColumn.height + 24
 
-    property bool showTrash: false
     property bool dismissing: false
     property real bellAngle: 0
     property bool groupDismissing: false
@@ -129,35 +208,13 @@ PopupWindow {
       }
     }
 
-    // Red reveal layer shown while the card slides out on dismiss.
-    Rectangle {
-      id: deleteLayer
-
-      anchors.fill: parent
-      color: card.controller.urgent
-      opacity: 0
-      radius: 18
-
-      LucideIcon {
-        anchors {
-          right: parent.right
-          rightMargin: 18
-          verticalCenter: parent.verticalCenter
-        }
-        color: card.controller.controlPrimaryText
-        height: 22
-        source: card.controller.icon("trash")
-        width: 22
-      }
-    }
+    HoverHandler { id: cardHover }
 
     // Declared first so the buttons inside the surface keep their clicks.
     MouseArea {
       anchors.fill: parent
       cursorShape: Qt.PointingHandCursor
       hoverEnabled: true
-      onEntered: card.showTrash = true
-      onExited: card.showTrash = false
       onClicked: card.activate()
     }
 
@@ -233,7 +290,7 @@ PopupWindow {
             font.family: card.controller.fontFamily
             font.pixelSize: 10
             text: card.record.appName
-            width: parent.width - timeLabel.width - dismissButton.width - parent.spacing
+            width: parent.width - timeLabel.width - dismissButton.width - parent.spacing * 2
           }
 
           Text {
@@ -246,47 +303,14 @@ PopupWindow {
             text: service.timeAgo(card.record)
           }
 
-          Item {
+          DismissButton {
             id: dismissButton
 
             anchors.verticalCenter: parent.verticalCenter
-            height: 18
-            opacity: card.showTrash || trashArea.containsMouse ? 1 : 0
-            width: 18
-
-            Behavior on opacity {
-              NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
-            }
-
-            Rectangle {
-              anchors.fill: parent
-              color: Qt.rgba(card.controller.urgent.r, card.controller.urgent.g, card.controller.urgent.b, 0.25)
-              opacity: trashArea.containsMouse ? 1 : 0
-              radius: 5
-
-              Behavior on opacity {
-                NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
-              }
-            }
-
-            LucideIcon {
-              anchors.centerIn: parent
-              color: trashArea.containsMouse ? card.controller.urgent : card.controller.controlSecondaryText
-              height: 14
-              source: card.controller.icon("trash")
-              width: 14
-            }
-
-            MouseArea {
-              id: trashArea
-
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              hoverEnabled: true
-              onEntered: card.showTrash = true
-              onExited: card.showTrash = false
-              onClicked: card.startDismiss()
-            }
+            description: "Dismiss notification"
+            emphasized: cardHover.hovered
+            enabled: !card.dismissing && !card.groupDismissing
+            onClicked: card.startDismiss()
           }
         }
 
@@ -436,8 +460,8 @@ PopupWindow {
         easing.type: Easing.OutCubic
       }
       OpacityAnimator {
-        target: deleteLayer
-        to: 1
+        target: surface
+        to: 0
         duration: 200
         easing.type: Easing.OutCubic
       }
@@ -450,6 +474,8 @@ PopupWindow {
 
   component NotificationGroup: Item {
     id: notificationGroup
+
+    HoverHandler { id: groupHover }
 
     required property var controller
     required property var group
@@ -591,7 +617,7 @@ PopupWindow {
         }
       }
 
-      HeaderIconButton {
+      DismissButton {
         id: clearGroupButton
 
         anchors {
@@ -599,8 +625,9 @@ PopupWindow {
           rightMargin: 6
           verticalCenter: parent.verticalCenter
         }
-        destructive: true
-        iconName: "trash"
+        description: "Dismiss group"
+        emphasized: groupHover.hovered
+        enabled: !notificationGroup.dismissing
         onClicked: notificationGroup.dismissGroup()
       }
 
@@ -933,7 +960,7 @@ PopupWindow {
           onClicked: popup.controller.toggleDoNotDisturb()
         }
 
-        HeaderIconButton {
+        DismissButton {
           id: clearButton
 
           anchors {
@@ -941,7 +968,9 @@ PopupWindow {
             rightMargin: 8
             verticalCenter: parent.verticalCenter
           }
-          iconName: "trash"
+          label: "Clear all"
+          description: "Clear notification history"
+          emphasized: true
           enabled: !clearAllAnimation.running
           onClicked: {
             popup.clearingRecords = service.history.slice()

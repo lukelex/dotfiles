@@ -471,7 +471,7 @@ QtObject {
     const source = String(icon || "")
     if (!source)
       return ""
-    if (source.startsWith("file://") || source.startsWith("/"))
+    if (/^(file|image|qrc):/.test(source) || source.startsWith("/"))
       return source
     return Quickshell.iconPath(source, true)
   }
@@ -485,26 +485,63 @@ QtObject {
     return entry ? service.resolveIcon(entry.icon) : ""
   }
 
+  function iconDescriptor(source) {
+    const path = source.startsWith("image://icon/") ? source.slice("image://icon/".length) : source
+    const url = path.startsWith("/") ? "file://" + path : path
+    const lucideDirectory = "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/"
+    if (url.startsWith(lucideDirectory)) {
+      const filename = url.slice(lucideDirectory.length)
+      // Only our own monochrome assets should use the theme's foreground color.
+      if (/^[a-z0-9-]+\.svg$/.test(filename))
+        return { kind: "lucide", source: filename.slice(0, -4) }
+    }
+    return { kind: "image", source: source }
+  }
+
+  function systemIcon(record) {
+    if (record.appName !== "System")
+      return ""
+    const tags = {
+      "battery-charging": "battery-charging",
+      "battery-critical": "battery-warning",
+      "battery-low": "battery-low"
+    }
+    const summaries = {
+      "Charging started": "battery-charging",
+      "Battery critical": "battery-warning",
+      "Battery low": "battery-low",
+      "Battery": "battery",
+      "Microphone": "mic-audio-lines",
+      "Bluetooth device connected": "bluetooth-connected"
+    }
+    return Object.prototype.hasOwnProperty.call(tags, record.tag) ? tags[record.tag]
+      : Object.prototype.hasOwnProperty.call(summaries, record.summary) ? summaries[record.summary] : ""
+  }
+
   function iconFor(record) {
     if (!record)
       return { kind: "lucide", source: "bell" }
 
     const appIcon = service.resolveIcon(record.appIcon)
     const image = service.resolveIcon(record.image)
+    if (appIcon && !service.isBrowserIcon(record.appIcon))
+      return service.iconDescriptor(appIcon)
+    if (image)
+      return service.iconDescriptor(image)
+
+    const systemIcon = service.systemIcon(record)
+    if (systemIcon)
+      return { kind: "lucide", source: systemIcon }
+
     const desktopIcon = service.desktopEntryIcon(record.desktopEntry)
     const namedApp = DesktopEntries.heuristicLookup(record.appName)
     const namedAppIcon = namedApp ? service.resolveIcon(namedApp.icon) : ""
-
-    if (appIcon && !service.isBrowserIcon(record.appIcon))
-      return { kind: "image", source: appIcon }
-    if (image)
-      return { kind: "image", source: image }
     if (desktopIcon)
-      return { kind: "image", source: desktopIcon }
+      return service.iconDescriptor(desktopIcon)
     if (namedAppIcon)
-      return { kind: "image", source: namedAppIcon }
+      return service.iconDescriptor(namedAppIcon)
     if (appIcon)
-      return { kind: "image", source: appIcon }
+      return service.iconDescriptor(appIcon)
 
     return { kind: "lucide", source: service.lucideIcon(record) }
   }

@@ -49,7 +49,10 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Group consecutive notifications only when app and urgency match. Never jump back to an older matching stack across an intervening mismatch. Live popups also have an existing time-window constraint.
 - Hover protects cards from both timeout and capacity eviction. New cards joining a hovered stack inherit that protection.
 - Clear All acts on a snapshot taken at the click. Later arrivals and independent volume/brightness OSDs must survive.
+- Notification dismissal is routine housekeeping, not deletion of the underlying message. Use a subdued `x` with a generous hit target, neutral hover feedback, and a descriptive tooltip/accessibility label for cards and groups; use a separate "Clear all" text action for history. Keep exits slide-and-fade without red trash-reveal layers.
 - Keep system OSDs distinct from notification history. Release references when native notifications close; do not invoke methods on destroyed objects.
+- System notification senders should supply a specific icon with `notify-send -i` (for example, `$LUCIDE_PATH/battery-charging.svg`), rather than relying on the generic `System` app name. The shared `NotificationService.iconFor()` resolver preserves sender-selected variants and routes this repository's Lucide SVGs through theme-colored rendering. Keep explicit imagery ahead of semantic fallbacks and never recolor arbitrary application icons or avatars.
+- Notification icons can already be `image://icon/...` or other native image-provider URLs; preserve them rather than resolving them again as theme names. Quickshell's `Qt.resolvedUrl()` can block paths outside the shell directory, so the sibling Lucide assets use the repository's installed `$HOME/dotfiles` location.
 - Respect explicit persistent timeouts. The installed Quickshell 0.3.1 build was live-verified to expose notification timeouts in milliseconds despite conflicting documentation; verify units again when changing versions.
 
 ## Architecture And Platform
