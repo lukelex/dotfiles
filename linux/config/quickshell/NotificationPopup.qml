@@ -82,6 +82,10 @@ PopupWindow {
     function onPopupRecordRemoved(id) {
       popup.removePopupRecord(id)
     }
+
+    function onPopupRecordsCleared() {
+      popupGroupModel.clear()
+    }
   }
 
   component NotificationToast: Item {
@@ -418,7 +422,11 @@ PopupWindow {
 
     property var records: popupGroup.records
     property var removeHandler: null
-    readonly property int layerCount: Math.max(0, Math.min(records.length - 1, 2))
+    readonly property int maxCollapsedCards: 3
+    readonly property int visibleCollapsedCardCount: Math.min(records.length, maxCollapsedCards)
+    readonly property int layerCount: Math.max(0, visibleCollapsedCardCount - 1)
+    readonly property int collapsedLayerInset: 6
+    readonly property int collapsedLayerOffset: 12
     readonly property var latestRecord: records[records.length - 1]
     readonly property bool grouped: records.length > 1
     readonly property bool showingExpanded: expanded && records.length > 0
@@ -447,7 +455,7 @@ PopupWindow {
       }
     ]
     clip: !reflowing
-    height: records.length === 0 ? 0 : (showingExpanded ? expandedHeight : latestToast.height + layerCount * 6)
+    height: records.length === 0 ? 0 : (showingExpanded ? expandedHeight : latestToast.height + layerCount * collapsedLayerOffset)
     visible: records.length > 0
     width: parent.width
 
@@ -561,10 +569,12 @@ PopupWindow {
         border.width: 1
         color: stack.controller.controlSurface
         height: latestToast.height
+        opacity: 0.72 + index * 0.12
         radius: 18
         visible: !stack.expanded
-        width: stack.width
-        y: index * 6
+        width: stack.width - (stack.layerCount - index) * stack.collapsedLayerInset * 2
+        x: (stack.layerCount - index) * stack.collapsedLayerInset
+        y: index * stack.collapsedLayerOffset
       }
     }
 
@@ -579,7 +589,7 @@ PopupWindow {
       service: stack.service
       urgentAttention: stack.hasCritical
       visible: !stack.showingExpanded
-      y: stack.layerCount * 6
+      y: stack.layerCount * stack.collapsedLayerOffset
       z: 3
     }
 
@@ -664,6 +674,7 @@ PopupWindow {
       const latestRecord = stack.records[stack.records.length - 1]
       return latestRecord
         && stack.service.appKey(record) === stack.service.appKey(latestRecord)
+        && record.urgency === latestRecord.urgency
         && record.time - latestRecord.time <= stack.service.popupGroupWindow
     }
 
@@ -717,13 +728,6 @@ PopupWindow {
       return true
     }
 
-    Connections {
-      target: stack.service
-
-      function onPopupRecordAdded(record) {
-        stack.addRecord(record)
-      }
-    }
   }
 
   Column {

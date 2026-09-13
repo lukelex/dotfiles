@@ -24,6 +24,7 @@ QtObject {
   readonly property var popupGroups: service.groupPopup(service.popupReversed)
   signal popupRecordAdded(var record)
   signal popupRecordRemoved(var id)
+  signal popupRecordsCleared()
   signal historyRecordDismissed(string id)
 
   property Process desktopEntryLauncher: Process {
@@ -263,6 +264,7 @@ QtObject {
       const previousRecord = previousGroup ? previousGroup.records[previousGroup.records.length - 1] : null
       const isConsecutive = previousGroup
         && previousGroup.key === service.appKey(record)
+        && record.urgency === previousRecord.urgency
         && record.time - previousRecord.time <= service.popupGroupWindow
 
       if (isConsecutive) {
@@ -328,6 +330,7 @@ QtObject {
     service.historyGroups = []
     service.popup = []
     service.popupReversed = []
+    service.popupRecordsCleared()
     service.osdTimer.stop()
     service.osd = null
     service.saveHistory()
