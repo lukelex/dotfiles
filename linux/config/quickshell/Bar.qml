@@ -22,6 +22,7 @@ Scope {
   readonly property color urgent: "#DA4939"
   readonly property color muted: "#A9ADB4"
   readonly property string fontFamily: "Hack Nerd Font Mono"
+  readonly property int barFontSize: 17
 
   property real audioVolume: 0
   property bool audioMuted: false
@@ -504,9 +505,9 @@ Scope {
 
           Image {
             anchors.centerIn: parent
-            height: 22
+            height: root.barFontSize
             source: "file:///usr/share/icons/Papirus/24x24/apps/tux.svg"
-            width: 22
+            width: root.barFontSize
           }
         }
 
@@ -527,7 +528,7 @@ Scope {
               anchors.centerIn: parent
               color: workspace.urgent ? root.urgent : root.foreground
               font.family: root.fontFamily
-              font.pixelSize: 17
+              font.pixelSize: root.barFontSize
               text: workspace.number
             }
 
@@ -565,16 +566,16 @@ Scope {
             spacing: 6
 
             LucideIcon {
-              height: 16
+              height: root.barFontSize
               source: root.icon("clock")
-              width: 16
+              width: root.barFontSize
               color: root.foreground
             }
 
             Text {
               color: root.foreground
               font.family: root.fontFamily
-              font.pixelSize: 17
+              font.pixelSize: root.barFontSize
               text: Qt.formatTime(clock.date, "HH:mm")
             }
           }
@@ -610,16 +611,16 @@ Scope {
             spacing: 6
 
             LucideIcon {
-              height: 16
+              height: root.barFontSize
               source: root.icon("calendar")
-              width: 16
+              width: root.barFontSize
               color: root.foreground
             }
 
             Text {
               color: root.foreground
               font.family: root.fontFamily
-              font.pixelSize: 17
+              font.pixelSize: root.barFontSize
               text: Qt.formatDate(clock.date, "dd MMM - dddd")
             }
           }
@@ -655,22 +656,22 @@ Scope {
         spacing: 12
 
         LucideIcon {
-          height: 18
+          height: root.barFontSize
           source: root.icon(root.audioIcon())
-          width: 18
+          width: root.barFontSize
           color: root.audioAvailable && !root.audioMuted ? root.foreground : root.muted
         }
 
         LucideIcon {
-          height: 18
-          width: 18
+          height: root.barFontSize
+          width: root.barFontSize
           color: root.batteryAvailable && root.batteryPercentage <= 5 ? root.urgent : root.batteryAvailable ? root.foreground : root.muted
           source: root.icon(root.batteryIcon())
         }
 
         Item {
-          height: 18
-          width: 18
+          height: root.barFontSize
+          width: root.barFontSize
 
           LucideIcon {
             anchors.fill: parent
@@ -710,9 +711,9 @@ Scope {
         }
 
         LucideIcon {
-          height: 18
+          height: root.barFontSize
           source: root.icon("sliders")
-          width: 18
+          width: root.barFontSize
           color: root.foreground
 
           MouseArea {
