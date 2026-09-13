@@ -11,6 +11,22 @@ Scope {
   property var controlCenterTarget: null
   property var notificationCenterTarget: null
   property var dateTimeCenterTarget: null
+  property var connectivityTarget: null
+  readonly property var connectivityService: connectivity
+
+  ConnectivityService {
+    id: connectivity
+    wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
+  }
+
+  function closeConnectivity() {
+    if (root.connectivityTarget)
+      root.connectivityTarget.requestClose()
+  }
+
+  function openConnectivity(panel) {
+    panel.openConnectivity(true)
+  }
   property int hoverCloseCandidate: 0
 
   property Timer hoverCloseTimer: Timer {
@@ -31,13 +47,13 @@ Scope {
   property int batteryPercentage: 0
   property string batteryTime: ""
   property bool batteryAvailable: false
-  property bool bluetoothEnabled: false
+  readonly property bool bluetoothEnabled: connectivity.bluetoothEnabled
   readonly property bool doNotDisturb: root.notificationService.doNotDisturb
   property int brightness: 0
   property bool darkMode: true
   property bool nightModeEnabled: false
-  property bool wifiEnabled: false
-  property string wifiSsid: ""
+  readonly property bool wifiEnabled: connectivity.wifiEnabled
+  readonly property string wifiSsid: connectivity.wifiSsid
   property bool nordVpnInstalled: false
   property bool vpnConnected: false
   property bool powerProfileAvailable: false
@@ -108,6 +124,7 @@ Scope {
       return
 
     root.cancelHoverClose()
+    root.closeConnectivity()
     root.dateTimeCenterTarget.visible = false
     root.controlCenterTarget.requestClose()
     if (root.notificationCenterOpen)
@@ -141,9 +158,7 @@ Scope {
   }
 
   function toggleWifi() {
-    wifiToggle.enabled = !root.wifiEnabled
-    wifiToggle.running = true
-    controlRefreshTimer.restart()
+    connectivity.setWifiEnabled(!root.wifiEnabled)
   }
 
   function toggleDoNotDisturb() {
@@ -168,9 +183,7 @@ Scope {
   }
 
   function toggleBluetooth() {
-    bluetoothToggle.enabled = !root.bluetoothEnabled
-    bluetoothToggle.running = true
-    controlRefreshTimer.restart()
+    connectivity.setBluetoothEnabled(!root.bluetoothEnabled)
   }
 
   function toggleNightMode() {
@@ -213,38 +226,23 @@ Scope {
 
   Process {
     id: controlStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$(nmcli -t -f WIFI general 2>/dev/null)\" \"$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | awk -F: '$1 == \"yes\" { print $2; exit }')\" \"$(bluetoothctl show 2>/dev/null | awk '/Powered:/ { print $2; exit }')\" \"$(u_nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
+    command: ["sh", "-c", "printf '%s\\n' \"$(u_nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
         const output = this.text.replace(/\n$/, "").split("\n")
-        root.wifiEnabled = output[0] === "enabled"
-        root.wifiSsid = output[1] || ""
-        root.bluetoothEnabled = output[2] === "yes"
-        root.nightModeEnabled = output[3] === "true"
+        root.nightModeEnabled = output[0] === "true"
 
-        const brightness = Number(output[4])
+        const brightness = Number(output[1])
         if (!isNaN(brightness))
           root.brightness = brightness
 
-        root.nordVpnInstalled = output[5] === "true"
-        root.vpnConnected = output[6] === "Connected"
-        root.powerProfileAvailable = output[7] === "true"
-        root.powerProfile = output[8] || ""
+        root.nordVpnInstalled = output[2] === "true"
+        root.vpnConnected = output[3] === "Connected"
+        root.powerProfileAvailable = output[4] === "true"
+        root.powerProfile = output[5] || ""
       }
     }
-  }
-
-  Process {
-    id: wifiToggle
-    property bool enabled: false
-    command: ["nmcli", "radio", "wifi", enabled ? "on" : "off"]
-  }
-
-  Process {
-    id: bluetoothToggle
-    property bool enabled: false
-    command: ["bluetoothctl", "power", enabled ? "on" : "off"]
   }
 
   Process {
@@ -437,6 +435,25 @@ Scope {
 
       required property var modelData
 
+      function openConnectivity(pin = false) {
+        root.cancelHoverClose()
+        if (root.connectivityTarget !== connectivityCenter)
+          root.closeConnectivity()
+        root.connectivityTarget = connectivityCenter
+        controlCenter.requestClose()
+        notificationCenter.requestClose()
+        dateTimeCenter.visible = false
+        root.notificationCenterOpen = false
+        connectivityCenter.requestOpen(pin)
+      }
+
+      ConnectivityCenter {
+        id: connectivityCenter
+        controller: root
+        panel: panel
+        service: connectivity
+      }
+
       screen: modelData
       color: "transparent"
       implicitHeight: 40
@@ -585,6 +602,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: {
+              root.closeConnectivity()
               controlCenter.requestClose()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
@@ -593,6 +611,7 @@ Scope {
             }
             onExited: root.requestHoverClose(3, 600)
             onClicked: {
+              root.closeConnectivity()
               controlCenter.requestClose()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
@@ -630,6 +649,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: {
+              root.closeConnectivity()
               controlCenter.requestClose()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
@@ -638,6 +658,7 @@ Scope {
             }
             onExited: root.requestHoverClose(3, 600)
             onClicked: {
+              root.closeConnectivity()
               controlCenter.requestClose()
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
@@ -654,6 +675,41 @@ Scope {
           verticalCenter: parent.verticalCenter
         }
         spacing: 12
+
+        Item {
+          height: root.barFontSize
+          width: root.barFontSize * 2 + 8
+
+          Row {
+            spacing: 8
+            LucideIcon {
+              width: root.barFontSize
+              height: root.barFontSize
+              source: root.icon(!connectivity.wifiEnabled ? "wifi-off"
+                : !connectivity.wifiConnected ? "wifi-zero"
+                : connectivity.wifiStrength < 0.35 ? "wifi-low"
+                : connectivity.wifiStrength < 0.7 ? "wifi-high" : "wifi")
+              color: connectivity.wifiConnected ? root.foreground : root.muted
+            }
+            LucideIcon {
+              width: root.barFontSize
+              height: root.barFontSize
+              source: root.icon(connectivity.bluetoothEnabled ? "bluetooth" : "bluetooth-off")
+              color: connectivity.connectedBluetoothDevices.some(device => device.batteryAvailable && device.battery <= 0.15)
+                ? root.urgent : connectivity.connectedBluetoothDevices.length > 0 ? root.foreground : root.muted
+            }
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            anchors.margins: -5
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: panel.openConnectivity()
+            onExited: connectivityCenter.scheduleClose()
+            onClicked: panel.openConnectivity(true)
+          }
+        }
 
         LucideIcon {
           height: root.barFontSize
@@ -699,6 +755,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: {
+              root.closeConnectivity()
               controlCenter.requestClose()
               dateTimeCenter.visible = false
               notificationCenter.requestOpen()
@@ -721,6 +778,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: {
+              root.closeConnectivity()
               dateTimeCenter.visible = false
               notificationCenter.requestClose()
               root.notificationCenterOpen = false
@@ -729,6 +787,7 @@ Scope {
             }
             onExited: root.requestHoverClose(2)
             onClicked: {
+              root.closeConnectivity()
               controlCenter.requestOpen()
             }
           }

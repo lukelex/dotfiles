@@ -316,7 +316,7 @@ PopupWindow {
           subtitle: popup.controller.wifiEnabled ? popup.controller.wifiSsid || "Not connected" : "Off"
           title: "Wi-Fi"
           width: (parent.width - parent.spacing) / 2
-          onActivated: popup.controller.toggleWifi()
+          onActivated: popup.controller.openConnectivity(popup.panel)
         }
 
         ControlTile {
@@ -327,7 +327,7 @@ PopupWindow {
           subtitle: popup.controller.bluetoothEnabled ? "On" : "Off"
           title: "Bluetooth"
           width: (parent.width - parent.spacing) / 2
-          onActivated: popup.controller.toggleBluetooth()
+          onActivated: popup.controller.openConnectivity(popup.panel)
         }
       }
 
