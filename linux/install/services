@@ -12,6 +12,8 @@ wm_profile=""
 has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
 run systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
+run sudo usermod -aG nordvpn "$USER"
+run systemctl enable --now nordvpnd
 
 if has_wm i3; then
   answer="$(ask 'Enable SDDM as display manager? [Y/n] ')"

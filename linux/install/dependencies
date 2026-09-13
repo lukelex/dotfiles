@@ -30,7 +30,7 @@ run yay -S --needed --noconfirm ibus openssh \
   papirus-icon-theme colloid-gtk-theme-git kvantum qt5ct \
   tree v4l-utils neovim fd fzf ripgrep rustup kmonad-bin \
   kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome dbus udiskie
+  pipewire-pulse google-chrome dbus udiskie nordvpn-bin
 
 answer="$(ask 'Would you like to install Hyprland? [Y/n] ')"
 case $answer in
