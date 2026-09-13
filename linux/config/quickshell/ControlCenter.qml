@@ -341,7 +341,7 @@ PopupWindow {
           controller: popup.controller
           height: parent.height
           iconName: "globe"
-          title: popup.controller.vpnAvailable ? popup.controller.vpnConnected ? "VPN Connected" : "VPN" : "VPN unavailable"
+          title: popup.controller.nordVpnInstalled ? popup.controller.vpnConnected ? "NordVPN Connected" : "NordVPN" : "NordVPN unavailable"
           width: parent.width
           onActivated: popup.controller.toggleVpn()
         }

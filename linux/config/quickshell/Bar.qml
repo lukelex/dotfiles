@@ -38,7 +38,7 @@ Scope {
   property bool nightModeEnabled: false
   property bool wifiEnabled: false
   property string wifiSsid: ""
-  property bool vpnAvailable: false
+  property bool nordVpnInstalled: false
   property bool vpnConnected: false
   property bool powerProfileAvailable: false
   property string powerProfile: ""
@@ -151,7 +151,7 @@ Scope {
   }
 
   function toggleVpn() {
-    if (!root.vpnAvailable)
+    if (!root.nordVpnInstalled)
       return
 
     vpnToggle.command = ["nordvpn", root.vpnConnected ? "disconnect" : "connect"]
@@ -213,7 +213,7 @@ Scope {
 
   Process {
     id: controlStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$(nmcli -t -f WIFI general 2>/dev/null)\" \"$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | awk -F: '$1 == \"yes\" { print $2; exit }')\" \"$(bluetoothctl show 2>/dev/null | awk '/Powered:/ { print $2; exit }')\" \"$(u_nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
+    command: ["sh", "-c", "printf '%s\\n' \"$(nmcli -t -f WIFI general 2>/dev/null)\" \"$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | awk -F: '$1 == \"yes\" { print $2; exit }')\" \"$(bluetoothctl show 2>/dev/null | awk '/Powered:/ { print $2; exit }')\" \"$(u_nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
@@ -227,10 +227,10 @@ Scope {
         if (!isNaN(brightness))
           root.brightness = brightness
 
-        root.vpnAvailable = output[5] === "Connected" || output[5] === "Disconnected"
-        root.vpnConnected = output[5] === "Connected"
-        root.powerProfileAvailable = output[6] === "true"
-        root.powerProfile = output[7] || ""
+        root.nordVpnInstalled = output[5] === "true"
+        root.vpnConnected = output[6] === "Connected"
+        root.powerProfileAvailable = output[7] === "true"
+        root.powerProfile = output[8] || ""
       }
     }
   }
