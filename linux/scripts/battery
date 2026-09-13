@@ -15,6 +15,7 @@ LOW_BATTERY_THRESHOLD=15
 CRITICAL_BATTERY_THRESHOLD=5
 LOW_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-low-notified"
 CRITICAL_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-critical-notified"
+CHARGING_STATE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-charging-state"
 
 device=$(upower -e | grep 'BAT' | head -n 1)
 stats=$(upower -i "$(echo $device)" | grep -E "state|to full|percentage|time to empty")
@@ -72,6 +73,7 @@ notification_icon() {
 }
 
 get() {
+  track_charging
   state=$(echo "$stats" | grep state | awk '{print $2}')
   charge=$(echo "$stats" | grep percentage | awk '{print $2}')
   time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
@@ -86,6 +88,26 @@ shorten_time() {
     *seconds) echo "${1% seconds} sec" ;;
     *)        echo "$1 left" ;;
   esac
+}
+
+track_charging() {
+  local state previous charge
+
+  state=$(get_state)
+  previous=""
+  [[ -r "$CHARGING_STATE_FILE" ]] && read -r previous < "$CHARGING_STATE_FILE"
+  mkdir -p "$(dirname "$CHARGING_STATE_FILE")"
+
+  if [[ -n "$previous" && "$previous" != charging && "$state" == charging ]]; then
+    charge=$(get_percentage)
+    notify-send -a System \
+      -i "$LUCIDE_PATH/battery-charging.svg" \
+      -h string:wired-tag:battery-charging \
+      -h int:value:"$charge" \
+      "Charging started" "$charge% charged"
+  fi
+
+  printf '%s\n' "$state" > "$CHARGING_STATE_FILE"
 }
 
 show_battery() {
