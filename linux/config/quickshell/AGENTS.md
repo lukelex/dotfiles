@@ -70,6 +70,8 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Delegate advanced networking and pairing to `nm-connection-editor` and `blueman-manager`. Release popup grabs before opening another application.
 - On Quickshell 0.3.1/X11, `PopupWindow.grabFocus` alone does not reliably implement keyboard/pointer grabs. `ConnectivityCenter.qml` uses a non-grabbing hover preview and `Controls.Popup.Window` for the pinned view, sharing one content item. Preserve this distinction unless a replacement is live-verified.
 - DateTimeCenter uses that same preview/pinned distinction with a screen-local 600ms close timer. Both bar date/time entry points must route to the actual screen's instance; do not restore the old primary-screen delayed-close shortcut. At narrow widths, stack weather below the calendar and constrain height with scrolling.
+- In `../picom.conf`, allow background blur for both Quickshell tooltip previews and normal pinned windows. Excluding tooltip windows makes the same panel visibly change blur when pinned; keep the dock/bar exclusion separate.
+- During date/time promotion, keep a snapshot in the preview above the destination until the destination's first `frameSwapped`. Qt's `opened` signal and QML visibility/opacity values alone do not prove a populated frame has reached the screen; test first-click transitions with rendered-frame capture, not only mocked lifecycle tests.
 - Prefer the smallest correct change. Extract shared code when there is actual reuse, not to build a generic widget framework. Do not add compatibility fallbacks without a concrete supported consumer.
 
 ## Validation And Safe Development
@@ -88,6 +90,7 @@ quickshell log --pid <current-pid> --tail 30
 - The Node tests extract JavaScript from QML and mock native services. They cover logic, not QML bindings, rendering, focus, D-Bus delivery, or actual hardware behavior.
 - Inspect installed `.qmltypes` under `/usr/lib/qt6/qml/Quickshell/` and matching upstream source when API behavior is uncertain. Confirm units and lifecycle semantics rather than relying on names or documentation alone.
 - Configs are symlinked and Quickshell reloads on edits. Check the current instance and its logs; do not launch a second full shell or run provisioning scripts just to validate a component.
+- Confirm the reload log timestamp is newer than the edit before live-testing. Atomic file replacement by a formatter can leave the running instance watching an old inode; an edit to the shell entry point can trigger a fresh reload and restore component watches. Do not infer that new code loaded from an old "Configuration Loaded" message.
 - For UI changes, exercise hover-to-panel traversal, pinning, Escape/outside closure, sibling-panel changes, rapid reversal, and list updates. Check light/dark appearance and relevant screen sizes; multi-monitor behavior needs explicit verification.
 - For notifications, check arrivals during dismissal, burst expiry, hovered cards, Clear All snapshots, and reading position midway through and near the bottom of history.
 - Do not toggle radios, switch networks, pair devices, clear real notification history, or change system settings merely to test without user approval. Use mocks or narrowly scoped synthetic data, and disclose what was not live-tested.

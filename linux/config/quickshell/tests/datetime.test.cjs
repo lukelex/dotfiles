@@ -11,12 +11,23 @@ function fixture() {
   const animation = () => ({ running: false, stop() { this.running = false; }, start() { this.running = true; } });
   const context = vm.createContext({
     popup: { today: new Date(2024, 1, 29, 12), displayedMonth: new Date(2023, 11, 1, 12),
-      pinned: false, closing: false, weather: { refreshes: 0, refresh() { this.refreshes++; } } },
-    preview: { visible: false },
+      pinned: false, closing: false, promotionPending: false, promotionSnapshot: null,
+      promotionWindow: null, pinRequest: 0, weather: { refreshes: 0, refresh() { this.refreshes++; } } },
+    preview: { visible: false, contentItem: { Window: { window: { raise() {} } } } },
     pinnedPopup: { visible: false, open() { this.visible = true; context.onOpened(); }, close() { this.visible = false; } },
-    scroll: { contentY: 80 }, content: { opacity: 0, y: 10, forceActiveFocus() {} },
+    scroll: { contentY: 80 }, content: {
+      opacity: 0, y: 10, forceActiveFocus() {}, nativeWindow: {},
+      grabToImage(callback) {
+        later.push(() => {
+          callback({ url: 'image://test/snapshot' });
+          if (context.popup.promotionSnapshot)
+            context.Qt.callLater(context.popup.openPinned, context.popup.pinRequest); // Image.Ready.
+        });
+        return true;
+      },
+    },
     openAnim: animation(), closeAnim: animation(), closeTimer: { stop() {}, restart() {} },
-    Qt: { callLater(callback) { later.push(callback); } },
+    Qt: { callLater(callback, ...args) { later.push(() => callback(...args)); } },
   });
   Object.defineProperty(context.popup, 'visible', { get: () => context.preview.visible || context.pinnedPopup.visible });
   for (const match of source.matchAll(/^  function (\w+)\(([^\n]*)\) \{\n([\s\S]*?)^  \}/gm)) {
@@ -25,7 +36,10 @@ function fixture() {
   const opened = source.match(/^    onOpened: \{\n([\s\S]*?)^    \}/m);
   assert.ok(opened, 'Missing pinned popup open handler');
   context.onOpened = vm.runInContext(`(function() {\n${opened[1]}\n})`, context);
-  return { ...context, flush() { while (later.length) later.shift()(); } };
+  const frame = source.match(/^    function onFrameSwapped\(\) \{\n([\s\S]*?)^    \}/m);
+  assert.ok(frame, 'Missing native frame-ready handler');
+  const frameSwapped = vm.runInContext(`(function() {\n${frame[1]}\n})`, context);
+  return { ...context, frameSwapped, flush() { while (later.length) later.shift()(); } };
 }
 
 function dateParts(date) {
@@ -112,11 +126,39 @@ test('first calendar click keeps the preview visible and does not replay its ent
   assert.equal(f.popup.visible, true);
   assert.equal(f.pinnedPopup.visible, false);
   f.flush();
-  assert.equal(f.preview.visible, false);
+  assert.equal(f.preview.visible, true, 'Native opened is not a painted-frame guarantee');
   assert.equal(f.pinnedPopup.visible, true);
+  assert.ok(f.popup.promotionSnapshot);
+  assert.equal(f.popup.promotionWindow, f.content.nativeWindow);
   assert.equal(f.content.opacity, 1);
   assert.equal(f.content.y, 0);
   assert.equal(f.openAnim.running, false);
+  f.frameSwapped();
+  assert.equal(f.preview.visible, false);
+  assert.equal(f.popup.promotionSnapshot, null);
+  assert.equal(f.popup.promotionWindow, null);
+});
+
+test('closing before a snapshot completes cannot pin a later hover session', () => {
+  const f = fixture();
+  f.popup.requestOpen();
+  f.popup.changeMonth(1);
+  f.popup.requestClose(true);
+  f.popup.requestOpen();
+  f.flush();
+  assert.equal(f.preview.visible, true);
+  assert.equal(f.pinnedPopup.visible, false);
+  assert.equal(f.popup.promotionSnapshot, null);
+});
+
+test('a failed snapshot leaves the preview usable and allows a later retry', () => {
+  const f = fixture();
+  f.popup.requestOpen();
+  f.content.grabToImage = () => false;
+  f.popup.changeMonth(1);
+  assert.equal(f.preview.visible, true);
+  assert.equal(f.popup.pinned, false);
+  assert.equal(f.popup.promotionPending, false);
 });
 
 test('closing a deferred pin prevents the queued native open', () => {
@@ -125,6 +167,18 @@ test('closing a deferred pin prevents the queued native open', () => {
   f.popup.requestClose(true);
   f.flush();
   assert.equal(f.popup.visible, false);
+});
+
+test('an obsolete queued open cannot promote a newer session', () => {
+  const f = fixture();
+  f.popup.requestOpen(true);
+  const oldRequest = f.popup.pinRequest;
+  f.popup.requestClose(true);
+  f.popup.requestOpen(true);
+  f.popup.openPinned(oldRequest);
+  assert.equal(f.pinnedPopup.visible, false);
+  f.flush();
+  assert.equal(f.pinnedPopup.visible, true);
 });
 
 test('forecast city date is parsed at local noon and timestamp age follows the minute clock', () => {

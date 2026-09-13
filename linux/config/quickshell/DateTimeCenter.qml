@@ -13,6 +13,10 @@ Scope {
   property bool pinned: false
   property bool closing: false
   property bool closeImmediately: false
+  property bool promotionPending: false
+  property var promotionSnapshot: null
+  property var promotionWindow: null
+  property int pinRequest: 0
   property bool detailsExpanded: false
   readonly property bool visible: preview.visible || pinnedPopup.visible
   readonly property date today: controller.currentDate
@@ -61,6 +65,14 @@ Scope {
     return minutes < 1 ? "Updated just now" : minutes < 60 ? "Updated " + minutes + " min ago" : minutes < 1440 ? "Updated " + Math.floor(minutes / 60) + " h ago" : "Updated " + Math.floor(minutes / 1440) + " d ago"
   }
 
+  function openPinned(request) {
+    if (request !== popup.pinRequest)
+      return
+    if (popup.pinned && !popup.closing)
+      pinnedPopup.open()
+    popup.promotionPending = false
+  }
+
   function requestOpen(pin = false) {
     if (!pin && popup.closing && popup.pinned)
       return
@@ -77,11 +89,23 @@ Scope {
     }
     if (pin || popup.pinned) {
       popup.pinned = true
-      // Finish the pointer event before taking native popup grabs.
-      Qt.callLater(function () {
-        if (popup.pinned && !popup.closing)
-          pinnedPopup.open()
-      })
+      if (pinnedPopup.visible || popup.promotionPending)
+        return
+      popup.promotionPending = true
+      const request = ++popup.pinRequest
+      if (preview.visible) {
+        const captured = content.grabToImage(result => {
+          if (request !== popup.pinRequest || !popup.pinned || popup.closing)
+            return
+          popup.promotionSnapshot = result
+        })
+        if (!captured) {
+          popup.promotionPending = false
+          popup.pinned = false
+        }
+      } else {
+        Qt.callLater(popup.openPinned, request)
+      }
     } else {
       preview.visible = true
       if (content.opacity < 1 && !openAnim.running)
@@ -90,6 +114,10 @@ Scope {
   }
 
   function requestClose(immediate = false) {
+    popup.pinRequest++
+    popup.promotionPending = false
+    popup.promotionSnapshot = null
+    popup.promotionWindow = null
     popup.closing = true
     popup.cancelClose()
     openAnim.stop()
@@ -135,6 +163,28 @@ Scope {
     color: "transparent"
     surfaceFormat.opaque: false
     grabFocus: false
+
+    Image {
+      anchors.fill: parent
+      source: popup.promotionSnapshot ? popup.promotionSnapshot.url : ""
+      visible: popup.promotionSnapshot !== null
+      z: 1
+      onStatusChanged: {
+        if (status === Image.Ready)
+          Qt.callLater(popup.openPinned, popup.pinRequest)
+      }
+    }
+  }
+
+  Connections {
+    target: popup.promotionWindow
+    function onFrameSwapped() {
+      if (pinnedPopup.visible && popup.promotionSnapshot) {
+        preview.visible = false
+        popup.promotionSnapshot = null
+        popup.promotionWindow = null
+      }
+    }
   }
 
   Controls.Popup {
@@ -173,8 +223,12 @@ Scope {
       }
     }
     onOpened: {
-      // Keep the preview visible until the native popup is ready; promotion is not a new entrance.
-      preview.visible = false
+      // Native "opened" precedes painting. The preview snapshot bridges the first frame.
+      if (popup.promotionSnapshot) {
+        // Before opening, the content's window can still be the bar rather than the popup.
+        popup.promotionWindow = content.nativeWindow
+        preview.contentItem.Window.window.raise()
+      }
       content.forceActiveFocus()
       if (content.opacity < 1 && !openAnim.running)
         openAnim.start()
@@ -184,7 +238,12 @@ Scope {
       popup.cancelClose()
       openAnim.stop()
     }
-    onClosed: popup.pinned = false
+    onClosed: {
+      popup.pinned = false
+      preview.visible = false
+      popup.promotionSnapshot = null
+      popup.promotionWindow = null
+    }
   }
 
   Timer {
@@ -294,6 +353,7 @@ Scope {
 
   FocusScope {
     id: content
+    readonly property var nativeWindow: Window.window
     parent: pinnedPopup.visible ? pinnedPopup.contentItem : preview.contentItem
     width: popup.width
     height: popup.height
