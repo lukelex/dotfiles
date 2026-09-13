@@ -113,7 +113,7 @@ QtObject {
 
     if (tag && service.tagMap[tag]) {
       const previous = service.tagMap[tag]
-      previous.dismiss()
+      previous.expire()
       delete service.tagMap[tag]
       delete service.live[previous.id]
     }
