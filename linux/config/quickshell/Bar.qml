@@ -16,6 +16,15 @@ Scope {
 
   WeatherService { id: weatherService }
 
+  Connections {
+    target: Hyprland
+
+    function onRawEvent(event) {
+      if (event.name === "activespecial" || event.name === "activespecialv2")
+        Hyprland.refreshMonitors()
+    }
+  }
+
   function closeDateTime() {
     if (root.dateTimeCenterTarget)
       root.dateTimeCenterTarget.requestClose()
@@ -458,9 +467,25 @@ Scope {
             required property var modelData
 
             readonly property var workspace: modelData
+            readonly property bool specialWorkspace: root.hyprlandSession && workspace.name.startsWith("special:")
+            readonly property var specialWorkspaceState: specialWorkspace && workspace.monitor.lastIpcObject
+              ? workspace.monitor.lastIpcObject.specialWorkspace : null
+            readonly property bool selected: workspace.focused
+              || (specialWorkspaceState && specialWorkspaceState.id === workspace.id)
 
             height: 26
-            width: label.implicitWidth + 6
+            width: specialWorkspace ? specialWorkspaceIcon.width + 6 : label.implicitWidth + 6
+
+            LucideIcon {
+              id: specialWorkspaceIcon
+
+              anchors.centerIn: parent
+              color: workspace.urgent ? root.urgent : root.foreground
+              height: root.barFontSize
+              source: root.icon("boxes")
+              visible: parent.specialWorkspace
+              width: root.barFontSize
+            }
 
             Text {
               id: label
@@ -470,6 +495,7 @@ Scope {
               font.family: root.fontFamily
               font.pixelSize: root.barFontSize
               text: root.hyprlandSession ? workspace.name : workspace.number
+              visible: !parent.specialWorkspace
             }
 
             Rectangle {
@@ -480,7 +506,7 @@ Scope {
               }
               color: root.foreground
               height: 2
-              visible: workspace.focused
+              visible: parent.selected
             }
 
             MouseArea {
