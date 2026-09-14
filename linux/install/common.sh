@@ -33,6 +33,15 @@ manifest_package_configs() {
   "$YQ" -r "($1) | .. | select((tag == \"!!map\") and has(\"configs\")) | .configs[]" "$INSTALL_MANIFEST"
 }
 
+manifest_package_services() {
+  local scope="$1"
+  shift
+  local category
+  for category in "$@"; do
+    "$YQ" -r "($category) | .. | select((tag == \"!!map\") and has(\"services\")) | .services.$scope[]?" "$INSTALL_MANIFEST"
+  done
+}
+
 group_logout_notice() {
   local message='LOG OUT AND BACK IN before using the updated group permissions.'
   if [ "$DRY_RUN" -eq 1 ]; then

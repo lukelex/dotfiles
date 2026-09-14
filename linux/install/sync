@@ -48,6 +48,17 @@ Options:
 EOF
 }
 
+print_stage_heading() {
+  local stage="$1"
+  printf '\n%s%s%s\n' "$BOLD$BLUE" "${stage^^}" "$RESET"
+  printf '%s----------------------------------------%s\n' "$DIM" "$RESET"
+}
+
+print_in_sync() {
+  print_stage_heading "$1"
+  printf '  %sok%s already synchronized\n' "$GREEN" "$RESET"
+}
+
 for arg in "$@"; do
   case $arg in
     --help|-h) usage; exit 0 ;;
@@ -92,8 +103,7 @@ confirm_stage() {
   shift
   local change label adopted=0
 
-  printf '\n%s%s%s\n' "$BOLD$BLUE" "${stage^^}" "$RESET"
-  printf '%s----------------------------------------%s\n' "$DIM" "$RESET"
+  print_stage_heading "$stage"
   for change in "$@"; do
     case $change in
       adopt:*)
@@ -113,7 +123,7 @@ confirm_stage() {
     esac
   done
   if [ "$adopted" -gt 0 ]; then
-    printf '  %s~%s track %d existing resource(s)\n' "$DIM" "$RESET" "$adopted"
+    printf '  %s~%s adopt %d existing resource(s)\n' "$DIM" "$RESET" "$adopted"
   fi
   answer="$(ask "Apply $stage changes? [y/N] ")"
   [[ "$answer" =~ ^[Yy]$ ]]
@@ -132,17 +142,26 @@ if ! is_server; then
 fi
 
 required_categories=('.common.packages.core' ".profiles.$INSTALL_PROFILE.packages.core")
+selected_wms=()
 if ! is_server; then
   required_categories+=('.profiles.desktop.packages.extras')
   wm_selection="$HOME/.config/dotfiles/wm-selection"
   if [ -f "$wm_selection" ]; then
     while IFS= read -r wm; do
       case $wm in
-        hypr) required_categories+=('.profiles.desktop.packages.hyprland') ;;
-        i3) required_categories+=('.profiles.desktop.packages.i3') ;;
+        hypr) required_categories+=('.profiles.desktop.packages.hyprland'); selected_wms+=(Hyprland) ;;
+        i3) required_categories+=('.profiles.desktop.packages.i3'); selected_wms+=(i3) ;;
       esac
     done < "$wm_selection"
   fi
+fi
+
+if is_server; then
+  printf '%sSyncing server profile%s\n' "$BOLD" "$RESET"
+elif [ "${#selected_wms[@]}" -eq 0 ]; then
+  printf '%sSyncing desktop profile%s %s(no window manager selected)%s\n' "$BOLD" "$RESET" "$YELLOW" "$RESET"
+else
+  printf '%sSyncing desktop profile%s %s(%s)%s\n' "$BOLD" "$RESET" "$DIM" "${selected_wms[*]}" "$RESET"
 fi
 
 packages_from_categories() {
@@ -198,6 +217,8 @@ if [ "${#package_changes[@]}" -gt 0 ] && confirm_stage packages "${package_chang
   done
   next_packages+=("${missing_packages[@]}")
   write_state packages "${next_packages[@]}"
+elif [ "${#package_changes[@]}" -eq 0 ]; then
+  print_in_sync packages
 fi
 
 mapfile -t declared_groups < <(manifest_package_groups ".common.packages, .profiles.$INSTALL_PROFILE.packages" | sort -u)
@@ -238,6 +259,8 @@ if [ "${#group_changes[@]}" -gt 0 ] && confirm_stage groups "${group_changes[@]}
   done
   next_groups+=("${missing_groups[@]}")
   write_state groups "${next_groups[@]}"
+elif [ "${#group_changes[@]}" -eq 0 ]; then
+  print_in_sync groups
 fi
 
 expand_target() {
@@ -294,26 +317,51 @@ if [ "${#config_changes[@]}" -gt 0 ] && confirm_stage configs "${config_changes[
     [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ] && next_configs+=("$mapping")
   done
   write_state configs "${next_configs[@]}"
+elif [ "${#config_changes[@]}" -eq 0 ]; then
+  print_in_sync configs
 fi
 
+services_from_categories() {
+  local scope="$1"
+  shift
+  local service
+  while IFS= read -r service; do
+    if [ "$scope" = user ]; then
+      printf 'user:%s\n' "$service"
+    else
+      printf '%s\n' "$service"
+    fi
+  done < <(manifest_package_services "$scope" "$@")
+}
+
 mapfile -t declared_services < <(
-  manifest_list '.common.services'
-  manifest_list ".profiles.$INSTALL_PROFILE.services"
+  {
+    services_from_categories system "${required_categories[@]}"
+    services_from_categories user "${required_categories[@]}"
+  } | sort -u
 )
 read_state services tracked_services
 adopted_services=()
 if [ ! -f "$state_dir/services" ]; then
-  for service in "${declared_services[@]}"; do
-    systemctl is-enabled --quiet "$service" && adopted_services+=("$service")
-  done
-  tracked_services=("${adopted_services[@]}")
+  tracked_services=()
 fi
 missing_services=()
 for service in "${declared_services[@]}"; do
-  if ! systemctl cat "$service" >/dev/null 2>&1; then
+  if [[ "$service" = user:* ]]; then
+    unit="${service#user:}"
+    if ! systemctl --user cat "$unit" >/dev/null 2>&1; then
+      printf 'skipping unavailable user service: %s\n' "$unit"
+    elif ! systemctl --user is-enabled --quiet "$unit"; then
+      missing_services+=("$service")
+    elif ! contains "$service" "${tracked_services[@]}"; then
+      adopted_services+=("$service")
+    fi
+  elif ! systemctl cat "$service" >/dev/null 2>&1; then
     printf 'skipping unavailable service: %s\n' "$service"
   elif ! systemctl is-enabled --quiet "$service"; then
     missing_services+=("$service")
+  elif ! contains "$service" "${tracked_services[@]}"; then
+    adopted_services+=("$service")
   fi
 done
 extra_services=()
@@ -325,9 +373,17 @@ for service in "${adopted_services[@]}"; do service_changes+=("adopt: $service")
 for service in "${missing_services[@]}"; do service_changes+=("enable: $service"); done
 for service in "${extra_services[@]}"; do service_changes+=("disable: $service"); done
 if [ "${#service_changes[@]}" -gt 0 ] && confirm_stage services "${service_changes[@]}"; then
-  [ "${#missing_services[@]}" -gt 0 ] && run systemctl enable --now "${missing_services[@]}"
+  for service in "${missing_services[@]}"; do
+    if [[ "$service" = user:* ]]; then
+      run systemctl --user enable --now "${service#user:}"
+    else
+      run systemctl enable --now "$service"
+    fi
+  done
   for service in "${extra_services[@]}"; do
-    if systemctl cat "$service" >/dev/null 2>&1; then
+    if [[ "$service" = user:* ]] && systemctl --user cat "${service#user:}" >/dev/null 2>&1; then
+      run systemctl --user disable --now "${service#user:}"
+    elif [[ "$service" != user:* ]] && systemctl cat "$service" >/dev/null 2>&1; then
       run systemctl disable --now "$service"
     fi
   done
@@ -335,6 +391,9 @@ if [ "${#service_changes[@]}" -gt 0 ] && confirm_stage services "${service_chang
   for service in "${tracked_services[@]}"; do
     contains "$service" "${extra_services[@]}" || next_services+=("$service")
   done
+  next_services+=("${adopted_services[@]}")
   next_services+=("${missing_services[@]}")
   write_state services "${next_services[@]}"
+elif [ "${#service_changes[@]}" -eq 0 ]; then
+  print_in_sync services
 fi

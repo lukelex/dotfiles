@@ -5,6 +5,9 @@ common:
       docker:
         groups:
           - docker
+        services:
+          system:
+            - docker
       docker-buildx: []
       docker-compose: []
       git: []
@@ -32,8 +35,6 @@ common:
       install: false
       configs:
         - linux/config/opencode:$XDG_CONFIG_HOME/opencode
-  services:
-    - docker
 profiles:
   desktop:
     packages:
@@ -41,7 +42,10 @@ profiles:
         ibus: []
         polkit: []
         polkit-gnome: []
-        network-manager-applet: []
+        network-manager-applet:
+          services:
+            system:
+              - NetworkManager
         ttf-hack: []
         noto-fonts-cjk: []
         ttf-lucide-font: []
@@ -51,7 +55,18 @@ profiles:
         yazi: []
         pcmanfm: []
         imagemagick: []
-        blueman: []
+        blueman:
+          configs:
+            - linux/config/bluetooth-notify/bluetooth-notify.service:$XDG_CONFIG_HOME/systemd/user/bluetooth-notify.service
+          services:
+            system:
+              - bluetooth
+            user:
+              - bluetooth-notify.service
+        avahi:
+          services:
+            system:
+              - avahi-daemon
         fragments: []
         playerctl: []
         inetutils: []
@@ -72,10 +87,18 @@ profiles:
         pipewire-pulse: []
         google-chrome: []
         dbus: []
-        udiskie: []
+        udiskie:
+          configs:
+            - linux/config/usb-notify/usb-notify.service:$XDG_CONFIG_HOME/systemd/user/usb-notify.service
+          services:
+            user:
+              - usb-notify.service
         nordvpn-bin:
           groups:
             - nordvpn
+          services:
+            system:
+              - nordvpnd
       hyprland:
         hyprland:
           configs:
@@ -110,7 +133,12 @@ profiles:
             - linux/config/i3/main.conf:$XDG_CONFIG_HOME/i3/config
         xss-lock: []
         xwallpaper: []
-        xautolock: []
+        xautolock:
+          configs:
+            - linux/config/xautolock/xautolock.service:$XDG_CONFIG_HOME/systemd/user/xautolock.service
+          services:
+            user:
+              - xautolock.service
         xorg-xkill: []
         i3lock: []
         xfce4-power-manager: []
@@ -145,11 +173,17 @@ profiles:
         gammastep:
           configs:
             - linux/config/gammastep/config.ini:$XDG_CONFIG_HOME/gammastep/config.ini
+          services:
+            user:
+              - gammastep.service
         1password: []
         spotify: []
         cups:
           groups:
             - lp
+          services:
+            system:
+              - cups
         ghostscript: []
         kbt: []
         cameractrls:
@@ -210,16 +244,10 @@ profiles:
           - linux/config/fonts.conf:$XDG_CONFIG_HOME/fontconfig/fonts.conf
           - linux/config/mimeapps.conf:$HOME/.local/share/applications/mimeapps.list
           - linux/config/mimeapps.conf:$XDG_CONFIG_HOME/mimeapps.list
-          - linux/config/usb-notify/usb-notify.service:$XDG_CONFIG_HOME/systemd/user/usb-notify.service
-          - linux/config/bluetooth-notify/bluetooth-notify.service:$XDG_CONFIG_HOME/systemd/user/bluetooth-notify.service
-    services:
-      - bluetooth
-      - NetworkManager
-      - avahi-daemon
-      - cups
-      - nordvpnd
   server:
     packages:
-      core: {}
-    services:
-      - sshd
+      core:
+        openssh:
+          services:
+            system:
+              - sshd
