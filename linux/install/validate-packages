@@ -31,17 +31,16 @@ package_categories=(
   '.profiles.desktop.packages.hyprland'
   '.profiles.desktop.packages.i3'
   '.profiles.desktop.packages.extras'
-  '.profiles.desktop.packages.ipod'
-  '.profiles.desktop.packages.optional'
-  '.profiles.desktop.packages.nvidia'
-  '.profiles.desktop.packages.nvidia-gui'
   '.profiles.server.packages.core'
 )
 
 mapfile -t packages < <(
-  for category in "${package_categories[@]}"; do
-    manifest_packages "$category"
-  done | sort -u
+  {
+    for category in "${package_categories[@]}"; do
+      manifest_packages "$category"
+    done
+    manifest_options_packages '.profiles.desktop.options'
+  } | sort -u
 )
 
 declare -A repository_packages aur_packages

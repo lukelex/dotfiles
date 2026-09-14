@@ -135,10 +135,6 @@ if ! is_server; then
     '.profiles.desktop.packages.hyprland'
     '.profiles.desktop.packages.i3'
     '.profiles.desktop.packages.extras'
-    '.profiles.desktop.packages.ipod'
-    '.profiles.desktop.packages.optional'
-    '.profiles.desktop.packages.nvidia'
-    '.profiles.desktop.packages.nvidia-gui'
   )
 fi
 
@@ -172,7 +168,12 @@ packages_from_categories() {
   done
 }
 
-mapfile -t declared_packages < <(packages_from_categories "${package_categories[@]}" | sort -u)
+mapfile -t declared_packages < <(
+  {
+    packages_from_categories "${package_categories[@]}"
+    is_server || manifest_options_packages '.profiles.desktop.options'
+  } | sort -u
+)
 mapfile -t required_packages < <(packages_from_categories "${required_categories[@]}" | sort -u)
 
 read_state packages tracked_packages

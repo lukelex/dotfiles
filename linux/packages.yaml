@@ -215,24 +215,6 @@ profiles:
         downgrade: []
         cifs-utils: []
         smbclient: []
-      ipod:
-        rhythmbox: []
-        libgpod: []
-        gvfs: []
-      optional:
-        kicad: []
-        curtail: []
-        birdfont: []
-        whatsapp-for-linux-git: []
-        telegram-desktop: []
-        discord: []
-        via-appimage: []
-        slack-desktop: []
-      nvidia:
-        nvidia-open: []
-        nvidia-prime: []
-      nvidia-gui:
-        nvidia-settings: []
       dotfiles:
         install: false
         configs:
@@ -245,6 +227,37 @@ profiles:
           - linux/config/fonts.conf:$XDG_CONFIG_HOME/fontconfig/fonts.conf
           - linux/config/mimeapps.conf:$HOME/.local/share/applications/mimeapps.list
           - linux/config/mimeapps.conf:$XDG_CONFIG_HOME/mimeapps.list
+    options:
+      ipod:
+        prompt: Would you like to be able to sync your iPod? [Y/n]
+        default: yes
+        packages:
+          rhythmbox: []
+          libgpod: []
+          gvfs: []
+      optional:
+        prompt: Would you like to install optional dependencies? [Y/n]
+        default: yes
+        packages:
+          kicad: []
+          curtail: []
+          birdfont: []
+          whatsapp-for-linux-git: []
+          telegram-desktop: []
+          discord: []
+          via-appimage: []
+          slack-desktop: []
+      nvidia:
+        prompt: Would you like to install the NVIDIA driver? [y/N]
+        default: no
+        packages:
+          nvidia-open: []
+          nvidia-prime: []
+      nvidia-gui:
+        prompt: Would you like to install NVIDIA Settings? [y/N]
+        default: no
+        packages:
+          nvidia-settings: []
   server:
     packages:
       core:

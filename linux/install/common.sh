@@ -25,6 +25,30 @@ manifest_packages() {
   "$YQ" -r "$1 | keys[]" "$INSTALL_MANIFEST"
 }
 
+manifest_option_names() {
+  "$YQ" -r "$1 | keys[]" "$INSTALL_MANIFEST"
+}
+
+manifest_option_prompt() {
+  "$YQ" -r "$1.prompt" "$INSTALL_MANIFEST"
+}
+
+manifest_option_default() {
+  "$YQ" -r "$1.default" "$INSTALL_MANIFEST"
+}
+
+manifest_option_packages() {
+  "$YQ" -r "$1.packages | keys[]" "$INSTALL_MANIFEST"
+}
+
+manifest_options_packages() {
+  local options_path="$1"
+  local option
+  while IFS= read -r option; do
+    manifest_option_packages "$options_path.$option"
+  done < <(manifest_option_names "$options_path")
+}
+
 manifest_package_groups() {
   "$YQ" -r "($1) | .. | select((tag == \"!!map\") and has(\"groups\")) | .groups[]" "$INSTALL_MANIFEST"
 }

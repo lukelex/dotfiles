@@ -36,6 +36,9 @@ The `common` section applies to every profile; profile sections contain only
 their additions. Package values list the Unix groups required by that package.
 Packages can also declare repository-to-target config links, such as
 `linux/config/nvim:$XDG_CONFIG_HOME/nvim`.
+Desktop install options live under `profiles.desktop.options`. Each option has
+`prompt`, `default`, and `packages` fields; the installer discovers every
+option at runtime and asks whether to install its package set.
 
 Run `./linux/install/all --dry-run` to preview every action without touching
 the system. The config stage skips links that would overwrite existing files;

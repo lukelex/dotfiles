@@ -62,49 +62,23 @@ case $answer in
 esac
 
 mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.extras')
-run yay -S --needed --noconfirm "${packages[@]}" \
-  2> /dev/null
+run yay -S --needed --noconfirm "${packages[@]}" 2> /dev/null
 
-answer="$(ask 'Would you like to be able to sync your iPod? [Y/n] ')"
-case $answer in
-  [Yy]* | "")
-    echo 'Installing iPod dependencies...'
-    mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.ipod')
-    run yay -S --needed --noconfirm "${packages[@]}"
-    ;;
-  * ) ;;
-esac
-
-# Audio manipulation tools
-# ffmpeg
-
-answer="$(ask 'Would you like to install optional dependencies? [Y/n] ')"
-case $answer in
-  [Yy]* | "")
-    echo 'Installing optional dependencies...'
-    mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.optional')
-    run yay -S --needed --noconfirm "${packages[@]}"
-    ;;
-  * ) ;;
-esac
-
-if eval lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'; then
-  answer="$(ask "I've found an NVidia GPU. Would you like to install its driver? [Y/n] ")"
+mapfile -t option_names < <(manifest_option_names '.profiles.desktop.options')
+for option in "${option_names[@]}"; do
+  prompt="$(manifest_option_prompt ".profiles.desktop.options.$option")"
+  default="$(manifest_option_default ".profiles.desktop.options.$option")"
+  answer="$(ask "$prompt ")"
   case $answer in
-    [Yy]* | "")
-      mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.nvidia')
-      run yay -S --needed --noconfirm "${packages[@]}" ;;
-    * ) ;;
+    [Yy]*) install_option=1 ;;
+    "") [ "$default" = yes ] && install_option=1 || install_option=0 ;;
+    *) install_option=0 ;;
   esac
-
-  answer="$(ask 'Would you like to install NVIDIA Settings? [y/N] ')"
-  case $answer in
-    [Yy]*)
-      mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.nvidia-gui')
-      run yay -S --needed --noconfirm "${packages[@]}" ;;
-    * ) ;;
-  esac
-fi
+  if [ "$install_option" -eq 1 ]; then
+    mapfile -t packages < <(manifest_option_packages ".profiles.desktop.options.$option")
+    run yay -S --needed --noconfirm "${packages[@]}"
+  fi
+done
 
 run rustup default stable
 
