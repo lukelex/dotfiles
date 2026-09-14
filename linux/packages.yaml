@@ -56,14 +56,13 @@ profiles:
         playerctl: []
         inetutils: []
         papirus-icon-theme: []
-        colloid-gtk-theme-git: []
         kvantum: []
         qt5ct: []
         v4l-utils:
           groups:
             - video
-        rustup: []
-        kmonad-bin: []
+        rust: []
+        kmonad: []
         kitty:
           configs:
             - linux/config/kitty:$XDG_CONFIG_HOME/kitty
@@ -88,7 +87,7 @@ profiles:
         wdisplays: []
         cliphist: []
         awww: []
-        swhkd: []
+        swhkd-git: []
         hypridle: []
         hyprlock: []
         hyprpanel-bin: []
@@ -169,7 +168,7 @@ profiles:
         fastfetch: []
         blanket: []
         sxiv: []
-        postbird: []
+        postbird-bin: []
         sysstat: []
         viewnior: []
         zathura: []
@@ -190,13 +189,13 @@ profiles:
         kicad: []
         curtail: []
         birdfont: []
-        whatsapp-for-linux: []
+        whatsapp-for-linux-git: []
         telegram-desktop: []
         discord: []
         via-appimage: []
         slack-desktop: []
       nvidia:
-        nvidia: []
+        nvidia-open: []
         nvidia-settings: []
         nvidia-prime: []
       dotfiles:
