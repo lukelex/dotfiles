@@ -54,7 +54,8 @@ Scope {
   readonly property string fontFamily: "Hack Nerd Font Mono"
   readonly property int barFontSize: 17
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
-  readonly property bool hyprlandSession: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") !== ""
+  readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
+  readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
   property real audioVolume: 0
   property bool audioMuted: false
@@ -85,6 +86,27 @@ Scope {
 
   function icon(name) {
     return "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/" + name + ".svg"
+  }
+
+  function workspaceFor(number) {
+    const workspaces = root.hyprlandSession ? Hyprland.workspaces.values : I3.workspaces.values
+
+    for (const workspace of workspaces) {
+      if ((root.hyprlandSession ? workspace.id : workspace.number) === number)
+        return workspace
+    }
+
+    return null
+  }
+
+  function activateWorkspace(number, workspace) {
+    if (workspace) {
+      workspace.activate()
+    } else if (root.hyprlandSession) {
+      Hyprland.dispatch("workspace " + number)
+    } else {
+      I3.dispatch("workspace " + number)
+    }
   }
 
   function audioIcon() {
@@ -462,77 +484,38 @@ Scope {
         }
 
         Repeater {
-          model: root.hyprlandSession ? Hyprland.workspaces : I3.workspaces
+          model: root.workspaceNumbers
 
           delegate: Item {
             id: workspaceItem
 
-            required property var modelData
+            required property int modelData
 
-            readonly property var workspace: modelData
-            readonly property bool specialWorkspace: root.hyprlandSession && workspace.name.startsWith("special:")
-            readonly property var specialWorkspaceState: specialWorkspace && workspace.monitor.lastIpcObject
-              ? workspace.monitor.lastIpcObject.specialWorkspace : null
-            readonly property bool selected: workspace.focused
-              || (specialWorkspaceState && specialWorkspaceState.id === workspace.id)
-            readonly property bool occupied: root.hyprlandSession
-              ? workspace.lastIpcObject && workspace.lastIpcObject.windows > 0
-              : workspace.lastIpcObject && ((workspace.lastIpcObject.nodes && workspace.lastIpcObject.nodes.length > 0)
-                || (workspace.lastIpcObject.floating_nodes && workspace.lastIpcObject.floating_nodes.length > 0))
+            readonly property int workspaceNumber: modelData
+            readonly property var workspace: root.workspaceFor(workspaceNumber)
+            readonly property bool selected: !!workspace && workspace.focused
+            readonly property bool occupied: !!workspace && (root.hyprlandSession
+              ? !!workspace.lastIpcObject && workspace.lastIpcObject.windows > 0
+              : !!workspace.lastIpcObject && ((!!workspace.lastIpcObject.nodes && workspace.lastIpcObject.nodes.length > 0)
+                || (!!workspace.lastIpcObject.floating_nodes && workspace.lastIpcObject.floating_nodes.length > 0)))
 
             height: 26
-            width: specialWorkspace ? specialWorkspaceIcon.width + 6 : 24
+            width: 24
             Accessible.role: Accessible.Button
-            Accessible.name: specialWorkspace ? "Special workspace" : "Workspace " + (root.hyprlandSession ? workspace.name : workspace.number)
-            Accessible.onPressAction: workspace.activate()
-
-            Canvas {
-              id: specialWorkspaceIcon
-
-              anchors.centerIn: parent
-              height: 20
-              visible: parent.specialWorkspace
-              width: 20
-
-              property bool active: workspaceItem.selected
-              property bool urgent: workspaceItem.workspace.urgent
-
-              onActiveChanged: requestPaint()
-              onUrgentChanged: requestPaint()
-              onPaint: {
-                const context = getContext("2d")
-                const centerX = width / 2
-                const centerY = height / 2
-                const color = specialWorkspaceIcon.urgent ? root.urgent
-                  : specialWorkspaceIcon.active ? root.foreground : root.muted
-
-                context.clearRect(0, 0, width, height)
-                context.beginPath()
-                context.arc(centerX, centerY, 7, 0, Math.PI * 2)
-
-                if (specialWorkspaceIcon.active) {
-                  context.fillStyle = color
-                  context.fill()
-                } else {
-                  context.lineWidth = 2
-                  context.strokeStyle = color
-                  context.stroke()
-                }
-              }
-            }
+            Accessible.name: "Workspace " + workspaceNumber
+            Accessible.onPressAction: root.activateWorkspace(workspaceNumber, workspace)
 
             Canvas {
               id: marker
 
               anchors.centerIn: parent
               height: 20
-              visible: !parent.specialWorkspace
               width: 24
 
               readonly property real mouthAngle: 0.42
               property bool active: workspaceItem.selected
               property bool full: workspaceItem.occupied
-              property bool urgent: workspaceItem.workspace.urgent
+              property bool urgent: !!workspaceItem.workspace && workspaceItem.workspace.urgent
 
               onActiveChanged: requestPaint()
               onFullChanged: requestPaint()
@@ -594,14 +577,14 @@ Scope {
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
-              onClicked: workspace.activate()
+              onClicked: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
             }
 
             Controls.ToolTip {
               parent: workspaceMouse
               visible: workspaceMouse.containsMouse
               delay: 500
-              text: workspaceItem.specialWorkspace ? "Special workspace" : "Workspace " + (root.hyprlandSession ? workspaceItem.workspace.name : workspaceItem.workspace.number)
+              text: "Workspace " + workspaceItem.workspaceNumber
             }
           }
         }
