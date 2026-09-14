@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+: "${DISPLAY:?keyboard-repeat requires an X11 session}"
+runtime_dir="${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}}"
+session="${I3SOCK:-$DISPLAY}"
+mkdir -p "$runtime_dir"
+exec 9>"$runtime_dir/dotfiles-keyboard-repeat-${session//[^a-zA-Z0-9]/_}.lock"
+flock -n 9 || exit 0
+
+# X11 input resets can undo the rate after login, unlock, resume, or hotplug.
+# This replaces the five-second correction previously supplied by Polybar.
+while xset r rate 300 35; do
+  sleep 5
+done

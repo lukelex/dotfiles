@@ -1,5 +1,5 @@
 #!/usr/bin/bash
 
 # keyboard configs
-xset r rate 200 35
+xset r rate 300 35
 setxkbmap -layout us -variant mac
