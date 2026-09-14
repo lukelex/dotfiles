@@ -286,7 +286,9 @@ test('bar selects the native workspace model for the active session', () => {
   assert.match(bar, /source: root\.icon\("boxes"\)/);
   assert.match(bar, /specialWorkspaceState\.id === workspace\.id/);
   assert.match(bar, /event\.name === "activespecial" \|\| event\.name === "activespecialv2"/);
-  assert.match(bar, /text: root\.hyprlandSession \? workspace\.name : workspace\.number/);
+  assert.match(bar, /readonly property bool occupied: root\.hyprlandSession/);
+  assert.match(bar, /workspace\.lastIpcObject\.windows > 0/);
+  assert.match(bar, /readonly property real mouthAngle: 0\.42/);
 });
 
 test('i3 explicitly runs the existing session startup helper', () => {

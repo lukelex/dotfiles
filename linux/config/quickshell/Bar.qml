@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import Quickshell.I3
 import Quickshell.Io
 import QtQuick
+import QtQuick.Controls as Controls
 
 Scope {
   id: root
@@ -464,6 +465,8 @@ Scope {
           model: root.hyprlandSession ? Hyprland.workspaces : I3.workspaces
 
           delegate: Item {
+            id: workspaceItem
+
             required property var modelData
 
             readonly property var workspace: modelData
@@ -472,9 +475,16 @@ Scope {
               ? workspace.monitor.lastIpcObject.specialWorkspace : null
             readonly property bool selected: workspace.focused
               || (specialWorkspaceState && specialWorkspaceState.id === workspace.id)
+            readonly property bool occupied: root.hyprlandSession
+              ? workspace.lastIpcObject && workspace.lastIpcObject.windows > 0
+              : workspace.lastIpcObject && ((workspace.lastIpcObject.nodes && workspace.lastIpcObject.nodes.length > 0)
+                || (workspace.lastIpcObject.floating_nodes && workspace.lastIpcObject.floating_nodes.length > 0))
 
             height: 26
-            width: specialWorkspace ? specialWorkspaceIcon.width + 6 : label.implicitWidth + 6
+            width: specialWorkspace ? specialWorkspaceIcon.width + 6 : 24
+            Accessible.role: Accessible.Button
+            Accessible.name: specialWorkspace ? "Special workspace" : "Workspace " + (root.hyprlandSession ? workspace.name : workspace.number)
+            Accessible.onPressAction: workspace.activate()
 
             LucideIcon {
               id: specialWorkspaceIcon
@@ -487,32 +497,87 @@ Scope {
               width: root.barFontSize
             }
 
-            Text {
-              id: label
+            Canvas {
+              id: marker
 
               anchors.centerIn: parent
-              color: workspace.urgent ? root.urgent : root.foreground
-              font.family: root.fontFamily
-              font.pixelSize: root.barFontSize
-              text: root.hyprlandSession ? workspace.name : workspace.number
+              height: 20
               visible: !parent.specialWorkspace
-            }
+              width: 24
 
-            Rectangle {
-              anchors {
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
+              readonly property real mouthAngle: 0.42
+              property bool active: workspaceItem.selected
+              property bool full: workspaceItem.occupied
+              property bool urgent: workspaceItem.workspace.urgent
+
+              onActiveChanged: requestPaint()
+              onFullChanged: requestPaint()
+              onUrgentChanged: requestPaint()
+              onPaint: {
+                const context = getContext("2d")
+                const centerX = width / 2
+                const centerY = height / 2
+
+                context.clearRect(0, 0, width, height)
+                context.fillStyle = marker.urgent ? root.urgent : root.muted
+
+                if (marker.full && !marker.active) {
+                  context.beginPath()
+                  context.moveTo(4, 18)
+                  context.lineTo(4, 10)
+                  context.arc(centerX, centerY, 8, Math.PI, 0)
+                  context.lineTo(20, 18)
+                  context.lineTo(17.3, 15)
+                  context.lineTo(14.7, 18)
+                  context.lineTo(12, 15)
+                  context.lineTo(9.3, 18)
+                  context.lineTo(6.7, 15)
+                  context.closePath()
+                  context.fill()
+
+                  context.fillStyle = root.foreground
+                  context.beginPath()
+                  context.arc(centerX - 3, centerY - 1, 2, 0, Math.PI * 2)
+                  context.arc(centerX + 3, centerY - 1, 2, 0, Math.PI * 2)
+                  context.fill()
+
+                  context.fillStyle = marker.urgent ? root.urgent : root.muted
+                  context.beginPath()
+                  context.arc(centerX - 3, centerY - 0.5, 0.8, 0, Math.PI * 2)
+                  context.arc(centerX + 3, centerY - 0.5, 0.8, 0, Math.PI * 2)
+                  context.fill()
+                }
+
+                if (marker.active) {
+                  context.fillStyle = "#FFD43B"
+                  context.beginPath()
+                  context.moveTo(centerX, centerY)
+                  context.arc(centerX, centerY, 8, marker.mouthAngle, Math.PI * 2 - marker.mouthAngle)
+                  context.closePath()
+                  context.fill()
+                } else if (!marker.full) {
+                  context.fillStyle = marker.urgent ? root.urgent : root.muted
+                  context.beginPath()
+                  context.arc(centerX, centerY, 3, 0, Math.PI * 2)
+                  context.fill()
+                }
               }
-              color: root.foreground
-              height: 2
-              visible: parent.selected
             }
 
             MouseArea {
+              id: workspaceMouse
+
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
+              hoverEnabled: true
               onClicked: workspace.activate()
+            }
+
+            Controls.ToolTip {
+              parent: workspaceMouse
+              visible: workspaceMouse.containsMouse
+              delay: 500
+              text: workspaceItem.specialWorkspace ? "Special workspace" : "Workspace " + (root.hyprlandSession ? workspaceItem.workspace.name : workspaceItem.workspace.number)
             }
           }
         }
