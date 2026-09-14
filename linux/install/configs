@@ -6,48 +6,41 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-if is_server; then
-  exec "$install_dir/configs-server" "$@"
-fi
-
-DOT_CONFIG="$DOTFILES/linux/config"
 source "$install_dir/config-links.sh"
+
+link_manifest_configs() {
+  local mapping source target
+  while IFS= read -r mapping; do
+    case $mapping in
+      *:*) ;;
+      *)
+        printf 'Invalid config mapping: %s\n' "$mapping" >&2
+        return 1
+        ;;
+    esac
+    source="$DOTFILES/${mapping%%:*}"
+    target="${mapping#*:}"
+    target="${target//\$HOME/$HOME}"
+    target="${target//\$XDG_CONFIG_HOME/$XDG_CONFIG_HOME}"
+    link_config "$source" "$target"
+  done < <(manifest_package_configs "$1")
+}
 
 run mkdir -p "$XDG_CONFIG_HOME"
 run mkdir -p "$HOME/.ssh"
+
+link_manifest_configs '.common.packages'
+
+if is_server; then
+  exit 0
+fi
+
 run mkdir -p "$HOME/screenshots"
 run mkdir -p "$HOME/.local/share/applications"
 run mkdir -p "$HOME/backup_vim"
 run mkdir -p "$HOME/projects"
 
-link_config "$DOT_CONFIG/i3/main.conf" "$XDG_CONFIG_HOME/i3/config"
-link_config "$DOT_CONFIG/hypr" "$XDG_CONFIG_HOME/hypr"
-link_config "$DOT_CONFIG/waybar/config.json" "$XDG_CONFIG_HOME/waybar/config"
-link_config "$DOT_CONFIG/waybar/style.css" "$XDG_CONFIG_HOME/waybar/style.css"
-link_config "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
-link_config "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
-link_config "$DOT_CONFIG/rofi" "$XDG_CONFIG_HOME/rofi"
-link_config "$DOT_CONFIG/tofi.conf" "$XDG_CONFIG_HOME/tofi/config"
-link_config "$DOT_CONFIG/gsimplecal" "$XDG_CONFIG_HOME/gsimplecal/config"
-link_config "$DOT_CONFIG/gammastep/config.ini" "$XDG_CONFIG_HOME/gammastep/config.ini"
-link_config "$DOT_CONFIG/kitty" "$XDG_CONFIG_HOME/kitty"
-link_config "$DOT_CONFIG/flameshot.ini" "$XDG_CONFIG_HOME/flameshot/flameshot.ini"
-link_config "$DOTFILES/linux/Xresources" "$HOME/.Xresources"
-link_config "$DOTFILES/linux/profile" "$HOME/.profile"
-link_config "$DOTFILES/linux/xprofile" "$HOME/.xprofile"
-link_config "$DOTFILES/linux/xinitrc" "$HOME/.xinitrc"
-link_config "$DOT_CONFIG/quickshell" "$XDG_CONFIG_HOME/quickshell"
-link_config "$DOT_CONFIG/greenclip.toml" "$XDG_CONFIG_HOME/greenclip.toml"
-link_config "$DOT_CONFIG/default-apps.list" "$HOME/.local/share/applications/defaults.list"
-link_config "$DOT_CONFIG/fonts.conf" "$XDG_CONFIG_HOME/fontconfig/fonts.conf"
-link_config "$DOT_CONFIG/autorandr/postswitch" "$XDG_CONFIG_HOME/autorandr/postswitch"
-link_config "$DOT_CONFIG/mimeapps.conf" "$HOME/.local/share/applications/mimeapps.list"
-link_config "$DOT_CONFIG/mimeapps.conf" "$XDG_CONFIG_HOME/mimeapps.list"
-link_config "$DOT_CONFIG/opencode" "$XDG_CONFIG_HOME/opencode"
-link_config "$DOT_CONFIG/usb-notify/usb-notify.service" "$XDG_CONFIG_HOME/systemd/user/usb-notify.service"
-link_config "$DOT_CONFIG/bluetooth-notify/bluetooth-notify.service" "$XDG_CONFIG_HOME/systemd/user/bluetooth-notify.service"
-link_config "$DOT_CONFIG/quickshell/quickshell.service" "$XDG_CONFIG_HOME/systemd/user/quickshell.service"
+link_manifest_configs '.profiles.desktop.packages'
 
 run "$DOTFILES/linux/scripts/theme" init
 run update-desktop-database "$HOME/.local/share/applications"

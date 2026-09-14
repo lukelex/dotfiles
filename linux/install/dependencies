@@ -7,11 +7,15 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 wm_selection="$HOME/.config/dotfiles/wm-selection"
 
-if is_server; then
-  exec "$install_dir/dependencies-server" "$@"
-fi
+mapfile -t packages < <(
+  manifest_packages '.common.packages.core'
+  manifest_packages ".profiles.$INSTALL_PROFILE.packages.core"
+)
 
-if [ "$DRY_RUN" -eq 1 ]; then
+if is_server; then
+  run sudo pacman -S --needed --noconfirm "${packages[@]}"
+  exit 0
+elif [ "$DRY_RUN" -eq 1 ]; then
   echo "dry-run: bootstrap yay from AUR if missing"
 elif ! command -v yay &> /dev/null
 then
@@ -25,25 +29,14 @@ else
   : > "$wm_selection"
 fi
 
-# essentials
-run yay -S --needed --noconfirm ibus openssh \
-  polkit polkit-gnome network-manager-applet \
-  man-db wget ttf-hack ttf-hack-nerd noto-fonts-cjk ttf-lucide-font bc zsh \
-  zsh-completions cmake jq tidy yazi pcmanfm \
-  imagemagick blueman fragments playerctl inetutils \
-  papirus-icon-theme colloid-gtk-theme-git kvantum qt5ct \
-  tree v4l-utils neovim fd fzf ripgrep rustup kmonad-bin \
-  kitty bat diff-so-fancy pavucontrol pipewire-jack pipewire-alsa \
-  pipewire-pulse google-chrome dbus udiskie nordvpn-bin
+run yay -S --needed --noconfirm "${packages[@]}"
 
 answer="$(ask 'Would you like to install Hyprland? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing Wayland dependencies...'
-    run yay -S --needed --noconfirm hyprland waybar-git wdisplays cliphist awww \
-      swhkd hypridle hyprlock hyprpanel-bin hyprshot \
-      qt5-wayland qt6-wayland tofi sox slurp wf-recorder \
-      xdg-desktop-portal-hyprland kooha
+    mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.hyprland')
+    run yay -S --needed --noconfirm "${packages[@]}"
     if [ "$DRY_RUN" -eq 1 ]; then
       echo "dry-run: record wm selection: hypr"
     else
@@ -57,11 +50,8 @@ answer="$(ask 'Would you like to install i3wm? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing X.Org dependencies...'
-    run yay -S --needed --noconfirm xorg-server xorg-xinit i3-wm \
-       xss-lock xwallpaper xautolock xorg-xkill i3lock \
-      xfce4-power-manager flameshot arandr xclip xdotool quickshell \
-       simplescreenrecorder picom autorandr sxhkd \
-      rofi rofi-greenclip rofi-bluetooth-git sddm qt6-svg
+    mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.i3')
+    run yay -S --needed --noconfirm "${packages[@]}"
     if [ "$DRY_RUN" -eq 1 ]; then
       echo "dry-run: record wm selection: i3"
     else
@@ -71,21 +61,16 @@ case $answer in
   * ) ;;
 esac
 
-# non-essentials
-run yay -S --needed --noconfirm light ddcutil gammastep \
-  1password spotify cups ghostscript kbt cameractrls \
-  zeal vlc zip unzip unrar btop seadrive-gui \
-  pantheon-calculator tldr docker docker-buildx docker-compose \
-  rubygems npm fastfetch blanket sxiv postbird \
-  sysstat viewnior zathura zathura-pdf-mupdf etcher-bin \
-  system-config-printer fprintd downgrade cifs-utils smbclient \
+mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.extras')
+run yay -S --needed --noconfirm "${packages[@]}" \
   2> /dev/null
 
 answer="$(ask 'Would you like to be able to sync your iPod? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing iPod dependencies...'
-    run yay -S --needed --noconfirm rhythmbox libgpod gvfs
+    mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.ipod')
+    run yay -S --needed --noconfirm "${packages[@]}"
     ;;
   * ) ;;
 esac
@@ -97,9 +82,8 @@ answer="$(ask 'Would you like to install optional dependencies? [Y/n] ')"
 case $answer in
   [Yy]* | "")
     echo 'Installing optional dependencies...'
-    run yay -S --needed --noconfirm kicad curtail birdfont \
-      whatsapp-for-linux telegram-desktop discord via-appimage \
-      slack-desktop
+    mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.optional')
+    run yay -S --needed --noconfirm "${packages[@]}"
     ;;
   * ) ;;
 esac
@@ -108,7 +92,8 @@ if eval lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'; then
   answer="$(ask "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] ")"
   case $answer in
     [Yy]* | "")
-      run yay -S --needed --noconfirm nvidia nvidia-settings nvidia-prime ;;
+      mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.nvidia')
+      run yay -S --needed --noconfirm "${packages[@]}" ;;
     * ) ;;
   esac
 fi

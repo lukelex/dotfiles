@@ -11,14 +11,15 @@ wm_profile=""
 
 has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
-if is_server; then
-  install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  exec "$install_dir/services-server" "$@"
-fi
+mapfile -t services < <(
+  manifest_list '.common.services'
+  manifest_list ".profiles.$INSTALL_PROFILE.services"
+)
+run systemctl enable --now "${services[@]}"
 
-run systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
-run sudo usermod -aG nordvpn "$USER"
-run systemctl enable --now nordvpnd
+if is_server; then
+  exit 0
+fi
 
 if has_wm i3; then
   answer="$(ask 'Enable SDDM as display manager? [Y/n] ')"

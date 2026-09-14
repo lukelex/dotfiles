@@ -30,7 +30,18 @@ $ cd dotfiles && ./linux/install/all
 For a headless homelab server, run `./linux/install/all --server`. This
 installs terminal tooling, OpenSSH, and Docker without an AUR helper, GUI
 packages, display services, desktop configuration, or personal Git settings.
+Profile packages, groups, and services are defined in
+`linux/packages.yaml` and parsed by the bundled static `yq` binary.
+The `common` section applies to every profile; profile sections contain only
+their additions. Package values list the Unix groups required by that package.
+Packages can also declare repository-to-target config links, such as
+`linux/config/nvim:$XDG_CONFIG_HOME/nvim`.
 
 Run `./linux/install/all --dry-run` to preview every action without touching
 the system. The config stage skips links that would overwrite existing files;
 pass `--replace` (e.g. `./linux/install/configs --replace`) to overwrite them.
+
+Run `./linux/install/sync --server` (or `--desktop`) to reconcile a profile.
+Each package, group, service, and config-link stage requires confirmation.
+Only resources previously recorded under `$XDG_STATE_HOME/dotfiles/install` are
+eligible for removal.

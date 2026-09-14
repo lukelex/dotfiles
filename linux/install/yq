@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+case "$(uname -m)" in
+  x86_64) binary="$install_dir/../vendor/yq/yq_linux_amd64" ;;
+  aarch64) binary="$install_dir/../vendor/yq/yq_linux_arm64" ;;
+  *)
+    printf 'Unsupported architecture for bundled yq: %s\n' "$(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+exec "$binary" "$@"

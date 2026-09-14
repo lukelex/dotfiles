@@ -4,15 +4,10 @@ set -Eeuo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 
-if is_server; then
-  install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  exec "$install_dir/configs-account-server" "$@"
-fi
-
-# Desktop packages need access to video devices, Docker, and printers.
-run sudo usermod -aG video "$USER"
-run sudo usermod -aG docker "$USER"
-run sudo usermod -aG lp "$USER"
+mapfile -t groups < <(manifest_package_groups ".common.packages, .profiles.$INSTALL_PROFILE.packages" | sort -u)
+for group in "${groups[@]}"; do
+  run sudo usermod -aG "$group" "$USER"
+done
 
 answer="$(ask "Set your login shell to zsh? [Y/n] ")"
 case $answer in

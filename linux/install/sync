@@ -1,0 +1,267 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$install_dir/common.sh"
+source "$HOME/dotfiles/linux/variables.env"
+source "$install_dir/config-links.sh"
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install"
+
+contains() {
+  local needle="$1"
+  shift
+  local value
+  for value in "$@"; do
+    [ "$value" = "$needle" ] && return 0
+  done
+  return 1
+}
+
+read_state() {
+  local name="$1"
+  local -n result="$2"
+  local file="$state_dir/$name"
+  result=()
+  [ -f "$file" ] && mapfile -t result < "$file"
+  return 0
+}
+
+write_state() {
+  local name="$1"
+  shift
+  local file="$state_dir/$name"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    printf 'dry-run: record managed %s\n' "$name"
+    return
+  fi
+  mkdir -p "$state_dir"
+  printf '%s\n' "$@" > "$file"
+}
+
+confirm_stage() {
+  local stage="$1"
+  shift
+  printf '\n==> %s\n' "$stage"
+  printf '%s\n' "$@"
+  answer="$(ask "Apply $stage changes? [y/N] ")"
+  [[ "$answer" =~ ^[Yy]$ ]]
+}
+
+package_categories=('.common.packages.core' ".profiles.$INSTALL_PROFILE.packages.core")
+if ! is_server; then
+  package_categories+=(
+    '.profiles.desktop.packages.hyprland'
+    '.profiles.desktop.packages.i3'
+    '.profiles.desktop.packages.extras'
+    '.profiles.desktop.packages.ipod'
+    '.profiles.desktop.packages.optional'
+    '.profiles.desktop.packages.nvidia'
+  )
+fi
+
+required_categories=('.common.packages.core' ".profiles.$INSTALL_PROFILE.packages.core")
+if ! is_server; then
+  required_categories+=('.profiles.desktop.packages.extras')
+  wm_selection="$HOME/.config/dotfiles/wm-selection"
+  if [ -f "$wm_selection" ]; then
+    while IFS= read -r wm; do
+      case $wm in
+        hypr) required_categories+=('.profiles.desktop.packages.hyprland') ;;
+        i3) required_categories+=('.profiles.desktop.packages.i3') ;;
+      esac
+    done < "$wm_selection"
+  fi
+fi
+
+packages_from_categories() {
+  local category
+  for category in "$@"; do
+    manifest_packages "$category"
+  done
+}
+
+mapfile -t declared_packages < <(packages_from_categories "${package_categories[@]}" | sort -u)
+mapfile -t required_packages < <(packages_from_categories "${required_categories[@]}" | sort -u)
+
+read_state packages tracked_packages
+adopted_packages=()
+if [ ! -f "$state_dir/packages" ]; then
+  for package in "${declared_packages[@]}"; do
+    pacman -Q "$package" >/dev/null 2>&1 && adopted_packages+=("$package")
+  done
+  tracked_packages=("${adopted_packages[@]}")
+fi
+
+missing_packages=()
+for package in "${required_packages[@]}"; do
+  pacman -Q "$package" >/dev/null 2>&1 || missing_packages+=("$package")
+done
+extra_packages=()
+for package in "${tracked_packages[@]}"; do
+  contains "$package" "${declared_packages[@]}" || extra_packages+=("$package")
+done
+
+package_changes=()
+for package in "${adopted_packages[@]}"; do package_changes+=("adopt: $package"); done
+for package in "${missing_packages[@]}"; do package_changes+=("install: $package"); done
+for package in "${extra_packages[@]}"; do package_changes+=("remove: $package"); done
+if [ "${#package_changes[@]}" -gt 0 ] && confirm_stage packages "${package_changes[@]}"; then
+  if [ "${#missing_packages[@]}" -gt 0 ]; then
+    if is_server; then
+      run sudo pacman -S --needed --noconfirm "${missing_packages[@]}"
+    else
+      run yay -S --needed --noconfirm "${missing_packages[@]}"
+    fi
+  fi
+  if [ "${#extra_packages[@]}" -gt 0 ]; then
+    if is_server; then
+      run sudo pacman -Rns --noconfirm "${extra_packages[@]}"
+    else
+      run yay -Rns --noconfirm "${extra_packages[@]}"
+    fi
+  fi
+  next_packages=()
+  for package in "${tracked_packages[@]}"; do
+    contains "$package" "${extra_packages[@]}" || next_packages+=("$package")
+  done
+  next_packages+=("${missing_packages[@]}")
+  write_state packages "${next_packages[@]}"
+fi
+
+mapfile -t declared_groups < <(manifest_package_groups ".common.packages, .profiles.$INSTALL_PROFILE.packages" | sort -u)
+read_state groups tracked_groups
+current_groups=( $(id -nG "$USER") )
+adopted_groups=()
+if [ ! -f "$state_dir/groups" ]; then
+  for group in "${declared_groups[@]}"; do
+    contains "$group" "${current_groups[@]}" && adopted_groups+=("$group")
+  done
+  tracked_groups=("${adopted_groups[@]}")
+fi
+missing_groups=()
+for group in "${declared_groups[@]}"; do
+  if ! getent group "$group" >/dev/null; then
+    printf 'skipping unavailable group: %s\n' "$group"
+  elif ! contains "$group" "${current_groups[@]}"; then
+    missing_groups+=("$group")
+  fi
+done
+extra_groups=()
+for group in "${tracked_groups[@]}"; do
+  contains "$group" "${declared_groups[@]}" || extra_groups+=("$group")
+done
+group_changes=()
+for group in "${adopted_groups[@]}"; do group_changes+=("adopt: $group"); done
+for group in "${missing_groups[@]}"; do group_changes+=("add user to: $group"); done
+for group in "${extra_groups[@]}"; do group_changes+=("remove user from: $group"); done
+if [ "${#group_changes[@]}" -gt 0 ] && confirm_stage groups "${group_changes[@]}"; then
+  for group in "${missing_groups[@]}"; do run sudo usermod -aG "$group" "$USER"; done
+  for group in "${extra_groups[@]}"; do run sudo gpasswd -d "$USER" "$group"; done
+  next_groups=()
+  for group in "${tracked_groups[@]}"; do
+    contains "$group" "${extra_groups[@]}" || next_groups+=("$group")
+  done
+  next_groups+=("${missing_groups[@]}")
+  write_state groups "${next_groups[@]}"
+fi
+
+mapfile -t declared_services < <(
+  manifest_list '.common.services'
+  manifest_list ".profiles.$INSTALL_PROFILE.services"
+)
+read_state services tracked_services
+adopted_services=()
+if [ ! -f "$state_dir/services" ]; then
+  for service in "${declared_services[@]}"; do
+    systemctl is-enabled --quiet "$service" && adopted_services+=("$service")
+  done
+  tracked_services=("${adopted_services[@]}")
+fi
+missing_services=()
+for service in "${declared_services[@]}"; do
+  if ! systemctl cat "$service" >/dev/null 2>&1; then
+    printf 'skipping unavailable service: %s\n' "$service"
+  elif ! systemctl is-enabled --quiet "$service"; then
+    missing_services+=("$service")
+  fi
+done
+extra_services=()
+for service in "${tracked_services[@]}"; do
+  contains "$service" "${declared_services[@]}" || extra_services+=("$service")
+done
+service_changes=()
+for service in "${adopted_services[@]}"; do service_changes+=("adopt: $service"); done
+for service in "${missing_services[@]}"; do service_changes+=("enable: $service"); done
+for service in "${extra_services[@]}"; do service_changes+=("disable: $service"); done
+if [ "${#service_changes[@]}" -gt 0 ] && confirm_stage services "${service_changes[@]}"; then
+  [ "${#missing_services[@]}" -gt 0 ] && run systemctl enable --now "${missing_services[@]}"
+  for service in "${extra_services[@]}"; do
+    if systemctl cat "$service" >/dev/null 2>&1; then
+      run systemctl disable --now "$service"
+    fi
+  done
+  next_services=()
+  for service in "${tracked_services[@]}"; do
+    contains "$service" "${extra_services[@]}" || next_services+=("$service")
+  done
+  next_services+=("${missing_services[@]}")
+  write_state services "${next_services[@]}"
+fi
+
+expand_target() {
+  local target="$1"
+  target="${target//\$HOME/$HOME}"
+  target="${target//\$XDG_CONFIG_HOME/$XDG_CONFIG_HOME}"
+  printf '%s\n' "$target"
+}
+
+mapfile -t declared_configs < <(
+  manifest_package_configs '.common.packages'
+  manifest_package_configs ".profiles.$INSTALL_PROFILE.packages"
+)
+read_state configs tracked_configs
+adopted_configs=()
+if [ ! -f "$state_dir/configs" ]; then
+  for mapping in "${declared_configs[@]}"; do
+    source="$DOTFILES/${mapping%%:*}"
+    target="$(expand_target "${mapping#*:}")"
+    [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ] && adopted_configs+=("$mapping")
+  done
+  tracked_configs=("${adopted_configs[@]}")
+fi
+missing_configs=()
+for mapping in "${declared_configs[@]}"; do
+  source="$DOTFILES/${mapping%%:*}"
+  target="$(expand_target "${mapping#*:}")"
+  [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ] || missing_configs+=("$mapping")
+done
+extra_configs=()
+for mapping in "${tracked_configs[@]}"; do
+  contains "$mapping" "${declared_configs[@]}" || extra_configs+=("$mapping")
+done
+config_changes=()
+for mapping in "${adopted_configs[@]}"; do config_changes+=("adopt: $mapping"); done
+for mapping in "${missing_configs[@]}"; do config_changes+=("link: $mapping"); done
+for mapping in "${extra_configs[@]}"; do config_changes+=("unlink: $mapping"); done
+if [ "${#config_changes[@]}" -gt 0 ] && confirm_stage configs "${config_changes[@]}"; then
+  for mapping in "${missing_configs[@]}"; do
+    link_config "$DOTFILES/${mapping%%:*}" "$(expand_target "${mapping#*:}")"
+  done
+  for mapping in "${extra_configs[@]}"; do
+    source="$DOTFILES/${mapping%%:*}"
+    target="$(expand_target "${mapping#*:}")"
+    [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ] && run rm "$target"
+  done
+  next_configs=()
+  for mapping in "${tracked_configs[@]}"; do
+    contains "$mapping" "${extra_configs[@]}" || next_configs+=("$mapping")
+  done
+  for mapping in "${missing_configs[@]}"; do
+    source="$DOTFILES/${mapping%%:*}"
+    target="$(expand_target "${mapping#*:}")"
+    [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ] && next_configs+=("$mapping")
+  done
+  write_state configs "${next_configs[@]}"
+fi
