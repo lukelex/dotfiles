@@ -226,6 +226,12 @@ test('unit is not pulled in by default.target or ordered after graphical.target'
   }
 });
 
+test('unit launches the shell without requiring a NordVPN group', () => {
+  const unit = fs.readFileSync(path.join(__dirname, '../quickshell.service'), 'utf8');
+  assert.match(unit, /^ExecStart=%h\/dotfiles\/linux\/config\/quickshell\/scripts\/quickshell$/m);
+  assert.doesNotMatch(unit, /newgrp/);
+});
+
 test('Hyprland launches the default shell with its Wayland environment', async t => {
   const f = await fixture(t);
   const result = f.run([], {

@@ -5,6 +5,6 @@ Documentation=https://quickshell.outfoxxed.me
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/newgrp nordvpn --command %h/dotfiles/linux/config/quickshell/scripts/quickshell
+ExecStart=%h/dotfiles/linux/config/quickshell/scripts/quickshell
 Restart=always
 RestartSec=5
