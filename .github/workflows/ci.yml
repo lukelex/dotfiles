@@ -2,9 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   node-tests:
@@ -25,6 +27,18 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f -print0 | xargs -0 shellcheck
+
+  yamlfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+      - name: Install yamlfmt
+        run: go install github.com/google/yamlfmt/cmd/yamlfmt@v0.21.0
+      - name: Lint YAML files
+        run: yamlfmt -conf .yamlfmt.yaml -lint .
 
   whitespace:
     runs-on: ubuntu-latest

@@ -1,0 +1,9 @@
+formatter:
+  type: basic
+  indent: 2
+  include_document_start: false
+  retain_line_breaks_single: true
+  indentless_arrays: false
+  trim_trailing_whitespace: true
+  force_array_style: block
+  drop_merge_tag: true
