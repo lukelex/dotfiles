@@ -27,6 +27,10 @@ $ git clone --recurse-submodules git@github.com:lukelex/dotfiles.git
 $ cd dotfiles && ./linux/install/all
 ```
 
+For a headless homelab server, run `./linux/install/all --server`. This
+installs terminal tooling, OpenSSH, and Docker without an AUR helper, GUI
+packages, display services, or desktop configuration.
+
 Run `./linux/install/all --dry-run` to preview every action without touching
 the system. The config stage skips links that would overwrite existing files;
 pass `--replace` (e.g. `./linux/install/configs --replace`) to overwrite them.

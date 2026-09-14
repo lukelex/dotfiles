@@ -11,6 +11,11 @@ wm_profile=""
 
 has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
+if is_server; then
+  run systemctl enable --now docker sshd
+  exit 0
+fi
+
 run systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
 run sudo usermod -aG nordvpn "$USER"
 run systemctl enable --now nordvpnd

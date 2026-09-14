@@ -3,8 +3,15 @@
 set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$install_dir/common.sh"
 
-for stage in preflight dependencies binaries icons configs configs-system configs-account kmonad-device-manager configs-post git-config services; do
+if is_server; then
+  stages=(preflight dependencies configs configs-account git-config services)
+else
+  stages=(preflight dependencies binaries icons configs configs-system configs-account kmonad-device-manager configs-post git-config services)
+fi
+
+for stage in "${stages[@]}"; do
   echo "==> $stage"
   "$install_dir/$stage" "$@"
 done

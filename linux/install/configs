@@ -48,6 +48,14 @@ link_config() {
 
 run mkdir -p "$XDG_CONFIG_HOME"
 run mkdir -p "$HOME/.ssh"
+
+if is_server; then
+  link_config "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
+  link_config "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
+  link_config "$DOT_CONFIG/opencode" "$XDG_CONFIG_HOME/opencode"
+  exit 0
+fi
+
 run mkdir -p "$HOME/screenshots"
 run mkdir -p "$HOME/.local/share/applications"
 run mkdir -p "$HOME/backup_vim"
