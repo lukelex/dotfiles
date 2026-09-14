@@ -6,6 +6,6 @@ ConditionEnvironment=DISPLAY
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/newgrp nordvpn --command %h/dotfiles/linux/scripts/quickshell
+ExecStart=/usr/bin/newgrp nordvpn --command %h/dotfiles/linux/config/quickshell/scripts/quickshell
 Restart=always
 RestartSec=5

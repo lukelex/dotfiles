@@ -6,7 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 
-const launcher = path.resolve(__dirname, '../../../scripts/quickshell');
+const launcher = path.resolve(__dirname, '../scripts/quickshell');
 
 async function fixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'qs-startup-'));
@@ -213,7 +213,7 @@ test('unit is not pulled in by default.target or ordered after graphical.target'
 
 test('i3 explicitly runs the existing session startup helper', () => {
   const config = fs.readFileSync(path.resolve(__dirname, '../../i3/main.conf'), 'utf8');
-  assert.match(config, /^\s*exec(?:_always)?\s+--no-startup-id\s+"\$HOME\/dotfiles\/linux\/scripts\/quickshell --session-start"\s*$/m);
+  assert.match(config, /^\s*exec(?:_always)?\s+--no-startup-id\s+"\$HOME\/dotfiles\/linux\/config\/quickshell\/scripts\/quickshell --session-start"\s*$/m);
   assert.ok(fs.statSync(launcher).isFile());
   fs.accessSync(launcher, fs.constants.X_OK);
 });

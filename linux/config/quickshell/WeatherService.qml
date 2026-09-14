@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQml
+import Quickshell
 import Quickshell.Io
 
 QtObject {
@@ -70,8 +71,10 @@ QtObject {
     service._now = Date.now() / 1000
   }
 
+  readonly property string _weatherScript: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts/weather"
+
   readonly property Process _process: Process {
-    command: service._force ? ["u_weather", "snapshot", "--refresh"] : ["u_weather", "snapshot"]
+    command: service._force ? [service._weatherScript, "snapshot", "--refresh"] : [service._weatherScript, "snapshot"]
     stdout: StdioCollector {
       onStreamFinished: service._accept(this.text)
     }

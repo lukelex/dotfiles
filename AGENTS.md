@@ -13,12 +13,12 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 - Entrypoint: `./linux/install/all` which sources, in order: `dependencies`, `binaries`, `icons`, `configs`, `git-config`, `services`.
 - `linux/variables.env` sets `DOTFILES="$HOME/dotfiles"`, `XDG_CONFIG_HOME`, `DOT_CONFIG="$DOTFILES/linux/config"`. Install scripts hardcode `"$HOME/dotfiles"` and assume the repo is cloned there.
 - `dependencies` installs via `yay` (AUR) and is interactive (prompts).
-- `linux/install/binaries` symlinks every executable in `linux/scripts/` to `/usr/local/bin/u_<script>` (hence the `u_` prefix used across configs, e.g. `u_audio`, `u_screenshot`). Commands in configs refer to these `u_*` names, not the raw scripts.
+- `linux/install/binaries` symlinks every executable in `linux/scripts/` to `/usr/local/bin/u_<script>` (hence the `u_` prefix used across configs, e.g. `u_audio`, `u_screenshot`). Commands in configs refer to these `u_*` names, not the raw scripts. Exception: Quickshell keeps its helpers inside `linux/config/quickshell/scripts/` and invokes them by absolute path, so it needs no `u_*` links; `binaries` prunes any dangling `u_*` links it no longer owns.
 
 ## Directory layout
 
 - `linux/config/` — per-app configs (the actual content being symlinked).
-- `linux/scripts/` — shell helper scripts; installed as `u_*`.
+- `linux/scripts/` — shell helper scripts; installed as `u_*` (except those owned by Quickshell — see `linux/config/quickshell/scripts/`).
 - `linux/install/` — provisioning scripts (idempotent-ish, system-affecting).
 - `linux/config/nvim/` — Neovim config, managed by lazy.nvim (plugins auto-install in `lua/plugins/`). `init.lua` sets `mapleader`/`maplocalleader` then requires `core.*`; plugins are lazy-loaded from `lua/plugins/*.lua`.
 - `keyboards/<board>/keymap.c` — QMK keymaps, one directory per keyboard; compiled out-of-repo (`.hex` artifacts committed alongside).

@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 
-const script = path.resolve(__dirname, '../../../scripts/weather');
+const script = path.resolve(__dirname, '../scripts/weather');
 const source = fs.readFileSync(path.join(__dirname, '../WeatherService.qml'), 'utf8');
 const now = Math.floor(Date.now() / 1000); // Freeze the clock while keeping filesystem mtimes comparable.
 const weather = [{ id: 800, main: 'Clear', description: 'clear sky', icon: '01n' }];

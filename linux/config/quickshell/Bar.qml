@@ -42,6 +42,7 @@ Scope {
   readonly property color muted: "#A9ADB4"
   readonly property string fontFamily: "Hack Nerd Font Mono"
   readonly property int barFontSize: 17
+  readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
 
   property real audioVolume: 0
   property bool audioMuted: false
@@ -197,7 +198,7 @@ Scope {
 
   Process {
     id: controlStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$(u_nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
+    command: ["sh", "-c", "printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
@@ -229,7 +230,7 @@ Scope {
 
   Process {
     id: nightModeToggle
-    command: ["u_nightmode", "toggle"]
+    command: [root.quickshellScripts + "/nightmode", "toggle"]
   }
 
   Process {
@@ -274,7 +275,7 @@ Scope {
 
   Process {
     id: batteryStatus
-    command: ["u_battery", "get"]
+    command: [root.quickshellScripts + "/battery", "get"]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {

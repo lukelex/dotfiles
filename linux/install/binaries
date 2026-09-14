@@ -10,3 +10,9 @@ files=$(find "$DOTFILES/linux/scripts/" -maxdepth 1 -type f -perm 755)
 for script in $files; do
   run sudo ln -fvs "$script" "/usr/local/bin/u_$(basename "$script")"
 done
+
+# Drop stale u_ links whose script left linux/scripts (e.g. the Quickshell-owned helpers).
+shopt -s nullglob
+for link in /usr/local/bin/u_*; do
+  [ -e "$link" ] || run sudo rm -f "$link"
+done
