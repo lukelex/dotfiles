@@ -283,7 +283,7 @@ test('bar selects the native workspace model for the active session', () => {
   assert.match(bar, /^import Quickshell\.I3$/m);
   assert.match(bar, /model: root\.hyprlandSession \? Hyprland\.workspaces : I3\.workspaces/);
   assert.match(bar, /workspace\.name\.startsWith\("special:"\)/);
-  assert.match(bar, /source: root\.icon\("boxes"\)/);
+  assert.match(bar, /id: specialWorkspaceIcon/);
   assert.match(bar, /specialWorkspaceState\.id === workspace\.id/);
   assert.match(bar, /event\.name === "activespecial" \|\| event\.name === "activespecialv2"/);
   assert.match(bar, /readonly property bool occupied: root\.hyprlandSession/);

@@ -46,3 +46,10 @@ test('VPN toggle ignores competing requests while the previous command runs', ()
   loadFunction('Bar.qml', 'toggleVpn', { root, vpnToggle, controlRefreshTimer })();
   assert.deepEqual(vpnToggle.command, []);
 });
+
+test('hover centers do not grab focus from their bar triggers', () => {
+  for (const file of ['ControlCenter.qml', 'NotificationCenter.qml']) {
+    const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+    assert.match(source, /grabFocus: false/);
+  }
+});

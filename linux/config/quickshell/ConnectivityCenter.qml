@@ -400,6 +400,30 @@ Scope {
         }
       }
 
+      Action {
+        width: parent.width
+        title: "Ethernet"
+        iconName: "ethernet-port"
+        radioSwitch: true
+        active: popup.service.ethernetConnected
+        enabled: popup.service.ethernetAvailable
+        subtitle: !popup.service.ethernetAvailable ? "No Ethernet adapter"
+          : popup.service.ethernetConnected ? popup.service.ethernetName || "Connected" : "Off"
+        onActivated: {
+          popup.requestOpen(true)
+          popup.service.setEthernetEnabled(!popup.service.ethernetConnected)
+        }
+      }
+
+      Label {
+        width: parent.width
+        visible: text !== ""
+        text: popup.service.ethernetError
+        color: popup.controller.urgent
+        elide: Text.ElideNone
+        wrapMode: Text.Wrap
+      }
+
       Label {
         width: parent.width
         text: "Saved networks"

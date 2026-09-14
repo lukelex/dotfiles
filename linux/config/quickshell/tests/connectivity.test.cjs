@@ -10,6 +10,11 @@ const BluetoothAdapterState = { Blocked: 0 };
 
 function serviceForTest() {
   const calls = { connect: 0, restart: 0, stop: 0, power: [] };
+  Object.defineProperties(calls, {
+    ethernetConnect: { value: 0, writable: true },
+    ethernetDisconnect: { value: 0, writable: true },
+    autoconnect: { value: [], writable: true },
+  });
   const network = {
     known: true,
     connected: false,
@@ -22,6 +27,18 @@ function serviceForTest() {
     get enabled() { return false; },
     set enabled(value) { calls.power.push(['bluetooth', value]); },
   };
+  const wiredNetwork = {
+    known: true,
+    connected: false,
+    state: ConnectionState.Disconnected,
+    connect() { calls.ethernetConnect++; },
+  };
+  const wiredDevice = {
+    connected: true,
+    state: ConnectionState.Connected,
+    set autoconnect(value) { calls.autoconnect.push(value); },
+    disconnect() { calls.ethernetDisconnect++; },
+  };
   const service = {
     wifiAvailable: true,
     wifiEnabled: true,
@@ -29,9 +46,12 @@ function serviceForTest() {
     bluetoothAvailable: true,
     savedNetworks: [network],
     activeNetwork: { connected: true, disconnect: network.disconnect },
+    ethernetAvailable: true,
+    _wiredDevices: [wiredDevice],
+    _wiredNetworks: [wiredNetwork],
     _state: {
       requestedNetwork: null, pending: false, sawConnecting: false,
-      wifiError: '', wifiErrorReason: -1, bluetoothError: '',
+      wifiError: '', wifiErrorReason: -1, ethernetError: '', bluetoothError: '',
     },
     _connectionTimeout: {
       restart() { calls.restart++; },
@@ -50,7 +70,7 @@ function serviceForTest() {
       set wifiEnabled(value) { calls.power.push(['wifi', value]); },
     },
   });
-  for (const name of ['connectNetwork', '_finishConnection', 'setWifiEnabled',
+  for (const name of ['connectNetwork', '_finishConnection', 'setWifiEnabled', 'setEthernetEnabled',
     'setBluetoothEnabled', 'onConnectionFailed', 'onStateChanged']) {
     const match = source.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
     assert.ok(match, `Missing QML function ${name}`);
@@ -58,8 +78,26 @@ function serviceForTest() {
       signature.replace(/:\s*\w+/g, ''));
     service[name] = vm.runInContext(`(${javascript})`, context);
   }
-  return { service, network, calls };
+  return { service, network, wiredNetwork, wiredDevice, calls };
 }
+
+test('Ethernet toggle disables autoconnect and disconnects active adapters', () => {
+  const { service, calls } = serviceForTest();
+  assert.equal(service.setEthernetEnabled(false), true);
+  assert.deepEqual(calls.autoconnect, [false]);
+  assert.equal(calls.ethernetDisconnect, 1);
+  assert.equal(calls.ethernetConnect, 0);
+});
+
+test('Ethernet toggle enables autoconnect and activates an available profile', () => {
+  const { service, wiredDevice, calls } = serviceForTest();
+  wiredDevice.connected = false;
+  wiredDevice.state = ConnectionState.Disconnected;
+  assert.equal(service.setEthernetEnabled(true), true);
+  assert.deepEqual(calls.autoconnect, [true]);
+  assert.equal(calls.ethernetConnect, 1);
+  assert.equal(calls.ethernetDisconnect, 0);
+});
 
 test('saved network activation does not disconnect the active network or change power', () => {
   const { service, network, calls } = serviceForTest();

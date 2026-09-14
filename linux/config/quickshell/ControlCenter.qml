@@ -11,7 +11,7 @@ PopupWindow {
   anchor.rect.x: Math.max(0, panel.width - width - 12)
   anchor.rect.y: panel.height + 12
   color: "transparent"
-  grabFocus: true
+  grabFocus: false
   implicitHeight: sections.implicitHeight + 32
   implicitWidth: Math.min(432, panel.screen.width - 24)
 

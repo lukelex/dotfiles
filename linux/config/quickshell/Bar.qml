@@ -486,15 +486,39 @@ Scope {
             Accessible.name: specialWorkspace ? "Special workspace" : "Workspace " + (root.hyprlandSession ? workspace.name : workspace.number)
             Accessible.onPressAction: workspace.activate()
 
-            LucideIcon {
+            Canvas {
               id: specialWorkspaceIcon
 
               anchors.centerIn: parent
-              color: workspace.urgent ? root.urgent : root.foreground
-              height: root.barFontSize
-              source: root.icon("boxes")
+              height: 20
               visible: parent.specialWorkspace
-              width: root.barFontSize
+              width: 20
+
+              property bool active: workspaceItem.selected
+              property bool urgent: workspaceItem.workspace.urgent
+
+              onActiveChanged: requestPaint()
+              onUrgentChanged: requestPaint()
+              onPaint: {
+                const context = getContext("2d")
+                const centerX = width / 2
+                const centerY = height / 2
+                const color = specialWorkspaceIcon.urgent ? root.urgent
+                  : specialWorkspaceIcon.active ? root.foreground : root.muted
+
+                context.clearRect(0, 0, width, height)
+                context.beginPath()
+                context.arc(centerX, centerY, 7, 0, Math.PI * 2)
+
+                if (specialWorkspaceIcon.active) {
+                  context.fillStyle = color
+                  context.fill()
+                } else {
+                  context.lineWidth = 2
+                  context.strokeStyle = color
+                  context.stroke()
+                }
+              }
             }
 
             Canvas {
@@ -673,11 +697,12 @@ Scope {
             LucideIcon {
               width: root.barFontSize
               height: root.barFontSize
-              source: root.icon(!connectivity.wifiEnabled ? "wifi-off"
+              source: root.icon(!connectivity.wifiConnected && connectivity.ethernetConnected ? "ethernet-port"
+                : !connectivity.wifiEnabled ? "wifi-off"
                 : !connectivity.wifiConnected ? "wifi-zero"
                 : connectivity.wifiStrength < 0.35 ? "wifi-low"
                 : connectivity.wifiStrength < 0.7 ? "wifi-high" : "wifi")
-              color: connectivity.wifiConnected ? root.foreground : root.muted
+              color: connectivity.wifiConnected || connectivity.ethernetConnected ? root.foreground : root.muted
             }
             LucideIcon {
               width: root.barFontSize
@@ -709,6 +734,7 @@ Scope {
         LucideIcon {
           height: root.barFontSize
           width: root.barFontSize
+          visible: root.batteryAvailable
           color: root.batteryAvailable && root.batteryPercentage <= 5 ? root.urgent : root.batteryAvailable ? root.foreground : root.muted
           source: root.icon(root.batteryIcon())
         }

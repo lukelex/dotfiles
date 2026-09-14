@@ -14,7 +14,7 @@ PopupWindow {
   anchor.rect.x: parentWindow.width - width - 12
   anchor.rect.y: parentWindow.height + 12
   color: "transparent"
-  grabFocus: true
+  grabFocus: false
   implicitHeight: 548
   implicitWidth: 432
   surfaceFormat.opaque: false

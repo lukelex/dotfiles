@@ -14,6 +14,10 @@ QtObject {
   property bool wifiScanningEnabled: true
   readonly property bool wifiConnected: service.activeNetwork !== null
   readonly property string wifiSsid: service.activeNetwork ? service.activeNetwork.name : ""
+  readonly property bool ethernetAvailable: service._wiredDevices.length > 0
+  readonly property bool ethernetConnected: service._wiredDevices.some(device => device.connected)
+  readonly property string ethernetName: service.activeEthernetNetwork ? service.activeEthernetNetwork.name : ""
+  readonly property string ethernetError: service._state.ethernetError
   // Native signalStrength and BluetoothDevice.battery are fractions, not percentages.
   readonly property real wifiStrength: service.activeNetwork ? service.activeNetwork.signalStrength : 0
   readonly property WifiNetwork activeNetwork: service._networks.find(network => network.connected) || null
@@ -40,6 +44,16 @@ QtObject {
     .sort((a, b) => a.name.localeCompare(b.name) || a.dbusPath.localeCompare(b.dbusPath))
 
   readonly property var _wifiDevices: Networking.devices.values.filter(device => device.type === DeviceType.Wifi)
+  readonly property var _wiredDevices: Networking.devices.values.filter(device => device.type === DeviceType.Wired)
+  readonly property var _wiredNetworks: {
+    const networks = []
+    for (const device of service._wiredDevices) {
+      for (const network of device.networks.values)
+        networks.push(network)
+    }
+    return networks
+  }
+  readonly property Network activeEthernetNetwork: service._wiredNetworks.find(network => network.connected) || null
   readonly property var _networks: {
     const networks = []
     for (const device of service._wifiDevices) {
@@ -56,6 +70,7 @@ QtObject {
     property bool sawConnecting: false
     property string wifiError: ""
     property int wifiErrorReason: -1
+    property string ethernetError: ""
     property string bluetoothError: ""
   }
 
@@ -118,6 +133,36 @@ QtObject {
     return true
   }
 
+  function setEthernetEnabled(enabled: bool): bool {
+    service._state.ethernetError = ""
+    if (!service.ethernetAvailable) {
+      service._state.ethernetError = "No Ethernet adapter is available."
+      return false
+    }
+    for (const device of service._wiredDevices)
+      device.autoconnect = enabled
+    if (!enabled) {
+      for (const device of service._wiredDevices) {
+        if (device.connected || device.state === ConnectionState.Connecting)
+          device.disconnect()
+      }
+      return true
+    }
+    const network = service._wiredNetworks.find(network => network.known) || service._wiredNetworks[0]
+    if (!network) {
+      service._state.ethernetError = "No Ethernet connection is available."
+      return false
+    }
+    try {
+      if (!network.connected && network.state !== ConnectionState.Connecting)
+        network.connect()
+    } catch (error) {
+      service._state.ethernetError = String(error)
+      return false
+    }
+    return true
+  }
+
   function setBluetoothEnabled(enabled: bool): bool {
     service._state.bluetoothError = ""
     if (!service.bluetoothAvailable) {
@@ -169,6 +214,7 @@ QtObject {
   function clearErrors(): void {
     service._state.wifiError = ""
     service._state.wifiErrorReason = -1
+    service._state.ethernetError = ""
     service._state.bluetoothError = ""
   }
 
