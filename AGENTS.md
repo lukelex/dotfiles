@@ -32,5 +32,5 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 
 ## Validation
 
-- `Dockerfile` is a minimal Debian image with `shellcheck` only — the intended validation path for shell scripts (`linux/scripts`, `linux/install`).
-- There is no automated test/lint/typecheck suite beyond that. For nvim changes there is no CI; verify by reloading nvim (`nvim -u linux/config/nvim/init.lua` loads the repo config directly).
+- `Dockerfile` is a minimal Debian image with `shellcheck` only — the intended local validation path for shell scripts (`linux/scripts`, `linux/install`).
+- `.github/workflows/ci.yml` runs on push/PR to `master`: the Quickshell Node test suite (`node --test .../tests/*.test.cjs`), shellcheck over the shell scripts, and whitespace/conflict-marker checks. For nvim changes there is no CI; verify by reloading nvim (`nvim -u linux/config/nvim/init.lua` loads the repo config directly).
