@@ -138,6 +138,7 @@ if ! is_server; then
     '.profiles.desktop.packages.ipod'
     '.profiles.desktop.packages.optional'
     '.profiles.desktop.packages.nvidia'
+    '.profiles.desktop.packages.nvidia-gui'
   )
 fi
 

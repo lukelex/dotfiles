@@ -34,6 +34,7 @@ package_categories=(
   '.profiles.desktop.packages.ipod'
   '.profiles.desktop.packages.optional'
   '.profiles.desktop.packages.nvidia'
+  '.profiles.desktop.packages.nvidia-gui'
   '.profiles.server.packages.core'
 )
 

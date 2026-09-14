@@ -230,8 +230,9 @@ profiles:
         slack-desktop: []
       nvidia:
         nvidia-open: []
-        nvidia-settings: []
         nvidia-prime: []
+      nvidia-gui:
+        nvidia-settings: []
       dotfiles:
         install: false
         configs:

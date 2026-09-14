@@ -89,10 +89,18 @@ case $answer in
 esac
 
 if eval lspci -k | grep -A 2 -E "(VGA|3D)" | grep 'nvidia'; then
-  answer="$(ask "I've found an NVidia GPU. Would you like to install its driver and utilities? [Y/n] ")"
+  answer="$(ask "I've found an NVidia GPU. Would you like to install its driver? [Y/n] ")"
   case $answer in
     [Yy]* | "")
       mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.nvidia')
+      run yay -S --needed --noconfirm "${packages[@]}" ;;
+    * ) ;;
+  esac
+
+  answer="$(ask 'Would you like to install NVIDIA Settings? [y/N] ')"
+  case $answer in
+    [Yy]*)
+      mapfile -t packages < <(manifest_packages '.profiles.desktop.packages.nvidia-gui')
       run yay -S --needed --noconfirm "${packages[@]}" ;;
     * ) ;;
   esac
