@@ -15,27 +15,50 @@ Scope {
   property bool pinned: false
   property bool closing: false
   property bool closeImmediately: false
+  property bool promotionPending: false
+  property var promotionSnapshot: null
+  property var promotionWindow: null
+  property int pinRequest: 0
   readonly property bool visible: preview.visible || pinnedPopup.visible
   readonly property real width: Math.max(1, Math.min(432, (popup.panel.screen ? popup.panel.screen.width : popup.panel.width) - 24))
   readonly property real height: sections.implicitHeight + 32
   signal shown()
   onShown: popup.controller.refreshControlStatus()
 
+  function openPinned(request) {
+    if (request !== popup.pinRequest)
+      return
+    if (popup.pinned && !popup.closing)
+      pinnedPopup.open()
+    popup.promotionPending = false
+  }
+
   function requestOpen(pin = false) {
     if (!pin && popup.closing && popup.pinned)
       return
-    cancelClose()
+    popup.cancelClose()
     closeAnim.stop()
     popup.closing = false
     popup.closeImmediately = false
     if (pin || popup.pinned) {
       popup.pinned = true
-      preview.visible = false
-      // Finish the triggering pointer event before acquiring native popup grabs.
-      Qt.callLater(function() {
-        if (popup.pinned && !popup.closing)
-          pinnedPopup.open()
-      })
+      if (pinnedPopup.visible || popup.promotionPending)
+        return
+      popup.promotionPending = true
+      const request = ++popup.pinRequest
+      if (preview.visible) {
+        const captured = content.grabToImage(result => {
+          if (request !== popup.pinRequest || !popup.pinned || popup.closing)
+            return
+          popup.promotionSnapshot = result
+        })
+        if (!captured) {
+          popup.promotionPending = false
+          popup.pinned = false
+        }
+      } else {
+        Qt.callLater(popup.openPinned, request)
+      }
     } else {
       preview.visible = true
       if (content.opacity < 1 && !openAnim.running)
@@ -44,8 +67,12 @@ Scope {
   }
 
   function requestClose(immediate = false) {
+    popup.pinRequest++
+    popup.promotionPending = false
+    popup.promotionSnapshot = null
+    popup.promotionWindow = null
     popup.closing = true
-    cancelClose()
+    popup.cancelClose()
     openAnim.stop()
     popup.closeImmediately = immediate
     if (pinnedPopup.visible) {
@@ -81,6 +108,10 @@ Scope {
       closeTimer.stop()
       openAnim.stop()
       closeAnim.stop()
+      popup.pinRequest++
+      popup.promotionPending = false
+      popup.promotionSnapshot = null
+      popup.promotionWindow = null
       content.opacity = 0
       content.y = 10
     }
@@ -96,6 +127,28 @@ Scope {
     color: "transparent"
     surfaceFormat.opaque: false
     grabFocus: false
+
+    Image {
+      anchors.fill: parent
+      source: popup.promotionSnapshot ? popup.promotionSnapshot.url : ""
+      visible: popup.promotionSnapshot !== null
+      z: 1
+      onStatusChanged: {
+        if (status === Image.Ready)
+          Qt.callLater(popup.openPinned, popup.pinRequest)
+      }
+    }
+  }
+
+  Connections {
+    target: popup.promotionWindow
+    function onFrameSwapped() {
+      if (pinnedPopup.visible && popup.promotionSnapshot) {
+        preview.visible = false
+        popup.promotionSnapshot = null
+        popup.promotionWindow = null
+      }
+    }
   }
 
   Controls.Popup {
@@ -122,15 +175,27 @@ Scope {
       }
     }
     onOpened: {
+      // Native "opened" precedes painting. The preview snapshot bridges the first frame.
+      if (popup.promotionSnapshot) {
+        // Before opening, the content's window can still be the bar rather than the popup.
+        popup.promotionWindow = content.nativeWindow
+        preview.contentItem.Window.window.raise()
+      }
       content.forceActiveFocus()
-      openAnim.start()
+      if (content.opacity < 1 && !openAnim.running)
+        openAnim.start()
     }
     onAboutToHide: {
       popup.closing = true
       popup.cancelClose()
       openAnim.stop()
     }
-    onClosed: popup.pinned = false
+    onClosed: {
+      popup.pinned = false
+      preview.visible = false
+      popup.promotionSnapshot = null
+      popup.promotionWindow = null
+    }
   }
 
   Timer {
@@ -262,7 +327,8 @@ Scope {
 
   FocusScope {
     id: content
-    parent: popup.pinned ? pinnedPopup.contentItem : preview.contentItem
+    readonly property var nativeWindow: Window.window
+    parent: pinnedPopup.visible ? pinnedPopup.contentItem : preview.contentItem
     width: popup.width
     height: popup.height
     opacity: 0
