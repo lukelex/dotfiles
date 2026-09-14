@@ -6,7 +6,7 @@ install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$install_dir/common.sh"
 
 if is_server; then
-  stages=(preflight dependencies configs configs-account git-config services)
+  stages=(preflight dependencies-server configs-server configs-account-server services-server)
 else
   stages=(preflight dependencies binaries icons configs configs-system configs-account kmonad-device-manager configs-post git-config services)
 fi

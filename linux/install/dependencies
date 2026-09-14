@@ -8,12 +8,7 @@ install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 wm_selection="$HOME/.config/dotfiles/wm-selection"
 
 if is_server; then
-  # Keep the server profile in the official repositories: it needs no AUR helper.
-  run sudo pacman -S --needed --noconfirm \
-    openssh docker docker-buildx docker-compose \
-    git man-db wget zsh zsh-completions \
-    neovim fd fzf ripgrep jq tree bat diff-so-fancy btop ttf-hack-nerd
-  exit 0
+  exec "$install_dir/dependencies-server" "$@"
 fi
 
 if [ "$DRY_RUN" -eq 1 ]; then

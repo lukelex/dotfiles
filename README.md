@@ -29,7 +29,7 @@ $ cd dotfiles && ./linux/install/all
 
 For a headless homelab server, run `./linux/install/all --server`. This
 installs terminal tooling, OpenSSH, and Docker without an AUR helper, GUI
-packages, display services, or desktop configuration.
+packages, display services, desktop configuration, or personal Git settings.
 
 Run `./linux/install/all --dry-run` to preview every action without touching
 the system. The config stage skips links that would overwrite existing files;

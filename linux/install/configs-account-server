@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
+run sudo usermod -aG docker "$USER"
+
+answer="$(ask "Set your login shell to zsh? [Y/n] ")"
+case $answer in
+  [Yy]* | "") run chsh -s /usr/bin/zsh ;;
+  * ) ;;
+esac

@@ -5,57 +5,17 @@ set -Eeuo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if is_server; then
+  exec "$install_dir/configs-server" "$@"
+fi
+
 DOT_CONFIG="$DOTFILES/linux/config"
-
-replace_existing=0
-for arg in "$@"; do
-  [ "$arg" = "--replace" ] && replace_existing=1
-done
-
-link_config() {
-  local source="$1"
-  local target="$2"
-  if [ "$DRY_RUN" -eq 1 ]; then
-    if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
-      echo "ok: $target -> $source"
-    elif [ -e "$target" ] || [ -L "$target" ]; then
-      if [ "$replace_existing" = 1 ]; then
-        echo "dry-run: would replace $target -> $source"
-      else
-        echo "dry-run: would skip $target (not a repo link; --replace to overwrite)"
-      fi
-    else
-      echo "dry-run: would link $target -> $source"
-    fi
-    return 0
-  fi
-  mkdir -p "$(dirname "$target")"
-  if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
-    echo "ok: $target -> $source"
-  elif [ -e "$target" ] || [ -L "$target" ]; then
-    if [ "$replace_existing" = 1 ]; then
-      rm -rf "$target"
-      ln -s "$source" "$target"
-      echo "replaced: $target -> $source"
-    else
-      echo "skipping $target: exists and is not a repo link; rerun with --replace to overwrite" >&2
-    fi
-  else
-    ln -s "$source" "$target"
-    echo "linked: $target -> $source"
-  fi
-}
+source "$install_dir/config-links.sh"
 
 run mkdir -p "$XDG_CONFIG_HOME"
 run mkdir -p "$HOME/.ssh"
-
-if is_server; then
-  link_config "$DOT_CONFIG/zsh/zshrc" "$HOME/.zshrc"
-  link_config "$DOT_CONFIG/nvim" "$XDG_CONFIG_HOME/nvim"
-  link_config "$DOT_CONFIG/opencode" "$XDG_CONFIG_HOME/opencode"
-  exit 0
-fi
-
 run mkdir -p "$HOME/screenshots"
 run mkdir -p "$HOME/.local/share/applications"
 run mkdir -p "$HOME/backup_vim"

@@ -12,8 +12,8 @@ wm_profile=""
 has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
 if is_server; then
-  run systemctl enable --now docker sshd
-  exit 0
+  install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  exec "$install_dir/services-server" "$@"
 fi
 
 run systemctl enable --now docker bluetooth NetworkManager avahi-daemon cups
