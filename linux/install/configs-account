@@ -8,6 +8,9 @@ mapfile -t groups < <(manifest_package_groups ".common.packages, .profiles.$INST
 for group in "${groups[@]}"; do
   run sudo usermod -aG "$group" "$USER"
 done
+if [ "${#groups[@]}" -gt 0 ]; then
+  group_logout_notice
+fi
 
 answer="$(ask "Set your login shell to zsh? [Y/n] ")"
 case $answer in

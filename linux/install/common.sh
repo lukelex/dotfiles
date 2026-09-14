@@ -33,6 +33,17 @@ manifest_package_configs() {
   "$YQ" -r "($1) | .. | select((tag == \"!!map\") and has(\"configs\")) | .configs[]" "$INSTALL_MANIFEST"
 }
 
+group_logout_notice() {
+  local message='LOG OUT AND BACK IN before using the updated group permissions.'
+  if [ "$DRY_RUN" -eq 1 ]; then
+    message='LOG OUT AND BACK IN will be required if group changes are applied.'
+  fi
+
+  printf '\n========================================================================\n'
+  printf '  %s\n' "$message"
+  printf '========================================================================\n\n'
+}
+
 run() {
   if [ "$DRY_RUN" -eq 1 ]; then
     echo "dry-run: $*"

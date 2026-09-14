@@ -229,6 +229,9 @@ for group in "${extra_groups[@]}"; do group_changes+=("remove user from: $group"
 if [ "${#group_changes[@]}" -gt 0 ] && confirm_stage groups "${group_changes[@]}"; then
   for group in "${missing_groups[@]}"; do run sudo usermod -aG "$group" "$USER"; done
   for group in "${extra_groups[@]}"; do run sudo gpasswd -d "$USER" "$group"; done
+  if [ "${#missing_groups[@]}" -gt 0 ] || [ "${#extra_groups[@]}" -gt 0 ]; then
+    group_logout_notice
+  fi
   next_groups=()
   for group in "${tracked_groups[@]}"; do
     contains "$group" "${extra_groups[@]}" || next_groups+=("$group")
