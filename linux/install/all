@@ -3,6 +3,31 @@
 set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  cat <<'EOF'
+Usage: ./linux/install/all [options]
+
+Install this dotfiles profile. The desktop profile is the default and installs
+desktop packages, configuration, services, and input tooling. The server
+profile installs only shared terminal tooling, OpenSSH, Docker, and their
+configuration.
+
+Options:
+  --desktop    Install the desktop profile (default).
+  --server     Install the headless server profile.
+  --dry-run    Print actions without changing the system.
+  --replace    Replace existing config paths when creating symlinks.
+  --help       Show this help message.
+EOF
+}
+
+for arg in "$@"; do
+  case $arg in
+    --help|-h) usage; exit 0 ;;
+  esac
+done
+
 source "$install_dir/common.sh"
 
 if is_server; then

@@ -7,6 +7,53 @@ source "$install_dir/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 source "$install_dir/config-links.sh"
 
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  BOLD=$'\033[1m'
+  DIM=$'\033[2m'
+  BLUE=$'\033[34m'
+  GREEN=$'\033[32m'
+  RED=$'\033[31m'
+  YELLOW=$'\033[33m'
+  RESET=$'\033[0m'
+else
+  BOLD=''
+  DIM=''
+  BLUE=''
+  GREEN=''
+  RED=''
+  YELLOW=''
+  RESET=''
+fi
+
+usage() {
+  cat <<'EOF'
+Usage: ./linux/install/sync [options]
+
+Reconcile the selected profile with linux/packages.yaml. Each stage requires
+confirmation before changing the system:
+  packages  Install required packages and remove tracked packages no longer declared.
+  groups    Reconcile groups required by declared packages.
+  configs   Create declared config links and remove tracked links no longer declared.
+  services  Enable declared services and disable tracked services no longer declared.
+
+Only resources tracked in $XDG_STATE_HOME/dotfiles/install are eligible for
+removal. The first confirmed run adopts matching declared resources.
+
+Options:
+  --desktop    Reconcile the desktop profile (default).
+  --server     Reconcile the headless server profile.
+  --dry-run    Print proposed changes without changing the system.
+  --replace    Replace existing config paths when creating symlinks.
+  --help       Show this help message.
+EOF
+}
+
+for arg in "$@"; do
+  case $arg in
+    --help|-h) usage; exit 0 ;;
+  esac
+done
+
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install"
 
 contains() {
@@ -43,8 +90,31 @@ write_state() {
 confirm_stage() {
   local stage="$1"
   shift
-  printf '\n==> %s\n' "$stage"
-  printf '%s\n' "$@"
+  local change label adopted=0
+
+  printf '\n%s%s%s\n' "$BOLD$BLUE" "${stage^^}" "$RESET"
+  printf '%s----------------------------------------%s\n' "$DIM" "$RESET"
+  for change in "$@"; do
+    case $change in
+      adopt:*)
+        adopted=$((adopted + 1))
+        ;;
+      install:*|add\ user\ to:*|enable:*|link:*)
+        label="${change#*: }"
+        printf '  %s+%s %s\n' "$GREEN" "$RESET" "$label"
+        ;;
+      remove:*|disable:*|unlink:*)
+        label="${change#*: }"
+        printf '  %s-%s %s\n' "$RED" "$RESET" "$label"
+        ;;
+      *)
+        printf '  %s~%s %s\n' "$YELLOW" "$RESET" "$change"
+        ;;
+    esac
+  done
+  if [ "$adopted" -gt 0 ]; then
+    printf '  %s~%s track %d existing resource(s)\n' "$DIM" "$RESET" "$adopted"
+  fi
   answer="$(ask "Apply $stage changes? [y/N] ")"
   [[ "$answer" =~ ^[Yy]$ ]]
 }
@@ -167,49 +237,6 @@ if [ "${#group_changes[@]}" -gt 0 ] && confirm_stage groups "${group_changes[@]}
   write_state groups "${next_groups[@]}"
 fi
 
-mapfile -t declared_services < <(
-  manifest_list '.common.services'
-  manifest_list ".profiles.$INSTALL_PROFILE.services"
-)
-read_state services tracked_services
-adopted_services=()
-if [ ! -f "$state_dir/services" ]; then
-  for service in "${declared_services[@]}"; do
-    systemctl is-enabled --quiet "$service" && adopted_services+=("$service")
-  done
-  tracked_services=("${adopted_services[@]}")
-fi
-missing_services=()
-for service in "${declared_services[@]}"; do
-  if ! systemctl cat "$service" >/dev/null 2>&1; then
-    printf 'skipping unavailable service: %s\n' "$service"
-  elif ! systemctl is-enabled --quiet "$service"; then
-    missing_services+=("$service")
-  fi
-done
-extra_services=()
-for service in "${tracked_services[@]}"; do
-  contains "$service" "${declared_services[@]}" || extra_services+=("$service")
-done
-service_changes=()
-for service in "${adopted_services[@]}"; do service_changes+=("adopt: $service"); done
-for service in "${missing_services[@]}"; do service_changes+=("enable: $service"); done
-for service in "${extra_services[@]}"; do service_changes+=("disable: $service"); done
-if [ "${#service_changes[@]}" -gt 0 ] && confirm_stage services "${service_changes[@]}"; then
-  [ "${#missing_services[@]}" -gt 0 ] && run systemctl enable --now "${missing_services[@]}"
-  for service in "${extra_services[@]}"; do
-    if systemctl cat "$service" >/dev/null 2>&1; then
-      run systemctl disable --now "$service"
-    fi
-  done
-  next_services=()
-  for service in "${tracked_services[@]}"; do
-    contains "$service" "${extra_services[@]}" || next_services+=("$service")
-  done
-  next_services+=("${missing_services[@]}")
-  write_state services "${next_services[@]}"
-fi
-
 expand_target() {
   local target="$1"
   target="${target//\$HOME/$HOME}"
@@ -264,4 +291,47 @@ if [ "${#config_changes[@]}" -gt 0 ] && confirm_stage configs "${config_changes[
     [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ] && next_configs+=("$mapping")
   done
   write_state configs "${next_configs[@]}"
+fi
+
+mapfile -t declared_services < <(
+  manifest_list '.common.services'
+  manifest_list ".profiles.$INSTALL_PROFILE.services"
+)
+read_state services tracked_services
+adopted_services=()
+if [ ! -f "$state_dir/services" ]; then
+  for service in "${declared_services[@]}"; do
+    systemctl is-enabled --quiet "$service" && adopted_services+=("$service")
+  done
+  tracked_services=("${adopted_services[@]}")
+fi
+missing_services=()
+for service in "${declared_services[@]}"; do
+  if ! systemctl cat "$service" >/dev/null 2>&1; then
+    printf 'skipping unavailable service: %s\n' "$service"
+  elif ! systemctl is-enabled --quiet "$service"; then
+    missing_services+=("$service")
+  fi
+done
+extra_services=()
+for service in "${tracked_services[@]}"; do
+  contains "$service" "${declared_services[@]}" || extra_services+=("$service")
+done
+service_changes=()
+for service in "${adopted_services[@]}"; do service_changes+=("adopt: $service"); done
+for service in "${missing_services[@]}"; do service_changes+=("enable: $service"); done
+for service in "${extra_services[@]}"; do service_changes+=("disable: $service"); done
+if [ "${#service_changes[@]}" -gt 0 ] && confirm_stage services "${service_changes[@]}"; then
+  [ "${#missing_services[@]}" -gt 0 ] && run systemctl enable --now "${missing_services[@]}"
+  for service in "${extra_services[@]}"; do
+    if systemctl cat "$service" >/dev/null 2>&1; then
+      run systemctl disable --now "$service"
+    fi
+  done
+  next_services=()
+  for service in "${tracked_services[@]}"; do
+    contains "$service" "${extra_services[@]}" || next_services+=("$service")
+  done
+  next_services+=("${missing_services[@]}")
+  write_state services "${next_services[@]}"
 fi
