@@ -11,15 +11,26 @@ const launcher = path.resolve(__dirname, '../scripts/quickshell');
 async function fixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'qs-startup-'));
   const socket = path.join(directory, 'i3.sock');
-  const server = net.createServer();
+  const hyprland = {
+    runtime: path.join(directory, 'runtime'),
+    signature: 'hypr-test',
+  };
+  const hyprlandDirectory = path.join(hyprland.runtime, 'hypr', hyprland.signature);
+  const servers = [net.createServer(), net.createServer(), net.createServer()];
   t.after(async () => {
-    if (server.listening) await new Promise(resolve => server.close(resolve));
+    await Promise.all(servers.filter(server => server.listening)
+      .map(server => new Promise(resolve => server.close(resolve))));
     fs.rmSync(directory, { recursive: true, force: true });
   });
-  await new Promise((resolve, reject) => {
+  fs.mkdirSync(hyprlandDirectory, { recursive: true });
+  await Promise.all([
+    [servers[0], socket],
+    [servers[1], path.join(hyprlandDirectory, '.socket.sock')],
+    [servers[2], path.join(hyprlandDirectory, '.socket2.sock')],
+  ].map(([server, path]) => new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(socket, resolve);
-  });
+    server.listen(path, resolve);
+  })));
   assert.ok(fs.statSync(socket).isSocket());
 
   const bin = path.join(directory, 'bin');
@@ -52,6 +63,7 @@ if (command === 'sleep') process.exit(99);
 
   return {
     socket,
+    hyprland,
     home,
     directory,
     run(args = [], overrides = {}) {
@@ -94,7 +106,7 @@ for (const args of [[], ['--session-start']]) {
     for (const DISPLAY of [undefined, '']) {
       const result = f.run(args, { DISPLAY, I3SOCK: undefined });
       assert.equal(result.status, 1);
-      assert.match(result.stderr, /DISPLAY is missing/);
+      assert.match(result.stderr, /active i3 or Hyprland session/);
       assert.deepEqual(result.calls, []);
     }
   });
@@ -159,6 +171,7 @@ test('session startup imports only session names before idempotent start, never 
     });
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(commands(result), [
+      ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XAUTHORITY'],
       ['systemctl', '--user', 'start', 'quickshell.service'],
     ]);
@@ -167,7 +180,7 @@ test('session startup imports only session names before idempotent start, never 
       assert.equal(call.env.I3SOCK, f.socket);
       assert.equal(call.env.XAUTHORITY, XAUTHORITY);
     }
-    assert.equal(result.calls[1].pid, result.pid, 'systemctl start must replace Bash');
+    assert.equal(result.calls[2].pid, result.pid, 'systemctl start must replace Bash');
   }
 });
 
@@ -178,6 +191,7 @@ test('unset or empty XAUTHORITY clears the manager value before importing the di
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(commands(result), [
       ['i3', '--get-socketpath'],
+      ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ['systemctl', '--user', 'unset-environment', 'XAUTHORITY'],
       ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK'],
       ['systemctl', '--user', 'start', 'quickshell.service'],
@@ -193,6 +207,7 @@ test('failed environment import blocks service startup', async t => {
     const result = f.run(['--session-start'], { XAUTHORITY, IMPORT_STATUS: '42' });
     assert.equal(result.status, 42);
     assert.deepEqual(commands(result), [
+      ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ...(XAUTHORITY ? [] : [['systemctl', '--user', 'unset-environment', 'XAUTHORITY']]),
       ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', ...(XAUTHORITY ? ['XAUTHORITY'] : [])],
     ]);
@@ -209,6 +224,59 @@ test('unit is not pulled in by default.target or ordered after graphical.target'
     const forbidden = match[1] === 'WantedBy' ? 'default.target' : 'graphical.target';
     assert.ok(!match[2].split(/\s+/).includes(forbidden), `Forbidden startup dependency: ${line}`);
   }
+});
+
+test('Hyprland launches the default shell with its Wayland environment', async t => {
+  const f = await fixture(t);
+  const result = f.run([], {
+    DISPLAY: undefined,
+    I3SOCK: undefined,
+    HYPRLAND_INSTANCE_SIGNATURE: f.hyprland.signature,
+    WAYLAND_DISPLAY: 'wayland-test',
+    XDG_RUNTIME_DIR: f.hyprland.runtime,
+    LAUNCH_STATUS: '23',
+  });
+  assert.equal(result.status, 23);
+  assert.deepEqual(commands(result), [
+    ['quickshell', '--path', path.join(f.home, 'dotfiles/linux/config/quickshell/shell.qml')],
+  ]);
+  assert.equal(result.calls[0].env.HYPRLAND_INSTANCE_SIGNATURE, f.hyprland.signature);
+  assert.equal(result.calls[0].env.WAYLAND_DISPLAY, 'wayland-test');
+});
+
+test('Hyprland startup clears i3 variables before importing Wayland plumbing', async t => {
+  const f = await fixture(t);
+  const result = f.run(['--session-start'], {
+    HYPRLAND_INSTANCE_SIGNATURE: f.hyprland.signature,
+    WAYLAND_DISPLAY: 'wayland-test',
+    XDG_RUNTIME_DIR: f.hyprland.runtime,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(commands(result), [
+    ['systemctl', '--user', 'unset-environment', 'DISPLAY', 'I3SOCK', 'XAUTHORITY'],
+    ['systemctl', '--user', 'import-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR'],
+    ['systemctl', '--user', 'start', 'quickshell.service'],
+  ]);
+});
+
+test('incomplete Hyprland environment fails without falling back to i3', async t => {
+  const f = await fixture(t);
+  const result = f.run([], {
+    HYPRLAND_INSTANCE_SIGNATURE: f.hyprland.signature,
+    WAYLAND_DISPLAY: undefined,
+    XDG_RUNTIME_DIR: f.hyprland.runtime,
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /incomplete Hyprland Wayland environment/);
+  assert.deepEqual(result.calls, []);
+});
+
+test('bar selects the native workspace model for the active session', () => {
+  const bar = fs.readFileSync(path.resolve(__dirname, '../Bar.qml'), 'utf8');
+  assert.match(bar, /^import Quickshell\.Hyprland$/m);
+  assert.match(bar, /^import Quickshell\.I3$/m);
+  assert.match(bar, /model: root\.hyprlandSession \? Hyprland\.workspaces : I3\.workspaces/);
+  assert.match(bar, /text: root\.hyprlandSession \? workspace\.name : workspace\.number/);
 });
 
 test('i3 explicitly runs the existing session startup helper', () => {

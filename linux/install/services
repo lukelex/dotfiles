@@ -31,16 +31,18 @@ if has_wm i3; then
   esac
 
   run systemctl enable --user --now "$DOTFILES/linux/config/xautolock/xautolock.service"
+fi
 
+if has_wm i3 || has_wm hyprland; then
   if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
     && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
     run sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
   fi
-  # Remove legacy default.target startup; i3 starts the service with a ready environment.
+  # Remove legacy default.target startup; the active WM imports a ready environment first.
   run systemctl --user disable quickshell.service
   run systemctl --user link "$DOTFILES/linux/config/quickshell/quickshell.service"
   run systemctl --user daemon-reload
-  if [[ -n "${DISPLAY:-}" ]] && i3 --get-socketpath >/dev/null 2>&1; then
+  if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || { [[ -n "${DISPLAY:-}" ]] && i3 --get-socketpath >/dev/null 2>&1; }; then
     run "$DOTFILES/linux/config/quickshell/scripts/quickshell" --session-start
   fi
 fi

@@ -2,7 +2,9 @@
 
 This directory implements the desktop bar, its panels, notifications, and system
 OSDs. Use this guide for future changes alongside the repository's root AGENTS.md.
-The supported live environment is i3/X11; do not assume Wayland behavior applies.
+The configuration supports i3/X11 and Hyprland/Wayland. Validate behavior in each
+session; X11-specific window-management workarounds do not automatically apply to
+Wayland.
 
 ## Design Intent
 
@@ -59,7 +61,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 ## Architecture And Platform
 
 - `shell.qml` composes the shell. `Bar.qml` owns shared visual tokens and per-screen panel wiring.
-- i3 starts Quickshell through `linux/config/quickshell/scripts/quickshell --session-start`: validate the live socket/display, import only `DISPLAY`, `I3SOCK`, and optional `XAUTHORITY`, then start the systemd user service. Repeated calls use `start`, not `restart`. The unit is linked but not enabled on `default.target`; starting before the graphical session caused a 30-second socket wait and a restart delay. Do not restore boot-time enablement or import the entire login environment.
+- Both window managers start Quickshell through `linux/config/quickshell/scripts/quickshell --session-start`. The launcher validates a Hyprland socket pair when `HYPRLAND_INSTANCE_SIGNATURE` is set, otherwise validates i3's display/socket. It imports only the selected session's plumbing and clears stale variables from the other backend before starting the shared systemd user service. Repeated calls use `start`, not `restart`. The unit is linked but not enabled on `default.target`; do not restore boot-time enablement or import the entire login environment.
 - Runtime helpers the shell invokes live beside the config in `linux/config/quickshell/scripts/` and are called by absolute path (`scripts/battery`, `scripts/nightmode`, `scripts/weather`, plus this launcher), never through the global `u_*` links that `linux/install/binaries` creates for `linux/scripts/`. Keep the quickshell stack self-contained; do not move its helpers back to `linux/scripts/`.
 - `*Center.qml` files own panel presentation and interaction. `NotificationService.qml` and `ConnectivityService.qml` own backend state and lifecycle; do not duplicate their state through independent polling in a panel.
 - `WeatherService.qml` owns one shared weather snapshot from the colocated `scripts/weather snapshot`; retain the helper's existing CLI modes (`icon`/`show`/`details`/`forecast`) for the snapshot pipeline and manual use. The helper validates payloads before replacing its 20-minute cache, preserves valid cached data on failure, and bounds requests with a cooldown. Expose loading, freshness, update time, and errors honestly; a retry button must indicate when cooldown prevents action.
@@ -90,7 +92,7 @@ quickshell log --pid <current-pid> --tail 30
 
 - Run Qt 6's linter on every changed QML file. `/usr/bin/qmllint` may select an older Qt version and fail without useful diagnostics. Native Quickshell type metadata can produce unresolved-type warnings; inspect and report them rather than calling a warning-producing run clean.
 - The Node tests extract JavaScript from QML and mock native services. They cover logic, not QML bindings, rendering, focus, D-Bus delivery, or actual hardware behavior.
-- Startup tests exercise the launcher with isolated Unix sockets and mocked system commands. For startup changes, also validate the unit and i3 config, check boot journal timestamps and restart counts, and distinguish a measured live restart from an actual reboot/login test.
+- Startup tests exercise the launcher with isolated Unix sockets and mocked system commands. For startup changes, also validate the unit and both i3 and Hyprland session entries, check boot journal timestamps and restart counts, and distinguish a measured live restart from an actual reboot/login test.
 - Inspect installed `.qmltypes` under `/usr/lib/qt6/qml/Quickshell/` and matching upstream source when API behavior is uncertain. Confirm units and lifecycle semantics rather than relying on names or documentation alone.
 - Configs are symlinked and Quickshell reloads on edits. Check the current instance and its logs; do not launch a second full shell or run provisioning scripts just to validate a component.
 - Confirm the reload log timestamp is newer than the edit before live-testing. Atomic file replacement by a formatter can leave the running instance watching an old inode; an edit to the shell entry point can trigger a fresh reload and restore component watches. Do not infer that new code loaded from an old "Configuration Loaded" message.

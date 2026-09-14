@@ -1,8 +1,7 @@
 [Unit]
 Description=Quickshell shell (bar, control center, notifications)
 Documentation=https://quickshell.outfoxxed.me
-# Started explicitly by i3 after its display and IPC environment are imported.
-ConditionEnvironment=DISPLAY
+# Started explicitly by the active i3 or Hyprland session after its environment is imported.
 
 [Service]
 Type=simple

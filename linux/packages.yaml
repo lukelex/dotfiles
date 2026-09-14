@@ -81,10 +81,10 @@ profiles:
         hyprland:
           configs:
             - linux/config/hypr:$XDG_CONFIG_HOME/hypr
-        waybar-git:
+        quickshell:
           configs:
-            - linux/config/waybar/config.json:$XDG_CONFIG_HOME/waybar/config
-            - linux/config/waybar/style.css:$XDG_CONFIG_HOME/waybar/style.css
+            - linux/config/quickshell:$XDG_CONFIG_HOME/quickshell
+            - linux/config/quickshell/quickshell.service:$XDG_CONFIG_HOME/systemd/user/quickshell.service
         wdisplays: []
         cliphist: []
         awww: []

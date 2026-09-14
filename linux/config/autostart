@@ -11,7 +11,7 @@ seadrive-gui &
 
 case "$XDG_SESSION_TYPE" in
   wayland)
-    waybar -c "$HOME/dotfiles/linux/config/waybar/config.json" -s "$HOME/dotfiles/linux/config/waybar/style.css" &
+    "$HOME/dotfiles/linux/config/quickshell/scripts/quickshell" --session-start &
     kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
     awww-daemon &
 

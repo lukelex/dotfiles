@@ -1,29 +1,51 @@
 #!/usr/bin/bash
 
-# i3 imports its ready session before starting the supervised shell.
+# Import the ready i3 or Hyprland session before starting the supervised shell.
 
 set -Eeuo pipefail
 
-if [[ -z "${DISPLAY:-}" ]]; then
-  echo "quickshell: start from an active i3 X11 session (DISPLAY is missing)" >&2
-  exit 1
-fi
+backend=""
 
-if [[ ! -S "${I3SOCK:-}" ]]; then
-  I3SOCK="$(i3 --get-socketpath 2>/dev/null)" || I3SOCK=""
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  if [[ -z "${WAYLAND_DISPLAY:-}" || -z "${XDG_RUNTIME_DIR:-}" ]]; then
+    echo "quickshell: incomplete Hyprland Wayland environment" >&2
+    exit 1
+  fi
+  hyprland_socket_directory="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE"
+  if [[ ! -S "$hyprland_socket_directory/.socket.sock" || ! -S "$hyprland_socket_directory/.socket2.sock" ]]; then
+    echo "quickshell: no ready Hyprland IPC sockets; start from the Hyprland session" >&2
+    exit 1
+  fi
+  backend="hyprland"
+else
+  if [[ -z "${DISPLAY:-}" ]]; then
+    echo "quickshell: start from an active i3 or Hyprland session" >&2
+    exit 1
+  fi
+
+  if [[ ! -S "${I3SOCK:-}" ]]; then
+    I3SOCK="$(i3 --get-socketpath 2>/dev/null)" || I3SOCK=""
+  fi
+  if [[ ! -S "$I3SOCK" ]]; then
+    echo "quickshell: no ready i3 IPC socket; start from the i3 session" >&2
+    exit 1
+  fi
+  export I3SOCK
+  backend="i3"
 fi
-if [[ ! -S "$I3SOCK" ]]; then
-  echo "quickshell: no ready i3 IPC socket; start from the i3 session" >&2
-  exit 1
-fi
-export I3SOCK
 
 if [[ "${1:-}" == --session-start ]]; then
-  session_variables=(DISPLAY I3SOCK)
-  if [[ -n "${XAUTHORITY:-}" ]]; then
-    session_variables+=(XAUTHORITY)
+  if [[ "$backend" == hyprland ]]; then
+    systemctl --user unset-environment DISPLAY I3SOCK XAUTHORITY
+    session_variables=(HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_RUNTIME_DIR)
   else
-    systemctl --user unset-environment XAUTHORITY
+    systemctl --user unset-environment HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY
+    session_variables=(DISPLAY I3SOCK)
+    if [[ -n "${XAUTHORITY:-}" ]]; then
+      session_variables+=(XAUTHORITY)
+    else
+      systemctl --user unset-environment XAUTHORITY
+    fi
   fi
   # Import only session plumbing, not the secrets loaded by the login profile.
   systemctl --user import-environment "${session_variables[@]}"

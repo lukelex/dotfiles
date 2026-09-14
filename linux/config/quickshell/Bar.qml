@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.I3
 import Quickshell.Io
 import QtQuick
@@ -43,6 +44,7 @@ Scope {
   readonly property string fontFamily: "Hack Nerd Font Mono"
   readonly property int barFontSize: 17
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
+  readonly property bool hyprlandSession: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") !== ""
 
   property real audioVolume: 0
   property bool audioMuted: false
@@ -72,7 +74,7 @@ Scope {
   readonly property color controlSurface: root.darkMode ? "#2B303A" : "#E8EBEF"
 
   function icon(name) {
-    return "file:///home/lukas/dotfiles/linux/config/lucide/svg/" + name + ".svg"
+    return "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/" + name + ".svg"
   }
 
   function audioIcon() {
@@ -190,7 +192,7 @@ Scope {
 
   FileView {
     id: themeState
-    path: "/home/lukas/.local/state/dotfiles/color-scheme"
+    path: Quickshell.env("HOME") + "/.local/state/dotfiles/color-scheme"
     watchChanges: true
     onFileChanged: reload()
     onLoaded: root.syncTheme()
@@ -450,7 +452,7 @@ Scope {
         }
 
         Repeater {
-          model: I3.workspaces
+          model: root.hyprlandSession ? Hyprland.workspaces : I3.workspaces
 
           delegate: Item {
             required property var modelData
@@ -467,7 +469,7 @@ Scope {
               color: workspace.urgent ? root.urgent : root.foreground
               font.family: root.fontFamily
               font.pixelSize: root.barFontSize
-              text: workspace.number
+              text: root.hyprlandSession ? workspace.name : workspace.number
             }
 
             Rectangle {
