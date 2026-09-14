@@ -54,6 +54,9 @@ fi
 link_config "$DOTFILES/linux/config/quickshell" "$quickshell_config"
 link_config "$DOTFILES/linux/config/quickshell/quickshell.service" "$quickshell_service"
 
+run systemctl --user disable quickshell.service
+run systemctl --user link "$DOTFILES/linux/config/quickshell/quickshell.service"
 run systemctl --user daemon-reload
-run systemctl --user enable --now quickshell.service
-run systemctl --user restart quickshell.service
+if [[ -n "${DISPLAY:-}" ]] && i3 --get-socketpath >/dev/null 2>&1; then
+  run "$DOTFILES/linux/scripts/quickshell" --session-start
+fi

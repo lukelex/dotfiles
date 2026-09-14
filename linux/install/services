@@ -30,7 +30,13 @@ if has_wm i3; then
     && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
     run sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
   fi
-  run systemctl enable --user --now "$DOTFILES/linux/config/quickshell/quickshell.service"
+  # Remove legacy default.target startup; i3 starts the service with a ready environment.
+  run systemctl --user disable quickshell.service
+  run systemctl --user link "$DOTFILES/linux/config/quickshell/quickshell.service"
+  run systemctl --user daemon-reload
+  if [[ -n "${DISPLAY:-}" ]] && i3 --get-socketpath >/dev/null 2>&1; then
+    run "$DOTFILES/linux/scripts/quickshell" --session-start
+  fi
 fi
 
 run systemctl enable --user "$DOTFILES/linux/config/gammastep/gammastep.service"

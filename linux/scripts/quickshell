@@ -1,21 +1,33 @@
 #!/usr/bin/bash
 
-# Launch quickshell with the i3 IPC socket path in its environment.
+# i3 imports its ready session before starting the supervised shell.
 
 set -Eeuo pipefail
 
-if [[ -z "${I3SOCK:-}" ]]; then
-  for _ in $(seq 1 30); do
-    if I3SOCK="$(i3 --get-socketpath 2>/dev/null)"; then
-      break
-    fi
-    sleep 1
-  done
-  if [[ -z "${I3SOCK:-}" ]]; then
-    echo "quickshell: could not resolve an i3 IPC socket path" >&2
-    exit 1
+if [[ -z "${DISPLAY:-}" ]]; then
+  echo "quickshell: start from an active i3 X11 session (DISPLAY is missing)" >&2
+  exit 1
+fi
+
+if [[ ! -S "${I3SOCK:-}" ]]; then
+  I3SOCK="$(i3 --get-socketpath 2>/dev/null)" || I3SOCK=""
+fi
+if [[ ! -S "$I3SOCK" ]]; then
+  echo "quickshell: no ready i3 IPC socket; start from the i3 session" >&2
+  exit 1
+fi
+export I3SOCK
+
+if [[ "${1:-}" == --session-start ]]; then
+  session_variables=(DISPLAY I3SOCK)
+  if [[ -n "${XAUTHORITY:-}" ]]; then
+    session_variables+=(XAUTHORITY)
+  else
+    systemctl --user unset-environment XAUTHORITY
   fi
-  export I3SOCK
+  # Import only session plumbing, not the secrets loaded by the login profile.
+  systemctl --user import-environment "${session_variables[@]}"
+  exec systemctl --user start quickshell.service
 fi
 
 exec quickshell --path "$HOME/dotfiles/linux/config/quickshell/shell.qml" "$@"
