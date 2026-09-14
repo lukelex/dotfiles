@@ -1,0 +1,83 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$install_dir/common.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: ./linux/install/validate-packages
+
+Validate every installable package in linux/packages.yaml. Packages found in
+the local pacman sync databases require no network request. All remaining
+packages are checked through the AUR RPC API in batches of at most 200 names.
+EOF
+}
+
+for arg in "$@"; do
+  case $arg in
+    --help|-h) usage; exit 0 ;;
+    *) printf 'Unknown option: %s\n' "$arg" >&2; usage >&2; exit 2 ;;
+  esac
+done
+
+command -v pacman >/dev/null || { printf 'pacman is required\n' >&2; exit 2; }
+command -v curl >/dev/null || { printf 'curl is required\n' >&2; exit 2; }
+
+package_categories=(
+  '.common.packages.core'
+  '.profiles.desktop.packages.core'
+  '.profiles.desktop.packages.hyprland'
+  '.profiles.desktop.packages.i3'
+  '.profiles.desktop.packages.extras'
+  '.profiles.desktop.packages.ipod'
+  '.profiles.desktop.packages.optional'
+  '.profiles.desktop.packages.nvidia'
+  '.profiles.server.packages.core'
+)
+
+mapfile -t packages < <(
+  for category in "${package_categories[@]}"; do
+    manifest_packages "$category"
+  done | sort -u
+)
+
+declare -A repository_packages aur_packages
+while IFS= read -r package; do
+  repository_packages["$package"]=1
+done < <(pacman -Slq | sort -u)
+
+aur_candidates=()
+for package in "${packages[@]}"; do
+  [ -n "${repository_packages[$package]:-}" ] || aur_candidates+=("$package")
+done
+
+for ((start = 0; start < ${#aur_candidates[@]}; start += 200)); do
+  batch=("${aur_candidates[@]:start:200}")
+  curl_args=(--fail --silent --show-error --get 'https://aur.archlinux.org/rpc/v5/info')
+  for package in "${batch[@]}"; do
+    curl_args+=(--data-urlencode "arg[]=$package")
+  done
+
+  response="$(curl "${curl_args[@]}")" || {
+    printf 'AUR package lookup failed\n' >&2
+    exit 2
+  }
+  while IFS= read -r package; do
+    aur_packages["$package"]=1
+  done < <(printf '%s\n' "$response" | "$YQ" -r '.results[].Name')
+done
+
+missing=()
+for package in "${aur_candidates[@]}"; do
+  [ -n "${aur_packages[$package]:-}" ] || missing+=("$package")
+done
+
+printf 'Validated %d manifest packages: %d repository, %d AUR\n' \
+  "${#packages[@]}" "$(( ${#packages[@]} - ${#aur_candidates[@]} ))" "${#aur_candidates[@]}"
+if [ "${#missing[@]}" -gt 0 ]; then
+  printf 'Missing packages:\n' >&2
+  printf '  %s\n' "${missing[@]}" >&2
+  exit 1
+fi

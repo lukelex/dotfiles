@@ -45,3 +45,8 @@ Run `./linux/install/sync --server` (or `--desktop`) to reconcile a profile.
 Each package, group, service, and config-link stage requires confirmation.
 Only resources previously recorded under `$XDG_STATE_HOME/dotfiles/install` are
 eligible for removal.
+
+Run `./linux/install/validate-packages` to verify every installable manifest
+package is available from the configured Arch repositories or AUR. Repository
+packages use the local pacman sync databases; AUR candidates are checked with
+batched AUR RPC requests.
