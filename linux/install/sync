@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$install_dir/common.sh"
-source "$HOME/dotfiles/linux/variables.env"
+source "$DOTFILES/linux/variables.env"
 source "$install_dir/config-links.sh"
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
@@ -42,6 +42,7 @@ removal. The first confirmed run adopts matching declared resources.
 Options:
   --desktop    Reconcile the desktop profile (default).
   --server     Reconcile the headless server profile.
+  --host NAME  Apply the committed linux/hosts/NAME.yaml overlay.
   --dry-run    Print proposed changes without changing the system.
   --replace    Replace existing config paths when creating symlinks.
   --help       Show this help message.
@@ -65,7 +66,10 @@ for arg in "$@"; do
   esac
 done
 
+"$install_dir/preflight" "$@"
+
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install"
+state_file="$state_dir/state.yaml"
 
 contains() {
   local needle="$1"
@@ -77,7 +81,7 @@ contains() {
   return 1
 }
 
-read_state() {
+read_legacy_state() {
   local name="$1"
   local -n result="$2"
   local file="$state_dir/$name"
@@ -86,17 +90,154 @@ read_state() {
   return 0
 }
 
+ensure_state_file() {
+  [ -f "$state_file" ] && return
+
+  local temporary name item
+  temporary="$(mktemp "$state_dir/state.yaml.XXXXXX")"
+  {
+    printf 'version: 1\ncurrent:\n'
+    printf '  profile: %s\n' "$INSTALL_PROFILE"
+    printf '  host: %s\n' "$INSTALL_HOST"
+    printf '  manifest_sha256: %s\n' "$(sha256sum "$INSTALL_MANIFEST" | cut -d' ' -f1)"
+    printf 'managed:\n'
+    for name in packages groups configs services; do
+      printf '  %s:\n' "$name"
+      local entries=()
+      read_legacy_state "$name" entries
+      for item in "${entries[@]}"; do
+        printf '    - %s\n' "$item"
+      done
+    done
+  } > "$temporary"
+  mv "$temporary" "$state_file"
+  rm -f "$state_dir"/packages "$state_dir"/groups "$state_dir"/configs "$state_dir"/services
+}
+
+read_state() {
+  local name="$1"
+  local result_name="$2"
+  local -n result="$result_name"
+  result=()
+  if [ -f "$state_file" ]; then
+    mapfile -t result < <("$YQ" -r ".managed.$name[]?" "$state_file")
+  else
+    read_legacy_state "$name" "$result_name"
+  fi
+}
+
 write_state() {
   local name="$1"
   shift
-  local file="$state_dir/$name"
   if [ "$DRY_RUN" -eq 1 ]; then
     printf 'dry-run: record managed %s\n' "$name"
     return
   fi
   mkdir -p "$state_dir"
-  printf '%s\n' "$@" > "$file"
+  ensure_state_file
+  local temporary item
+  temporary="$(mktemp "$state_dir/state.yaml.XXXXXX")"
+  cp "$state_file" "$temporary"
+  "$YQ" -i ".current.profile = \"$INSTALL_PROFILE\" | .current.host = \"$INSTALL_HOST\" | .current.manifest_sha256 = \"$(sha256sum "$INSTALL_MANIFEST" | cut -d' ' -f1)\" | .managed.$name = []" "$temporary"
+  for item in "$@"; do
+    ITEM="$item" "$YQ" -i ".managed.$name += [strenv(ITEM)]" "$temporary"
+  done
+  mv "$temporary" "$state_file"
 }
+
+sort_state_packages() {
+  [ "$DRY_RUN" -eq 0 ] && [ -f "$state_file" ] || return
+  local temporary package
+  local packages=()
+  mapfile -t packages < <("$YQ" -r '.managed.packages[]?' "$state_file" | sort -u)
+  temporary="$(mktemp "$state_dir/state.yaml.XXXXXX")"
+  cp "$state_file" "$temporary"
+  "$YQ" -i '.managed.packages = []' "$temporary"
+  for package in "${packages[@]}"; do
+    ITEM="$package" "$YQ" -i '.managed.packages += [strenv(ITEM)]' "$temporary"
+  done
+  mv "$temporary" "$state_file"
+}
+
+sort_manifest_packages() {
+  [ "$DRY_RUN" -eq 0 ] || return
+  local manifest="$DOTFILES/linux/packages.yaml"
+  local temporary
+  temporary="$(mktemp "$DOTFILES/linux/packages.yaml.XXXXXX")"
+  cp "$manifest" "$temporary"
+  "$YQ" -i '.common.packages.headless |= sort_keys(.) | .profiles.desktop.packages.desktop |= sort_keys(.) | .profiles.desktop.packages.hyprland |= sort_keys(.) | .profiles.desktop.packages.i3 |= sort_keys(.) | .profiles.desktop.packages.extras |= sort_keys(.) | .profiles.server.packages.headless |= sort_keys(.) | with(.profiles.desktop.options[]; .packages |= sort_keys(.)) | .profiles.desktop = {"packages": .profiles.desktop.packages, "options": .profiles.desktop.options} | .profiles = {"desktop": .profiles.desktop, "server": .profiles.server} | . = {"source": .source, "common": .common, "profiles": .profiles}' "$temporary"
+  mv "$temporary" "$manifest"
+}
+
+if [ "$DRY_RUN" -eq 0 ] && [ ! -f "$state_file" ] \
+  && { [ -f "$state_dir/packages" ] || [ -f "$state_dir/groups" ] || [ -f "$state_dir/configs" ] || [ -f "$state_dir/services" ]; }; then
+  mkdir -p "$state_dir"
+  ensure_state_file
+fi
+
+selection_value() {
+  local path="$1"
+  "$YQ" -r ".current.selections.$path" "$state_file"
+}
+
+selection_recorded() {
+  local path="$1"
+  [ -f "$state_file" ] && [ "$("$YQ" -r ".current.selections.$path != null" "$state_file")" = true ]
+}
+
+initialize_desktop_selections() {
+  is_server && return
+  if [ "$DRY_RUN" -eq 1 ]; then
+    return
+  fi
+
+  mkdir -p "$state_dir"
+  ensure_state_file
+  local temporary selection option answer category title
+  temporary="$(mktemp "$state_dir/state.yaml.XXXXXX")"
+  cp "$state_file" "$temporary"
+  for selection in extras hyprland i3; do
+    selection_recorded "$selection" && continue
+    case $selection in
+      extras) category='.profiles.desktop.packages.extras'; title='Desktop extras' ;;
+      hyprland) category='.profiles.desktop.packages.hyprland'; title='Hyprland' ;;
+      i3) category='.profiles.desktop.packages.i3'; title='i3/X11' ;;
+    esac
+    printf '\n%s includes:\n' "$title"
+    manifest_packages "$category" | paste -sd ', ' | fold -s -w 88 | sed 's/^/  /'
+    answer="$(ask "Install $title? [y/N] ")"
+    case $answer in [Yy]*) value=true ;; *) value=false ;; esac
+    "$YQ" -i ".current.selections.$selection = $value" "$temporary"
+  done
+  local options=()
+  mapfile -t options < <(manifest_option_names '.profiles.desktop.options')
+  for option in "${options[@]}"; do
+    selection_recorded "options.$option" && continue
+    printf '\nOptional set %s includes:\n' "$option"
+    manifest_option_packages ".profiles.desktop.options.$option" | paste -sd ', ' | fold -s -w 88 | sed 's/^/  /'
+    answer="$(ask "Install optional set '$option'? [y/N] ")"
+    case $answer in [Yy]*) value=true ;; *) value=false ;; esac
+    "$YQ" -i ".current.selections.options.$option = $value" "$temporary"
+  done
+  mv "$temporary" "$state_file"
+}
+
+initialize_desktop_selections
+
+if ! is_server && [ "$DRY_RUN" -eq 1 ]; then
+  for selection in extras hyprland i3; do
+    if ! selection_recorded "$selection"; then
+      printf 'No recorded desktop selections; run sync without --dry-run first.\n' >&2
+      exit 2
+    fi
+  done
+  while IFS= read -r option; do
+    if ! selection_recorded "options.$option"; then
+      printf 'No recorded desktop selections; run sync without --dry-run first.\n' >&2
+      exit 2
+    fi
+  done < <(manifest_option_names '.profiles.desktop.options')
+fi
 
 confirm_stage() {
   local stage="$1"
@@ -129,28 +270,29 @@ confirm_stage() {
   [[ "$answer" =~ ^[Yy]$ ]]
 }
 
-package_categories=('.common.packages.core' ".profiles.$INSTALL_PROFILE.packages.core")
-if ! is_server; then
-  package_categories+=(
-    '.profiles.desktop.packages.hyprland'
-    '.profiles.desktop.packages.i3'
-    '.profiles.desktop.packages.extras'
-  )
-fi
-
-required_categories=('.common.packages.core' ".profiles.$INSTALL_PROFILE.packages.core")
+package_categories=('.common.packages.headless' ".profiles.$INSTALL_PROFILE.packages.$([ "$INSTALL_PROFILE" = desktop ] && printf desktop || printf headless)")
+resource_categories=('.common.packages' ".profiles.$INSTALL_PROFILE.packages.$([ "$INSTALL_PROFILE" = desktop ] && printf desktop || printf headless)")
 selected_wms=()
 if ! is_server; then
-  required_categories+=('.profiles.desktop.packages.extras')
-  wm_selection="$HOME/.config/dotfiles/wm-selection"
-  if [ -f "$wm_selection" ]; then
-    while IFS= read -r wm; do
-      case $wm in
-        hypr) required_categories+=('.profiles.desktop.packages.hyprland'); selected_wms+=(Hyprland) ;;
-        i3) required_categories+=('.profiles.desktop.packages.i3'); selected_wms+=(i3) ;;
-      esac
-    done < "$wm_selection"
+  resource_categories+=('.profiles.desktop.packages.dotfiles')
+  if [ "$(selection_value extras)" = true ]; then
+    package_categories+=('.profiles.desktop.packages.extras')
+    resource_categories+=('.profiles.desktop.packages.extras')
   fi
+  if [ "$(selection_value hyprland)" = true ]; then
+    package_categories+=('.profiles.desktop.packages.hyprland')
+    resource_categories+=('.profiles.desktop.packages.hyprland')
+    selected_wms+=(Hyprland)
+  fi
+  if [ "$(selection_value i3)" = true ]; then
+    package_categories+=('.profiles.desktop.packages.i3')
+    resource_categories+=('.profiles.desktop.packages.i3')
+    selected_wms+=(i3)
+  fi
+  while IFS= read -r option; do
+    package_categories+=(".profiles.desktop.options.$option.packages")
+    resource_categories+=(".profiles.desktop.options.$option.packages")
+  done < <(manifest_option_names '.profiles.desktop.options' | while IFS= read -r option; do [ "$(selection_value "options.$option")" = true ] && printf '%s\n' "$option"; done)
 fi
 
 if is_server; then
@@ -169,16 +311,12 @@ packages_from_categories() {
 }
 
 mapfile -t declared_packages < <(
-  {
-    packages_from_categories "${package_categories[@]}"
-    is_server || manifest_options_packages '.profiles.desktop.options'
-  } | sort -u
+  packages_from_categories "${package_categories[@]}" | sort -u
 )
-mapfile -t required_packages < <(packages_from_categories "${required_categories[@]}" | sort -u)
 
 read_state packages tracked_packages
 adopted_packages=()
-if [ ! -f "$state_dir/packages" ]; then
+if [ ! -f "$state_file" ] && [ ! -f "$state_dir/packages" ]; then
   for package in "${declared_packages[@]}"; do
     pacman -Q "$package" >/dev/null 2>&1 && adopted_packages+=("$package")
   done
@@ -186,7 +324,7 @@ if [ ! -f "$state_dir/packages" ]; then
 fi
 
 missing_packages=()
-for package in "${required_packages[@]}"; do
+for package in "${declared_packages[@]}"; do
   pacman -Q "$package" >/dev/null 2>&1 || missing_packages+=("$package")
 done
 extra_packages=()
@@ -200,10 +338,21 @@ for package in "${missing_packages[@]}"; do package_changes+=("install: $package
 for package in "${extra_packages[@]}"; do package_changes+=("remove: $package"); done
 if [ "${#package_changes[@]}" -gt 0 ] && confirm_stage packages "${package_changes[@]}"; then
   if [ "${#missing_packages[@]}" -gt 0 ]; then
-    if is_server; then
-      run sudo pacman -S --needed --noconfirm "${missing_packages[@]}"
-    else
-      run yay -S --needed --noconfirm "${missing_packages[@]}"
+    repo_packages=()
+    aur_packages=()
+    for package in "${missing_packages[@]}"; do
+      case "$(manifest_package_origin "$package")" in
+        repo) repo_packages+=("$package") ;;
+        aur) aur_packages+=("$package") ;;
+        *) printf 'Missing package origin: %s\n' "$package" >&2; exit 2 ;;
+      esac
+    done
+    [ "${#repo_packages[@]}" -eq 0 ] || run sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
+    if [ "${#aur_packages[@]}" -gt 0 ]; then
+      if ! command -v yay >/dev/null; then
+        run "$install_dir/yay"
+      fi
+      run yay -S --needed --noconfirm "${aur_packages[@]}"
     fi
   fi
   if [ "${#extra_packages[@]}" -gt 0 ]; then
@@ -223,11 +372,16 @@ elif [ "${#package_changes[@]}" -eq 0 ]; then
   print_in_sync packages
 fi
 
-mapfile -t declared_groups < <(manifest_package_groups ".common.packages, .profiles.$INSTALL_PROFILE.packages" | sort -u)
+category_expression="(${resource_categories[0]}"
+for category in "${resource_categories[@]:1}"; do
+  category_expression+=", $category"
+done
+category_expression+=")"
+mapfile -t declared_groups < <(manifest_package_groups "$category_expression" | sort -u)
 read_state groups tracked_groups
 current_groups=( $(id -nG "$USER") )
 adopted_groups=()
-if [ ! -f "$state_dir/groups" ]; then
+if [ ! -f "$state_file" ] && [ ! -f "$state_dir/groups" ]; then
   for group in "${declared_groups[@]}"; do
     contains "$group" "${current_groups[@]}" && adopted_groups+=("$group")
   done
@@ -273,12 +427,11 @@ expand_target() {
 }
 
 mapfile -t declared_configs < <(
-  manifest_package_configs '.common.packages'
-  manifest_package_configs ".profiles.$INSTALL_PROFILE.packages"
+  for category in "${resource_categories[@]}"; do manifest_package_configs "$category"; done
 )
 read_state configs tracked_configs
 adopted_configs=()
-if [ ! -f "$state_dir/configs" ]; then
+if [ ! -f "$state_file" ] && [ ! -f "$state_dir/configs" ]; then
   for mapping in "${declared_configs[@]}"; do
     source="$DOTFILES/${mapping%%:*}"
     target="$(expand_target "${mapping#*:}")"
@@ -338,13 +491,13 @@ services_from_categories() {
 
 mapfile -t declared_services < <(
   {
-    services_from_categories system "${required_categories[@]}"
-    services_from_categories user "${required_categories[@]}"
+    services_from_categories system "${package_categories[@]}"
+    services_from_categories user "${package_categories[@]}"
   } | sort -u
 )
 read_state services tracked_services
 adopted_services=()
-if [ ! -f "$state_dir/services" ]; then
+if [ ! -f "$state_file" ] && [ ! -f "$state_dir/services" ]; then
   tracked_services=()
 fi
 missing_services=()
@@ -399,3 +552,6 @@ if [ "${#service_changes[@]}" -gt 0 ] && confirm_stage services "${service_chang
 elif [ "${#service_changes[@]}" -eq 0 ]; then
   print_in_sync services
 fi
+
+sort_state_packages
+sort_manifest_packages

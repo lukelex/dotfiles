@@ -3,15 +3,15 @@
 set -Eeuo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
-source "$HOME/dotfiles/linux/variables.env"
+source "$DOTFILES/linux/variables.env"
 
-wm_selection="$HOME/.config/dotfiles/wm-selection"
-wm_profile=""
-[ -f "$wm_selection" ] && wm_profile="$(tr '\n' ' ' < "$wm_selection")"
+state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
 
-has_wm() { case " $wm_profile " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
+has_wm() {
+  [ -f "$state_file" ] && [ "$("$YQ" -r ".current.selections.$1" "$state_file")" = true ]
+}
 
-service_categories=('.common.packages.core' ".profiles.$INSTALL_PROFILE.packages.core")
+service_categories=('.common.packages.headless' ".profiles.$INSTALL_PROFILE.packages.$([ "$INSTALL_PROFILE" = desktop ] && printf desktop || printf headless)")
 if ! is_server; then
   service_categories+=('.profiles.desktop.packages.extras')
   has_wm hyprland && service_categories+=('.profiles.desktop.packages.hyprland')
@@ -42,12 +42,5 @@ if has_wm i3 || has_wm hyprland; then
   if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
     && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
     run sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
-  fi
-  # Remove legacy default.target startup; the active WM imports a ready environment first.
-  run systemctl --user disable quickshell.service
-  run systemctl --user link "$DOTFILES/linux/config/quickshell/quickshell.service"
-  run systemctl --user daemon-reload
-  if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || { [[ -n "${DISPLAY:-}" ]] && i3 --get-socketpath >/dev/null 2>&1; }; then
-    run "$DOTFILES/linux/config/quickshell/scripts/quickshell" --session-start
   fi
 fi

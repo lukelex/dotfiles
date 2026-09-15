@@ -11,18 +11,19 @@ failures=0
 check() {
   local desc="$1"
   shift
-  if "$@"; then
-    echo "ok: $desc"
+  if "$@" >/dev/null 2>&1; then
+    printf '  ok   %s\n' "$desc"
   else
-    echo "FAIL: $desc" >&2
+    printf '  FAIL %s\n' "$desc" >&2
     failures=$((failures + 1))
   fi
 }
 
+printf 'Preflight\n'
 check "not running as root" test "$(id -u)" -ne 0
 check "sudo is available" command -v sudo
 check "running on Arch Linux (pacman found)" command -v pacman
-check "repo located at \$HOME/dotfiles" test "$dotfiles" = "$HOME/dotfiles"
+check "repo root matches installer" test "$dotfiles" = "$DOTFILES"
 if ! is_server; then
   check "fonts submodule checked out" test -d "$dotfiles/fonts/fa6/svgs"
   check "lucide svgs vendored" test -f "$dotfiles/linux/config/lucide/svg/monitor.svg"

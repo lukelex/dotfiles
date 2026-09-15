@@ -3,15 +3,33 @@
 DRY_RUN=0
 INSTALL_PROFILE=desktop
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_MANIFEST="$INSTALL_DIR/../packages.yaml"
+DOTFILES="$(cd "$INSTALL_DIR/../.." && pwd)"
+export DOTFILES
+INSTALL_MANIFEST="$DOTFILES/linux/packages.yaml"
+INSTALL_HOST=""
 YQ="$INSTALL_DIR/yq"
 for arg in "$@"; do
   case $arg in
     --dry-run|--check) DRY_RUN=1 ;;
     --server) INSTALL_PROFILE=server ;;
     --desktop) INSTALL_PROFILE=desktop ;;
+    --host=*) INSTALL_HOST="${arg#--host=}" ;;
   esac
 done
+
+for ((index = 1; index <= $#; index++)); do
+  if [ "${!index}" = "--host" ]; then
+    next=$((index + 1))
+    INSTALL_HOST="${!next:-}"
+  fi
+done
+
+if [ -n "$INSTALL_HOST" ]; then
+  host_manifest="$DOTFILES/linux/hosts/$INSTALL_HOST.yaml"
+  [ -f "$host_manifest" ] || { printf 'Unknown host overlay: %s\n' "$INSTALL_HOST" >&2; exit 2; }
+  INSTALL_MANIFEST="$(mktemp)"
+  "$YQ" eval-all '. as $item ireduce ({}; . * $item)' "$DOTFILES/linux/packages.yaml" "$host_manifest" > "$INSTALL_MANIFEST"
+fi
 
 is_server() {
   [ "$INSTALL_PROFILE" = server ]
@@ -23,6 +41,17 @@ manifest_list() {
 
 manifest_packages() {
   "$YQ" -r "$1 | keys[]" "$INSTALL_MANIFEST"
+}
+
+manifest_package_origin() {
+  local package="$1"
+  local source
+  source="$("$YQ" -r "[.. | select(tag == \"!!map\" and has(\"$package\")) | .[\"$package\"].source] | map(select(. != null)) | unique | .[]" "$INSTALL_MANIFEST")"
+  if [ -n "$source" ]; then
+    printf '%s\n' "$source"
+  else
+    "$YQ" -r '.source' "$INSTALL_MANIFEST"
+  fi
 }
 
 manifest_option_names() {

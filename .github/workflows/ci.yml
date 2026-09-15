@@ -28,6 +28,13 @@ jobs:
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f -print0 | xargs -0 shellcheck
 
+  installer-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run installer manifest tests
+        run: bash linux/install/tests/manifest.test.sh
+
   yamlfmt:
     runs-on: ubuntu-latest
     steps:

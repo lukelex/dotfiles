@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
-source "$HOME/dotfiles/linux/variables.env"
+source "$DOTFILES/linux/variables.env"
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$install_dir/config-links.sh"

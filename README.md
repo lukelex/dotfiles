@@ -24,21 +24,24 @@ Configuration is done through symlinks and relative paths.
 
 ```sh
 $ git clone --recurse-submodules git@github.com:lukelex/dotfiles.git
-$ cd dotfiles && ./linux/install/all
+$ cd dotfiles && ./linux/install/sync
 ```
 
-For a headless homelab server, run `./linux/install/all --server`. This
-installs terminal tooling, OpenSSH, and Docker without an AUR helper, GUI
-packages, display services, desktop configuration, or personal Git settings.
+For a headless homelab server, run `./linux/install/sync --server`. The legacy
+`all` command is retained as a compatibility wrapper for `sync`.
 Profile packages, groups, and services are defined in
 `linux/packages.yaml` and parsed by the bundled static `yq` binary.
 The `common` section applies to every profile; profile sections contain only
-their additions. Package values list the Unix groups required by that package.
+their additions. The root `source: aur` makes `yay` the default resolver; it
+also resolves official repository packages. A package can override this with a
+`source` child when needed. Package values can list Unix groups required by
+that package.
 Packages can also declare repository-to-target config links, such as
 `linux/config/nvim:$XDG_CONFIG_HOME/nvim`.
-Desktop install options live under `profiles.desktop.options`. Each option has
-`prompt`, `default`, and `packages` fields; the installer discovers every
-option at runtime and asks whether to install its package set.
+The first interactive desktop sync records its package selections locally. Use a
+committed `linux/hosts/<name>.yaml` overlay with `--host <name>` for additional
+machine-specific package metadata. See `linux/hosts/README.md` for the overlay
+format.
 
 Run `./linux/install/all --dry-run` to preview every action without touching
 the system. The config stage skips links that would overwrite existing files;
@@ -49,7 +52,6 @@ Each package, group, service, and config-link stage requires confirmation.
 Only resources previously recorded under `$XDG_STATE_HOME/dotfiles/install` are
 eligible for removal.
 
-Run `./linux/install/validate-packages` to verify every installable manifest
-package is available from the configured Arch repositories or AUR. Repository
-packages use the local pacman sync databases; AUR candidates are checked with
-batched AUR RPC requests.
+Run `./linux/install/validate-packages [--host <name>]` to verify selected
+manifest packages. Repository packages use local pacman sync databases and AUR
+packages use batched AUR RPC requests.

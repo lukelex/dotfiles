@@ -1,60 +1,53 @@
+source: aur
 common:
   packages:
-    core:
-      openssh: []
+    headless:
+      1password-cli:
+      bat:
+      btop:
+      diff-so-fancy:
       docker:
         groups:
           - docker
         services:
           system:
             - docker
-      docker-buildx: []
-      docker-compose: []
-      git: []
-      man-db: []
-      wget: []
-      zsh: []
-      zsh-completions: []
-      neovim: []
-      fd: []
-      fzf: []
-      ripgrep: []
-      jq: []
-      tree: []
-      bat: []
-      diff-so-fancy: []
-      btop: []
-      ttf-hack-nerd: []
-    zsh:
-      configs:
-        - linux/config/zsh/zshrc:$HOME/.zshrc
+      docker-buildx:
+      docker-compose:
+      downgrade:
+      fd:
+      fzf:
+      git:
+      jq:
+      man-db:
+      neovim:
+      openssh:
+      ripgrep:
+      tree:
+      ttf-hack-nerd:
+      wget:
+      zsh:
+      zsh-completions:
     neovim:
       configs:
         - linux/config/nvim:$XDG_CONFIG_HOME/nvim
     opencode:
-      install: false
       configs:
         - linux/config/opencode:$XDG_CONFIG_HOME/opencode
+      install: false
+    zsh:
+      configs:
+        - linux/config/zsh/zshrc:$HOME/.zshrc
 profiles:
   desktop:
     packages:
-      core:
-        ibus: []
-        polkit: []
-        polkit-gnome: []
-        network-manager-applet:
+      desktop:
+        1password:
+        avahi:
           services:
             system:
-              - NetworkManager
-        ttf-hack: []
-        noto-fonts-cjk: []
-        ttf-lucide-font: []
-        bc: []
-        cmake: []
-        tidy: []
-        yazi: []
-        pcmanfm: []
-        imagemagick: []
+              - avahi-daemon
+        bc:
         blueman:
           configs:
             - linux/config/bluetooth-notify/bluetooth-notify.service:$XDG_CONFIG_HOME/systemd/user/bluetooth-notify.service
@@ -63,113 +56,23 @@ profiles:
               - bluetooth
             user:
               - bluetooth-notify.service
-        avahi:
-          services:
-            system:
-              - avahi-daemon
-        fragments: []
-        playerctl: []
-        inetutils: []
-        papirus-icon-theme: []
-        kvantum: []
-        qt5ct: []
-        v4l-utils:
+        cameractrls:
           groups:
             - video
-        rust: []
-        kmonad: []
-        kitty:
-          configs:
-            - linux/config/kitty:$XDG_CONFIG_HOME/kitty
-        pavucontrol: []
-        pipewire-jack: []
-        pipewire-alsa: []
-        pipewire-pulse: []
-        google-chrome: []
-        dbus: []
-        udiskie:
-          configs:
-            - linux/config/usb-notify/usb-notify.service:$XDG_CONFIG_HOME/systemd/user/usb-notify.service
-          services:
-            user:
-              - usb-notify.service
-        nordvpn-bin:
+        cifs-utils:
+        cmake:
+        cups:
           groups:
-            - nordvpn
+            - lp
           services:
             system:
-              - nordvpnd
-      hyprland:
-        hyprland:
-          configs:
-            - linux/config/hypr:$XDG_CONFIG_HOME/hypr
-        quickshell:
-          configs:
-            - linux/config/quickshell:$XDG_CONFIG_HOME/quickshell
-            - linux/config/quickshell/quickshell.service:$XDG_CONFIG_HOME/systemd/user/quickshell.service
-        wdisplays: []
-        cliphist: []
-        awww: []
-        swhkd-bin: []
-        hypridle: []
-        hyprlock: []
-        hyprpanel-bin: []
-        hyprshot: []
-        qt5-wayland: []
-        qt6-wayland: []
-        tofi:
-          configs:
-            - linux/config/tofi.conf:$XDG_CONFIG_HOME/tofi/config
-        sox: []
-        slurp: []
-        wf-recorder: []
-        xdg-desktop-portal-hyprland: []
-        kooha: []
-      i3:
-        xorg-server: []
-        xorg-xinit: []
-        i3-wm:
-          configs:
-            - linux/config/i3/main.conf:$XDG_CONFIG_HOME/i3/config
-        xss-lock: []
-        xwallpaper: []
-        xautolock:
-          configs:
-            - linux/config/xautolock/xautolock.service:$XDG_CONFIG_HOME/systemd/user/xautolock.service
-          services:
-            user:
-              - xautolock.service
-        xorg-xkill: []
-        i3lock: []
-        xfce4-power-manager: []
-        flameshot:
-          configs:
-            - linux/config/flameshot.ini:$XDG_CONFIG_HOME/flameshot/flameshot.ini
-        arandr: []
-        xclip: []
-        xdotool: []
-        quickshell:
-          configs:
-            - linux/config/quickshell:$XDG_CONFIG_HOME/quickshell
-            - linux/config/quickshell/quickshell.service:$XDG_CONFIG_HOME/systemd/user/quickshell.service
-        simplescreenrecorder: []
-        picom: []
-        autorandr:
-          configs:
-            - linux/config/autorandr/postswitch:$XDG_CONFIG_HOME/autorandr/postswitch
-        sxhkd: []
-        rofi:
-          configs:
-            - linux/config/rofi:$XDG_CONFIG_HOME/rofi
-        rofi-greenclip:
-          configs:
-            - linux/config/greenclip.toml:$XDG_CONFIG_HOME/greenclip.toml
-        rofi-bluetooth-git: []
-        sddm: []
-        qt6-svg: []
-      extras:
-        light: []
-        ddcutil: []
+              - cups
+        dbus:
+        ddcutil:
+        etcher-bin:
+        fastfetch:
+        fprintd:
+        fragments:
         gammastep:
           configs:
             - linux/config/gammastep/config.ini:$XDG_CONFIG_HOME/gammastep/config.ini
@@ -179,91 +82,186 @@ profiles:
             user:
               - gammastep.service
               - night-mode-sunset.timer
-        1password: []
-        spotify: []
-        cups:
-          groups:
-            - lp
+        google-chrome:
+        ibus:
+        imagemagick:
+        inetutils:
+        kitty:
+          configs:
+            - linux/config/kitty:$XDG_CONFIG_HOME/kitty
+        kmonad:
+        kvantum:
+        light:
+        mpv:
+        network-manager-applet:
           services:
             system:
-              - cups
-        ghostscript: []
-        kbt: []
-        cameractrls:
+              - NetworkManager
+        nordvpn-bin:
           groups:
-            - video
-        zeal: []
-        vlc: []
-        zip: []
-        unzip: []
-        unrar: []
-        seadrive-gui: []
-        pantheon-calculator: []
-        tldr: []
-        rubygems: []
-        npm: []
-        fastfetch: []
-        blanket: []
-        sxiv: []
-        postbird-bin: []
-        sysstat: []
-        viewnior: []
-        zathura: []
-        zathura-pdf-mupdf: []
-        etcher-bin: []
+            - nordvpn
+          services:
+            system:
+              - nordvpnd
+        noto-fonts-cjk:
+        npm:
+        pantheon-calculator:
+        papirus-icon-theme:
+        pavucontrol:
+        pcmanfm:
+        pipewire-alsa:
+        pipewire-jack:
+        pipewire-pulse:
+        playerctl:
+        polkit:
+        polkit-gnome:
+        postbird-bin:
+        qt5ct:
+        qt6-svg:
+        quickshell:
+          configs:
+            - linux/config/quickshell:$XDG_CONFIG_HOME/quickshell
+            - linux/config/quickshell/quickshell.service:$XDG_CONFIG_HOME/systemd/user/quickshell.service
+        rubygems:
+        rust:
+        seadrive-gui:
+        spotify:
         system-config-printer:
           groups:
             - lp
-        fprintd: []
-        downgrade: []
-        cifs-utils: []
-        smbclient: []
+        tidy:
+        ttf-hack:
+        ttf-lucide-font:
+        udiskie:
+          configs:
+            - linux/config/usb-notify/usb-notify.service:$XDG_CONFIG_HOME/systemd/user/usb-notify.service
+          services:
+            user:
+              - usb-notify.service
+        unrar:
+        unzip:
+        v4l-utils:
+          groups:
+            - video
+        viewnior:
+        yazi:
+        zathura:
+        zathura-pdf-mupdf:
+        zeal:
+        zip:
       dotfiles:
-        install: false
         configs:
-          - linux/config/gsimplecal:$XDG_CONFIG_HOME/gsimplecal/config
-          - linux/Xresources:$HOME/.Xresources
           - linux/profile:$HOME/.profile
-          - linux/xprofile:$HOME/.xprofile
-          - linux/xinitrc:$HOME/.xinitrc
           - linux/config/default-apps.list:$HOME/.local/share/applications/defaults.list
           - linux/config/fonts.conf:$XDG_CONFIG_HOME/fontconfig/fonts.conf
           - linux/config/mimeapps.conf:$HOME/.local/share/applications/mimeapps.list
           - linux/config/mimeapps.conf:$XDG_CONFIG_HOME/mimeapps.list
+        install: false
+      extras:
+        blanket:
+        ghostscript:
+        kbt:
+        smbclient:
+        sxiv:
+        sysstat:
+        tldr:
+      hyprland:
+        awww:
+        cliphist:
+        hypridle:
+        hyprland:
+          configs:
+            - linux/config/hypr:$XDG_CONFIG_HOME/hypr
+        hyprlock:
+        hyprpanel-bin:
+        hyprshot:
+        kooha:
+        qt5-wayland:
+        qt6-wayland:
+        slurp:
+        sox:
+        swhkd-bin:
+        tofi:
+          configs:
+            - linux/config/tofi.conf:$XDG_CONFIG_HOME/tofi/config
+        wdisplays:
+        wf-recorder:
+        xdg-desktop-portal-hyprland:
+      i3:
+        arandr:
+        autorandr:
+          configs:
+            - linux/config/autorandr/postswitch:$XDG_CONFIG_HOME/autorandr/postswitch
+        flameshot:
+          configs:
+            - linux/config/flameshot.ini:$XDG_CONFIG_HOME/flameshot/flameshot.ini
+        i3-wm:
+          configs:
+            - linux/config/i3/main.conf:$XDG_CONFIG_HOME/i3/config
+            - linux/config/gsimplecal:$XDG_CONFIG_HOME/gsimplecal/config
+            - linux/Xresources:$HOME/.Xresources
+            - linux/xprofile:$HOME/.xprofile
+            - linux/xinitrc:$HOME/.xinitrc
+        i3lock:
+        picom:
+        rofi:
+          configs:
+            - linux/config/rofi:$XDG_CONFIG_HOME/rofi
+        rofi-bluetooth-git:
+        rofi-greenclip:
+          configs:
+            - linux/config/greenclip.toml:$XDG_CONFIG_HOME/greenclip.toml
+        sddm:
+        simplescreenrecorder:
+        sxhkd:
+        xautolock:
+          configs:
+            - linux/config/xautolock/xautolock.service:$XDG_CONFIG_HOME/systemd/user/xautolock.service
+          services:
+            user:
+              - xautolock.service
+        xclip:
+        xdotool:
+        xfce4-power-manager:
+        xorg-server:
+        xorg-xinit:
+        xorg-xkill:
+        xss-lock:
+        xwallpaper:
     options:
       ipod:
+        default: yes
+        packages:
+          gvfs:
+          libgpod:
+          rhythmbox:
         prompt: Would you like to be able to sync your iPod? [Y/n]
-        default: yes
-        packages:
-          rhythmbox: []
-          libgpod: []
-          gvfs: []
-      optional:
-        prompt: Would you like to install optional dependencies? [Y/n]
-        default: yes
-        packages:
-          kicad: []
-          curtail: []
-          birdfont: []
-          whatsapp-for-linux-git: []
-          telegram-desktop: []
-          discord: []
-          via-appimage: []
-          slack-desktop: []
       nvidia:
+        default: no
+        packages:
+          nvidia-open:
+          nvidia-prime:
         prompt: Would you like to install the NVIDIA driver? [y/N]
-        default: no
-        packages:
-          nvidia-open: []
-          nvidia-prime: []
       nvidia-gui:
-        prompt: Would you like to install NVIDIA Settings? [y/N]
         default: no
         packages:
-          nvidia-settings: []
+          nvidia-settings:
+        prompt: Would you like to install NVIDIA Settings? [y/N]
+      optional:
+        default: yes
+        packages:
+          birdfont:
+          curtail:
+          discord:
+          kicad:
+          slack-desktop:
+          telegram-desktop:
+          via-appimage:
+          whatsapp-for-linux-git:
+        prompt: Would you like to install optional dependencies? [Y/n]
   server:
     packages:
-      core:
+      headless:
         openssh:
           services:
             system:

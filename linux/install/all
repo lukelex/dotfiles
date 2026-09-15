@@ -8,14 +8,13 @@ usage() {
   cat <<'EOF'
 Usage: ./linux/install/all [options]
 
-Install this dotfiles profile. The desktop profile is the default and installs
-desktop packages, configuration, services, and input tooling. The server
-profile installs only shared terminal tooling, OpenSSH, Docker, and their
-configuration.
+Reconcile this dotfiles profile through the manifest. The legacy imperative
+helpers remain available as individual commands when explicitly needed.
 
 Options:
   --desktop    Install the desktop profile (default).
-  --server     Install the headless server profile.
+  --server     Reconcile the headless server profile.
+  --host NAME  Apply the committed linux/hosts/NAME.yaml overlay.
   --dry-run    Print actions without changing the system.
   --replace    Replace existing config paths when creating symlinks.
   --help       Show this help message.
@@ -30,13 +29,4 @@ done
 
 source "$install_dir/common.sh"
 
-if is_server; then
-  stages=(preflight dependencies configs configs-account services)
-else
-  stages=(preflight dependencies binaries icons configs configs-system configs-account kmonad-device-manager configs-post git-config services)
-fi
-
-for stage in "${stages[@]}"; do
-  echo "==> $stage"
-  "$install_dir/$stage" "$@"
-done
+exec "$install_dir/sync" "$@"
