@@ -107,6 +107,7 @@ PopupWindow {
     property bool enterFromRight: false
 
     readonly property var icon: service.iconFor(toast.record)
+    readonly property string body: service.displayBody(toast.record)
 
     transform: [
       Translate {
@@ -345,8 +346,8 @@ PopupWindow {
         font.family: toast.controller.fontFamily
         font.pixelSize: 11
         maximumLineCount: 2
-        text: toast.record.body
-        visible: toast.record.body.length > 0
+        text: toast.body
+        visible: toast.body.length > 0
         width: parent.width
         wrapMode: Text.Wrap
       }

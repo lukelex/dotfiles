@@ -17,12 +17,23 @@ function resolver(appLookup = null, env = {}) {
     },
     DesktopEntries: { byId: () => appLookup, heuristicLookup: () => appLookup },
   });
-  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isTeamsNotification', 'focusCommand', 'lucideIcon', 'iconFor']) {
+  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isTeamsNotification', 'displayBody', 'focusCommand', 'lucideIcon', 'iconFor']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
   }
   return record => JSON.parse(JSON.stringify(service.iconFor(record)));
+}
+
+function displayBody(record) {
+  const service = {};
+  const context = vm.createContext({ service });
+  for (const name of ['isBrowserIcon', 'displayBody']) {
+    const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+    assert.ok(match, `Missing QML function ${name}`);
+    service[name] = vm.runInContext(`(${match[0]})`, context);
+  }
+  return service.displayBody(record);
 }
 
 function focusCommand(appLookup, env, isTeamsNotification = () => false) {
@@ -85,6 +96,21 @@ test('Teams notifications sent through Chrome use the Teams icon', () => {
     kind: 'image',
     source: 'file:///home/test/dotfiles/linux/config/quickshell/assets/teams.svg',
   });
+});
+
+test('browser notification previews omit a hostname origin and retain the message', () => {
+  assert.equal(displayBody({
+    appIcon: 'google-chrome',
+    body: 'teams.cloud.microsoft\n\nI did address your comments',
+  }), 'I did address your comments');
+  assert.equal(displayBody({
+    appIcon: 'firefox',
+    body: 'example.com\n\nYour report is ready',
+  }), 'Your report is ready');
+  assert.equal(displayBody({
+    appIcon: 'google-chrome',
+    body: 'The report is ready',
+  }), 'The report is ready');
 });
 
 test('expired notifications focus an existing matching window instead of relaunching the app', () => {

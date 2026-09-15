@@ -150,6 +150,7 @@ PopupWindow {
 
     readonly property bool isLive: Boolean(service.live[record.id])
     readonly property var icon: service.iconFor(card.record)
+    readonly property string body: service.displayBody(card.record)
     readonly property real contentHeight: textColumn.height + 24
 
     property bool dismissing: false
@@ -329,8 +330,8 @@ PopupWindow {
           font.family: card.controller.fontFamily
           font.pixelSize: 11
           maximumLineCount: 2
-          text: card.record.body
-          visible: card.record.body.length > 0
+          text: card.body
+          visible: card.body.length > 0
           width: parent.width
           wrapMode: Text.Wrap
         }

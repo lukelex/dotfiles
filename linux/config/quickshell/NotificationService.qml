@@ -501,6 +501,15 @@ QtObject {
       && /(?:^|\n)teams(?:\.cloud)?\.microsoft(?:\.com)?(?:\n|$)/i.test(body)
   }
 
+  function displayBody(record) {
+    const body = String(record && record.body || "")
+    if (!record || !service.isBrowserIcon(record.appIcon))
+      return body
+
+    // Chromium prefixes web notifications with their origin on a separate line.
+    return body.replace(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+[ \t]*(?:\r?\n[ \t]*){2}/i, "")
+  }
+
   function resolveIcon(icon) {
     const source = String(icon || "")
     if (!source)
