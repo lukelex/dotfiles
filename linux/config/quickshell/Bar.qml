@@ -52,7 +52,7 @@ Scope {
   readonly property color urgent: "#DA4939"
   readonly property color muted: "#A9ADB4"
   readonly property string fontFamily: "Hack Nerd Font Mono"
-  readonly property int barFontSize: 17
+  readonly property int barFontSize: 18
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
