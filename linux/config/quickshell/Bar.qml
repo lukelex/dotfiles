@@ -571,7 +571,7 @@ Scope {
                 const centerY = height / 2
 
                 context.clearRect(0, 0, width, height)
-                context.fillStyle = marker.urgent ? root.urgent : root.muted
+                context.fillStyle = marker.urgent ? root.urgent : root.foreground
 
                 if (marker.full && !marker.active) {
                   context.beginPath()
@@ -585,30 +585,26 @@ Scope {
                   context.lineTo(9.3, 18)
                   context.lineTo(6.7, 15)
                   context.closePath()
-                  context.fill()
+                  context.lineWidth = 2
+                  context.strokeStyle = marker.urgent ? root.urgent : root.foreground
+                  context.stroke()
 
                   context.fillStyle = root.foreground
                   context.beginPath()
                   context.arc(centerX - 3, centerY - 1, 2, 0, Math.PI * 2)
                   context.arc(centerX + 3, centerY - 1, 2, 0, Math.PI * 2)
                   context.fill()
-
-                  context.fillStyle = marker.urgent ? root.urgent : root.muted
-                  context.beginPath()
-                  context.arc(centerX - 3, centerY - 0.5, 0.8, 0, Math.PI * 2)
-                  context.arc(centerX + 3, centerY - 0.5, 0.8, 0, Math.PI * 2)
-                  context.fill()
                 }
 
                 if (marker.active) {
-                  context.fillStyle = "#FFD43B"
+                  context.fillStyle = marker.urgent ? root.urgent : "#FFD43B"
                   context.beginPath()
                   context.moveTo(centerX, centerY)
                   context.arc(centerX, centerY, 8, marker.mouthAngle, Math.PI * 2 - marker.mouthAngle)
                   context.closePath()
                   context.fill()
                 } else if (!marker.full) {
-                  context.fillStyle = marker.urgent ? root.urgent : root.muted
+                  context.fillStyle = marker.urgent ? root.urgent : root.foreground
                   context.beginPath()
                   context.arc(centerX, centerY, 3, 0, Math.PI * 2)
                   context.fill()
