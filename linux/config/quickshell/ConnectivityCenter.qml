@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Networking
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls as Controls
 
 Scope {
   id: popup
@@ -154,33 +153,21 @@ Scope {
     }
   }
 
-  Controls.Popup {
+  PopupWindow {
     id: pinnedPopup
-    parent: popup.panel.contentItem
-    popupType: Controls.Popup.Window
-    x: Math.max(0, popup.panel.width - popup.width - 12)
-    y: popup.panel.height + 12
-    width: popup.width
-    height: popup.height
-    padding: 0
-    margins: -1
-    background: null
-    focus: true
-    modal: false
-    dim: false
-    closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
-    enter: null
-    exit: Transition {
-      enabled: !popup.closeImmediately
-      ParallelAnimation {
-        NumberAnimation { target: content; property: "opacity"; to: 0; duration: 120; easing.type: Easing.InCubic }
-        NumberAnimation { target: content; property: "y"; to: 6; duration: 120; easing.type: Easing.InCubic }
-      }
-    }
-    onOpened: {
-      // Native "opened" precedes painting. The preview snapshot bridges the first frame.
+    anchor.window: popup.panel
+    anchor.rect.x: Math.max(0, popup.panel.width - popup.width - 12)
+    anchor.rect.y: popup.panel.height + 12
+    implicitWidth: popup.width
+    implicitHeight: popup.height
+    color: "transparent"
+    surfaceFormat.opaque: false
+    grabFocus: true
+
+    function open() {
+      pinnedPopup.visible = true
+      // The preview snapshot bridges the first pinned frame.
       if (popup.promotionSnapshot) {
-        // Before opening, the content's window can still be the bar rather than the popup.
         popup.promotionWindow = content.nativeWindow
         preview.contentItem.Window.window.raise()
       }
@@ -188,12 +175,9 @@ Scope {
       if (content.opacity < 1 && !openAnim.running)
         openAnim.start()
     }
-    onAboutToHide: {
-      popup.closing = true
-      popup.cancelClose()
-      openAnim.stop()
-    }
-    onClosed: {
+
+    function close() {
+      pinnedPopup.visible = false
       popup.pinned = false
       preview.visible = false
       popup.promotionSnapshot = null

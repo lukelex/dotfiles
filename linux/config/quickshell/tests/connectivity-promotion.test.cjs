@@ -32,8 +32,8 @@ function fixture() {
   for (const match of source.matchAll(/^  function (\w+)\(([^\n]*)\) \{\n([\s\S]*?)^  \}/gm)) {
     context.popup[match[1]] = vm.runInContext(`(function(${match[2]}) {\n${match[3]}\n})`, context);
   }
-  const opened = source.match(/^    onOpened: \{\n([\s\S]*?)^    \}/m);
-  assert.ok(opened, 'Missing pinned popup open handler');
+  const opened = source.match(/^    function open\(\) \{\n([\s\S]*?)^    \}/m);
+  assert.ok(opened, 'Missing pinned popup open function');
   context.onOpened = vm.runInContext(`(function() {\n${opened[1]}\n})`, context);
   const frame = source.match(/^    function onFrameSwapped\(\) \{\n([\s\S]*?)^    \}/m);
   assert.ok(frame, 'Missing native frame-ready handler');
