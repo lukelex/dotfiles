@@ -1,5 +1,5 @@
 [Unit]
-Description=Offer night mode at sunset
+Description=Offer night mode at night
 After=graphical-session.target
 
 [Service]

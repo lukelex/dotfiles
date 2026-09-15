@@ -3,7 +3,7 @@ Description=Check whether night mode should be offered
 
 [Timer]
 OnStartupSec=5m
-OnUnitActiveSec=5m
+OnUnitActiveSec=1h
 Persistent=true
 
 [Install]

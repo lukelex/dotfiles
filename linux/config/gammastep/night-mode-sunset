@@ -5,30 +5,52 @@ set -eu
 source "$HOME/dotfiles/linux/variables.env"
 
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/weather/current.json"
-state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/night-mode-sunset-notified"
 
-[[ -r $cache_file ]] || exit 0
+night_is_active() {
+  local sunrise sunset now
 
-sunset=$(jq -er '.sys.sunset | numbers | floor' < "$cache_file") || exit 0
-now=$(date +%s)
+  [[ -r $cache_file ]] || return 1
+  sunrise=$(jq -er '.sys.sunrise | numbers | floor' "$cache_file" 2>/dev/null) || return 1
+  sunset=$(jq -er '.sys.sunset | numbers | floor' "$cache_file" 2>/dev/null) || return 1
+  now=$(date +%s)
 
-# Prompt shortly after the locally cached weather data says the sun has set.
-[[ $now -ge $sunset && $now -lt $((sunset + 21600)) ]] || exit 0
+  [[ $now -ge $sunset || $now -lt $sunrise ]]
+}
+
+session_is_locked() {
+  local session_id user
+
+  user=${USER:-$(id -un)}
+  session_id=${XDG_SESSION_ID:-}
+  if [[ -z $session_id ]]; then
+    session_id=$(loginctl show-user "$user" -p Display --value 2>/dev/null || true)
+  fi
+
+  if [[ -n $session_id ]] && [[ "$(loginctl show-session "$session_id" -p LockedHint --value 2>/dev/null || true)" == yes ]]; then
+    return 0
+  fi
+
+  pidof hyprlock >/dev/null 2>&1 || pidof i3lock >/dev/null 2>&1
+}
+
+night_is_active || exit 0
 [[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null || true)" != true ]] || exit 0
 
-if [[ -r $state_file ]] && [[ $(< "$state_file") == "$sunset" ]]; then
-  exit 0
-fi
+# Keep the offer until the session is unlocked, unless daylight arrives first.
+while session_is_locked; do
+  night_is_active || exit 0
+  sleep 5
+done
 
-mkdir -p "$(dirname "$state_file")"
-printf '%s\n' "$sunset" > "$state_file"
+night_is_active || exit 0
+[[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null || true)" != true ]] || exit 0
 
 action=$(notify-send -a System \
   -i "$LUCIDE_PATH/moon-star.svg" \
-  -h string:wired-tag:night-mode-sunset \
-  -t 0 \
+  -h string:wired-tag:night-mode \
+  -t 3300000 \
   -A turn-on='Turn on' \
-  'Night mode' 'Sunset has arrived. Turn on night mode?' || true)
+  'Night mode' 'It is nighttime. Turn on night mode?' || true)
 
 if [[ $action == turn-on ]]; then
   "$DOTFILES/linux/config/quickshell/scripts/nightmode" on
