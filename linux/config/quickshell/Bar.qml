@@ -71,6 +71,8 @@ Scope {
   property bool nightModeEnabled: false
   property bool nordVpnInstalled: false
   property bool vpnConnected: false
+  property string vpnLocation: ""
+  property var vpnLocations: []
   readonly property bool vpnBusy: vpnToggle.running
   property bool powerProfileAvailable: false
   property string powerProfile: ""
@@ -180,9 +182,29 @@ Scope {
     if (!root.nordVpnInstalled || root.vpnBusy)
       return
 
-    vpnToggle.command = ["nordvpn", root.vpnConnected ? "disconnect" : "connect"]
+    if (root.vpnConnected) {
+      vpnToggle.command = ["nordvpn", "disconnect"]
+      vpnToggle.running = true
+      controlRefreshTimer.restart()
+    } else {
+      root.connectVpn("")
+    }
+  }
+
+  function connectVpn(location) {
+    if (!root.nordVpnInstalled || root.vpnBusy)
+      return
+
+    vpnToggle.command = location ? ["nordvpn", "connect", location] : ["nordvpn", "connect"]
     vpnToggle.running = true
     controlRefreshTimer.restart()
+  }
+
+  function refreshVpnLocations() {
+    if (!root.nordVpnInstalled || root.vpnLocations.length || vpnLocationsLoad.running)
+      return
+
+    vpnLocationsLoad.running = true
   }
 
   function cyclePowerProfile() {
@@ -236,7 +258,7 @@ Scope {
 
   Process {
     id: controlStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$($HOME/dotfiles/linux/config/quickshell/scripts/brightness get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
+    command: ["sh", "-c", "vpn_status=\"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null || true)\"; printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$($HOME/dotfiles/linux/config/quickshell/scripts/brightness get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(printf '%s\\n' \"$vpn_status\" | awk -F ': ' '/^Status:/{ print $2; exit }')\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\" \"$(printf '%s\\n' \"$vpn_status\" | awk -F ': ' '/^Country:/{ country=$2 } /^City:/{ city=$2 } END { if (country) print country (city ? \" / \" city : \"\") }')\""]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
@@ -251,6 +273,7 @@ Scope {
         root.vpnConnected = output[3] === "Connected"
         root.powerProfileAvailable = output[4] === "true"
         root.powerProfile = output[5] || ""
+        root.vpnLocation = output[6] || ""
       }
     }
   }
@@ -259,6 +282,23 @@ Scope {
     id: vpnToggle
     command: []
     onExited: root.refreshControlStatus()
+  }
+
+  Process {
+    id: vpnLocationsLoad
+    command: ["nordvpn", "countries"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const output = this.text.replace(/\x1B\[[0-?]*[ -\/]*[@-~]/g, "").replace(/\r/g, "")
+        if (/Permission denied|^Error:/mi.test(output)) {
+          root.vpnLocations = []
+          return
+        }
+
+        root.vpnLocations = output.split("\n").map(location => location.trim())
+          .filter(location => /^[A-Za-z][A-Za-z -]*$/.test(location) && location !== "Available countries")
+      }
+    }
   }
 
   Process {

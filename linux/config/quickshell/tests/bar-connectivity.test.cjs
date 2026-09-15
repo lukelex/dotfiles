@@ -16,3 +16,8 @@ test('wired connectivity is exposed and replaces a disconnected Wi-Fi icon', () 
 test('battery status is hidden when no battery is available', () => {
   assert.match(source, /visible: root\.batteryAvailable\n          color: root\.batteryAvailable && root\.batteryPercentage <= 5/);
 });
+
+test('NordVPN status exposes its active location', () => {
+  assert.match(source, /property string vpnLocation: ""/);
+  assert.match(source, /root\.vpnLocation = output\[6\] \|\| ""/);
+});

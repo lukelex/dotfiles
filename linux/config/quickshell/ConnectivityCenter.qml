@@ -23,7 +23,10 @@ Scope {
   readonly property real width: Math.max(1, Math.min(432, (popup.panel.screen ? popup.panel.screen.width : popup.panel.width) - 24))
   readonly property real height: sections.implicitHeight + 32
   signal shown()
-  onShown: popup.controller.refreshControlStatus()
+  onShown: {
+    popup.controller.refreshControlStatus()
+    popup.controller.refreshVpnLocations()
+  }
 
   function openPinned(request) {
     if (request !== popup.pinRequest)
@@ -501,10 +504,38 @@ Scope {
         enabled: popup.controller.nordVpnInstalled && !popup.controller.vpnBusy
         subtitle: !popup.controller.nordVpnInstalled ? "Not installed"
           : popup.controller.vpnBusy ? "Updating connection..."
-          : popup.controller.vpnConnected ? "Connected" : "Disconnected"
+          : popup.controller.vpnConnected ? "Connected / " + (popup.controller.vpnLocation || "Location unavailable") : "Disconnected"
         onActivated: {
           popup.requestOpen(true)
           popup.controller.toggleVpn()
+        }
+      }
+
+      Row {
+        width: parent.width
+        height: visible ? 32 : 0
+        spacing: 10
+        visible: popup.controller.nordVpnInstalled && popup.controller.vpnConnected
+
+        Label {
+          anchors.verticalCenter: parent.verticalCenter
+          text: "Location"
+          width: 64
+        }
+
+        ComboBox {
+          id: vpnLocations
+
+          anchors.verticalCenter: parent.verticalCenter
+          enabled: !popup.controller.vpnBusy && popup.controller.vpnLocations.length > 0
+          font.family: popup.controller.fontFamily
+          font.pixelSize: 11
+          model: ["Recommended"].concat(popup.controller.vpnLocations)
+          width: parent.width - 74
+          onActivated: function(index) {
+            popup.requestOpen(true)
+            popup.controller.connectVpn(index === 0 ? "" : currentText)
+          }
         }
       }
 
