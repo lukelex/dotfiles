@@ -229,7 +229,7 @@ QtObject {
       return 0
     if (notification.expireTimeout > 0)
       return Date.now() + notification.expireTimeout
-    return Date.now() + 5000
+    return Date.now() + 10000
   }
 
   function addHistory(record) {
