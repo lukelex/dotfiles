@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 DRY_RUN=0
+export PACKAGES_ONLY=0
 INSTALL_PROFILE=desktop
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES="$(cd "$INSTALL_DIR/../.." && pwd)"
@@ -11,6 +12,7 @@ YQ="$INSTALL_DIR/yq"
 for arg in "$@"; do
   case $arg in
     --dry-run|--check) DRY_RUN=1 ;;
+    --packages-only) PACKAGES_ONLY=1 ;;
     --server) INSTALL_PROFILE=server ;;
     --desktop) INSTALL_PROFILE=desktop ;;
     --host=*) INSTALL_HOST="${arg#--host=}" ;;
@@ -91,7 +93,7 @@ manifest_package_services() {
   shift
   local category
   for category in "$@"; do
-    "$YQ" -r "($category) | .. | select((tag == \"!!map\") and has(\"services\")) | .services.$scope[]?" "$INSTALL_MANIFEST"
+    "$YQ" -r "($category) | .. | select((tag == \"!!map\") and has(\"services\")) | .services.${scope}[]?" "$INSTALL_MANIFEST"
   done
 }
 

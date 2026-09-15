@@ -1,0 +1,159 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  cat <<'EOF'
+Usage: ./linux/install/package COMMAND [arguments]
+
+Commands:
+  add PACKAGE  Declare, validate, install, and track one package.
+  sync         Reconcile declared packages and their tracking state.
+  validate     Validate declared packages and optional package candidates.
+
+Add options:
+  --scope NAME  Manifest scope: common, desktop, server, hyprland, i3, extras,
+                or option:NAME. Prompts when omitted.
+  --desktop     Reconcile the desktop profile (default).
+  --server      Reconcile the headless server profile.
+  --host NAME   Write to linux/hosts/NAME.yaml instead of packages.yaml.
+  --dry-run     Validate and print the planned manifest and sync changes.
+  --help        Show this help message.
+EOF
+}
+
+fail() {
+  printf '%s\n' "$1" >&2
+  exit 2
+}
+
+command=${1:-}
+shift || true
+case $command in
+  sync)
+    exec "$install_dir/sync" --packages-only "$@"
+    ;;
+  validate)
+    exec "$install_dir/validate-packages" "$@"
+    ;;
+  add) ;;
+  --help|-h|"") usage; exit 0 ;;
+  *) fail "Unknown package command: $command" ;;
+esac
+
+[ -n "${1:-}" ] || { usage >&2; exit 2; }
+if [ "${1:-}" = --help ] || [ "${1:-}" = -h ]; then
+  usage
+  exit 0
+fi
+
+package=$1
+shift
+
+scope=""
+profile=desktop
+host=""
+dry_run=0
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    --scope)
+      [ -n "${2:-}" ] || fail 'Missing value for --scope'
+      scope=$2
+      shift 2
+      ;;
+    --scope=*) scope=${1#--scope=} ; shift ;;
+    --desktop) profile=desktop ; shift ;;
+    --server) profile=server ; shift ;;
+    --host)
+      [ -n "${2:-}" ] || fail 'Missing value for --host'
+      host=$2
+      shift 2
+      ;;
+    --host=*) host=${1#--host=} ; shift ;;
+    --dry-run) dry_run=1 ; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) fail "Unknown option: $1" ;;
+  esac
+done
+
+[[ "$package" =~ ^[A-Za-z0-9@._+:-]+$ ]] || fail "Invalid package name: $package"
+
+common_args=("--$profile")
+[ -z "$host" ] || common_args+=("--host=$host")
+[ "$dry_run" -eq 0 ] || common_args+=(--dry-run)
+source "$install_dir/common.sh" "${common_args[@]}"
+
+if [ -z "$scope" ]; then
+  if [ "$dry_run" -eq 1 ]; then
+    scope=$profile
+    printf 'dry-run: default package scope is %s\n' "$scope"
+  elif [ "$profile" = desktop ]; then
+    printf '%s\n' 'Available scopes: desktop, hyprland, i3, extras, common, option:NAME'
+    scope="$(ask "Add $package to scope [desktop]: ")"
+    scope=${scope:-desktop}
+  else
+    printf '%s\n' 'Available scopes: server, common'
+    scope="$(ask "Add $package to scope [server]: ")"
+    scope=${scope:-server}
+  fi
+fi
+
+scope_path=""
+case $scope in
+  common) scope_path='.common.packages.headless' ;;
+  desktop) [ "$profile" = desktop ] || fail 'The desktop scope requires --desktop'; scope_path='.profiles.desktop.packages.desktop' ;;
+  server) [ "$profile" = server ] || fail 'The server scope requires --server'; scope_path='.profiles.server.packages.headless' ;;
+  hyprland|i3|extras)
+    [ "$profile" = desktop ] || fail "The $scope scope requires --desktop"
+    scope_path=".profiles.desktop.packages.$scope"
+    ;;
+  option:*)
+    [ "$profile" = desktop ] || fail 'Optional scopes require --desktop'
+    option=${scope#option:}
+    [[ "$option" =~ ^[A-Za-z0-9_-]+$ ]] || fail "Invalid option scope: $scope"
+    "$YQ" -e ".profiles.desktop.options.$option.packages" "$INSTALL_MANIFEST" >/dev/null \
+      || fail "Unknown optional scope: $scope"
+    scope_path=".profiles.desktop.options.$option.packages"
+    ;;
+  *) fail "Unknown scope: $scope" ;;
+esac
+
+state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
+selection=""
+case $scope in
+  hyprland|i3|extras) selection=$scope ;;
+  option:*) selection="options.${scope#option:}" ;;
+esac
+if [ -n "$selection" ] && { [ ! -f "$state_file" ] || [ "$("$YQ" -r ".current.selections.$selection" "$state_file")" != true ]; }; then
+  fail "The $scope scope is not selected locally; run sync and enable it before adding packages there."
+fi
+
+if PACKAGE="$package" "$YQ" -e '[.. | select(tag == "!!map" and has(strenv(PACKAGE))) | .[strenv(PACKAGE)]] | length > 0' "$INSTALL_MANIFEST" >/dev/null 2>&1; then
+  fail "Package is already declared: $package"
+fi
+
+validation_args=("--$profile" "--package=$package")
+[ -z "$host" ] || validation_args+=("--host=$host")
+"$0" validate "${validation_args[@]}"
+
+manifest_target="$DOTFILES/linux/packages.yaml"
+[ -z "$host" ] || manifest_target="$DOTFILES/linux/hosts/$host.yaml"
+
+if [ "$dry_run" -eq 1 ]; then
+  printf 'dry-run: add %s to %s in %s\n' "$package" "$scope" "$manifest_target"
+  printf 'dry-run: run %s sync --%s%s\n' "$0" "$profile" "${host:+ --host=$host}"
+  exit 0
+fi
+
+temporary="$(mktemp "$manifest_target.XXXXXX")"
+trap 'rm -f "$temporary"' EXIT
+cp "$manifest_target" "$temporary"
+PACKAGE="$package" "$YQ" -i "${scope_path}[strenv(PACKAGE)] = {} | $scope_path |= sort_keys(.)" "$temporary"
+mv "$temporary" "$manifest_target"
+trap - EXIT
+
+sync_args=("--$profile")
+[ -z "$host" ] || sync_args+=("--host=$host")
+"$0" sync "${sync_args[@]}"

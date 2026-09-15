@@ -26,12 +26,15 @@ zmodload zsh/complist
 if [[ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" ]]; then
   fpath=("${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions" $fpath)
 fi
+fpath=("$DOTFILES/linux/config/zsh/completions" $fpath)
 autoload -Uz compinit
 if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
   compinit -d ~/.zcompdump
 else
   compinit -C -d ~/.zcompdump
 fi
+autoload -Uz _dotfiles_package
+compdef _dotfiles_package "$DOTFILES/linux/install/package" "$HOME/dotfiles/linux/install/package" ./linux/install/package linux/install/package
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors '=*=32'

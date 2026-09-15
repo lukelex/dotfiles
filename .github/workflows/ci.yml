@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run installer manifest tests
-        run: bash linux/install/tests/manifest.test.sh
+        run: for test in linux/install/tests/*.test.sh; do bash "$test"; done
 
   yamlfmt:
     runs-on: ubuntu-latest

@@ -43,6 +43,7 @@ Options:
   --desktop    Reconcile the desktop profile (default).
   --server     Reconcile the headless server profile.
   --host NAME  Apply the committed linux/hosts/NAME.yaml overlay.
+  --packages-only  Reconcile packages and their tracking state only.
   --dry-run    Print proposed changes without changing the system.
   --replace    Replace existing config paths when creating symlinks.
   --help       Show this help message.
@@ -120,7 +121,7 @@ read_state() {
   local -n result="$result_name"
   result=()
   if [ -f "$state_file" ]; then
-    mapfile -t result < <("$YQ" -r ".managed.$name[]?" "$state_file")
+    mapfile -t result < <("$YQ" -r ".managed.${name}[]?" "$state_file")
   else
     read_legacy_state "$name" "$result_name"
   fi
@@ -317,10 +318,20 @@ mapfile -t declared_packages < <(
 read_state packages tracked_packages
 adopted_packages=()
 if [ ! -f "$state_file" ] && [ ! -f "$state_dir/packages" ]; then
+  tracked_packages=()
   for package in "${declared_packages[@]}"; do
-    pacman -Q "$package" >/dev/null 2>&1 && adopted_packages+=("$package")
+    if pacman -Q "$package" >/dev/null 2>&1; then
+      adopted_packages+=("$package")
+      tracked_packages+=("$package")
+    fi
   done
-  tracked_packages=("${adopted_packages[@]}")
+else
+  for package in "${declared_packages[@]}"; do
+    if pacman -Q "$package" >/dev/null 2>&1 && ! contains "$package" "${tracked_packages[@]}"; then
+      adopted_packages+=("$package")
+      tracked_packages+=("$package")
+    fi
+  done
 fi
 
 missing_packages=()
@@ -370,6 +381,11 @@ if [ "${#package_changes[@]}" -gt 0 ] && confirm_stage packages "${package_chang
   write_state packages "${next_packages[@]}"
 elif [ "${#package_changes[@]}" -eq 0 ]; then
   print_in_sync packages
+fi
+
+if [ "$PACKAGES_ONLY" -eq 1 ]; then
+  sort_state_packages
+  exit 0
 fi
 
 category_expression="(${resource_categories[0]}"

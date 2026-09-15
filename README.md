@@ -52,6 +52,11 @@ Each package, group, service, and config-link stage requires confirmation.
 Only resources previously recorded under `$XDG_STATE_HOME/dotfiles/install` are
 eligible for removal.
 
-Run `./linux/install/validate-packages [--host <name>]` to verify selected
+Run `./linux/install/package validate [--host <name>]` to verify selected
 manifest packages. Repository packages use local pacman sync databases and AUR
 packages use batched AUR RPC requests.
+
+Package-specific operations use `./linux/install/package`: run `package sync`
+to reconcile only packages, `package validate` to check the manifest, or
+`package add <name>` to declare, validate, install, and track a package. The
+add command prompts for a manifest scope unless `--scope` is provided.
