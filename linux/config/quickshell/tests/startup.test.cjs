@@ -290,7 +290,7 @@ test('bar selects the native workspace model for the active session', () => {
   assert.match(bar, /I3\.dispatch\("workspace " \+ number\)/);
   assert.match(bar, /event\.name === "activespecial" \|\| event\.name === "activespecialv2"/);
   assert.match(bar, /readonly property bool occupied: !!workspace && \(root\.hyprlandSession/);
-  assert.match(bar, /workspace\.lastIpcObject\.windows > 0/);
+  assert.match(bar, /workspace\.toplevels\.values\.length > 0/);
   assert.match(bar, /property real mouthAngle: 0\.42/);
   assert.match(bar, /id: biteAnimation/);
 });

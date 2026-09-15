@@ -540,7 +540,7 @@ Scope {
             readonly property var workspace: root.workspaceFor(workspaceNumber)
             readonly property bool selected: !!workspace && workspace.focused
             readonly property bool occupied: !!workspace && (root.hyprlandSession
-              ? !!workspace.lastIpcObject && workspace.lastIpcObject.windows > 0
+              ? workspace.toplevels.values.length > 0
               : !!workspace.lastIpcObject && ((!!workspace.lastIpcObject.nodes && workspace.lastIpcObject.nodes.length > 0)
                 || (!!workspace.lastIpcObject.floating_nodes && workspace.lastIpcObject.floating_nodes.length > 0)))
 
