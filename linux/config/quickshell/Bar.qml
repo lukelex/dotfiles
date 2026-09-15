@@ -603,6 +603,11 @@ Scope {
                   context.arc(centerX, centerY, 8, marker.mouthAngle, Math.PI * 2 - marker.mouthAngle)
                   context.closePath()
                   context.fill()
+
+                  context.fillStyle = "#000000"
+                  context.beginPath()
+                  context.arc(centerX - 2, centerY - 3, 1, 0, Math.PI * 2)
+                  context.fill()
                 } else if (!marker.full) {
                   context.fillStyle = marker.urgent ? root.urgent : root.foreground
                   context.beginPath()
