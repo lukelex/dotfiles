@@ -78,3 +78,30 @@ test('hover centers do not grab focus from their bar triggers', () => {
     assert.match(source, /grabFocus: false/);
   }
 });
+
+test('Control Center keeps tray content bounded and preserves hover menus', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
+  assert.match(source, /implicitHeight: Math\.min\(sections\.implicitHeight \+ 32, maxHeight\)/);
+  assert.match(source, /contentHeight: sections\.implicitHeight/);
+  assert.match(source, /TrayModule/);
+  assert.match(source, /else if \(!trayModule\.menuOpen\)/);
+  assert.match(source, /trayModule\.closeMenu\(\)/);
+});
+
+test('tray module uses native icons and routes StatusNotifier actions', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'TrayModule.qml'), 'utf8');
+  assert.match(source, /import Quickshell\.Services\.SystemTray/);
+  assert.match(source, /readonly property var items: SystemTray\.items/);
+  assert.match(source, /readonly property bool available: items\.values\.length > 0/);
+  assert.match(source, /source: cell\.modelData\.icon/);
+  assert.match(source, /sourceSize: Qt\.size\(24, 24\)/);
+  assert.match(source, /cell\.modelData\.activate\(\)/);
+  assert.match(source, /cell\.modelData\.secondaryActivate\(\)/);
+  assert.match(source, /QsMenuAnchor/);
+  assert.match(source, /menu: tray\.activeMenuItem \? tray\.activeMenuItem\.menu : null/);
+});
+
+test('platform tray menus run with QApplication support', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'shell.qml'), 'utf8');
+  assert.match(source, /^\/\/\@ pragma UseQApplication/m);
+});

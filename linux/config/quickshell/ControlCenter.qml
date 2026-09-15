@@ -1,5 +1,6 @@
 import Quickshell
 import QtQuick
+import QtQuick.Controls as Controls
 
 PopupWindow {
   id: popup
@@ -12,7 +13,8 @@ PopupWindow {
   anchor.rect.y: panel.height + 12
   color: "transparent"
   grabFocus: false
-  implicitHeight: sections.implicitHeight + 32
+  readonly property real maxHeight: Math.max(1, panel.screen.height - panel.height - 24)
+  implicitHeight: Math.min(sections.implicitHeight + 32, maxHeight)
   implicitWidth: Math.min(432, panel.screen.width - 24)
 
   surfaceFormat.opaque: false
@@ -359,6 +361,7 @@ PopupWindow {
     if (!popup.visible || closeAnim.running)
       return
     popup.closePending = true
+    trayModule.closeMenu()
     openAnim.stop()
     closeAnim.start()
   }
@@ -409,10 +412,12 @@ PopupWindow {
     height: parent.height
 
     HoverHandler {
+      id: contentHover
+
       onHoveredChanged: {
         if (hovered)
           popup.controller.cancelHoverClose()
-        else
+        else if (!trayModule.menuOpen)
           popup.controller.requestHoverClose(2)
       }
     }
@@ -425,210 +430,235 @@ PopupWindow {
       radius: 26
     }
 
-    Column {
-      id: sections
-      x: 16
-      y: 16
-      width: parent.width - 32
-      spacing: 16
+    Flickable {
+      id: scroll
 
-      Text {
-        color: popup.controller.controlPrimaryText
-        font.family: popup.controller.fontFamily
-        font.pixelSize: 16
-        text: "Control Center"
+      anchors.fill: parent
+      anchors.margins: 16
+      contentWidth: width
+      contentHeight: sections.implicitHeight
+      clip: true
+      boundsBehavior: Flickable.StopAtBounds
+      flickableDirection: Flickable.VerticalFlick
+
+      Controls.ScrollBar.vertical: Controls.ScrollBar {
+        policy: Controls.ScrollBar.AsNeeded
       }
 
-      Rectangle {
-        height: adjustments.implicitHeight + 28
-        width: parent.width
-        color: popup.controller.controlSurface
-        radius: 18
+      Column {
+        id: sections
+        width: scroll.width - (scroll.contentHeight > scroll.height ? 12 : 0)
+        spacing: 16
 
-        Column {
-          id: adjustments
-          x: 14
-          y: 14
-          width: parent.width - 28
-          spacing: 12
+        Text {
+          color: popup.controller.controlPrimaryText
+          font.family: popup.controller.fontFamily
+          font.pixelSize: 16
+          text: "Control Center"
+        }
 
-          SliderControl {
-            controller: popup.controller
-            enabled: popup.controller.audioAvailable
-            title: !popup.controller.audioAvailable ? "Audio unavailable" : popup.controller.audioMuted ? "Volume / muted" : "Volume"
-            iconName: popup.controller.audioIcon()
-            toggleTitle: popup.controller.audioMuted ? "Unmute" : "Mute"
-            toggleIcon: "volume-x"
-            toggleActive: popup.controller.audioMuted
-            onToggleRequested: popup.controller.toggleAudio()
-            value: popup.controller.audioVolume
-            width: parent.width
-            onValueChangedByUser: function(value) {
-              popup.controller.setAudioVolume(value)
+        Rectangle {
+          height: adjustments.implicitHeight + 28
+          width: parent.width
+          color: popup.controller.controlSurface
+          radius: 18
+
+          Column {
+            id: adjustments
+            x: 14
+            y: 14
+            width: parent.width - 28
+            spacing: 12
+
+            SliderControl {
+              controller: popup.controller
+              enabled: popup.controller.audioAvailable
+              title: !popup.controller.audioAvailable ? "Audio unavailable" : popup.controller.audioMuted ? "Volume / muted" : "Volume"
+              iconName: popup.controller.audioIcon()
+              toggleTitle: popup.controller.audioMuted ? "Unmute" : "Mute"
+              toggleIcon: "volume-x"
+              toggleActive: popup.controller.audioMuted
+              onToggleRequested: popup.controller.toggleAudio()
+              value: popup.controller.audioVolume
+              width: parent.width
+              onValueChangedByUser: function(value) {
+                popup.controller.setAudioVolume(value)
+              }
             }
-          }
 
-          SliderControl {
-            busy: popup.controller.brightnessBusy
-            controller: popup.controller
-            title: "Brightness"
-            iconName: "sun"
-            toggleTitle: popup.controller.nightModeEnabled ? "Night on" : "Night off"
-            toggleIcon: "moon-star"
-            toggleActive: popup.controller.nightModeEnabled
-            onToggleRequested: popup.controller.toggleNightMode()
-            value: popup.controller.brightness
-            width: parent.width
-            onValueChangedByUser: function(value) {
-              popup.controller.setBrightness(value)
+            SliderControl {
+              busy: popup.controller.brightnessBusy
+              controller: popup.controller
+              title: "Brightness"
+              iconName: "sun"
+              toggleTitle: popup.controller.nightModeEnabled ? "Night on" : "Night off"
+              toggleIcon: "moon-star"
+              toggleActive: popup.controller.nightModeEnabled
+              onToggleRequested: popup.controller.toggleNightMode()
+              value: popup.controller.brightness
+              width: parent.width
+              onValueChangedByUser: function(value) {
+                popup.controller.setBrightness(value)
+              }
             }
           }
         }
-      }
 
-      Rectangle {
-        height: systemMetrics.implicitHeight + 28
-        visible: popup.controller.systemStatsAvailable
-        width: parent.width
-        color: popup.controller.controlSurface
-        radius: 18
+        Rectangle {
+          height: systemMetrics.implicitHeight + 28
+          visible: popup.controller.systemStatsAvailable
+          width: parent.width
+          color: popup.controller.controlSurface
+          radius: 18
+
+          Column {
+            id: systemMetrics
+            x: 14
+            y: 14
+            width: parent.width - 28
+            spacing: 10
+
+            Text {
+              color: popup.controller.controlPrimaryText
+              font.family: popup.controller.fontFamily
+              font.pixelSize: 12
+              text: "System"
+            }
+
+            SystemUsage {
+              controller: popup.controller
+              iconName: "cpu"
+              percentage: popup.controller.cpuUsage
+              title: "CPU"
+              value: popup.controller.cpuUsage + "%"
+              width: parent.width
+            }
+
+            SystemUsage {
+              controller: popup.controller
+              iconName: "memory-stick"
+              percentage: popup.controller.memoryPercentage
+              title: "Memory"
+              value: popup.controller.memoryUsedGib.toFixed(1) + " / " + popup.controller.memoryTotalGib.toFixed(1) + " GiB"
+              width: parent.width
+            }
+
+            Row {
+              height: 18
+              spacing: 8
+              width: parent.width
+
+              LucideIcon {
+                anchors.verticalCenter: parent.verticalCenter
+                color: popup.controller.controlSecondaryText
+                height: 16
+                source: popup.controller.icon("gauge")
+                width: 16
+              }
+
+              Text {
+                id: loadLabel
+
+                anchors.verticalCenter: parent.verticalCenter
+                color: popup.controller.controlPrimaryText
+                font.family: popup.controller.fontFamily
+                font.pixelSize: 12
+                text: "Load (1m)"
+              }
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: popup.controller.controlSecondaryText
+                font.family: popup.controller.fontFamily
+                font.pixelSize: 11
+                horizontalAlignment: Text.AlignRight
+                text: popup.controller.loadAverage.toFixed(2)
+                width: parent.width - 16 - loadLabel.width - parent.spacing * 2
+              }
+            }
+          }
+        }
 
         Column {
-          id: systemMetrics
-          x: 14
-          y: 14
-          width: parent.width - 28
           spacing: 10
-
-          Text {
-            color: popup.controller.controlPrimaryText
-            font.family: popup.controller.fontFamily
-            font.pixelSize: 12
-            text: "System"
-          }
-
-          SystemUsage {
-            controller: popup.controller
-            iconName: "cpu"
-            percentage: popup.controller.cpuUsage
-            title: "CPU"
-            value: popup.controller.cpuUsage + "%"
-            width: parent.width
-          }
-
-          SystemUsage {
-            controller: popup.controller
-            iconName: "memory-stick"
-            percentage: popup.controller.memoryPercentage
-            title: "Memory"
-            value: popup.controller.memoryUsedGib.toFixed(1) + " / " + popup.controller.memoryTotalGib.toFixed(1) + " GiB"
-            width: parent.width
-          }
+          width: parent.width
+          visible: popup.controller.batteryAvailable || popup.controller.powerProfileAvailable
 
           Row {
-            height: 18
-            spacing: 8
             width: parent.width
+            height: 24
+            spacing: 8
+            visible: popup.controller.batteryAvailable
 
             LucideIcon {
+              id: powerIcon
               anchors.verticalCenter: parent.verticalCenter
-              color: popup.controller.controlSecondaryText
-              height: 16
-              source: popup.controller.icon("gauge")
-              width: 16
+              height: 18
+              width: 18
+              source: popup.controller.icon(popup.controller.batteryIcon())
+              color: popup.controller.batteryAvailable && popup.controller.batteryPercentage <= 5
+                ? popup.controller.urgent : popup.controller.controlSecondaryText
             }
 
             Text {
-              id: loadLabel
-
+              id: batterySummary
               anchors.verticalCenter: parent.verticalCenter
               color: popup.controller.controlPrimaryText
               font.family: popup.controller.fontFamily
               font.pixelSize: 12
-              text: "Load (1m)"
+              text: popup.controller.batteryAvailable ? "Battery " + popup.controller.batteryPercentage + "%" : "Power"
             }
 
             Text {
               anchors.verticalCenter: parent.verticalCenter
+              width: parent.width - powerIcon.width - batterySummary.width - parent.spacing * 2
+              horizontalAlignment: Text.AlignRight
+              elide: Text.ElideRight
               color: popup.controller.controlSecondaryText
               font.family: popup.controller.fontFamily
               font.pixelSize: 11
-              horizontalAlignment: Text.AlignRight
-              text: popup.controller.loadAverage.toFixed(2)
-              width: parent.width - 16 - loadLabel.width - parent.spacing * 2
+              text: !popup.controller.batteryAvailable ? ""
+                : popup.controller.batteryTime ? popup.controller.batteryTime
+                  + (popup.controller.batteryState === "charging" ? " until full" : " remaining")
+                : popup.controller.batteryState === "charging" ? "Charging" : ""
             }
           }
-        }
-      }
 
-      Column {
-        spacing: 10
-        width: parent.width
-        visible: popup.controller.batteryAvailable || popup.controller.powerProfileAvailable
-
-        Row {
-          width: parent.width
-          height: 24
-          spacing: 8
-          visible: popup.controller.batteryAvailable
-
-          LucideIcon {
-            id: powerIcon
-            anchors.verticalCenter: parent.verticalCenter
-            height: 18
-            width: 18
-            source: popup.controller.icon(popup.controller.batteryIcon())
-            color: popup.controller.batteryAvailable && popup.controller.batteryPercentage <= 5
-              ? popup.controller.urgent : popup.controller.controlSecondaryText
-          }
-
-          Text {
-            id: batterySummary
-            anchors.verticalCenter: parent.verticalCenter
-            color: popup.controller.controlPrimaryText
-            font.family: popup.controller.fontFamily
-            font.pixelSize: 12
-            text: popup.controller.batteryAvailable ? "Battery " + popup.controller.batteryPercentage + "%" : "Power"
-          }
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - powerIcon.width - batterySummary.width - parent.spacing * 2
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-            color: popup.controller.controlSecondaryText
-            font.family: popup.controller.fontFamily
-            font.pixelSize: 11
-            text: !popup.controller.batteryAvailable ? ""
-              : popup.controller.batteryTime ? popup.controller.batteryTime
-                + (popup.controller.batteryState === "charging" ? " until full" : " remaining")
-              : popup.controller.batteryState === "charging" ? "Charging" : ""
+          ControlTile {
+            active: popup.controller.powerProfile === "performance"
+            enabled: popup.controller.powerProfileAvailable
+            visible: popup.controller.powerProfileAvailable
+            controller: popup.controller
+            height: 64
+            iconName: "gauge"
+            subtitle: "Click to switch profile"
+            title: "Power: " + popup.controller.powerProfile
+            width: parent.width
+            onActivated: popup.controller.cyclePowerProfile()
           }
         }
 
-        ControlTile {
-          active: popup.controller.powerProfile === "performance"
-          enabled: popup.controller.powerProfileAvailable
-          visible: popup.controller.powerProfileAvailable
+        QuickAction {
+          anchors.right: parent.right
+          active: false
           controller: popup.controller
-          height: 64
-          iconName: "gauge"
-          subtitle: "Click to switch profile"
-          title: "Power: " + popup.controller.powerProfile
-          width: parent.width
-          onActivated: popup.controller.cyclePowerProfile()
+          height: 40
+          width: 144
+          iconName: "lock"
+          title: "Lock Screen"
+          onActivated: popup.controller.lockScreen()
         }
-      }
 
-      QuickAction {
-        anchors.right: parent.right
-        active: false
-        controller: popup.controller
-        height: 40
-        width: 144
-        iconName: "lock"
-        title: "Lock Screen"
-        onActivated: popup.controller.lockScreen()
+        TrayModule {
+          id: trayModule
+
+          controller: popup.controller
+          width: parent.width
+          onMenuClosed: {
+            if (popup.visible && !popup.closePending && !contentHover.hovered)
+              popup.controller.requestHoverClose(2)
+          }
+        }
       }
     }
   }
