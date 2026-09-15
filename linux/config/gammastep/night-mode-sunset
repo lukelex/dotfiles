@@ -1,0 +1,35 @@
+#!/usr/bin/bash
+
+set -eu
+
+source "$HOME/dotfiles/linux/variables.env"
+
+cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/weather/current.json"
+state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/night-mode-sunset-notified"
+
+[[ -r $cache_file ]] || exit 0
+
+sunset=$(jq -er '.sys.sunset | numbers | floor' < "$cache_file") || exit 0
+now=$(date +%s)
+
+# Prompt shortly after the locally cached weather data says the sun has set.
+[[ $now -ge $sunset && $now -lt $((sunset + 21600)) ]] || exit 0
+[[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null || true)" != true ]] || exit 0
+
+if [[ -r $state_file ]] && [[ $(< "$state_file") == "$sunset" ]]; then
+  exit 0
+fi
+
+mkdir -p "$(dirname "$state_file")"
+printf '%s\n' "$sunset" > "$state_file"
+
+action=$(notify-send -a System \
+  -i "$LUCIDE_PATH/moon-star.svg" \
+  -h string:wired-tag:night-mode-sunset \
+  -t 0 \
+  -A turn-on='Turn on' \
+  'Night mode' 'Sunset has arrived. Turn on night mode?' || true)
+
+if [[ $action == turn-on ]]; then
+  "$DOTFILES/linux/config/quickshell/scripts/nightmode" on
+fi

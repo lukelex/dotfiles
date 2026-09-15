@@ -173,9 +173,12 @@ profiles:
         gammastep:
           configs:
             - linux/config/gammastep/config.ini:$XDG_CONFIG_HOME/gammastep/config.ini
+            - linux/config/gammastep/night-mode-sunset.service:$XDG_CONFIG_HOME/systemd/user/night-mode-sunset.service
+            - linux/config/gammastep/night-mode-sunset.timer:$XDG_CONFIG_HOME/systemd/user/night-mode-sunset.timer
           services:
             user:
               - gammastep.service
+              - night-mode-sunset.timer
         1password: []
         spotify: []
         cups:
