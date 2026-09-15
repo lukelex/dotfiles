@@ -50,6 +50,22 @@ function focusCommand(appLookup, env, isTeamsNotification = () => false) {
   return record => JSON.parse(JSON.stringify(service.focusCommand(record)));
 }
 
+function serviceFunction(service, name) {
+  const context = vm.createContext({ service });
+  const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+  assert.ok(match, `Missing QML function ${name}`);
+  service[name] = vm.runInContext(`(${match[0]})`, context);
+  return service[name];
+}
+
+function activateRecord(service, id) {
+  return serviceFunction(service, 'activateRecord')(id);
+}
+
+function invokeAction(service, id, index) {
+  return serviceFunction(service, 'invokeAction')(id, index);
+}
+
 for (const variant of ['battery', 'battery-charging', 'battery-warning', 'battery-low', 'battery-medium', 'battery-full']) {
   test(`sender-selected ${variant} is preserved and themeable`, () => {
     const iconFor = resolver({ icon: 'custom-icon' });
@@ -121,6 +137,28 @@ test('expired notifications focus an existing matching window instead of relaunc
     ['i3-msg', '[class="^(?i)google-chrome$"] focus']);
   assert.deepEqual(focusCommand(entry, { HYPRLAND_INSTANCE_SIGNATURE: 'test' }, () => true)({ desktopEntry: 'com.google.Chrome' }),
     ['hyprctl', 'dispatch', 'focuswindow', 'title:^(.*Microsoft Teams.*)$']);
+});
+
+test('live notifications focus their sender before invoking its default action', () => {
+  const events = [];
+  const service = {
+    live: { 1: { actions: [{ identifier: 'default', invoke: () => events.push('action') }] } },
+    history: [{ id: 1 }],
+    focusRecord: () => events.push('focus'),
+  };
+  assert.equal(activateRecord(service, 1), true);
+  assert.deepEqual(events, ['focus', 'action']);
+});
+
+test('notification action buttons focus their sender before invoking the action', () => {
+  const events = [];
+  const service = {
+    live: { 1: { actions: [{ identifier: 'settings', invoke: () => events.push('action') }] } },
+    history: [{ id: 1 }],
+    focusRecord: () => events.push('focus'),
+  };
+  invokeAction(service, 1, 0);
+  assert.deepEqual(events, ['focus', 'action']);
 });
 
 test('system semantics do not classify unrelated notifications', () => {

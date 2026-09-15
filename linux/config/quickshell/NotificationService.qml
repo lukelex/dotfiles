@@ -406,6 +406,9 @@ QtObject {
 
   function activateRecord(id) {
     const notification = service.live[id]
+    const record = service.history.find(entry => entry.id === id)
+    const focused = service.focusRecord(record)
+
     if (notification) {
       for (let index = 0; index < notification.actions.length; index++) {
         const action = notification.actions[index]
@@ -416,7 +419,10 @@ QtObject {
       }
     }
 
-    const record = service.history.find(entry => entry.id === id)
+    return focused
+  }
+
+  function focusRecord(record) {
     const command = service.focusCommand(record)
     if (command.length === 0)
       return false
@@ -452,8 +458,10 @@ QtObject {
 
   function invokeAction(recordId, index) {
     const notification = service.live[recordId]
-    if (notification && index < notification.actions.length)
+    if (notification && index < notification.actions.length) {
+      service.focusRecord(service.history.find(entry => entry.id === recordId))
       notification.actions[index].invoke()
+    }
   }
 
   function timeAgo(record) {
