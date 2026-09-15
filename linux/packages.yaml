@@ -104,6 +104,7 @@ profiles:
             system:
               - nordvpnd
         noto-fonts-cjk:
+        noto-fonts-emoji:
         npm:
         pantheon-calculator:
         papirus-icon-theme:
