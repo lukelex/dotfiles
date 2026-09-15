@@ -36,7 +36,7 @@ test('timeouts use milliseconds and zero stays persistent', () => {
   const { service } = serviceForTest();
   const before = Date.now();
   const defaultExpiry = service.computeExpiry({ expireTimeout: -1 }, 'normal');
-  assert.ok(defaultExpiry >= before + 10000 && defaultExpiry <= Date.now() + 10000);
+  assert.ok(defaultExpiry >= before + 20000 && defaultExpiry <= Date.now() + 20000);
   const expiry = service.computeExpiry({ expireTimeout: 1000 }, 'normal');
   assert.ok(expiry >= before + 1000 && expiry <= Date.now() + 1000);
   assert.equal(service.computeExpiry({ expireTimeout: 0 }, 'normal'), 0);
