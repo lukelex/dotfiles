@@ -273,6 +273,73 @@ PopupWindow {
     }
   }
 
+  component SystemUsage: Item {
+    id: metric
+
+    required property var controller
+    required property string iconName
+    required property real percentage
+    required property string title
+    required property string value
+
+    height: 38
+
+    Row {
+      anchors {
+        left: parent.left
+        right: parent.right
+        top: parent.top
+      }
+      spacing: 8
+
+      LucideIcon {
+        anchors.verticalCenter: parent.verticalCenter
+        color: metric.percentage >= 90 ? metric.controller.urgent : metric.controller.controlSecondaryText
+        height: 16
+        source: metric.controller.icon(metric.iconName)
+        width: 16
+      }
+
+      Text {
+        id: metricLabel
+
+        anchors.verticalCenter: parent.verticalCenter
+        color: metric.controller.controlPrimaryText
+        font.family: metric.controller.fontFamily
+        font.pixelSize: 12
+        text: metric.title
+      }
+
+      Text {
+        anchors.verticalCenter: parent.verticalCenter
+        color: metric.percentage >= 90 ? metric.controller.urgent : metric.controller.controlSecondaryText
+        font.family: metric.controller.fontFamily
+        font.pixelSize: 11
+        horizontalAlignment: Text.AlignRight
+        text: metric.value
+        width: parent.width - 16 - metricLabel.width - parent.spacing * 2
+      }
+    }
+
+    Rectangle {
+      anchors {
+        bottom: parent.bottom
+        left: parent.left
+        right: parent.right
+      }
+      color: metric.controller.controlSliderTrack
+      height: 6
+      radius: 3
+
+      Rectangle {
+        color: metric.percentage >= 90 ? metric.controller.urgent : metric.controller.controlSliderFill
+        height: parent.height
+        radius: parent.radius
+        width: Math.max(parent.height, parent.width * metric.percentage / 100)
+      }
+    }
+  }
+
   property bool closePending: false
 
   function requestOpen() {
@@ -414,6 +481,81 @@ PopupWindow {
             width: parent.width
             onValueChangedByUser: function(value) {
               popup.controller.setBrightness(value)
+            }
+          }
+        }
+      }
+
+      Rectangle {
+        height: systemMetrics.implicitHeight + 28
+        visible: popup.controller.systemStatsAvailable
+        width: parent.width
+        color: popup.controller.controlSurface
+        radius: 18
+
+        Column {
+          id: systemMetrics
+          x: 14
+          y: 14
+          width: parent.width - 28
+          spacing: 10
+
+          Text {
+            color: popup.controller.controlPrimaryText
+            font.family: popup.controller.fontFamily
+            font.pixelSize: 12
+            text: "System"
+          }
+
+          SystemUsage {
+            controller: popup.controller
+            iconName: "cpu"
+            percentage: popup.controller.cpuUsage
+            title: "CPU"
+            value: popup.controller.cpuUsage + "%"
+            width: parent.width
+          }
+
+          SystemUsage {
+            controller: popup.controller
+            iconName: "memory-stick"
+            percentage: popup.controller.memoryPercentage
+            title: "Memory"
+            value: popup.controller.memoryUsedGib.toFixed(1) + " / " + popup.controller.memoryTotalGib.toFixed(1) + " GiB"
+            width: parent.width
+          }
+
+          Row {
+            height: 18
+            spacing: 8
+            width: parent.width
+
+            LucideIcon {
+              anchors.verticalCenter: parent.verticalCenter
+              color: popup.controller.controlSecondaryText
+              height: 16
+              source: popup.controller.icon("gauge")
+              width: 16
+            }
+
+            Text {
+              id: loadLabel
+
+              anchors.verticalCenter: parent.verticalCenter
+              color: popup.controller.controlPrimaryText
+              font.family: popup.controller.fontFamily
+              font.pixelSize: 12
+              text: "Load (1m)"
+            }
+
+            Text {
+              anchors.verticalCenter: parent.verticalCenter
+              color: popup.controller.controlSecondaryText
+              font.family: popup.controller.fontFamily
+              font.pixelSize: 11
+              horizontalAlignment: Text.AlignRight
+              text: popup.controller.loadAverage.toFixed(2)
+              width: parent.width - 16 - loadLabel.width - parent.spacing * 2
             }
           }
         }

@@ -76,6 +76,14 @@ Scope {
   readonly property bool vpnBusy: vpnToggle.running
   property bool powerProfileAvailable: false
   property string powerProfile: ""
+  property bool systemStatsAvailable: false
+  property int cpuUsage: 0
+  property int memoryPercentage: 0
+  property real memoryUsedGib: 0
+  property real memoryTotalGib: 0
+  property real loadAverage: 0
+  property real previousCpuTotal: -1
+  property real previousCpuIdle: -1
   readonly property date currentDate: clock.date
 
   readonly property color controlActive: root.darkMode ? "#3E5978" : "#C9E1F7"
@@ -371,6 +379,41 @@ Scope {
     }
   }
 
+  Process {
+    id: systemStatus
+    command: ["sh", "-c", "awk '/^cpu / { total = 0; for (i = 2; i <= NF; i++) total += $i; print total, $5 + $6; exit }' /proc/stat; awk '/^MemTotal:/ { total = $2 } /^MemAvailable:/ { available = $2 } END { print total, available }' /proc/meminfo; awk '{ print $1 }' /proc/loadavg"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const output = this.text.trim().split("\n")
+        const cpu = output[0]?.trim().split(/\s+/).map(Number)
+        const memory = output[1]?.trim().split(/\s+/).map(Number)
+        const load = Number(output[2])
+
+        if (cpu?.length === 2 && cpu.every(Number.isFinite)) {
+          if (root.previousCpuTotal >= 0 && cpu[0] > root.previousCpuTotal) {
+            const totalDelta = cpu[0] - root.previousCpuTotal
+            const idleDelta = Math.max(0, cpu[1] - root.previousCpuIdle)
+            root.cpuUsage = Math.round(Math.max(0, Math.min(100, (1 - idleDelta / totalDelta) * 100)))
+            root.systemStatsAvailable = true
+          }
+          root.previousCpuTotal = cpu[0]
+          root.previousCpuIdle = cpu[1]
+        }
+
+        if (memory?.length === 2 && memory.every(Number.isFinite) && memory[0] > 0) {
+          const used = Math.max(0, memory[0] - memory[1])
+          root.memoryPercentage = Math.round(used / memory[0] * 100)
+          root.memoryUsedGib = used / 1048576
+          root.memoryTotalGib = memory[0] / 1048576
+        }
+
+        if (Number.isFinite(load))
+          root.loadAverage = load
+      }
+    }
+  }
+
   Timer {
     interval: 1000
     running: true
@@ -383,6 +426,13 @@ Scope {
     running: true
     repeat: true
     onTriggered: batteryStatus.running = true
+  }
+
+  Timer {
+    interval: 5000
+    running: true
+    repeat: true
+    onTriggered: systemStatus.running = true
   }
 
   Timer {
