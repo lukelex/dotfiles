@@ -17,7 +17,7 @@ function resolver(appLookup = null) {
     },
     DesktopEntries: { byId: () => null, heuristicLookup: () => appLookup },
   });
-  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'lucideIcon', 'iconFor']) {
+  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isTeamsNotification', 'lucideIcon', 'iconFor']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -60,6 +60,17 @@ test('notification image-provider URLs retain browser image precedence', () => {
     { kind: 'image', source: 'image://qsimage/notification/1' });
   assert.deepEqual(iconFor({ appName: 'Firefox', appIcon: '/theme/firefox.svg' }),
     { kind: 'image', source: '/theme/firefox.svg' });
+});
+
+test('Teams notifications sent through Chrome use the Teams icon', () => {
+  const iconFor = resolver();
+  assert.deepEqual(iconFor({
+    appIcon: 'google-chrome',
+    body: 'teams.cloud.microsoft\n\nNew message',
+  }), {
+    kind: 'image',
+    source: 'file:///home/test/dotfiles/linux/config/quickshell/assets/teams.svg',
+  });
 });
 
 test('system semantics do not classify unrelated notifications', () => {

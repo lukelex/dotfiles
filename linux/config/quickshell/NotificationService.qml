@@ -207,7 +207,7 @@ QtObject {
     return {
       id: notification.id,
       tag: tag,
-      appName: notification.appName || "",
+      appName: service.isTeamsNotification(notification) ? "Microsoft Teams" : notification.appName || "",
       appIcon: notification.appIcon || "",
       desktopEntry: notification.desktopEntry || "",
       image: notification.image || "",
@@ -467,6 +467,12 @@ QtObject {
     return ["brave", "chromium", "firefox", "google-chrome", "microsoft-edge"].some(browser => name.includes(browser))
   }
 
+  function isTeamsNotification(record) {
+    const body = String(record.body || "")
+    return service.isBrowserIcon(record.appIcon)
+      && /(?:^|\n)teams(?:\.cloud)?\.microsoft(?:\.com)?(?:\n|$)/i.test(body)
+  }
+
   function resolveIcon(icon) {
     const source = String(icon || "")
     if (!source)
@@ -524,6 +530,8 @@ QtObject {
 
     const appIcon = service.resolveIcon(record.appIcon)
     const image = service.resolveIcon(record.image)
+    if (service.isTeamsNotification(record))
+      return { kind: "image", source: "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/assets/teams.svg" }
     if (appIcon && !service.isBrowserIcon(record.appIcon))
       return service.iconDescriptor(appIcon)
     if (image)
