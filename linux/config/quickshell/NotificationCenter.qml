@@ -370,7 +370,7 @@ PopupWindow {
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: service.invokeAction(card.record.id, index)
+                onClicked: service.invokeAction(card.record.id, modelData.sourceIndex)
               }
             }
           }

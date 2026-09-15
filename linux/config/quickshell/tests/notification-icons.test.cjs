@@ -7,22 +7,36 @@ const { test } = require('node:test');
 const source = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
 const assetPath = '/home/test/dotfiles/linux/config/lucide/svg/';
 
-function resolver(appLookup = null) {
+function resolver(appLookup = null, env = {}) {
   const service = {};
   const context = vm.createContext({
     service,
     Quickshell: {
-      env: () => '/home/test',
+      env: name => env[name] || (name === 'HOME' ? '/home/test' : ''),
       iconPath: name => name === 'custom-icon' ? '/theme/custom-icon.svg' : '',
     },
-    DesktopEntries: { byId: () => null, heuristicLookup: () => appLookup },
+    DesktopEntries: { byId: () => appLookup, heuristicLookup: () => appLookup },
   });
-  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isTeamsNotification', 'lucideIcon', 'iconFor']) {
+  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isTeamsNotification', 'focusCommand', 'lucideIcon', 'iconFor']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
   }
   return record => JSON.parse(JSON.stringify(service.iconFor(record)));
+}
+
+function focusCommand(appLookup, env, isTeamsNotification = () => false) {
+  const service = {};
+  const context = vm.createContext({
+    service,
+    Quickshell: { env: name => env[name] || '' },
+    DesktopEntries: { byId: () => appLookup, heuristicLookup: () => appLookup },
+  });
+  const match = source.match(/  function focusCommand\([^]*?\n  \}/);
+  assert.ok(match, 'Missing QML function focusCommand');
+  service.isTeamsNotification = isTeamsNotification;
+  service.focusCommand = vm.runInContext(`(${match[0]})`, context);
+  return record => JSON.parse(JSON.stringify(service.focusCommand(record)));
 }
 
 for (const variant of ['battery', 'battery-charging', 'battery-warning', 'battery-low', 'battery-medium', 'battery-full']) {
@@ -71,6 +85,16 @@ test('Teams notifications sent through Chrome use the Teams icon', () => {
     kind: 'image',
     source: 'file:///home/test/dotfiles/linux/config/quickshell/assets/teams.svg',
   });
+});
+
+test('expired notifications focus an existing matching window instead of relaunching the app', () => {
+  const entry = { startupClass: 'google-chrome' };
+  assert.deepEqual(focusCommand(entry, { HYPRLAND_INSTANCE_SIGNATURE: 'test' })({ desktopEntry: 'com.google.Chrome' }),
+    ['hyprctl', 'dispatch', 'focuswindow', 'class:^(google-chrome)$']);
+  assert.deepEqual(focusCommand(entry, { I3SOCK: '/tmp/i3.sock' })({ desktopEntry: 'com.google.Chrome' }),
+    ['i3-msg', '[class="^(?i)google-chrome$"] focus']);
+  assert.deepEqual(focusCommand(entry, { HYPRLAND_INSTANCE_SIGNATURE: 'test' }, () => true)({ desktopEntry: 'com.google.Chrome' }),
+    ['hyprctl', 'dispatch', 'focuswindow', 'title:^(.*Microsoft Teams.*)$']);
 });
 
 test('system semantics do not classify unrelated notifications', () => {

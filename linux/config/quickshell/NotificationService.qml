@@ -27,7 +27,7 @@ QtObject {
   signal popupRecordsCleared()
   signal historyRecordDismissed(string id)
 
-  property Process desktopEntryLauncher: Process {
+  property Process windowFocus: Process {
     command: []
   }
 
@@ -195,8 +195,11 @@ QtObject {
 
   function buildRecord(notification, tag, value) {
     const actions = []
-    for (let index = 0; index < notification.actions.length; index++)
-      actions.push({ identifier: notification.actions[index].identifier, text: notification.actions[index].text })
+    for (let index = 0; index < notification.actions.length; index++) {
+      const action = notification.actions[index]
+      if (action.text)
+        actions.push({ identifier: action.identifier, text: action.text, sourceIndex: index })
+    }
 
     let urgency = "normal"
     if (notification.urgency === NotificationUrgency.Critical)
@@ -414,12 +417,37 @@ QtObject {
     }
 
     const record = service.history.find(entry => entry.id === id)
-    if (!record || !record.desktopEntry)
+    const command = service.focusCommand(record)
+    if (command.length === 0)
       return false
 
-    service.desktopEntryLauncher.command = ["gtk-launch", record.desktopEntry.replace(/\.desktop$/, "")]
-    service.desktopEntryLauncher.startDetached()
+    service.windowFocus.command = command
+    service.windowFocus.startDetached()
     return true
+  }
+
+  function focusCommand(record) {
+    if (!record)
+      return []
+
+    const entryId = String(record.desktopEntry || "")
+    const entry = entryId && (DesktopEntries.byId(entryId) || DesktopEntries.byId(entryId.replace(/\.desktop$/, "")))
+    const namedApp = DesktopEntries.heuristicLookup(record.appName)
+    const startupClass = String((entry || namedApp || {}).startupClass || "")
+    if (!startupClass)
+      return []
+
+    const escapedClass = startupClass.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&")
+    const target = service.isTeamsNotification(record)
+      ? "title:^(.*Microsoft Teams.*)$"
+      : "class:^(" + escapedClass + ")$"
+    if (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE"))
+      return ["hyprctl", "dispatch", "focuswindow", target]
+    if (Quickshell.env("I3SOCK"))
+      return ["i3-msg", service.isTeamsNotification(record)
+        ? "[title=\"^(?i).*Microsoft Teams.*$\"] focus"
+        : "[class=\"^(?i)" + escapedClass + "$\"] focus"]
+    return []
   }
 
   function invokeAction(recordId, index) {
