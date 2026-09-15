@@ -557,14 +557,25 @@ Scope {
               height: 20
               width: 24
 
-              readonly property real mouthAngle: 0.42
+              property real mouthAngle: 0.42
               property bool active: workspaceItem.selected
               property bool full: workspaceItem.occupied
               property bool urgent: !!workspaceItem.workspace && workspaceItem.workspace.urgent
+              property bool ready: false
 
-              onActiveChanged: requestPaint()
+              Component.onCompleted: ready = true
+              onActiveChanged: {
+                if (marker.active && marker.ready)
+                  biteAnimation.restart()
+                else if (!marker.active) {
+                  biteAnimation.stop()
+                  marker.mouthAngle = 0.42
+                }
+                requestPaint()
+              }
               onFullChanged: requestPaint()
               onUrgentChanged: requestPaint()
+              onMouthAngleChanged: requestPaint()
               onPaint: {
                 const context = getContext("2d")
                 const centerX = width / 2
@@ -614,6 +625,15 @@ Scope {
                   context.arc(centerX, centerY, 3, 0, Math.PI * 2)
                   context.fill()
                 }
+              }
+
+              SequentialAnimation {
+                id: biteAnimation
+
+                NumberAnimation { target: marker; property: "mouthAngle"; to: 0.12; duration: 70 }
+                NumberAnimation { target: marker; property: "mouthAngle"; to: 0.42; duration: 70 }
+                NumberAnimation { target: marker; property: "mouthAngle"; to: 0.12; duration: 70 }
+                NumberAnimation { target: marker; property: "mouthAngle"; to: 0.42; duration: 70 }
               }
             }
 
