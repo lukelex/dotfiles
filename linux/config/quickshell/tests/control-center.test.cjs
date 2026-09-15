@@ -47,6 +47,22 @@ test('VPN toggle ignores competing requests while the previous command runs', ()
   assert.deepEqual(vpnToggle.command, []);
 });
 
+test('brightness ignores duplicate changes while the previous command is applying', () => {
+  const root = {
+    brightnessBusy: true,
+    notificationService: { showOsd() { assert.fail('Busy brightness must not show an OSD'); } },
+  };
+  const brightnessSet = { value: 0, running: true };
+  loadFunction('Bar.qml', 'setBrightness', { root, brightnessSet })(75);
+  assert.deepEqual(brightnessSet, { value: 0, running: true });
+});
+
+test('brightness slider shows a spinner while the DDC command is running', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
+  assert.match(source, /busy: popup\.controller\.brightnessBusy/);
+  assert.match(source, /running: spinner\.visible/);
+});
+
 test('hover centers do not grab focus from their bar triggers', () => {
   for (const file of ['ControlCenter.qml', 'NotificationCenter.qml']) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');

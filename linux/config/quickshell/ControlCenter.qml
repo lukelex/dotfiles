@@ -152,6 +152,7 @@ PopupWindow {
     required property string toggleTitle
     required property string toggleIcon
     required property bool toggleActive
+    property bool busy: false
     signal valueChangedByUser(real value)
     signal toggleRequested()
 
@@ -219,7 +220,8 @@ PopupWindow {
         anchors.fill: parent
         anchors.topMargin: -12
         anchors.bottomMargin: -12
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: slider.busy ? Qt.ArrowCursor : Qt.PointingHandCursor
+        enabled: !slider.busy
         onPositionChanged: function(mouse) {
           if (pressed)
             slider.valueChangedByUser(Math.max(0, Math.min(100, mouse.x / width * 100)))
@@ -234,7 +236,8 @@ PopupWindow {
       id: valueLabel
 
       anchors {
-        right: parent.right
+        right: spinner.left
+        rightMargin: 6
         verticalCenter: parent.verticalCenter
         verticalCenterOffset: 16
       }
@@ -244,6 +247,29 @@ PopupWindow {
       text: Math.round(slider.value) + "%"
       width: 44
       horizontalAlignment: Text.AlignRight
+    }
+
+    LucideIcon {
+      id: spinner
+
+      anchors {
+        right: parent.right
+        verticalCenter: valueLabel.verticalCenter
+      }
+      Accessible.name: "Applying " + slider.title
+      color: slider.controller.controlSecondaryText
+      height: 14
+      source: slider.controller.icon("refresh-cw")
+      visible: slider.busy
+      width: 14
+
+      RotationAnimation on rotation {
+        duration: 700
+        from: 0
+        loops: Animation.Infinite
+        running: spinner.visible
+        to: 360
+      }
     }
   }
 
@@ -376,6 +402,7 @@ PopupWindow {
           }
 
           SliderControl {
+            busy: popup.controller.brightnessBusy
             controller: popup.controller
             title: "Brightness"
             iconName: "sun"

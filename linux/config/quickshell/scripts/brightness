@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+# Prefer DDC/CI brightness for external displays, falling back to the laptop panel.
+
+set -eu
+
+scripts="$HOME/dotfiles/linux/scripts"
+
+if "$scripts/monitors" brightness if 2>/dev/null | grep -qx true; then
+  exec "$scripts/monitors" brightness "$@"
+fi
+
+exec "$scripts/backlight" "$@"

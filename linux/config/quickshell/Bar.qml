@@ -65,6 +65,7 @@ Scope {
   property string batteryTime: ""
   property bool batteryAvailable: false
   readonly property bool doNotDisturb: root.notificationService.doNotDisturb
+  readonly property bool brightnessBusy: brightnessSet.running
   property int brightness: 0
   property bool darkMode: true
   property bool nightModeEnabled: false
@@ -209,6 +210,9 @@ Scope {
   }
 
   function setBrightness(value) {
+    if (root.brightnessBusy)
+      return
+
     brightnessSet.value = Math.round(value)
     brightnessSet.running = true
     root.notificationService.showOsd("Brightness", value, "sun")
@@ -232,7 +236,7 @@ Scope {
 
   Process {
     id: controlStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$(u_backlight get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
+    command: ["sh", "-c", "printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$($HOME/dotfiles/linux/config/quickshell/scripts/brightness get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null | awk -F ': ' '/^Status:/{ print $2; exit }' || true)\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
@@ -281,7 +285,8 @@ Scope {
   Process {
     id: brightnessSet
     property int value: 0
-    command: ["u_backlight", "set", value.toString()]
+    command: [root.quickshellScripts + "/brightness", "set", value.toString()]
+    onExited: root.refreshControlStatus()
   }
 
   Process {
