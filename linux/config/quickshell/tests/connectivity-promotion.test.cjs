@@ -65,6 +65,15 @@ test('clicking a control keeps the preview visible and does not replay its entra
   assert.equal(f.popup.promotionWindow, null);
 });
 
+test('connection toggles stay in the anchored preview', () => {
+  for (const title of ['Wi-Fi', 'Ethernet', 'NordVPN', 'Bluetooth']) {
+    const action = source.match(new RegExp(`title: "${title}"[\\s\\S]*?onActivated: \\{([\\s\\S]*?)\\n        \\}`));
+    assert.ok(action, `Missing ${title} action`);
+    assert.match(action[1], /popup\.requestOpen\(\)/);
+    assert.doesNotMatch(action[1], /popup\.requestOpen\(true\)/);
+  }
+});
+
 test('closing before a snapshot completes cannot pin a later hover session', () => {
   const f = fixture();
   f.popup.requestOpen();

@@ -398,7 +398,7 @@ Scope {
           : popup.service.wifiConnected ? popup.service.wifiSsid + " / " + popup.strengthText(popup.service.wifiStrength)
           : "On / Not connected"
         onActivated: {
-          popup.requestOpen(true)
+          popup.requestOpen()
           popup.service.setWifiEnabled(!popup.service.wifiEnabled)
         }
       }
@@ -413,7 +413,7 @@ Scope {
         subtitle: !popup.service.ethernetAvailable ? "No Ethernet adapter"
           : popup.service.ethernetConnected ? popup.service.ethernetName || "Connected" : "Off"
         onActivated: {
-          popup.requestOpen(true)
+          popup.requestOpen()
           popup.service.setEthernetEnabled(!popup.service.ethernetConnected)
         }
       }
@@ -506,7 +506,7 @@ Scope {
           : popup.controller.vpnBusy ? "Updating connection..."
           : popup.controller.vpnConnected ? "Connected / " + (popup.controller.vpnLocation || "Location unavailable") : "Disconnected"
         onActivated: {
-          popup.requestOpen(true)
+          popup.requestOpen()
           popup.controller.toggleVpn()
         }
       }
@@ -533,7 +533,7 @@ Scope {
           model: ["Recommended"].concat(popup.controller.vpnLocations)
           width: parent.width - 74
           onActivated: function(index) {
-            popup.requestOpen(true)
+            popup.requestOpen()
             popup.controller.connectVpn(index === 0 ? "" : currentText)
           }
         }
@@ -553,7 +553,7 @@ Scope {
           : popup.service.bluetoothConnecting ? "Connecting..."
           : popup.service.bluetoothEnabled ? "On" : "Off"
         onActivated: {
-          popup.requestOpen(true)
+          popup.requestOpen()
           popup.service.setBluetoothEnabled(!popup.service.bluetoothEnabled)
         }
       }
