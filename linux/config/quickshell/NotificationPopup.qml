@@ -104,6 +104,7 @@ PopupWindow {
     property bool urgentAttention: false
     property var dismissHandler: null
     property real reflowOffset: 0
+    property real unfoldOffset: 0
     property bool enterFromRight: false
 
     readonly property var icon: service.iconFor(toast.record)
@@ -118,6 +119,9 @@ PopupWindow {
       },
       Translate {
         y: toast.reflowOffset
+      },
+      Translate {
+        y: toast.unfoldOffset
       }
     ]
     width: parent.width
@@ -464,7 +468,7 @@ PopupWindow {
     width: parent.width
 
     Behavior on height {
-      NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+      NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
     }
 
     Behavior on y {
@@ -581,17 +585,17 @@ PopupWindow {
         border.width: 1
         color: stack.controller.controlSurface
         height: latestToast.height
-        opacity: index === stack.expiringLayerIndex ? 0 : 0.72 + index * 0.12
+        opacity: stack.expanded || index === stack.expiringLayerIndex ? 0 : 0.72 + index * 0.12
         radius: 18
         scale: index === stack.expiringLayerIndex ? 0.9 : 1
         transformOrigin: Item.Center
-        visible: !stack.expanded
+        visible: stack.records.length > 0
         width: stack.width - (stack.layerCount - index) * stack.collapsedLayerInset * 2
         x: (stack.layerCount - index) * stack.collapsedLayerInset
         y: index * stack.collapsedLayerOffset - (index === stack.expiringLayerIndex ? 6 : 0)
 
         Behavior on opacity {
-          NumberAnimation { duration: 180; easing.type: Easing.InQuad }
+          NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
         }
 
         Behavior on scale {
@@ -614,9 +618,14 @@ PopupWindow {
       record: stack.latestRecord || popup.emptyRecord
       service: stack.service
       urgentAttention: stack.hasCritical
-      visible: !stack.showingExpanded
+      opacity: stack.showingExpanded ? 0 : 1
+      visible: stack.records.length > 0
       y: stack.layerCount * stack.collapsedLayerOffset
       z: 3
+
+      Behavior on opacity {
+        NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+      }
     }
 
     Item {
@@ -644,9 +653,15 @@ PopupWindow {
       }
 
       height: stack.showingExpanded ? stack.expandedHeight : contentHeight
-      visible: stack.showingExpanded
+      enabled: stack.showingExpanded
+      opacity: stack.showingExpanded ? 1 : 0
+      visible: stack.records.length > 0
       width: parent.width
       z: 4
+
+      Behavior on opacity {
+        NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+      }
 
       Repeater {
         id: expandedCards
@@ -666,12 +681,20 @@ PopupWindow {
           record: notification || popup.emptyRecord
           service: stack.service
           urgentAttention: notification && notification.urgency === "critical"
+          unfoldOffset: stack.expanded ? 0 : 16 + index * 3
           y: expandedColumn.cardY(index, height)
+
+          Behavior on unfoldOffset {
+            NumberAnimation {
+              duration: 360 + index * 70
+              easing.type: Easing.OutCubic
+            }
+          }
 
           Behavior on opacity {
             SequentialAnimation {
-              PauseAnimation { duration: stack.expanded ? index * 70 : 0 }
-              NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+              PauseAnimation { duration: stack.expanded ? index * 140 : 0 }
+              NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
             }
           }
         }
