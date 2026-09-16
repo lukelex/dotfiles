@@ -72,6 +72,27 @@ test('brightness slider shows a spinner while the DDC command is running', () =>
   assert.match(source, /running: spinner\.visible/);
 });
 
+test('sensor temperature selection only accepts matching chips with usable readings', () => {
+  const sensorTemperature = loadFunction('Bar.qml', 'sensorTemperature', {});
+  const sensors = {
+    'amdgpu-pci-c600': { edge: { temp1_input: 49 } },
+    'k10temp-pci-00c3': { Tctl: { temp1_input: 67.375 } },
+    'spd5118-i2c-16-50': { temp1: { temp1_input: 49.5 } },
+  };
+
+  assert.equal(sensorTemperature(sensors, /^(k10temp|coretemp|zenpower|cpu_thermal)/i), 67.375);
+  assert.equal(sensorTemperature(sensors, /^(amdgpu|nouveau|nvidia)/i), 49);
+  assert.equal(sensorTemperature(sensors, /^nvidia/i), null);
+});
+
+test('Control Center attaches temperature to each available processor label', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
+  assert.match(source, /title: "CPU" \+ \(popup\.controller\.cpuTemperatureAvailable/);
+  assert.match(source, /title: "GPU - " \+ Math\.round\(popup\.controller\.gpuTemperature\)/);
+  assert.match(source, /percentage: popup\.controller\.gpuUsage/);
+  assert.match(source, /visible: popup\.controller\.gpuTemperatureAvailable && popup\.controller\.gpuUsageAvailable/);
+});
+
 test('hover centers do not grab focus from their bar triggers', () => {
   for (const file of ['ControlCenter.qml', 'NotificationCenter.qml']) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');

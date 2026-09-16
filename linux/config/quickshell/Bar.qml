@@ -82,6 +82,12 @@ Scope {
   property real memoryUsedGib: 0
   property real memoryTotalGib: 0
   property real loadAverage: 0
+  property bool cpuTemperatureAvailable: false
+  property real cpuTemperature: 0
+  property bool gpuTemperatureAvailable: false
+  property real gpuTemperature: 0
+  property bool gpuUsageAvailable: false
+  property int gpuUsage: 0
   property real previousCpuTotal: -1
   property real previousCpuIdle: -1
   readonly property date currentDate: clock.date
@@ -144,6 +150,21 @@ Scope {
 
   function refreshControlStatus() {
     controlStatus.running = true
+  }
+
+  function sensorTemperature(sensors, chipPattern) {
+    for (const chipName of Object.keys(sensors)) {
+      if (!chipPattern.test(chipName))
+        continue
+
+      for (const label of Object.keys(sensors[chipName])) {
+        const value = Number(sensors[chipName][label]?.temp1_input)
+        if (Number.isFinite(value))
+          return value
+      }
+    }
+
+    return null
   }
 
   function openNotificationCenter() {
@@ -381,7 +402,7 @@ Scope {
 
   Process {
     id: systemStatus
-    command: ["sh", "-c", "awk '/^cpu / { total = 0; for (i = 2; i <= NF; i++) total += $i; print total, $5 + $6; exit }' /proc/stat; awk '/^MemTotal:/ { total = $2 } /^MemAvailable:/ { available = $2 } END { print total, available }' /proc/meminfo; awk '{ print $1 }' /proc/loadavg"]
+    command: ["sh", "-c", "awk '/^cpu / { total = 0; for (i = 2; i <= NF; i++) total += $i; print total, $5 + $6; exit }' /proc/stat; awk '/^MemTotal:/ { total = $2 } /^MemAvailable:/ { available = $2 } END { print total, available }' /proc/meminfo; awk '{ print $1 }' /proc/loadavg; gpu_usage=; for gpu_path in /sys/class/drm/card*/device/gpu_busy_percent; do [ -r \"$gpu_path\" ] || continue; read -r gpu_usage < \"$gpu_path\"; break; done; printf '%s\\n' \"$gpu_usage\"; sensors -j 2>/dev/null | tr -d '\\n'; printf '\\n'"]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
@@ -389,6 +410,14 @@ Scope {
         const cpu = output[0]?.trim().split(/\s+/).map(Number)
         const memory = output[1]?.trim().split(/\s+/).map(Number)
         const load = Number(output[2])
+        const gpuUsage = Number(output[3])
+        let sensors = {}
+
+        try {
+          sensors = JSON.parse(output[4] || "{}")
+        } catch (_) {
+          sensors = {}
+        }
 
         if (cpu?.length === 2 && cpu.every(Number.isFinite)) {
           if (root.previousCpuTotal >= 0 && cpu[0] > root.previousCpuTotal) {
@@ -410,6 +439,20 @@ Scope {
 
         if (Number.isFinite(load))
           root.loadAverage = load
+
+        root.gpuUsageAvailable = Number.isFinite(gpuUsage) && gpuUsage >= 0 && gpuUsage <= 100
+        if (root.gpuUsageAvailable)
+          root.gpuUsage = Math.round(gpuUsage)
+
+        const cpuTemperature = root.sensorTemperature(sensors, /^(k10temp|coretemp|zenpower|cpu_thermal)/i)
+        root.cpuTemperatureAvailable = Number.isFinite(cpuTemperature)
+        if (root.cpuTemperatureAvailable)
+          root.cpuTemperature = cpuTemperature
+
+        const gpuTemperature = root.sensorTemperature(sensors, /^(amdgpu|nouveau|nvidia)/i)
+        root.gpuTemperatureAvailable = Number.isFinite(gpuTemperature)
+        if (root.gpuTemperatureAvailable)
+          root.gpuTemperature = gpuTemperature
       }
     }
   }

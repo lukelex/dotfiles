@@ -529,7 +529,8 @@ PopupWindow {
               controller: popup.controller
               iconName: "cpu"
               percentage: popup.controller.cpuUsage
-              title: "CPU"
+              title: "CPU" + (popup.controller.cpuTemperatureAvailable
+                ? " - " + Math.round(popup.controller.cpuTemperature) + "\u00b0C" : "")
               value: popup.controller.cpuUsage + "%"
               width: parent.width
             }
@@ -540,6 +541,16 @@ PopupWindow {
               percentage: popup.controller.memoryPercentage
               title: "Memory"
               value: popup.controller.memoryUsedGib.toFixed(1) + " / " + popup.controller.memoryTotalGib.toFixed(1) + " GiB"
+              width: parent.width
+            }
+
+            SystemUsage {
+              controller: popup.controller
+              iconName: "microchip"
+              percentage: popup.controller.gpuUsage
+              title: "GPU - " + Math.round(popup.controller.gpuTemperature) + "\u00b0C"
+              value: popup.controller.gpuUsage + "%"
+              visible: popup.controller.gpuTemperatureAvailable && popup.controller.gpuUsageAvailable
               width: parent.width
             }
 
