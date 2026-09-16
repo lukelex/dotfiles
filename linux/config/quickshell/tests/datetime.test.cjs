@@ -12,7 +12,8 @@ function fixture() {
   const context = vm.createContext({
     popup: { today: new Date(2024, 1, 29, 12), displayedMonth: new Date(2023, 11, 1, 12),
       pinned: false, closing: false, promotionPending: false, promotionSnapshot: null,
-      promotionWindow: null, pinRequest: 0, weather: { refreshes: 0, refresh() { this.refreshes++; } } },
+      promotionWindow: null, pinRequest: 0, weather: { refreshes: 0, refresh() { this.refreshes++; } },
+      quote: { refreshes: 0, refresh() { this.refreshes++; } } },
     preview: { visible: false, contentItem: { Window: { window: { raise() {} } } } },
     pinnedPopup: { visible: false, open() { this.visible = true; context.onOpened(); }, close() { this.visible = false; } },
     scroll: { contentY: 80 }, content: {

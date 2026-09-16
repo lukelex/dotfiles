@@ -4,29 +4,89 @@ set -euo pipefail
 
 umask 077
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/quotes"
-DATE=$(date -u +%Y-%m-%d)
+DATE=$(date +%Y-%m-%d)
 CACHE_FILE="$CACHE_DIR/$DATE"
 LANGUAGE='en'
 QUOTES_URL="https://quotes.rest/qod.json?category=inspire&language=$LANGUAGE"
+ERROR=""
 
 mkdir -p "$CACHE_DIR"
+
+command -v curl >/dev/null || { printf '%s\n' 'curl is required.' >&2; exit 1; }
+command -v jq >/dev/null || { printf '%s\n' 'jq is required.' >&2; exit 1; }
+
+valid_quote() {
+  [[ -n "$1" && "$1" != *$'\r'* && "$1" != *$'\t'* ]]
+}
+
+latest_cached_quote() {
+  local file quote
+  while IFS= read -r file; do
+    [[ "$file" =~ /[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
+    quote=$(<"$file")
+    if valid_quote "$quote"; then
+      printf '%s' "$quote"
+      return 0
+    fi
+  done < <(printf '%s\n' "$CACHE_DIR"/* | sort -r)
+  return 1
+}
 
 get_quote() {
   local response quote temp_file
 
-  if [[ ! -s "$CACHE_FILE" ]]; then
-    response=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 \
-      -H "Authorization: Bearer $QUOTES_API_KEY" "$QUOTES_URL")
-    quote=$(jq -er '.contents.quotes[0].quote' <<< "$response")
-
-    temp_file=$(mktemp "$CACHE_DIR/$DATE.XXXXXX")
-    printf '%s\n' "$quote" > "$temp_file"
-    mv -f "$temp_file" "$CACHE_FILE"
+  if [[ -s "$CACHE_FILE" ]] && quote=$(<"$CACHE_FILE") && valid_quote "$quote"; then
+    printf '%s\n' "$quote"
+    return 0
   fi
 
-  cat "$CACHE_FILE"
+  if [[ -z "${QUOTES_API_KEY:-}" ]]; then
+    ERROR="QUOTES_API_KEY is not configured."
+  elif ! response=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 \
+      -H "Authorization: Bearer $QUOTES_API_KEY" "$QUOTES_URL"); then
+    ERROR="Quote service request failed."
+  elif ! quote=$(jq -er '.contents.quotes[0].quote // empty' <<< "$response") || ! valid_quote "$quote"; then
+    ERROR="Quote service returned invalid data."
+  else
+    temp_file=$(mktemp "$CACHE_DIR/.${DATE}.XXXXXX")
+    printf '%s\n' "$quote" > "$temp_file"
+    mv -f "$temp_file" "$CACHE_FILE"
+    printf '%s\n' "$quote"
+    return 0
+  fi
+
+  if quote=$(latest_cached_quote); then
+    printf '%s\n' "$quote"
+    return 0
+  fi
+
+  printf '%s\n' "$ERROR" >&2
+  return 1
+}
+
+snapshot() {
+  local quote stale=true error_json quote_json current_cached=false
+  ERROR=""
+  if [[ -s "$CACHE_FILE" ]] && quote=$(<"$CACHE_FILE") && valid_quote "$quote"; then
+    current_cached=true
+  fi
+  if quote=$(get_quote 2>/dev/null); then
+    if [[ "$current_cached" == true ]]; then
+      stale=false
+    else
+      ERROR="Using the latest cached quote."
+    fi
+  else
+    ERROR="${ERROR:-Quote unavailable.}"
+  fi
+  quote_json=$(jq -Rn --arg value "${quote:-}" '$value')
+  error_json=$(jq -Rn --arg value "${ERROR:-}" '$value')
+  printf '{"available":%s,"date":"%s","quote":%s,"stale":%s,"error":%s}\n' \
+    "$( [[ -n "${quote:-}" ]] && printf true || printf false )" "$DATE" "$quote_json" "$stale" "$error_json"
 }
 
 case ${1:-} in
   get) get_quote ;;
+  snapshot) snapshot ;;
+  *) printf 'Usage: %s {get|snapshot}\n' "$0" >&2; exit 2 ;;
 esac

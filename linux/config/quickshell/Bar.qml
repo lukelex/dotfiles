@@ -17,6 +17,7 @@ Scope {
   property var connectivityTarget: null
 
   WeatherService { id: weatherService }
+  QuoteService { id: quoteService }
 
   Connections {
     target: Hyprland
@@ -613,6 +614,7 @@ Scope {
         controller: root
         panel: panel
         weather: weatherService
+        quote: quoteService
       }
 
       Component.onCompleted: {

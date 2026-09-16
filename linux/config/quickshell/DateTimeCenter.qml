@@ -10,6 +10,7 @@ Scope {
   required property var controller
   required property var panel
   required property var weather
+  required property var quote
   property bool pinned: false
   property bool closing: false
   property bool closeImmediately: false
@@ -86,6 +87,7 @@ Scope {
       popup.detailsExpanded = false
       scroll.contentY = 0
       popup.weather.refresh()
+      popup.quote.refresh()
     }
     if (pin || popup.pinned) {
       popup.pinned = true
@@ -650,6 +652,63 @@ Scope {
                   visible: popup.weather.wind !== null
                   text: "Wind " + popup.weather.wind + " m/s"
                 }
+              }
+            }
+          }
+        }
+
+        Rectangle {
+          width: parent.width
+          color: popup.controller.controlSurface
+          radius: 18
+          implicitHeight: quoteSection.implicitHeight + 24
+
+          Column {
+            id: quoteSection
+            x: 16
+            y: 12
+            width: parent.width - 32
+            spacing: 7
+
+            Row {
+              width: parent.width
+              spacing: 8
+              LucideIcon {
+                width: 18
+                height: 18
+                source: popup.controller.icon("message-square-quote")
+                color: popup.controller.controlActiveIcon
+              }
+              Label {
+                width: parent.width - 26
+                text: "Quote of the day"
+                color: popup.controller.controlPrimaryText
+                font.pixelSize: 12
+              }
+            }
+            Label {
+              width: parent.width
+              text: popup.quote.loading ? "Loading quote..." : popup.quote.available ? "\u201c" + popup.quote.quote + "\u201d" : "No quote available"
+              visible: text !== ""
+              wrapMode: Text.Wrap
+              elide: Text.ElideNone
+              color: popup.controller.controlPrimaryText
+              font.pixelSize: 13
+            }
+            Label {
+              width: parent.width
+              text: popup.quote.stale && popup.quote.available ? "Using a cached quote" : popup.quote.error
+              visible: text !== ""
+              wrapMode: Text.Wrap
+              elide: Text.ElideNone
+            }
+            Action {
+              text: popup.quote.loading ? "Refreshing..." : "Retry"
+              enabled: !popup.quote.loading
+              visible: !popup.quote.available || popup.quote.stale || popup.quote.error !== ""
+              onClicked: {
+                popup.requestOpen(true)
+                popup.quote.refresh(true)
               }
             }
           }
