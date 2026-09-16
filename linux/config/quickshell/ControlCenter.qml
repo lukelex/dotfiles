@@ -649,15 +649,30 @@ PopupWindow {
           }
         }
 
-        QuickAction {
+        Row {
           anchors.right: parent.right
-          active: false
-          controller: popup.controller
-          height: 40
-          width: 144
-          iconName: "lock"
-          title: "Lock Screen"
-          onActivated: popup.controller.lockScreen()
+          width: parent.width
+          spacing: 8
+
+          QuickAction {
+            active: popup.controller.keepAwake
+            controller: popup.controller
+            height: 40
+            width: Math.min(132, (parent.width - parent.spacing) / 2)
+            iconName: popup.controller.keepAwake ? "monitor-off" : "monitor"
+            title: popup.controller.keepAwake ? "Keep Awake" : "Allow Idle"
+            onActivated: popup.controller.toggleKeepAwake()
+          }
+
+          QuickAction {
+            active: false
+            controller: popup.controller
+            height: 40
+            width: Math.min(144, (parent.width - parent.spacing) / 2)
+            iconName: "lock"
+            title: "Lock Screen"
+            onActivated: popup.controller.lockScreen()
+          }
         }
 
         TrayModule {

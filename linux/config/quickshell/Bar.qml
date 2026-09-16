@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.I3
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls as Controls
 
@@ -69,6 +70,7 @@ Scope {
   property int brightness: 0
   property bool darkMode: true
   property bool nightModeEnabled: false
+  property bool keepAwake: false
   property bool nordVpnInstalled: false
   property bool vpnConnected: false
   property string vpnLocation: ""
@@ -273,6 +275,15 @@ Scope {
     lockScreenProcess.startDetached()
   }
 
+  function toggleKeepAwake() {
+    if (keepAwakeProcess.running)
+      return
+
+    root.keepAwake = !root.keepAwake
+    if (!root.hyprlandSession)
+      keepAwakeProcess.running = true
+  }
+
   function syncTheme() {
     root.darkMode = themeState.text().trim() !== "light"
   }
@@ -361,6 +372,13 @@ Scope {
   Process {
     id: lockScreenProcess
     command: ["u_exit", "lock"]
+  }
+
+  Process {
+    id: keepAwakeProcess
+    command: ["sh", "-c", root.keepAwake
+      ? "xautolock -disable; xset s off -dpms"
+      : "xautolock -enable; xset s on +dpms; xset dpms 1200 0 0"]
   }
 
   Process {
@@ -545,6 +563,11 @@ Scope {
         controller: root
         panel: panel
         service: connectivity
+      }
+
+      IdleInhibitor {
+        enabled: root.hyprlandSession && root.keepAwake
+        window: panel
       }
 
       screen: modelData
