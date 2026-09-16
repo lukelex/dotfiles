@@ -118,6 +118,7 @@ profiles:
         polkit:
         polkit-gnome:
         postbird-bin:
+        qt5-wayland:
         qt5ct:
         qt6-svg:
         quickshell:
@@ -132,6 +133,7 @@ profiles:
           groups:
             - lp
         tidy:
+        qt6-wayland:
         ttf-hack:
         ttf-lucide-font:
         udiskie:
@@ -178,8 +180,6 @@ profiles:
         hyprpanel-bin:
         hyprshot:
         kooha:
-        qt5-wayland:
-        qt6-wayland:
         slurp:
         sox:
         swhkd-bin:
