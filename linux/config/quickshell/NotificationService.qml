@@ -31,6 +31,18 @@ QtObject {
     command: []
   }
 
+  property Process notificationSound: Process {
+    command: ["play", "-q", service.notificationSoundPath, "vol", "0.5"]
+  }
+
+  // Process runs outside the QML thread; notification handling stays responsive while audio plays.
+  property Timer notificationSoundTimer: Timer {
+    interval: 3000
+  }
+
+  readonly property string notificationSoundPath: Quickshell.env("HOME")
+    + "/dotfiles/sounds/icq-uh-oh.mp3"
+
   property Settings settings: Settings {
     id: settings
     location: "file:///home/lukas/.local/state/dotfiles/notifications.conf"
@@ -165,9 +177,18 @@ QtObject {
     }
 
     service.addHistory(record)
+    service.playNotificationSound()
     service.pendingPopupRecords = service.pendingPopupRecords
       .filter(entry => entry.id !== record.id).concat([record]).slice(-service.popupLimit)
     popupUpdateTimer.start()
+  }
+
+  function playNotificationSound() {
+    if (service.notificationSoundTimer.running || service.notificationSound.running)
+      return
+
+    service.notificationSound.running = true
+    service.notificationSoundTimer.start()
   }
 
   function isSystemOsd(record) {
