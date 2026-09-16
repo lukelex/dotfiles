@@ -92,6 +92,7 @@ profiles:
         kmonad:
         kvantum:
         light:
+        lm_sensors: {}
         mpv:
         network-manager-applet:
           services:
