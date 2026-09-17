@@ -73,6 +73,7 @@ if (command === 'sleep') process.exit(99);
         HOME: home,
         DISPLAY: ':987',
         I3SOCK: socket,
+        XDG_SESSION_TYPE: 'x11',
         CALL_LOG: log,
         DISCOVER_SOCKET: socket,
         ...overrides,
@@ -159,7 +160,7 @@ for (const failure of ['nonzero', 'empty', 'stale', 'regular file']) {
   });
 }
 
-test('session startup imports only session names before idempotent start, never restart', async t => {
+test('session startup imports only session environment before idempotent start, never restart', async t => {
   const f = await fixture(t);
   const XAUTHORITY = path.join(f.home, 'fake Xauthority');
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -172,12 +173,13 @@ test('session startup imports only session names before idempotent start, never 
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(commands(result), [
       ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
-      ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XAUTHORITY'],
+      ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XDG_SESSION_TYPE', 'XAUTHORITY'],
       ['systemctl', '--user', 'start', 'quickshell.service'],
     ]);
     for (const call of result.calls) {
       assert.equal(call.env.DISPLAY, ':987');
       assert.equal(call.env.I3SOCK, f.socket);
+      assert.equal(call.env.XDG_SESSION_TYPE, 'x11');
       assert.equal(call.env.XAUTHORITY, XAUTHORITY);
     }
     assert.equal(result.calls[2].pid, result.pid, 'systemctl start must replace Bash');
@@ -193,7 +195,7 @@ test('unset or empty XAUTHORITY clears the manager value before importing the di
       ['i3', '--get-socketpath'],
       ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ['systemctl', '--user', 'unset-environment', 'XAUTHORITY'],
-      ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK'],
+      ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XDG_SESSION_TYPE'],
       ['systemctl', '--user', 'start', 'quickshell.service'],
     ]);
     assert.equal(result.calls[2].env.I3SOCK, f.socket);
@@ -209,7 +211,7 @@ test('failed environment import blocks service startup', async t => {
     assert.deepEqual(commands(result), [
       ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ...(XAUTHORITY ? [] : [['systemctl', '--user', 'unset-environment', 'XAUTHORITY']]),
-      ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', ...(XAUTHORITY ? ['XAUTHORITY'] : [])],
+      ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XDG_SESSION_TYPE', ...(XAUTHORITY ? ['XAUTHORITY'] : [])],
     ]);
   }
 });
@@ -240,6 +242,7 @@ test('Hyprland launches the default shell with its Wayland environment', async t
     HYPRLAND_INSTANCE_SIGNATURE: f.hyprland.signature,
     WAYLAND_DISPLAY: 'wayland-test',
     XDG_RUNTIME_DIR: f.hyprland.runtime,
+    XDG_SESSION_TYPE: 'wayland',
     LAUNCH_STATUS: '23',
   });
   assert.equal(result.status, 23);
@@ -256,13 +259,15 @@ test('Hyprland startup clears i3 variables before importing Wayland plumbing', a
     HYPRLAND_INSTANCE_SIGNATURE: f.hyprland.signature,
     WAYLAND_DISPLAY: 'wayland-test',
     XDG_RUNTIME_DIR: f.hyprland.runtime,
+    XDG_SESSION_TYPE: 'wayland',
   });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(commands(result), [
     ['systemctl', '--user', 'unset-environment', 'DISPLAY', 'I3SOCK', 'XAUTHORITY'],
-    ['systemctl', '--user', 'import-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR'],
+    ['systemctl', '--user', 'import-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR', 'XDG_SESSION_TYPE'],
     ['systemctl', '--user', 'start', 'quickshell.service'],
   ]);
+  assert.equal(result.calls[1].env.XDG_SESSION_TYPE, 'wayland');
 });
 
 test('incomplete Hyprland environment fails without falling back to i3', async t => {

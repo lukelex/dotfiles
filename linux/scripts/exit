@@ -1,16 +1,25 @@
 #!/usr/bin/bash
 
 function reset_ui {
-  u_music pause 2&> /dev/null
-  qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible 2&> /dev/null
+  # Cleanup IPC must not delay locking while the compositor is suspending.
+  u_music pause 2&> /dev/null &
+  qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible 2&> /dev/null &
 }
 
 case "$1" in
   lock)
     reset_ui
-    case "$XDG_SESSION_TYPE" in
+    session_type="${XDG_SESSION_TYPE:-}"
+    if [[ -z "$session_type" ]]; then
+      if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+        session_type=wayland
+      elif [[ -n "${DISPLAY:-}" ]]; then
+        session_type=x11
+      fi
+    fi
+    case "$session_type" in
       x11) u_blurlock ;;
-      wayland) pidof hyprlock || hyprlock ;; # avoid starting multiple hyprlock instances.
+      wayland) exec hyprlock ;; # Hyprland rejects duplicate session locks.
     esac ;;
   logout)
     case "$XDG_SESSION_DESKTOP" in

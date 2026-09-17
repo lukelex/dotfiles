@@ -37,10 +37,10 @@ fi
 if [[ "${1:-}" == --session-start ]]; then
   if [[ "$backend" == hyprland ]]; then
     systemctl --user unset-environment DISPLAY I3SOCK XAUTHORITY
-    session_variables=(HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_RUNTIME_DIR)
+    session_variables=(HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_RUNTIME_DIR XDG_SESSION_TYPE)
   else
     systemctl --user unset-environment HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY
-    session_variables=(DISPLAY I3SOCK)
+    session_variables=(DISPLAY I3SOCK XDG_SESSION_TYPE)
     if [[ -n "${XAUTHORITY:-}" ]]; then
       session_variables+=(XAUTHORITY)
     else
