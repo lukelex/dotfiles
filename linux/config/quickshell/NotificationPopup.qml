@@ -725,10 +725,12 @@ PopupWindow {
 
     function canAddRecord(record) {
       const latestRecord = stack.records[stack.records.length - 1]
+      const firstRecord = stack.records[0]
       return !stack.expiring && !latestToast.dismissing && latestRecord
         && stack.service.appKey(record) === stack.service.appKey(latestRecord)
         && record.urgency === latestRecord.urgency
         && record.time - latestRecord.time <= stack.service.popupGroupWindow
+        && Math.abs(record.time - firstRecord.time) <= stack.service.notificationGroupWindow
     }
 
     function addRecord(record) {

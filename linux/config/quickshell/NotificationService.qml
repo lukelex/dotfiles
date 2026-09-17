@@ -10,6 +10,7 @@ QtObject {
   property int historyLimit: 100
   property int popupLimit: 5
   property int popupGroupWindow: 30
+  property int notificationGroupWindow: 5 * 60
   property var history: []
   property var popup: []
   property var popupReversed: []
@@ -306,8 +307,10 @@ QtObject {
     for (const record of records) {
       const previousGroup = groups[groups.length - 1]
       const previousRecord = previousGroup ? previousGroup.records[previousGroup.records.length - 1] : null
+      const firstRecord = previousGroup ? previousGroup.records[0] : null
       if (previousRecord && service.appKey(previousRecord) === service.appKey(record)
-          && previousRecord.urgency === record.urgency)
+          && previousRecord.urgency === record.urgency
+          && Math.abs(record.time - firstRecord.time) <= service.notificationGroupWindow)
         previousGroup.records.push(record)
       else
         groups.push({ key: String(record.id), records: [record] })
@@ -322,10 +325,12 @@ QtObject {
     for (const record of records) {
       const previousGroup = groups[groups.length - 1]
       const previousRecord = previousGroup ? previousGroup.records[previousGroup.records.length - 1] : null
+      const firstRecord = previousGroup ? previousGroup.records[0] : null
       const isConsecutive = previousGroup
         && previousGroup.key === service.appKey(record)
         && record.urgency === previousRecord.urgency
         && record.time - previousRecord.time <= service.popupGroupWindow
+        && Math.abs(record.time - firstRecord.time) <= service.notificationGroupWindow
 
       if (isConsecutive) {
         previousGroup.records.push(record)

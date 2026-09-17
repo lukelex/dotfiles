@@ -5,9 +5,18 @@ const vm = require('node:vm');
 const { test } = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
+const popupSource = fs.readFileSync(path.join(__dirname, '../NotificationPopup.qml'), 'utf8');
 
 function serviceForTest() {
-  const service = { history: [], popup: [], live: {}, hovered: {}, popupLimit: 5, popupGroupWindow: 30 };
+  const service = {
+    history: [],
+    popup: [],
+    live: {},
+    hovered: {},
+    popupLimit: 5,
+    popupGroupWindow: 30,
+    notificationGroupWindow: 5 * 60,
+  };
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
   const context = vm.createContext({ service, Date });
@@ -30,6 +39,35 @@ test('only adjacent notifications with the same app and urgency group', () => {
     const ids = JSON.parse(JSON.stringify(group(records).map(entry => entry.records.map(item => item.id))));
     assert.deepEqual(ids, [[1, 2], [3], [4], [5], [6]]);
   }
+});
+
+test('grouping stops five minutes after the first notification', () => {
+  const { service } = serviceForTest();
+  const liveRecords = Array.from({ length: 11 }, (_, index) => record(index * 30)).concat(record(301));
+  const groupedIds = groups => JSON.parse(JSON.stringify(groups.map(group => group.records.map(item => item.id))));
+
+  assert.deepEqual(groupedIds(service.groupPopup(liveRecords)), [
+    Array.from({ length: 11 }, (_, index) => index * 30),
+    [301],
+  ]);
+
+  assert.deepEqual(groupedIds(service.groupHistory(liveRecords.slice().reverse())), [
+    [301, 300, 270, 240, 210, 180, 150, 120, 90, 60, 30],
+    [0],
+  ]);
+});
+
+test('live stacks use the same first-record cutoff as popup groups', () => {
+  const { service } = serviceForTest();
+  const stack = { records: [record(0), record(30), record(270), record(300)], expiring: false, service };
+  const latestToast = { dismissing: false };
+  const context = vm.createContext({ stack, latestToast, Math });
+  const match = popupSource.match(/    function canAddRecord\([^]*?\n    \}/);
+  assert.ok(match, 'Missing PopupStack.canAddRecord');
+  const canAddRecord = vm.runInContext(`(${match[0]})`, context);
+
+  assert.equal(canAddRecord(record(300)), true);
+  assert.equal(canAddRecord(record(301)), false);
 });
 
 test('timeouts use milliseconds and zero stays persistent', () => {
