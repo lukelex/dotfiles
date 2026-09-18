@@ -121,6 +121,7 @@ profiles:
         qt5-wayland:
         qt5ct:
         qt6-svg:
+        qt6-wayland:
         quickshell:
           configs:
             - linux/config/quickshell:$XDG_CONFIG_HOME/quickshell
@@ -133,7 +134,6 @@ profiles:
           groups:
             - lp
         tidy:
-        qt6-wayland:
         ttf-hack:
         ttf-lucide-font:
         udiskie:
