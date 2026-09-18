@@ -12,6 +12,9 @@ source "$DOTFILES/linux/config/zsh/projects.zsh"
 
 source "$DOTFILES/linux/config/aliases"
 
+# 1Password-backed shared secrets (skips quietly when locked/unavailable)
+source "$DOTFILES/linux/config/zsh/secrets.zsh"
+
 bindkey "^[[1;5C" forward-word      # Ctrl+right
 bindkey "^[[1;5D" backward-word     # Ctrl+left
 bindkey "^[[H"    beginning-of-line # Ctrl+a

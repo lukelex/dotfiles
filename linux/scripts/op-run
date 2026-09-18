@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+# Run a command with shared secrets injected from 1Password.
+#
+# Usage: u_op-run <command> [args...]
+# Example: u_op-run gh pr list
+#
+# Resolves the op:// secret references in $DOTFILES/linux/config/oprefs/*.env
+# into real values and passes them as environment variables only to <command>.
+# op run masks secrets on stdout/stderr. Returns <command>'s exit status.
+
+set -euo pipefail
+
+if [[ "$#" -eq 0 ]]; then
+  echo "usage: u_op-run <command> [args...]" >&2
+  exit 2
+fi
+
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+# shellcheck source=../config/oprefs/op-run-args.sh
+source "$DOTFILES/linux/config/oprefs/op-run-args.sh"
+
+# No refs files (or no backend configured): nothing to inject, run as-is.
+if [[ "${#OP_RUN_ARGS[@]}" -eq 0 ]]; then
+  exec "$@"
+fi
+
+command -v op >/dev/null 2>&1 || {
+  echo "u_op-run: 1Password CLI (op) not found" >&2
+  exit 127
+}
+op whoami >/dev/null 2>&1 || {
+  echo "u_op-run: 1Password not signed in or unlocked (run 'op signin' or unlock the app)" >&2
+  exit 1
+}
+
+exec op run "${OP_RUN_ARGS[@]}" -- "$@"

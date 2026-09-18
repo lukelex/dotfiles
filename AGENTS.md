@@ -21,6 +21,7 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 - `linux/scripts/` — shell helper scripts; installed as `u_*` (except those owned by Quickshell — see `linux/config/quickshell/scripts/`).
 - `linux/install/` — provisioning scripts (idempotent-ish, system-affecting).
 - `linux/config/nvim/` — Neovim config, managed by lazy.nvim (plugins auto-install in `lua/plugins/`). `init.lua` sets `mapleader`/`maplocalleader` then requires `core.*`; plugins are lazy-loaded from `lua/plugins/*.lua`.
+- `linux/config/oprefs/` — shared secrets across machines via the existing 1Password account. `secrets.env` (plus optional `secrets.<host>.env`) holds only `op://` secret references, never plaintext (CI guards this). `op-run-args.sh` is the single backend switch (secret references now; 1Password Environments beta later). Loaded into every interactive shell by `linux/config/zsh/secrets.zsh`; one-off use via `u_op-run` (`linux/scripts/op-run`). Runs through `op run`, so `op` must be signed in/unlocked (the desktop app autostarts and unlocks at login; headless machines need a service account token).
 - `keyboards/<board>/keymap.c` — QMK keymaps, one directory per keyboard; compiled out-of-repo (`.hex` artifacts committed alongside).
 
 ## Conventions

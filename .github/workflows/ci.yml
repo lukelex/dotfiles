@@ -27,6 +27,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f -print0 | xargs -0 shellcheck
+      - name: Guard 1Password refs against plaintext secrets
+        run: |
+          bad="$(grep -nEH '^[A-Za-z_][A-Za-z0-9_]*=' linux/config/oprefs/*.env 2>/dev/null | grep -vE 'op://' || true)"
+          if [[ -n "$bad" ]]; then
+            echo "$bad"
+            echo "linux/config/oprefs/*.env must contain only op:// secret references, never plaintext values" >&2
+            exit 1
+          fi
 
   installer-tests:
     runs-on: ubuntu-latest
