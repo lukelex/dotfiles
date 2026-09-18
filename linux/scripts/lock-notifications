@@ -1,0 +1,178 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/notifications.conf"
+source_file="$HOME/.cache/dotfiles/lock-notifications.svg"
+cache_file="$HOME/.cache/dotfiles/lock-notifications.png"
+theme_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/color-scheme"
+
+mkdir -p "${source_file%/*}"
+
+theme="dark"
+if [[ -r "$theme_file" ]]; then
+  theme=$(tr -d '[:space:]' < "$theme_file") || true
+fi
+
+encoded=""
+if [[ -r "$state_file" ]]; then
+  encoded=$(sed -n 's/^historyJson="\(.*\)"$/\1/p' "$state_file")
+fi
+
+history='[]'
+if [[ -n "$encoded" ]]; then
+  history=$(printf '"%s"' "$encoded" | jq -er 'fromjson | if type == "array" then . else error("history is not an array") end' 2> /dev/null) || history='[]'
+fi
+
+temporary_source=$(mktemp "${source_file}.XXXXXX")
+temporary_png=$(mktemp "${cache_file}.XXXXXX")
+trap 'rm -f "$temporary_source" "$temporary_png"' EXIT
+
+printf '%s\n' "$history" | jq -r --arg theme "$theme" '
+  def clean:
+    tostring
+    | gsub("[[:space:]]+"; " ")
+    | sub("^ +"; "")
+    | sub(" +$"; "");
+
+  def clip($limit):
+    if length > $limit then .[0:($limit - 3)] + "..." else . end;
+
+  def displayBody($record):
+    (($record.body // "") | tostring) as $body
+    | if (($record.appIcon // "") | tostring | ascii_downcase | test("brave|chromium|firefox|google-chrome|google[.]chrome|microsoft-edge")) then
+        ($body | sub("^[^\\n]+\\n\\n[ \\t]*"; ""))
+      else $body end;
+
+  def wrap($width):
+    if . == "" then
+      []
+    else
+      reduce (split(" ")[]) as $word
+        ({lines: [], line: ""};
+          if .line == "" then
+            .line = $word
+          elif ((.line | length) + 1 + ($word | length) <= $width) then
+            .line += " " + $word
+          else
+            .lines += [.line] | .line = $word
+          end)
+      | if .line == "" then .lines else .lines + [.line] end
+    end;
+
+  def age($time):
+    ((now | floor) - (($time // 0) | tonumber? // 0)) as $seconds
+    | (if $seconds < 0 then 0 else $seconds end) as $value
+    | if $value < 60 then "now"
+      elif $value < 3600 then (($value / 60 | floor) | tostring) + "m"
+      elif $value < 86400 then (($value / 3600 | floor) | tostring) + "h"
+      elif $value < 604800 then (($value / 86400 | floor) | tostring) + "d"
+      else (($value / 604800 | floor) | tostring) + "w"
+      end;
+
+  def cardHeight($record):
+    64 + (if ($record.bodyLines | length) == 0 then 0 else 3 + 14 * ($record.bodyLines | length) end);
+
+  def icon($record; $x; $y; $primary):
+    if (($record.app | ascii_downcase) | contains("microsoft teams")) then
+      "<g transform=\"translate(" + ($x | tostring) + " " + ($y | tostring) + ") scale(0.3125)\">"
+        + "<circle cx=\"49\" cy=\"19\" r=\"10\" fill=\"#7b83eb\"/>"
+        + "<circle cx=\"51\" cy=\"46\" r=\"13\" fill=\"#5059c9\"/>"
+        + "<path fill=\"#7b83eb\" d=\"M19 18h26a7 7 0 0 1 7 7v21a7 7 0 0 1-7 7H19z\"/>"
+        + "<rect x=\"7\" y=\"20\" width=\"34\" height=\"32\" rx=\"6\" fill=\"#5059c9\"/>"
+        + "<path fill=\"#fff\" d=\"M14 27h20v5h-7v14h-6V32h-7z\"/></g>"
+    else
+      "<path d=\"M10.268 21a2 2 0 0 0 3.464 0M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326\""
+        + " transform=\"translate(" + ($x | tostring) + " " + ($y | tostring) + ") scale(0.833333)\""
+        + " fill=\"none\" stroke=\"" + $primary + "\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+    end;
+
+  def card($record; $y; $colors):
+    (if $record.critical then $colors.urgent else $colors.active end) as $iconColor
+    | (cardHeight($record)) as $height
+    | "<rect x=\"168\" y=\"" + ($y | tostring) + "\" width=\"432\" height=\"" + ($height | tostring)
+      + "\" rx=\"18\" fill=\"" + $colors.surface + "\"/>"
+    + (if $record.critical then
+        "<rect x=\"169\" y=\"" + (($y + 1) | tostring) + "\" width=\"430\" height=\"" + (($height - 2) | tostring)
+          + "\" rx=\"17\" fill=\"" + $colors.urgent + "\" fill-opacity=\"0.12\"/>"
+       else "" end)
+    + "<rect x=\"180\" y=\"" + (($y + 12) | tostring) + "\" width=\"40\" height=\"40\" rx=\"12\" fill=\"" + $iconColor + "\"/>"
+    + icon($record; 190; ($y + 22); $colors.primary)
+    + "<text x=\"232\" y=\"" + (($y + 27) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"10\">"
+      + ($record.app | @html) + "</text>"
+    + "<text x=\"586\" y=\"" + (($y + 27) | tostring) + "\" text-anchor=\"end\" fill=\"" + $colors.secondary + "\" font-size=\"10\">"
+      + ($record.time | @html) + "</text>"
+    + (if $record.summary == "" then "" else
+        "<text x=\"232\" y=\"" + (($y + 48) | tostring) + "\" fill=\"" + $colors.primary + "\" font-size=\"12\">"
+          + ($record.summary | @html) + "</text>"
+       end)
+    + (if ($record.bodyLines | length) == 0 then "" else
+        "<text x=\"232\" y=\"" + (($y + 65) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"11\">"
+          + ($record.bodyLines | to_entries | map(
+              "<tspan x=\"232\" dy=\"" + (if .key == 0 then "0" else "14" end) + "\">" + (.value | @html) + "</tspan>"
+            ) | join(""))
+          + "</text>"
+       end)
+    + "<rect x=\"168\" y=\"" + ($y | tostring) + "\" width=\"432\" height=\"" + ($height | tostring)
+      + "\" rx=\"18\" fill=\"none\" stroke=\"" + $colors.border + "\" stroke-width=\"1\"/>";
+
+  (if $theme == "light" then
+     {surface: "#E8EBEF", border: "#D7DCE3", active: "#C9E1F7", primary: "#20242A", secondary: "#59616D", urgent: "#DA4939"}
+   else
+     {surface: "#2B303A", border: "#33404D", active: "#3E5978", primary: "#F8F9FB", secondary: "#B7BEC9", urgent: "#DA4939"}
+   end) as $colors
+  | (if type == "array" then . else [] end)
+  | map(select(type == "object" and ((.summary // "") | type == "string")))
+  | .[0:5]
+  | map(
+      ((displayBody(.) | clean | clip(120))) as $body
+      | ($body | wrap(56) | .[0:2]) as $bodyLines
+      | {
+          app: ((.appName // "Notification") | tostring | clean | clip(32)),
+          summary: ((.summary // "") | clean | clip(58)),
+          bodyLines: $bodyLines,
+          critical: ((.urgency // "") == "critical"),
+          time: age(.time)
+        }
+    ) as $records
+  | ($records | map(cardHeight(.)) | add // 0) as $recordHeight
+  | ($records | length) as $count
+  | ($recordHeight + (if $count > 0 then ($count - 1) * 10 else 0 end)) as $listHeight
+  | ((600 - $listHeight) / 2) as $startY
+  | (reduce $records[] as $record
+      ({svg: "", y: $startY};
+        .svg += card($record; .y; $colors)
+        | .y += cardHeight($record) + 10
+      )) as $rendered
+  | "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"600\" viewBox=\"0 0 600 600\" font-family=\"Hack Nerd Font Mono, Hack, monospace\">"
+    + $rendered.svg
+    + "</svg>"
+ ' > "$temporary_source"
+
+if [[ -s "$source_file" && -s "$cache_file" ]] && cmp -s "$temporary_source" "$source_file"; then
+  rm -f "$temporary_source" "$temporary_png"
+  trap - EXIT
+  printf '%s\n' "$cache_file"
+  exit 0
+fi
+
+if command -v magick > /dev/null 2>&1; then
+  magick -background none "$temporary_source" "PNG32:$temporary_png"
+else
+  convert -background none "$temporary_source" "PNG32:$temporary_png"
+fi
+
+if [[ ! -s "$source_file" ]] || ! cmp -s "$temporary_source" "$source_file"; then
+  mv -f "$temporary_source" "$source_file"
+else
+  rm -f "$temporary_source"
+fi
+
+if [[ ! -s "$cache_file" ]] || ! cmp -s "$temporary_png" "$cache_file"; then
+  mv -f "$temporary_png" "$cache_file"
+else
+  rm -f "$temporary_png"
+fi
+
+trap - EXIT
+printf '%s\n' "$cache_file"
