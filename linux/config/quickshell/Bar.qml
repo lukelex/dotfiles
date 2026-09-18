@@ -285,6 +285,12 @@ Scope {
       keepAwakeProcess.running = true
   }
 
+  function toggleTheme() {
+    if (themeToggle.running)
+      return
+    themeToggle.running = true
+  }
+
   function syncTheme() {
     root.darkMode = themeState.text().trim() !== "light"
   }
@@ -380,6 +386,11 @@ Scope {
     command: ["sh", "-c", root.keepAwake
       ? "xautolock -disable; xset s off -dpms"
       : "xautolock -enable; xset s on +dpms; xset dpms 1200 0 0"]
+  }
+
+  Process {
+    id: themeToggle
+    command: ["u_theme", "toggle"]
   }
 
   Process {

@@ -112,10 +112,8 @@ PopupWindow {
     }
 
     Row {
-      anchors {
-        fill: parent
-        margins: 10
-      }
+      anchors.fill: parent
+      anchors.margins: 10
       spacing: 8
 
       LucideIcon {
@@ -658,17 +656,28 @@ PopupWindow {
             active: popup.controller.keepAwake
             controller: popup.controller
             height: 40
-            width: Math.min(132, (parent.width - parent.spacing) / 2)
+            width: (parent.width - parent.spacing * 2) / 3
             iconName: popup.controller.keepAwake ? "monitor-off" : "monitor"
             title: popup.controller.keepAwake ? "Keep Awake" : "Allow Idle"
             onActivated: popup.controller.toggleKeepAwake()
           }
 
           QuickAction {
+            active: popup.controller.darkMode
+            controller: popup.controller
+            height: 40
+            width: (parent.width - parent.spacing * 2) / 3
+            Accessible.name: popup.controller.darkMode ? "Switch to light mode" : "Switch to dark mode"
+            iconName: popup.controller.darkMode ? "sun" : "moon"
+            title: popup.controller.darkMode ? "Light" : "Dark"
+            onActivated: popup.controller.toggleTheme()
+          }
+
+          QuickAction {
             active: false
             controller: popup.controller
             height: 40
-            width: Math.min(144, (parent.width - parent.spacing) / 2)
+            width: (parent.width - parent.spacing * 2) / 3
             iconName: "lock"
             title: "Lock Screen"
             onActivated: popup.controller.lockScreen()
