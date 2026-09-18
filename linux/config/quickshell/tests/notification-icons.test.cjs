@@ -17,7 +17,7 @@ function resolver(appLookup = null, env = {}) {
     },
     DesktopEntries: { byId: () => appLookup, heuristicLookup: () => appLookup },
   });
-  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isTeamsNotification', 'displayBody', 'focusCommand', 'lucideIcon', 'iconFor']) {
+  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isEphemeralSource', 'isTeamsNotification', 'displayBody', 'focusCommand', 'lucideIcon', 'iconFor']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -101,6 +101,32 @@ test('notification image-provider URLs retain browser image precedence', () => {
     { kind: 'image', source: 'image://qsimage/notification/1' });
   assert.deepEqual(iconFor({ appName: 'Firefox', appIcon: '/theme/firefox.svg' }),
     { kind: 'image', source: '/theme/firefox.svg' });
+});
+
+test('live notification image providers are not mistaken for ephemeral sources', () => {
+  const service = {};
+  const isEphemeralSource = serviceFunction(service, 'isEphemeralSource');
+  for (const record of [
+    'image://qsimage/notification/1',
+    'image://icon//usr/share/icons/hicolor/128x128/apps/firefox.png',
+    'file:///usr/share/pixmaps/teams.png',
+  ]) {
+    assert.equal(isEphemeralSource(record), false);
+  }
+});
+
+test('expired Chromium temp icons fall back to the desktop entry icon', () => {
+  const iconFor = resolver({ icon: 'custom-icon' });
+  for (const record of [
+    // Edge web notification whose scoped_dir temp files were cleaned up.
+    { appName: 'Microsoft Edge', appIcon: 'file:///tmp/com.microsoft.Edge.scoped_dir.tQtfJw/logo.png', desktopEntry: 'microsoft-edge', image: 'image://icon//tmp/com.microsoft.Edge.scoped_dir.tQtfJw/icon.png' },
+    // Chrome web notification without a desktop entry available.
+    { appName: 'Google Chrome', appIcon: 'file:///tmp/com.google.Chrome.scoped_dir.6bBOvB/logo.png', desktopEntry: 'google-chrome' },
+    // Chromium variant uses a dot-prefixed temp directory.
+    { appName: 'Chromium', appIcon: 'file:///tmp/.org.chromium.Chromium.abcdef/logo.png', desktopEntry: 'chromium' },
+  ]) {
+    assert.deepEqual(iconFor(record), { kind: 'image', source: '/theme/custom-icon.svg' });
+  }
 });
 
 test('Teams notifications sent through Chrome or Edge use the Teams icon', () => {

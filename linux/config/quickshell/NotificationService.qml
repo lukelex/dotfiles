@@ -544,9 +544,18 @@ QtObject {
     return body.replace(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+[ \t]*(?:\r?\n[ \t]*){2}/i, "")
   }
 
+  function isEphemeralSource(source) {
+    // Chromium-family browsers park web-notification icons in temporary
+    // scoped_dir/.org.chromium directories that are deleted once the
+    // notification closes; loading them again (e.g. from history) fails.
+    return /(?:\.scoped_dir\.|\.org\.chromium\.)/i.test(String(source || ""))
+  }
+
   function resolveIcon(icon) {
     const source = String(icon || "")
     if (!source)
+      return ""
+    if (service.isEphemeralSource(source))
       return ""
     if (/^(file|image|qrc):/.test(source) || source.startsWith("/"))
       return source
