@@ -526,7 +526,7 @@ QtObject {
 
   function isBrowserIcon(icon) {
     const name = String(icon || "").toLowerCase()
-    return ["brave", "chromium", "firefox", "google-chrome", "google.chrome", "microsoft-edge"].some(browser => name.includes(browser))
+    return ["brave", "chromium", "firefox", "google-chrome", "google.chrome", "microsoft-edge", "microsoft.edge"].some(browser => name.includes(browser))
   }
 
   function isTeamsNotification(record) {

@@ -103,9 +103,14 @@ test('notification image-provider URLs retain browser image precedence', () => {
     { kind: 'image', source: '/theme/firefox.svg' });
 });
 
-test('Teams notifications sent through Chrome use the Teams icon', () => {
+test('Teams notifications sent through Chrome or Edge use the Teams icon', () => {
   const iconFor = resolver();
-  for (const appIcon of ['google-chrome', 'file:///tmp/com.google.Chrome.scoped_dir.UOLS13/logo.png']) {
+  for (const appIcon of [
+    'google-chrome',
+    'file:///tmp/com.google.Chrome.scoped_dir.UOLS13/logo.png',
+    'microsoft-edge',
+    'file:///tmp/com.microsoft.Edge.scoped_dir.tQtfJw/logo.png',
+  ]) {
     assert.deepEqual(iconFor({
       appIcon,
       body: 'teams.cloud.microsoft\n\nNew message',
@@ -133,6 +138,10 @@ test('browser notification previews omit a hostname origin and retain the messag
     appIcon: 'file:///tmp/com.google.Chrome.scoped_dir.UOLS13/logo.png',
     body: 'teams.cloud.microsoft\n\nI did address your comments',
   }), 'I did address your comments');
+  assert.equal(displayBody({
+    appIcon: 'file:///tmp/com.microsoft.Edge.scoped_dir.tQtfJw/logo.png',
+    body: 'teams.cloud.microsoft\n\nI saw your message',
+  }), 'I saw your message');
 });
 
 test('expired notifications focus an existing matching window instead of relaunching the app', () => {
