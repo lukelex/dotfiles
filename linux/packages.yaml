@@ -135,7 +135,6 @@ profiles:
             - lp
         tidy:
         ttf-hack:
-        ttf-lucide-font:
         udiskie:
           configs:
             - linux/config/usb-notify/usb-notify.service:$XDG_CONFIG_HOME/systemd/user/usb-notify.service

@@ -5,7 +5,7 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 ## How configs are applied (important)
 
 - Configs are NOT used in-place. `linux/install/configs` (run via `linux/install/all`) creates **symlinks**, e.g. `linux/config/nvim` → `~/.config/nvim`, `linux/config/hypr` → `~/.config/hypr`, `linux/config/i3/main.conf` → `~/.config/i3/config`.
-- For symlinked dirs (nvim, hypr, kitty, rofi, waybar), editing the repo file takes effect immediately — no rebuild/copy step.
+- For symlinked dirs (nvim, hypr, kitty, rofi), editing the repo file takes effect immediately — no rebuild/copy step.
 - `linux/install/configs` uses `rm -rf` + `ln` for several dirs (hypr, rofi, kitty, nvim). Don't run it casually; it replaces existing symlinks.
 
 ## Install flow
