@@ -80,6 +80,22 @@ done
 
 [[ "$package" =~ ^[A-Za-z0-9@._+:-]+$ ]] || fail "Invalid package name: $package"
 
+if [ "${DOTPKG_PACKAGE_STAGE:-1}" = 1 ]; then
+  dotfiles_root="$(cd "$install_dir/../.." && pwd)"
+  state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
+  dotpkg_args=(add
+    --manifest "$dotfiles_root/linux/packages.yaml"
+    --state-file "$state_file"
+    --profile "$profile"
+  )
+  [ -z "$scope" ] || dotpkg_args+=(--scope "$scope")
+  [ -z "$host" ] || dotpkg_args+=(--host "$host")
+  [ "$dry_run" -eq 0 ] || dotpkg_args+=(--dry-run)
+  [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
+  dotpkg_args+=("$package")
+  exec "$install_dir/dotpkg-package-stage" "${dotpkg_args[@]}"
+fi
+
 common_args=("--$profile")
 [ -z "$host" ] || common_args+=("--host=$host")
 [ "$dry_run" -eq 0 ] || common_args+=(--dry-run)

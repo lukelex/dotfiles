@@ -17,10 +17,18 @@ state_file=''
 profile=desktop
 host=''
 root=''
+command=sync
+package=''
+scope=''
 dry_run=0
 yes=0
 resources=0
 replace=0
+
+if [ "${1:-}" = add ] || [ "${1:-}" = sync ]; then
+  command=$1
+  shift
+fi
 
 while [ "$#" -gt 0 ]; do
   case $1 in
@@ -39,6 +47,14 @@ while [ "$#" -gt 0 ]; do
       profile=$2
       shift 2
       ;;
+    --scope)
+      [ "$command" = add ] || { printf 'Unknown option: --scope\n' >&2; exit 2; }
+      [ -n "${2:-}" ] || { printf 'Missing value for --scope\n' >&2; exit 2; }
+      scope=$2
+      shift 2
+      ;;
+    --desktop) profile=desktop; shift ;;
+    --server) profile=server; shift ;;
     --host)
       [ -n "${2:-}" ] || { printf 'Missing value for --host\n' >&2; exit 2; }
       host=$2
@@ -58,26 +74,34 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     *)
-      printf 'Unknown option: %s\n' "$1" >&2
-      exit 2
+      if [ "$command" = add ] && [ -z "$package" ]; then
+        package=$1
+        shift
+      else
+        printf 'Unknown option: %s\n' "$1" >&2
+        exit 2
+      fi
       ;;
   esac
 done
 
 [ -n "$manifest" ] || { printf 'Missing --manifest\n' >&2; exit 2; }
 [ -n "$state_file" ] || { printf 'Missing --state-file\n' >&2; exit 2; }
+[ "$command" != add ] || [ -n "$package" ] || { printf 'Missing package name\n' >&2; exit 2; }
 case "$profile" in
   desktop|server) ;;
   *) printf 'Unknown profile: %s\n' "$profile" >&2; exit 2 ;;
 esac
 
-args=(sync --manifest "$manifest" --state-file "$state_file" --profile "$profile")
+args=("$command" --manifest "$manifest" --state-file "$state_file" --profile "$profile")
 [ -n "$host" ] && args+=(--host "$host")
 [ -n "$root" ] && args+=(--root "$root")
+[ "$command" != add ] || [ -z "$scope" ] || args+=(--scope "$scope")
 [ "$dry_run" -eq 1 ] && args+=(--dry-run)
 [ "$yes" -eq 1 ] && args+=(--yes)
 [ "$resources" -eq 1 ] && args+=(--resources)
 [ "$replace" -eq 1 ] && args+=(--replace)
+[ "$command" != add ] || args+=("$package")
 
 # In resource mode this wrapper also owns groups, configs, and services; the
 # caller stops after this command to avoid running those stages twice.

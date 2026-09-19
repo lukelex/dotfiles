@@ -27,6 +27,8 @@ printf '%s\n' '#!/usr/bin/bash' \
 chmod +x "$temporary/bin/pacman" "$temporary/bin/curl"
 printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/bin/sudo"
 chmod +x "$temporary/bin/sudo"
+printf '%s\n' '#!/usr/bin/bash' 'printf "%s\\n" "$@" > "$DOTPKG_TEST_ARGS"' > "$temporary/bin/dotpkg"
+chmod +x "$temporary/bin/dotpkg"
 
 bash "$repo_root/linux/install/package" --help >/dev/null
 bash "$repo_root/linux/install/package" add --help >/dev/null
@@ -34,6 +36,24 @@ bash "$repo_root/linux/install/package" sync --help >/dev/null
 bash "$repo_root/linux/install/package" validate --help >/dev/null
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
+  DOTPKG_BIN="$temporary/bin/dotpkg" DOTPKG_TEST_ARGS="$temporary/add-args" \
+  bash "$temporary/linux/install/package" add candidate-package --scope desktop --dry-run >/dev/null
+cat > "$temporary/expected-add-args" <<EOF
+add
+--manifest
+$temporary/linux/packages.yaml
+--state-file
+$temporary/state/dotfiles/install/state.yaml
+--profile
+desktop
+--scope
+desktop
+--dry-run
+candidate-package
+EOF
+cmp "$temporary/expected-add-args" "$temporary/add-args" || fail 'Package add did not delegate to dotpkg'
+
+PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" DOTPKG_PACKAGE_STAGE=0 \
   bash "$temporary/linux/install/package" add candidate-package --scope desktop --dry-run > "$temporary/output"
 cmp "$repo_root/linux/packages.yaml" "$temporary/linux/packages.yaml" >/dev/null \
   || fail 'Dry-run modified the manifest'
@@ -41,12 +61,12 @@ output="$(<"$temporary/output")"
 [[ "$output" == *'Validated '* ]] || fail 'Candidate package was not validated'
 [[ "$output" == *'dry-run: add candidate-package to desktop'* ]] || fail 'Dry-run did not report the manifest change'
 
-PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
+PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" DOTPKG_PACKAGE_STAGE=0 \
   bash "$temporary/linux/install/package" add candidate-package --dry-run > "$temporary/default-output"
 output="$(<"$temporary/default-output")"
 [[ "$output" == *'dry-run: default package scope is desktop'* ]] || fail 'Dry-run did not select the desktop scope'
 
-if PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
+if PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" DOTPKG_PACKAGE_STAGE=0 \
   bash "$temporary/linux/install/package" add candidate-package --scope hyprland --dry-run >/dev/null 2>&1; then
   fail 'Unselected Hyprland scope unexpectedly succeeded'
 fi
