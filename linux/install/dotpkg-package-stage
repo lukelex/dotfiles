@@ -2,7 +2,10 @@
 
 set -Eeuo pipefail
 
-: "${DOTPKG_BIN:?Set DOTPKG_BIN to the pinned dotpkg executable}"
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -z "${DOTPKG_BIN:-}" ]; then
+  DOTPKG_BIN="$("$install_dir/dotpkg" --path)"
+fi
 
 if [ ! -x "$DOTPKG_BIN" ]; then
   printf 'dotpkg package stage: executable not found: %s\n' "$DOTPKG_BIN" >&2

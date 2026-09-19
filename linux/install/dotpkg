@@ -1,0 +1,48 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+dotfiles="$(cd "$install_dir/../.." && pwd)"
+# shellcheck disable=SC1091
+source "$install_dir/dotpkg-release.env"
+
+if [ "${1:-}" != --path ] || [ "$#" -ne 1 ]; then
+  printf 'Usage: %s --path\n' "$0" >&2
+  exit 2
+fi
+
+case "$(uname -m)" in
+  x86_64)
+    architecture=amd64
+    expected="$DOTPKG_SHA256_AMD64"
+    ;;
+  aarch64|arm64)
+    architecture=arm64
+    expected="$DOTPKG_SHA256_ARM64"
+    ;;
+  *)
+    printf 'Unsupported dotpkg architecture: %s\n' "$(uname -m)" >&2
+    exit 2
+    ;;
+esac
+
+vendor_dir="$dotfiles/linux/vendor/dotpkg/$DOTPKG_VERSION"
+binary="$vendor_dir/dotpkg-linux-$architecture"
+mkdir -p "$vendor_dir"
+
+if [ ! -f "$binary" ]; then
+  command -v curl >/dev/null || { printf 'curl is required to download dotpkg\n' >&2; exit 2; }
+  temporary="$binary.$$"
+  trap 'rm -f "$temporary"' EXIT
+  curl --fail --location --silent --show-error \
+    "https://github.com/lukelex/dotpkg/releases/download/$DOTPKG_VERSION/dotpkg-linux-$architecture" \
+    --output "$temporary"
+  printf '%s  %s\n' "$expected" "$temporary" | sha256sum --check --status
+  chmod 0755 "$temporary"
+  mv "$temporary" "$binary"
+  trap - EXIT
+fi
+
+printf '%s\n' "$expected  $binary" | sha256sum --check --status
+printf '%s\n' "$binary"

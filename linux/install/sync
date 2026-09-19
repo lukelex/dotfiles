@@ -48,9 +48,10 @@ Options:
   --replace    Replace existing config paths when creating symlinks.
   --help       Show this help message.
 
-The package stage remains Bash-owned by default. Set DOTPKG_PACKAGE_STAGE=1
-and DOTPKG_BIN to an explicitly pinned, checksum-verified dotpkg executable to
-opt into the standalone package reconciler. Groups, configs, services, and
+The package stage remains Bash-owned by default. Set DOTPKG_PACKAGE_STAGE=1 to
+opt into the standalone package reconciler. The pinned, checksum-verified
+release is downloaded and cached automatically; set DOTPKG_BIN to override it
+with an explicitly provisioned executable. Groups, configs, services, and
 other resource stages continue to run here.
 EOF
 }
