@@ -68,8 +68,7 @@ desktop
 EOF
 cmp "$temporary/expected" "$temporary/args"
 
-DOTPKG_RESOURCES=1 \
-  PATH="$temporary/bin:$PATH" \
+PATH="$temporary/bin:$PATH" \
   HOME="$temporary/home" \
   DOTFILES="$temporary" \
   XDG_STATE_HOME="$temporary/state" \

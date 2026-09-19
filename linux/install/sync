@@ -49,11 +49,11 @@ Options:
   --help       Show this help message.
 
 The package stage remains Bash-owned by default. Set DOTPKG_PACKAGE_STAGE=1 to
-opt into the standalone package reconciler. Set DOTPKG_RESOURCES=1 as well to
-delegate groups, config links, and services to dotpkg and stop after its full
-resource sync. The pinned, checksum-verified release is downloaded and cached
-automatically; set DOTPKG_BIN to override it with an explicitly provisioned
-executable.
+opt into the standalone package reconciler and its full resource stages. Set
+DOTPKG_RESOURCES=0 to keep package-only delegation and continue with the Bash
+resource stages. The pinned, checksum-verified release is downloaded and
+cached automatically; set DOTPKG_BIN to override it with an explicitly
+provisioned executable.
 EOF
 }
 
@@ -323,6 +323,8 @@ mapfile -t declared_packages < <(
 )
 
 if [ "${DOTPKG_PACKAGE_STAGE:-0}" = 1 ]; then
+  dotpkg_resources="${DOTPKG_RESOURCES:-1}"
+  [ "$PACKAGES_ONLY" -eq 1 ] && dotpkg_resources=0
   dotpkg_args=(
     --manifest "$DOTFILES/linux/packages.yaml"
     --state-file "$state_file"
@@ -331,12 +333,12 @@ if [ "${DOTPKG_PACKAGE_STAGE:-0}" = 1 ]; then
   [ -z "$INSTALL_HOST" ] || dotpkg_args+=(--host "$INSTALL_HOST")
   [ "$DRY_RUN" -eq 0 ] || dotpkg_args+=(--dry-run)
   [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
-  if [ "${DOTPKG_RESOURCES:-0}" = 1 ]; then
+  if [ "$dotpkg_resources" = 1 ]; then
     dotpkg_args+=(--resources --root "$DOTFILES")
     [ "${DOTPKG_REPLACE:-0}" = 1 ] && dotpkg_args+=(--replace)
   fi
   "$install_dir/dotpkg-package-stage" "${dotpkg_args[@]}"
-  if [ "$PACKAGES_ONLY" -eq 1 ] || [ "${DOTPKG_RESOURCES:-0}" = 1 ]; then
+  if [ "$PACKAGES_ONLY" -eq 1 ] || [ "$dotpkg_resources" = 1 ]; then
     exit 0
   fi
 else
