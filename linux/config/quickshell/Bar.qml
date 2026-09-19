@@ -4,7 +4,6 @@ import Quickshell.I3
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Controls as Controls
 
 Scope {
   id: root
@@ -817,13 +816,6 @@ Scope {
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
               onClicked: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
-            }
-
-            Controls.ToolTip {
-              parent: workspaceMouse
-              visible: workspaceMouse.containsMouse
-              delay: 500
-              text: "Workspace " + workspaceItem.workspaceNumber
             }
           }
         }
