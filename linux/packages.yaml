@@ -272,5 +272,7 @@ resources:
   services:
     - name: sddm
       scope: system
-      profiles: [desktop]
-      selections: [i3]
+      profiles:
+        - desktop
+      selections:
+        - i3
