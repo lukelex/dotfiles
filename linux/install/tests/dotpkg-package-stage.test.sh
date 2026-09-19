@@ -45,6 +45,12 @@ managed:
   services: []
 EOF
 
+cat > "$temporary/linux/install/preflight" <<'EOF'
+#!/usr/bin/bash
+exit 0
+EOF
+chmod +x "$temporary/linux/install/preflight"
+
 PATH="$temporary/bin:$PATH" \
 HOME="$temporary/home" \
 DOTFILES="$temporary" \
@@ -72,7 +78,6 @@ PATH="$temporary/bin:$PATH" \
   HOME="$temporary/home" \
   DOTFILES="$temporary" \
   XDG_STATE_HOME="$temporary/state" \
-  DOTPKG_PACKAGE_STAGE=1 \
   DOTPKG_BIN="$temporary/bin/dotpkg" \
   DOTPKG_YES=1 \
   DOTPKG_TEST_ARGS="$temporary/args" \
@@ -93,5 +98,21 @@ $temporary
 --resources
 EOF
 cmp "$temporary/expected-full" "$temporary/args"
+cp "$temporary/args" "$temporary/args-before-fallback"
+
+DOTPKG_PACKAGE_STAGE=0 \
+  PATH="$temporary/bin:$PATH" \
+  HOME="$temporary/home" \
+  DOTFILES="$temporary" \
+  XDG_STATE_HOME="$temporary/state" \
+  DOTPKG_BIN="$temporary/bin/dotpkg" \
+  DOTPKG_YES=1 \
+  DOTPKG_TEST_ARGS="$temporary/args" \
+    bash "$temporary/linux/install/sync" --dry-run > "$temporary/fallback-output" 2>&1
+
+cmp "$temporary/args-before-fallback" "$temporary/args"
+grep -q '^GROUPS$' "$temporary/fallback-output"
+grep -q '^CONFIGS$' "$temporary/fallback-output"
+grep -q '^SERVICES$' "$temporary/fallback-output"
 
 printf 'dotpkg package stage: ok\n'
