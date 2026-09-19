@@ -20,12 +20,13 @@ root=''
 command=sync
 package=''
 scope=''
+extra_packages=()
 dry_run=0
 yes=0
 resources=0
 replace=0
 
-if [ "${1:-}" = add ] || [ "${1:-}" = sync ]; then
+if [ "${1:-}" = add ] || [ "${1:-}" = sync ] || [ "${1:-}" = validate ]; then
   command=$1
   shift
 fi
@@ -47,11 +48,23 @@ while [ "$#" -gt 0 ]; do
       profile=$2
       shift 2
       ;;
+    --profile=*) profile=${1#--profile=} ; shift ;;
     --scope)
       [ "$command" = add ] || { printf 'Unknown option: --scope\n' >&2; exit 2; }
       [ -n "${2:-}" ] || { printf 'Missing value for --scope\n' >&2; exit 2; }
       scope=$2
       shift 2
+      ;;
+    --package)
+      [ "$command" = validate ] || { printf 'Unknown option: --package\n' >&2; exit 2; }
+      [ -n "${2:-}" ] || { printf 'Missing value for --package\n' >&2; exit 2; }
+      extra_packages+=(--package "$2")
+      shift 2
+      ;;
+    --package=*)
+      [ "$command" = validate ] || { printf 'Unknown option: --package\n' >&2; exit 2; }
+      extra_packages+=(--package "${1#--package=}")
+      shift
       ;;
     --desktop) profile=desktop; shift ;;
     --server) profile=server; shift ;;
@@ -60,6 +73,7 @@ while [ "$#" -gt 0 ]; do
       host=$2
       shift 2
       ;;
+    --host=*) host=${1#--host=} ; shift ;;
     --root)
       [ -n "${2:-}" ] || { printf 'Missing value for --root\n' >&2; exit 2; }
       root=$2
@@ -102,6 +116,7 @@ args=("$command" --manifest "$manifest" --state-file "$state_file" --profile "$p
 [ "$resources" -eq 1 ] && args+=(--resources)
 [ "$replace" -eq 1 ] && args+=(--replace)
 [ "$command" != add ] || args+=("$package")
+[ "$command" != validate ] || args+=("${extra_packages[@]}")
 
 # In resource mode this wrapper also owns groups, configs, and services; the
 # caller stops after this command to avoid running those stages twice.

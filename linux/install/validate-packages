@@ -3,7 +3,6 @@
 set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$install_dir/common.sh"
 
 usage() {
   cat <<'EOF'
@@ -13,6 +12,22 @@ Validate the selected manifest packages and their explicit origins. Repository
 packages are checked locally; AUR packages use the AUR RPC API.
 EOF
 }
+
+for arg in "$@"; do
+  case $arg in
+    --help|-h) usage; exit 0 ;;
+  esac
+done
+
+if [ "${DOTPKG_PACKAGE_STAGE:-1}" = 1 ]; then
+  dotfiles_root="$(cd "$install_dir/../.." && pwd)"
+  state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
+  exec "$install_dir/dotpkg-package-stage" validate \
+    --manifest "$dotfiles_root/linux/packages.yaml" \
+    --state-file "$state_file" "$@"
+fi
+
+source "$install_dir/common.sh"
 
 skip_next=0
 for arg in "$@"; do

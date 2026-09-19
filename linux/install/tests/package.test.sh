@@ -53,6 +53,24 @@ candidate-package
 EOF
 cmp "$temporary/expected-add-args" "$temporary/add-args" || fail 'Package add did not delegate to dotpkg'
 
+PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
+  DOTPKG_BIN="$temporary/bin/dotpkg" DOTPKG_TEST_ARGS="$temporary/validate-args" \
+  bash "$temporary/linux/install/validate-packages" --server --host laptop --package candidate-package >/dev/null
+cat > "$temporary/expected-validate-args" <<EOF
+validate
+--manifest
+$temporary/linux/packages.yaml
+--state-file
+$temporary/state/dotfiles/install/state.yaml
+--profile
+server
+--host
+laptop
+--package
+candidate-package
+EOF
+cmp "$temporary/expected-validate-args" "$temporary/validate-args" || fail 'Package validation did not delegate to dotpkg'
+
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" DOTPKG_PACKAGE_STAGE=0 \
   bash "$temporary/linux/install/package" add candidate-package --scope desktop --dry-run > "$temporary/output"
 cmp "$repo_root/linux/packages.yaml" "$temporary/linux/packages.yaml" >/dev/null \
