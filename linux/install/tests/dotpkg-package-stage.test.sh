@@ -68,4 +68,31 @@ desktop
 EOF
 cmp "$temporary/expected" "$temporary/args"
 
+DOTPKG_RESOURCES=1 \
+  PATH="$temporary/bin:$PATH" \
+  HOME="$temporary/home" \
+  DOTFILES="$temporary" \
+  XDG_STATE_HOME="$temporary/state" \
+  DOTPKG_PACKAGE_STAGE=1 \
+  DOTPKG_BIN="$temporary/bin/dotpkg" \
+  DOTPKG_YES=1 \
+  DOTPKG_TEST_ARGS="$temporary/args" \
+    bash "$temporary/linux/install/sync" --dry-run >/dev/null
+
+cat > "$temporary/expected-full" <<EOF
+sync
+--manifest
+$temporary/linux/packages.yaml
+--state-file
+$temporary/state/dotfiles/install/state.yaml
+--profile
+desktop
+--root
+$temporary
+--dry-run
+--yes
+--resources
+EOF
+cmp "$temporary/expected-full" "$temporary/args"
+
 printf 'dotpkg package stage: ok\n'

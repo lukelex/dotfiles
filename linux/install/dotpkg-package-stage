@@ -16,8 +16,11 @@ manifest=''
 state_file=''
 profile=desktop
 host=''
+root=''
 dry_run=0
 yes=0
+resources=0
+replace=0
 
 while [ "$#" -gt 0 ]; do
   case $1 in
@@ -41,8 +44,15 @@ while [ "$#" -gt 0 ]; do
       host=$2
       shift 2
       ;;
+    --root)
+      [ -n "${2:-}" ] || { printf 'Missing value for --root\n' >&2; exit 2; }
+      root=$2
+      shift 2
+      ;;
     --dry-run) dry_run=1; shift ;;
     --yes) yes=1; shift ;;
+    --resources) resources=1; shift ;;
+    --replace) replace=1; shift ;;
     --help|-h)
       printf 'Usage: DOTPKG_BIN=/path/to/pinned/dotpkg %s --manifest PATH --state-file PATH [options]\n' "$0"
       exit 0
@@ -63,9 +73,12 @@ esac
 
 args=(sync --manifest "$manifest" --state-file "$state_file" --profile "$profile")
 [ -n "$host" ] && args+=(--host "$host")
+[ -n "$root" ] && args+=(--root "$root")
 [ "$dry_run" -eq 1 ] && args+=(--dry-run)
 [ "$yes" -eq 1 ] && args+=(--yes)
+[ "$resources" -eq 1 ] && args+=(--resources)
+[ "$replace" -eq 1 ] && args+=(--replace)
 
-# This wrapper owns only package reconciliation. The caller keeps running the
-# Bash-owned groups, configs, services, and other resource stages.
+# In resource mode this wrapper also owns groups, configs, and services; the
+# caller stops after this command to avoid running those stages twice.
 exec "$DOTPKG_BIN" "${args[@]}"
