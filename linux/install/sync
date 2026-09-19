@@ -18,6 +18,7 @@ Options:
   --packages-only Reconcile packages only.
   --dry-run       Print proposed changes without changing the system.
   --replace       Replace existing config paths when creating symlinks.
+  --restart-services  Restart services backed by config links.
   --help          Show this help message.
 EOF
 }
@@ -51,13 +52,16 @@ dotpkg_args=(sync
 [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
 
 replace=0
+restart_services=0
 for arg in "$@"; do
   [ "$arg" = --replace ] && replace=1
+  [ "$arg" = --restart-services ] && restart_services=1
 done
 
 if [ "$PACKAGES_ONLY" -eq 0 ]; then
   dotpkg_args+=(--resources --root "$DOTFILES")
   [ "$replace" -eq 1 ] && dotpkg_args+=(--replace)
+  [ "$restart_services" -eq 1 ] && dotpkg_args+=(--restart-services)
 fi
 
 exec "$dotpkg_bin" "${dotpkg_args[@]}"

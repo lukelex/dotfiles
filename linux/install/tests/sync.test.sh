@@ -16,7 +16,7 @@ chmod +x "$temporary/linux/install/preflight" "$temporary/bin/dotpkg"
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
   DOTPKG_YES=1 DOTPKG_TEST_ARGS="$temporary/full-args" \
-  bash "$temporary/linux/install/sync" --desktop --host laptop --dry-run --replace
+  bash "$temporary/linux/install/sync" --desktop --host laptop --dry-run --replace --restart-services
 cat > "$temporary/expected-full" <<EOF
 sync
 --manifest
@@ -33,6 +33,7 @@ laptop
 --root
 $temporary
 --replace
+--restart-services
 EOF
 cmp "$temporary/expected-full" "$temporary/full-args"
 
