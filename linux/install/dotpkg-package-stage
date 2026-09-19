@@ -1,0 +1,68 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+: "${DOTPKG_BIN:?Set DOTPKG_BIN to the pinned dotpkg executable}"
+
+if [ ! -x "$DOTPKG_BIN" ]; then
+  printf 'dotpkg package stage: executable not found: %s\n' "$DOTPKG_BIN" >&2
+  exit 2
+fi
+
+manifest=''
+state_file=''
+profile=desktop
+host=''
+dry_run=0
+yes=0
+
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    --manifest)
+      [ -n "${2:-}" ] || { printf 'Missing value for --manifest\n' >&2; exit 2; }
+      manifest=$2
+      shift 2
+      ;;
+    --state-file)
+      [ -n "${2:-}" ] || { printf 'Missing value for --state-file\n' >&2; exit 2; }
+      state_file=$2
+      shift 2
+      ;;
+    --profile)
+      [ -n "${2:-}" ] || { printf 'Missing value for --profile\n' >&2; exit 2; }
+      profile=$2
+      shift 2
+      ;;
+    --host)
+      [ -n "${2:-}" ] || { printf 'Missing value for --host\n' >&2; exit 2; }
+      host=$2
+      shift 2
+      ;;
+    --dry-run) dry_run=1; shift ;;
+    --yes) yes=1; shift ;;
+    --help|-h)
+      printf 'Usage: DOTPKG_BIN=/path/to/pinned/dotpkg %s --manifest PATH --state-file PATH [options]\n' "$0"
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n' "$1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+[ -n "$manifest" ] || { printf 'Missing --manifest\n' >&2; exit 2; }
+[ -n "$state_file" ] || { printf 'Missing --state-file\n' >&2; exit 2; }
+case "$profile" in
+  desktop|server) ;;
+  *) printf 'Unknown profile: %s\n' "$profile" >&2; exit 2 ;;
+esac
+
+args=(sync --manifest "$manifest" --state-file "$state_file" --profile "$profile")
+[ -n "$host" ] && args+=(--host "$host")
+[ "$dry_run" -eq 1 ] && args+=(--dry-run)
+[ "$yes" -eq 1 ] && args+=(--yes)
+
+# This wrapper owns only package reconciliation. The caller keeps running the
+# Bash-owned groups, configs, services, and other resource stages.
+exec "$DOTPKG_BIN" "${args[@]}"

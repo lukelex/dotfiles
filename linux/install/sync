@@ -47,6 +47,11 @@ Options:
   --dry-run    Print proposed changes without changing the system.
   --replace    Replace existing config paths when creating symlinks.
   --help       Show this help message.
+
+The package stage remains Bash-owned by default. Set DOTPKG_PACKAGE_STAGE=1
+and DOTPKG_BIN to an explicitly pinned, checksum-verified dotpkg executable to
+opt into the standalone package reconciler. Groups, configs, services, and
+other resource stages continue to run here.
 EOF
 }
 
@@ -315,77 +320,92 @@ mapfile -t declared_packages < <(
   packages_from_categories "${package_categories[@]}" | sort -u
 )
 
-read_state packages tracked_packages
-adopted_packages=()
-if [ ! -f "$state_file" ] && [ ! -f "$state_dir/packages" ]; then
-  tracked_packages=()
-  for package in "${declared_packages[@]}"; do
-    if pacman -Q "$package" >/dev/null 2>&1; then
-      adopted_packages+=("$package")
-      tracked_packages+=("$package")
-    fi
-  done
+if [ "${DOTPKG_PACKAGE_STAGE:-0}" = 1 ]; then
+  dotpkg_args=(
+    --manifest "$DOTFILES/linux/packages.yaml"
+    --state-file "$state_file"
+    --profile "$INSTALL_PROFILE"
+  )
+  [ -z "$INSTALL_HOST" ] || dotpkg_args+=(--host "$INSTALL_HOST")
+  [ "$DRY_RUN" -eq 0 ] || dotpkg_args+=(--dry-run)
+  [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
+  "$install_dir/dotpkg-package-stage" "${dotpkg_args[@]}"
+  if [ "$PACKAGES_ONLY" -eq 1 ]; then
+    exit 0
+  fi
 else
-  for package in "${declared_packages[@]}"; do
-    if pacman -Q "$package" >/dev/null 2>&1 && ! contains "$package" "${tracked_packages[@]}"; then
-      adopted_packages+=("$package")
-      tracked_packages+=("$package")
-    fi
-  done
-fi
-
-missing_packages=()
-for package in "${declared_packages[@]}"; do
-  pacman -Q "$package" >/dev/null 2>&1 || missing_packages+=("$package")
-done
-extra_packages=()
-for package in "${tracked_packages[@]}"; do
-  contains "$package" "${declared_packages[@]}" || extra_packages+=("$package")
-done
-
-package_changes=()
-for package in "${adopted_packages[@]}"; do package_changes+=("adopt: $package"); done
-for package in "${missing_packages[@]}"; do package_changes+=("install: $package"); done
-for package in "${extra_packages[@]}"; do package_changes+=("remove: $package"); done
-if [ "${#package_changes[@]}" -gt 0 ] && confirm_stage packages "${package_changes[@]}"; then
-  if [ "${#missing_packages[@]}" -gt 0 ]; then
-    repo_packages=()
-    aur_packages=()
-    for package in "${missing_packages[@]}"; do
-      case "$(manifest_package_origin "$package")" in
-        repo) repo_packages+=("$package") ;;
-        aur) aur_packages+=("$package") ;;
-        *) printf 'Missing package origin: %s\n' "$package" >&2; exit 2 ;;
-      esac
-    done
-    [ "${#repo_packages[@]}" -eq 0 ] || run sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
-    if [ "${#aur_packages[@]}" -gt 0 ]; then
-      if ! command -v yay >/dev/null; then
-        run "$install_dir/yay"
+  read_state packages tracked_packages
+  adopted_packages=()
+  if [ ! -f "$state_file" ] && [ ! -f "$state_dir/packages" ]; then
+    tracked_packages=()
+    for package in "${declared_packages[@]}"; do
+      if pacman -Q "$package" >/dev/null 2>&1; then
+        adopted_packages+=("$package")
+        tracked_packages+=("$package")
       fi
-      run yay -S --needed --noconfirm "${aur_packages[@]}"
-    fi
+    done
+  else
+    for package in "${declared_packages[@]}"; do
+      if pacman -Q "$package" >/dev/null 2>&1 && ! contains "$package" "${tracked_packages[@]}"; then
+        adopted_packages+=("$package")
+        tracked_packages+=("$package")
+      fi
+    done
   fi
-  if [ "${#extra_packages[@]}" -gt 0 ]; then
-    if is_server; then
-      run sudo pacman -Rns --noconfirm "${extra_packages[@]}"
-    else
-      run yay -Rns --noconfirm "${extra_packages[@]}"
-    fi
-  fi
-  next_packages=()
-  for package in "${tracked_packages[@]}"; do
-    contains "$package" "${extra_packages[@]}" || next_packages+=("$package")
-  done
-  next_packages+=("${missing_packages[@]}")
-  write_state packages "${next_packages[@]}"
-elif [ "${#package_changes[@]}" -eq 0 ]; then
-  print_in_sync packages
-fi
 
-if [ "$PACKAGES_ONLY" -eq 1 ]; then
-  sort_state_packages
-  exit 0
+  missing_packages=()
+  for package in "${declared_packages[@]}"; do
+    pacman -Q "$package" >/dev/null 2>&1 || missing_packages+=("$package")
+  done
+  extra_packages=()
+  for package in "${tracked_packages[@]}"; do
+    contains "$package" "${declared_packages[@]}" || extra_packages+=("$package")
+  done
+
+  package_changes=()
+  for package in "${adopted_packages[@]}"; do package_changes+=("adopt: $package"); done
+  for package in "${missing_packages[@]}"; do package_changes+=("install: $package"); done
+  for package in "${extra_packages[@]}"; do package_changes+=("remove: $package"); done
+  if [ "${#package_changes[@]}" -gt 0 ] && confirm_stage packages "${package_changes[@]}"; then
+    if [ "${#missing_packages[@]}" -gt 0 ]; then
+      repo_packages=()
+      aur_packages=()
+      for package in "${missing_packages[@]}"; do
+        case "$(manifest_package_origin "$package")" in
+          repo) repo_packages+=("$package") ;;
+          aur) aur_packages+=("$package") ;;
+          *) printf 'Missing package origin: %s\n' "$package" >&2; exit 2 ;;
+        esac
+      done
+      [ "${#repo_packages[@]}" -eq 0 ] || run sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
+      if [ "${#aur_packages[@]}" -gt 0 ]; then
+        if ! command -v yay >/dev/null; then
+          run "$install_dir/yay"
+        fi
+        run yay -S --needed --noconfirm "${aur_packages[@]}"
+      fi
+    fi
+    if [ "${#extra_packages[@]}" -gt 0 ]; then
+      if is_server; then
+        run sudo pacman -Rns --noconfirm "${extra_packages[@]}"
+      else
+        run yay -Rns --noconfirm "${extra_packages[@]}"
+      fi
+    fi
+    next_packages=()
+    for package in "${tracked_packages[@]}"; do
+      contains "$package" "${extra_packages[@]}" || next_packages+=("$package")
+    done
+    next_packages+=("${missing_packages[@]}")
+    write_state packages "${next_packages[@]}"
+  elif [ "${#package_changes[@]}" -eq 0 ]; then
+    print_in_sync packages
+  fi
+
+  if [ "$PACKAGES_ONLY" -eq 1 ]; then
+    sort_state_packages
+    exit 0
+  fi
 fi
 
 category_expression="(${resource_categories[0]}"
