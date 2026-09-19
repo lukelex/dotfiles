@@ -14,7 +14,7 @@ fail() {
 cp -a "$repo_root/linux" "$temporary/linux"
 mkdir "$temporary/bin" "$temporary/home"
 
-printf '%s\n' '#!/usr/bin/bash' 'if [ "$1" = -Slq ]; then printf "%s\\n" lm_sensors; fi' > "$temporary/bin/pacman"
+printf '%s\n' '#!/usr/bin/bash' 'if [ "$1" = -Slq ]; then printf "%s\\n" candidate-package; fi' > "$temporary/bin/pacman"
 printf '%s\n' '#!/usr/bin/bash' \
   'printf "{\"results\":["' \
   'separator=""' \
@@ -34,20 +34,20 @@ bash "$repo_root/linux/install/package" sync --help >/dev/null
 bash "$repo_root/linux/install/package" validate --help >/dev/null
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
-  bash "$temporary/linux/install/package" add lm_sensors --scope desktop --dry-run > "$temporary/output"
+  bash "$temporary/linux/install/package" add candidate-package --scope desktop --dry-run > "$temporary/output"
 cmp "$repo_root/linux/packages.yaml" "$temporary/linux/packages.yaml" >/dev/null \
   || fail 'Dry-run modified the manifest'
 output="$(<"$temporary/output")"
 [[ "$output" == *'Validated '* ]] || fail 'Candidate package was not validated'
-[[ "$output" == *'dry-run: add lm_sensors to desktop'* ]] || fail 'Dry-run did not report the manifest change'
+[[ "$output" == *'dry-run: add candidate-package to desktop'* ]] || fail 'Dry-run did not report the manifest change'
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
-  bash "$temporary/linux/install/package" add lm_sensors --dry-run > "$temporary/default-output"
+  bash "$temporary/linux/install/package" add candidate-package --dry-run > "$temporary/default-output"
 output="$(<"$temporary/default-output")"
 [[ "$output" == *'dry-run: default package scope is desktop'* ]] || fail 'Dry-run did not select the desktop scope'
 
 if PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
-  bash "$temporary/linux/install/package" add lm_sensors --scope hyprland --dry-run >/dev/null 2>&1; then
+  bash "$temporary/linux/install/package" add candidate-package --scope hyprland --dry-run >/dev/null 2>&1; then
   fail 'Unselected Hyprland scope unexpectedly succeeded'
 fi
 
