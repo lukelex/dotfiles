@@ -25,6 +25,9 @@ add
 $temporary/linux/packages.yaml
 --state-file
 $temporary/state/dotfiles/install/state.yaml
+--resources
+--root
+$temporary
 candidate-package
 --scope
 desktop

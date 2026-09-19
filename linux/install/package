@@ -32,6 +32,7 @@ dotpkg_args=("$command"
   --manifest "$dotfiles_root/linux/packages.yaml"
   --state-file "$state_file"
 )
+[ "$command" = add ] && dotpkg_args+=(--resources --root "$dotfiles_root")
 [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
 dotpkg_args+=("$@")
 
