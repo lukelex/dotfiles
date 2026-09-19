@@ -71,7 +71,7 @@ printf '%s\n' \
   '  groups: []' \
   '  configs: []' \
   '  services: []' > "$temporary/state/dotfiles/install/state.yaml"
-printf 'y\n' | PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" \
+printf 'y\n' | PATH="$temporary/bin:$PATH" HOME="$temporary/home" XDG_STATE_HOME="$temporary/state" DOTPKG_PACKAGE_STAGE=0 \
   bash "$temporary/linux/install/package" add tracked-example --scope desktop >/dev/null
 "$temporary/linux/install/yq" -e '.profiles.desktop.packages.desktop | has("tracked-example")' "$temporary/linux/packages.yaml" >/dev/null \
   || fail 'Package was not added to the requested scope'
