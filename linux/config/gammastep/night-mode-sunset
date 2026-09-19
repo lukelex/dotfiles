@@ -5,6 +5,7 @@ set -eu
 source "$HOME/dotfiles/linux/variables.env"
 
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/weather/current.json"
+state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/night-mode-sunset-notified"
 
 night_is_active() {
   local sunrise sunset now
@@ -44,6 +45,14 @@ done
 
 night_is_active || exit 0
 [[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null || true)" != true ]] || exit 0
+
+sunset=$(jq -er '.sys.sunset | numbers | floor' "$cache_file") || exit 0
+if [[ -r $state_file ]] && [[ $(< "$state_file") == "$sunset" ]]; then
+  exit 0
+fi
+
+mkdir -p "$(dirname "$state_file")"
+printf '%s\n' "$sunset" > "$state_file"
 
 action=$(notify-send -a System \
   -i "$LUCIDE_PATH/moon-star.svg" \
