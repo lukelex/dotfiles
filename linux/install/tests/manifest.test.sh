@@ -13,7 +13,7 @@ assert_equal "$(manifest_package_origin google-chrome)" aur
 assert_equal "$(manifest_package_origin git)" aur
 
 mapfile -t top_level < <("$repo_root/linux/install/yq" -r 'keys[]' "$repo_root/linux/packages.yaml")
-assert_equal "${top_level[*]}" 'source common profiles'
+assert_equal "${top_level[*]}" 'source common profiles resources'
 mapfile -t desktop_level < <("$repo_root/linux/install/yq" -r '.profiles.desktop | keys[]' "$repo_root/linux/packages.yaml")
 assert_equal "${desktop_level[*]}" 'packages options'
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.i3."i3-wm".configs | map(select(. == "linux/xinitrc:$HOME/.xinitrc")) | length > 0' "$repo_root/linux/packages.yaml" >/dev/null

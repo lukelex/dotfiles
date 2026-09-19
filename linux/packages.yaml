@@ -107,6 +107,7 @@ profiles:
         noto-fonts-cjk:
         noto-fonts-emoji:
         npm:
+        opencode-desktop-bin: {}
         pantheon-calculator:
         papirus-icon-theme:
         pavucontrol:
@@ -267,3 +268,9 @@ profiles:
           services:
             system:
               - sshd
+resources:
+  services:
+    - name: sddm
+      scope: system
+      profiles: [desktop]
+      selections: [i3]
