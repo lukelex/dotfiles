@@ -21,23 +21,17 @@ common:
       jq:
       man-db:
       neovim:
+        configs:
+          - linux/config/nvim:$XDG_CONFIG_HOME/nvim
       openssh:
       ripgrep:
       tree:
       ttf-hack-nerd:
       wget:
       zsh:
+        configs:
+          - linux/config/zsh/zshrc:$HOME/.zshrc
       zsh-completions:
-    neovim:
-      configs:
-        - linux/config/nvim:$XDG_CONFIG_HOME/nvim
-    opencode:
-      configs:
-        - linux/config/opencode:$XDG_CONFIG_HOME/opencode
-      install: false
-    zsh:
-      configs:
-        - linux/config/zsh/zshrc:$HOME/.zshrc
 profiles:
   desktop:
     packages:
@@ -152,14 +146,6 @@ profiles:
         zathura-pdf-mupdf:
         zeal:
         zip:
-      dotfiles:
-        configs:
-          - linux/profile:$HOME/.profile
-          - linux/config/default-apps.list:$HOME/.local/share/applications/defaults.list
-          - linux/config/fonts.conf:$XDG_CONFIG_HOME/fontconfig/fonts.conf
-          - linux/config/mimeapps.conf:$HOME/.local/share/applications/mimeapps.list
-          - linux/config/mimeapps.conf:$XDG_CONFIG_HOME/mimeapps.list
-        install: false
       extras:
         blanket:
         ghostscript:
@@ -268,6 +254,28 @@ profiles:
             system:
               - sshd
 resources:
+  configs:
+    - linux/config/opencode:$XDG_CONFIG_HOME/opencode
+    - source: linux/profile
+      target: $HOME/.profile
+      profiles:
+        - desktop
+    - source: linux/config/default-apps.list
+      target: $HOME/.local/share/applications/defaults.list
+      profiles:
+        - desktop
+    - source: linux/config/fonts.conf
+      target: $XDG_CONFIG_HOME/fontconfig/fonts.conf
+      profiles:
+        - desktop
+    - source: linux/config/mimeapps.conf
+      target: $HOME/.local/share/applications/mimeapps.list
+      profiles:
+        - desktop
+    - source: linux/config/mimeapps.conf
+      target: $XDG_CONFIG_HOME/mimeapps.list
+      profiles:
+        - desktop
   services:
     - name: sddm
       scope: system
