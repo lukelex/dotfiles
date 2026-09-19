@@ -58,6 +58,7 @@ Scope {
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  property int workspaceTransition: 0
 
   property real audioVolume: 0
   property bool audioMuted: false
@@ -687,33 +688,60 @@ Scope {
               width: 24
 
               property real mouthAngle: 0.42
+              property real ghostOffsetY: 0
+              property real ghostScaleX: 1
+              property real ghostScaleY: 1
               property bool active: workspaceItem.selected
               property bool full: workspaceItem.occupied
               property bool urgent: !!workspaceItem.workspace && workspaceItem.workspace.urgent
               property bool ready: false
+              property int transitionTick: root.workspaceTransition
 
               Component.onCompleted: ready = true
               onActiveChanged: {
-                if (marker.active && marker.ready)
+                if (marker.active && marker.ready) {
                   biteAnimation.restart()
+                  root.workspaceTransition++
+                }
                 else if (!marker.active) {
                   biteAnimation.stop()
                   marker.mouthAngle = 0.42
                 }
                 requestPaint()
               }
-              onFullChanged: requestPaint()
+              onFullChanged: {
+                if (!marker.full) {
+                  ghostAnimation.stop()
+                  marker.ghostOffsetY = 0
+                  marker.ghostScaleX = 1
+                  marker.ghostScaleY = 1
+                }
+                requestPaint()
+              }
               onUrgentChanged: requestPaint()
               onMouthAngleChanged: requestPaint()
+              onGhostOffsetYChanged: requestPaint()
+              onGhostScaleXChanged: requestPaint()
+              onGhostScaleYChanged: requestPaint()
+              onTransitionTickChanged: {
+                if (marker.ready && marker.full && !marker.active)
+                  ghostAnimation.restart()
+              }
               onPaint: {
                 const context = getContext("2d")
                 const centerX = width / 2
                 const centerY = height / 2
+                const ghost = marker.full && !marker.active
 
                 context.clearRect(0, 0, width, height)
                 context.fillStyle = marker.urgent ? root.urgent : root.foreground
 
-                if (marker.full && !marker.active) {
+                if (ghost) {
+                  context.save()
+                  context.translate(centerX, centerY + marker.ghostOffsetY)
+                  context.scale(marker.ghostScaleX, marker.ghostScaleY)
+                  context.translate(-centerX, -centerY)
+
                   context.beginPath()
                   context.moveTo(4, 18)
                   context.lineTo(4, 10)
@@ -734,6 +762,7 @@ Scope {
                   context.arc(centerX - 3, centerY - 1, 2, 0, Math.PI * 2)
                   context.arc(centerX + 3, centerY - 1, 2, 0, Math.PI * 2)
                   context.fill()
+                  context.restore()
                 }
 
                 if (marker.active) {
@@ -763,6 +792,21 @@ Scope {
                 NumberAnimation { target: marker; property: "mouthAngle"; to: 0.42; duration: 70 }
                 NumberAnimation { target: marker; property: "mouthAngle"; to: 0.12; duration: 70 }
                 NumberAnimation { target: marker; property: "mouthAngle"; to: 0.42; duration: 70 }
+              }
+
+              SequentialAnimation {
+                id: ghostAnimation
+
+                ParallelAnimation {
+                  NumberAnimation { target: marker; property: "ghostOffsetY"; to: -2; duration: 70; easing.type: Easing.OutQuad }
+                  NumberAnimation { target: marker; property: "ghostScaleX"; to: 1.06; duration: 70; easing.type: Easing.OutQuad }
+                  NumberAnimation { target: marker; property: "ghostScaleY"; to: 0.94; duration: 70; easing.type: Easing.OutQuad }
+                }
+                ParallelAnimation {
+                  NumberAnimation { target: marker; property: "ghostOffsetY"; to: 0; duration: 120; easing.type: Easing.InOutSine }
+                  NumberAnimation { target: marker; property: "ghostScaleX"; to: 1; duration: 120; easing.type: Easing.OutQuad }
+                  NumberAnimation { target: marker; property: "ghostScaleY"; to: 1; duration: 120; easing.type: Easing.OutQuad }
+                }
               }
             }
 
