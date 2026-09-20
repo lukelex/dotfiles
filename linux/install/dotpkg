@@ -45,4 +45,13 @@ if [ ! -f "$binary" ]; then
 fi
 
 printf '%s\n' "$expected  $binary" | sha256sum --check --status
+
+# Expose the pinned dotpkg binary on the user's PATH.
+user_bin="$HOME/.local/bin"
+mkdir -p "$user_bin"
+link="$user_bin/dotpkg"
+if [ "$(readlink "$link" 2>/dev/null || true)" != "$binary" ]; then
+  ln -sfn "$binary" "$link"
+fi
+
 printf '%s\n' "$binary"

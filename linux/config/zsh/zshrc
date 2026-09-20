@@ -4,6 +4,12 @@ set -a
 source "$HOME/dotfiles/linux/variables.env"
 set +a
 
+# User-local binaries (dotpkg, yamlfmt, kmonad-device-manager, ...)
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
 source "$DOTFILES/linux/config/zsh/theme.zsh"
 source "$DOTFILES/linux/config/zsh/history.zsh"
 source "$DOTFILES/linux/config/zsh/branches.zsh"
