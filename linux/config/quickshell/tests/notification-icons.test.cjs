@@ -7,8 +7,15 @@ const { test } = require('node:test');
 const source = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
 const assetPath = '/home/test/dotfiles/linux/config/lucide/svg/';
 
-function resolver(appLookup = null, env = {}) {
-  const service = {};
+function resolver(appLookup = null, env = {}, options = {}) {
+  const service = {
+    iconFileCache: {},
+    iconFilePending: {},
+    iconFileQueue: [],
+    iconRevision: 0,
+    live: options.live || {},
+    requestIconFile: () => {},
+  };
   const context = vm.createContext({
     service,
     Quickshell: {
@@ -17,12 +24,23 @@ function resolver(appLookup = null, env = {}) {
     },
     DesktopEntries: { byId: () => appLookup, heuristicLookup: () => appLookup },
   });
-  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isEphemeralSource', 'isTeamsNotification', 'displayBody', 'focusCommand', 'lucideIcon', 'iconFor']) {
+  for (const name of ['resolveIcon', 'desktopEntryIcon', 'iconDescriptor', 'systemIcon', 'isBrowserIcon', 'isEphemeralSource', 'isLiveOnlySource', 'usableAppIcon', 'usableImage', 'isTeamsNotification', 'displayBody', 'focusCommand', 'lucideIcon', 'iconFor']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
   }
   return record => JSON.parse(JSON.stringify(service.iconFor(record)));
+}
+
+function multipleFunctions(names) {
+  const service = {};
+  const context = vm.createContext({ service });
+  for (const name of names) {
+    const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+    assert.ok(match, `Missing QML function ${name}`);
+    service[name] = vm.runInContext(`(${match[0]})`, context);
+  }
+  return service;
 }
 
 function displayBody(record) {
@@ -96,11 +114,57 @@ test('explicit imagery wins over semantic fallbacks and is not recolored', () =>
 });
 
 test('notification image-provider URLs retain browser image precedence', () => {
-  const iconFor = resolver();
-  assert.deepEqual(iconFor({ appName: 'Firefox', appIcon: '/theme/firefox.svg', image: 'image://qsimage/notification/1' }),
+  const iconFor = resolver(null, {}, { live: { 1: {} } });
+  assert.deepEqual(iconFor({ id: 1, appName: 'Firefox', appIcon: '/theme/firefox.svg', image: 'image://qsimage/notification/1' }),
     { kind: 'image', source: 'image://qsimage/notification/1' });
-  assert.deepEqual(iconFor({ appName: 'Firefox', appIcon: '/theme/firefox.svg' }),
+  assert.deepEqual(iconFor({ id: 1, appName: 'Firefox', appIcon: '/theme/firefox.svg' }),
     { kind: 'image', source: '/theme/firefox.svg' });
+});
+
+test('dead qsimage provider URLs fall back instead of rendering a broken history image', () => {
+  // The notification server holds qsimage pixmaps only while the notification is
+  // alive. A history record replayed later (e.g. OpenCode's app icon) would load
+  // a broken image, so it must fall back to the durable theme icon or lucide.
+  const record = { id: 5, appName: 'OpenCode', appIcon: 'ai.opencode.desktop', desktopEntry: 'ai.opencode.desktop', image: 'image://qsimage/16/1' };
+  assert.deepEqual(resolver()(record), { kind: 'lucide', source: 'bell' });
+  assert.deepEqual(resolver(null, {}, { live: { 5: {} } })(record),
+    { kind: 'image', source: 'image://qsimage/16/1' });
+});
+
+test('qsimage URLs are live-only sources; durable paths are not', () => {
+  const service = {};
+  const isLiveOnlySource = serviceFunction(service, 'isLiveOnlySource');
+  assert.equal(isLiveOnlySource('image://qsimage/16/1'), true);
+  assert.equal(isLiveOnlySource('image://qsimage/notification/1'), true);
+  for (const source of [
+    '/usr/share/icons/hicolor/128x128/apps/firefox.png',
+    'image://icon//usr/share/icons/hicolor/128x128/apps/firefox.png',
+    'file:///tmp/com.google.Chrome.scoped_dir.6bBOvB/logo.png',
+    '',
+    null,
+  ]) {
+    assert.equal(isLiveOnlySource(source), false);
+  }
+});
+
+test('saveHistory sanitizes live-only and ephemeral sources before persisting', () => {
+  const service = multipleFunctions(['sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource']);
+  const clean = service.sanitizeRecord({
+    id: 7,
+    appName: 'OpenCode',
+    appIcon: 'ai.opencode.desktop',
+    image: 'image://qsimage/16/1',
+    body: 'Build finished',
+  });
+  assert.equal(clean.image, '');
+  assert.equal(clean.appIcon, 'ai.opencode.desktop');
+  assert.equal(clean.id, 7);
+  assert.equal(clean.body, 'Build finished');
+  const chromium = service.sanitizeRecord({ appIcon: 'file:///tmp/com.google.Chrome.scoped_dir.6bBOvB/logo.png', image: 'image://qsimage/1/1' });
+  assert.equal(chromium.appIcon, '');
+  assert.equal(chromium.image, '');
+  const untouched = service.sanitizeRecord({ appIcon: '/usr/share/pixmaps/teams.png', image: '' });
+  assert.equal(untouched.appIcon, '/usr/share/pixmaps/teams.png');
 });
 
 test('live notification image providers are not mistaken for ephemeral sources', () => {

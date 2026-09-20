@@ -36,6 +36,37 @@ QtObject {
     command: ["play", "-q", service.notificationSoundPath, "vol", "0.5"]
   }
 
+  // Resolves theme icon names to concrete files when the QIcon theme lookup fails.
+  // Qt caches the icon theme per process, so icons installed after the shell started
+  // (e.g. a freshly shipped desktop entry icon) are invisible to Quickshell.iconPath()
+  // until a restart. A filesystem search runs outside the QML thread and stays correct
+  // for the shell's whole lifetime; results are cached by icon name.
+  property var iconFileCache: ({})
+  property var iconFilePending: ({})
+  property var iconFileQueue: []
+  property int iconRevision: 0
+  readonly property string iconLookupScript:
+    'name=$1\n' +
+    'for dir in "$HOME/.local/share/icons/hicolor"/*/apps "$HOME/.local/share/icons"/*/*/apps \\\n' +
+    '    /usr/share/icons/hicolor/*/apps /usr/share/icons/*/*/apps /usr/share/pixmaps; do\n' +
+    '  for ext in png svg xpm; do\n' +
+    '    if [ -f "$dir/$name.$ext" ]; then\n' +
+    '      printf \'%s\\n\' "$dir/$name.$ext"\n' +
+    '      exit 0\n' +
+    '    fi\n' +
+    '  done\n' +
+    'done\n' +
+    'exit 1'
+  property string iconFileLastLine: ""
+  property Process iconFileResolver: Process {
+    command: []
+    stdout: SplitParser {
+      onRead: data => service.iconFileLastLine = String(data).trim()
+    }
+    onStarted: service.iconFileLastLine = ""
+    onExited: service.finishIconLookup()
+  }
+
   // Process runs outside the QML thread; notification handling stays responsive while audio plays.
   property Timer notificationSoundTimer: Timer {
     interval: 3000
@@ -118,7 +149,7 @@ QtObject {
 
   property Timer historySaveTimer: Timer {
     interval: 250
-    onTriggered: settings.historyJson = JSON.stringify(service.history.slice(0, service.historyLimit))
+    onTriggered: settings.historyJson = JSON.stringify(service.history.slice(0, service.historyLimit).map(service.sanitizeRecord))
   }
 
   property Timer historyGroupTimer: Timer {
@@ -551,6 +582,68 @@ QtObject {
     return /(?:\.scoped_dir\.|\.org\.chromium\.)/i.test(String(source || ""))
   }
 
+  function isLiveOnlySource(source) {
+    // The notification server keeps these in-memory pixmaps only while the
+    // notification is alive; a history record that reuses the same URL renders
+    // a broken image once the notification is gone.
+    return /^image:\/\/qsimage\//i.test(String(source || ""))
+  }
+
+  function usableAppIcon(record) {
+    const source = String(record.appIcon || "")
+    if (service.isLiveOnlySource(source) && !service.live[record.id])
+      return ""
+    return service.resolveIcon(source)
+  }
+
+  function usableImage(record) {
+    const source = String(record.image || "")
+    if (service.isLiveOnlySource(source) && !service.live[record.id])
+      return ""
+    return service.resolveIcon(source)
+  }
+
+  function requestIconFile(name) {
+    const key = String(name)
+    if (!key || key in service.iconFileCache || key in service.iconFilePending)
+      return
+    service.iconFilePending[key] = true
+    service.iconFileQueue = service.iconFileQueue.concat([key])
+    if (!service.iconFileResolver.running)
+      service.startIconLookup()
+  }
+
+  function startIconLookup() {
+    const name = service.iconFileQueue.length > 0 ? service.iconFileQueue[0] : ""
+    if (!name)
+      return
+    service.iconFileResolver.command = ["sh", "-c", service.iconLookupScript, "icons", name]
+    service.iconFileResolver.running = true
+  }
+
+  function finishIconLookup() {
+    const name = service.iconFileQueue.length > 0 ? service.iconFileQueue[0] : ""
+    service.iconFileQueue = service.iconFileQueue.slice(1)
+    if (name) {
+      const path = service.iconFileLastLine.trim()
+      service.iconFileCache[name] = path ? "file://" + path : ""
+      delete service.iconFilePending[name]
+      service.iconRevision++
+    }
+    if (service.iconFileQueue.length > 0)
+      service.startIconLookup()
+  }
+
+  function sanitizeRecord(record) {
+    const clean = {}
+    const keys = Object.keys(record)
+    for (let index = 0; index < keys.length; index++)
+      clean[keys[index]] = record[keys[index]]
+    clean.appIcon = service.isLiveOnlySource(clean.appIcon) || service.isEphemeralSource(clean.appIcon) ? "" : clean.appIcon
+    clean.image = service.isLiveOnlySource(clean.image) || service.isEphemeralSource(clean.image) ? "" : clean.image
+    return clean
+  }
+
   function resolveIcon(icon) {
     const source = String(icon || "")
     if (!source)
@@ -559,7 +652,13 @@ QtObject {
       return ""
     if (/^(file|image|qrc):/.test(source) || source.startsWith("/"))
       return source
-    return Quickshell.iconPath(source, true)
+    if (Object.prototype.hasOwnProperty.call(service.iconFileCache, source))
+      return service.iconFileCache[source]
+    const themed = Quickshell.iconPath(source, true)
+    if (themed)
+      return themed
+    service.requestIconFile(source)
+    return ""
   }
 
   function desktopEntryIcon(desktopEntry) {
@@ -605,11 +704,14 @@ QtObject {
   }
 
   function iconFor(record) {
+    // Re-evaluate when an outstanding filesystem icon lookup resolves.
+    service.iconRevision
+
     if (!record)
       return { kind: "lucide", source: "bell" }
 
-    const appIcon = service.resolveIcon(record.appIcon)
-    const image = service.resolveIcon(record.image)
+    const appIcon = service.usableAppIcon(record)
+    const image = service.usableImage(record)
     if (service.isTeamsNotification(record))
       return { kind: "image", source: "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/assets/teams.svg" }
     if (appIcon && !service.isBrowserIcon(record.appIcon))
