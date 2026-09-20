@@ -29,8 +29,8 @@ $ cd dotfiles && ./linux/install/sync
 
 For a headless homelab server, run `./linux/install/sync --server`. The legacy
 `all` command is retained as a compatibility wrapper for `sync`.
-Profile packages, groups, and services are defined in
-`linux/packages.yaml` and parsed by the bundled static `yq` binary.
+Profile packages, AppImages, groups, config links, and services are defined in
+`linux/packages.yaml` and reconciled by the pinned static `dotpkg` binary.
 The `common` section applies to every profile; profile sections contain only
 their additions. The root `source: aur` makes `yay` the default resolver; it
 also resolves official repository packages. A package can override this with a
@@ -65,7 +65,16 @@ Existing package metadata remains supported: `groups`, `configs`, and
 Use top-level `resources.configs` and `resources.services` for custom resources
 that are not owned by a package.
 
+Pinned AppImages can be declared as package entries with `source: appimage`, an
+HTTPS release address, and a `sha256` digest. Dotpkg verifies and tracks these
+artifacts alongside package reconciliation.
+
 Package-specific operations use `./linux/install/package`: run `package sync`
 to reconcile only packages, `package validate` to check the manifest, or
 `package add <name>` to declare, validate, install, and track a package. The
 add command prompts for a manifest scope unless `--scope` is provided.
+
+The package wrapper also exposes dotpkg's operational commands: `package diff`,
+`package doctor`, `package clean`, and `package recover`. Use `package clean
+--yes` only to remove stale managed packages. Use `package recover --yes` after
+an interrupted transaction with a pending journal.

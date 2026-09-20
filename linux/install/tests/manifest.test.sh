@@ -11,6 +11,7 @@ assert_equal() {
 source "$repo_root/linux/install/common.sh" --desktop
 assert_equal "$(manifest_package_origin google-chrome)" aur
 assert_equal "$(manifest_package_origin git)" aur
+assert_equal "$(manifest_package_origin opencode-desktop)" appimage
 
 mapfile -t top_level < <("$repo_root/linux/install/yq" -r 'keys[]' "$repo_root/linux/packages.yaml")
 assert_equal "${top_level[*]}" 'source common profiles resources'
@@ -30,7 +31,7 @@ mapfile -t packages < <(
   for option in ipod optional nvidia nvidia-gui; do manifest_option_packages ".profiles.desktop.options.$option"; done
 )
 for package in "${packages[@]}"; do
-  case "$(manifest_package_origin "$package")" in repo|aur) ;; *) exit 1 ;; esac
+  case "$(manifest_package_origin "$package")" in repo|aur|appimage) ;; *) exit 1 ;; esac
 done
 
 if (source "$repo_root/linux/install/common.sh" --host missing-host); then

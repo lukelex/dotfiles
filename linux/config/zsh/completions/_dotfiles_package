@@ -34,7 +34,11 @@ _dotfiles_package() {
     _values 'package command' \
       'add[declare, validate, install, and track a package]' \
       'sync[reconcile packages only]' \
-      'validate[validate manifest packages]'
+      'validate[validate manifest packages]' \
+      'diff[show package drift]' \
+      'clean[remove stale managed packages]' \
+      'doctor[diagnose package and resource state]' \
+      'recover[recover an interrupted package transaction]'
     return
   fi
 
@@ -63,6 +67,37 @@ _dotfiles_package() {
         '--host=[host overlay]:host:_dotfiles_package_hosts' \
         '--desktop[validate the desktop profile]' \
         '--server[validate the server profile]' \
+        '--help[show help]'
+      ;;
+    diff)
+      _arguments -S \
+        '--host=[host overlay]:host:_dotfiles_package_hosts' \
+        '--desktop[inspect the desktop profile]' \
+        '--server[inspect the server profile]' \
+        '--output=[plan format]:format:(text json)' \
+        '--help[show help]'
+      ;;
+    clean)
+      _arguments -S \
+        '--host=[host overlay]:host:_dotfiles_package_hosts' \
+        '--desktop[clean the desktop profile]' \
+        '--server[clean the server profile]' \
+        '--yes[skip confirmation]' \
+        '--help[show help]'
+      ;;
+    doctor)
+      _arguments -S \
+        '--host=[host overlay]:host:_dotfiles_package_hosts' \
+        '--desktop[diagnose the desktop profile]' \
+        '--server[diagnose the server profile]' \
+        '--output=[report format]:format:(text json)' \
+        '--help[show help]'
+      ;;
+    recover)
+      _arguments -S \
+        '--desktop[recover the desktop profile]' \
+        '--server[recover the server profile]' \
+        '--yes[skip confirmation]' \
         '--help[show help]'
       ;;
   esac

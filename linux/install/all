@@ -9,8 +9,8 @@ usage() {
 Usage: ./linux/install/all [options]
 
 Reconcile this dotfiles profile through the manifest. The remaining imperative
-helpers (`configs-system`, `icons`, `post`, `kmonad-device-manager`,
-`opencode-desktop`) stay available when explicitly needed.
+helpers (`configs-system`, `icons`, `post`, and `kmonad-device-manager`) stay
+available when explicitly needed.
 
 Options:
   --desktop    Install the desktop profile (default).

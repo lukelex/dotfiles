@@ -16,7 +16,7 @@ fi
 
 command=${1:-}
 case $command in
-  add|sync|validate)
+  add|sync|validate|diff|clean|doctor|recover)
     shift
     ;;
   --help|-h|"")

@@ -101,6 +101,11 @@ profiles:
         noto-fonts-cjk:
         noto-fonts-emoji:
         npm:
+        opencode-desktop:
+          source: appimage
+          address: https://opencode.ai/files/bin/2.0.8/opencode-desktop-linux-x86_64.AppImage
+          target: $HOME/.local/opt/opencode-desktop/OpenCode.AppImage
+          sha256: e5e59645631380f545449118c5dbb069a45d4c7a98a996e62b7ce42bfb661eb2
         pantheon-calculator:
         papirus-icon-theme:
         pavucontrol:

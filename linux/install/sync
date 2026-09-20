@@ -64,10 +64,4 @@ if [ "$PACKAGES_ONLY" -eq 0 ]; then
   [ "$restart_services" -eq 1 ] && dotpkg_args+=(--restart-services)
 fi
 
-"$dotpkg_bin" "${dotpkg_args[@]}"
-
-# dotpkg manages repo/AUR packages and resources; the OpenCode Desktop (V2)
-# AppImage is fetched by the pinned installer as a desktop-only step.
-if [ "$INSTALL_PROFILE" = desktop ] && [ "$PACKAGES_ONLY" -eq 0 ]; then
-  DRY_RUN="$DRY_RUN" "$install_dir/opencode-desktop"
-fi
+exec "$dotpkg_bin" "${dotpkg_args[@]}"
