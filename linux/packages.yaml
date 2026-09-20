@@ -260,6 +260,10 @@ resources:
       target: $HOME/.profile
       profiles:
         - desktop
+    - source: icons/Bibata-Modern-Amber
+      target: $HOME/.local/share/icons/Bibata-Modern-Amber
+      profiles:
+        - desktop
     - source: linux/config/default-apps.list
       target: $HOME/.local/share/applications/defaults.list
       profiles:

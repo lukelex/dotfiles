@@ -5,16 +5,8 @@ set -Eeuo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$DOTFILES/linux/variables.env"
 
-run mkdir -p "$HOME/.local/share/icons"
-
-icon_sets=$(find "$DOTFILES/icons/" -maxdepth 1 -type d | tail -n +2)
-
-for set in $icon_sets; do
-  destination="$HOME/.local/share/icons/$(basename $set)"
-  run rm -vrf "$destination"
-
-  run sudo ln -fvs "$set" "$destination"
-done
+# The user icon theme (icons/*) is linked by dotpkg as a manifest resource;
+# only the root-owned Font Awesome icon sets stay imperative.
 
 run sudo mkdir -p "/usr/share/icons/FontAwesome-6/solid/512x512/"
 run sudo mkdir -p "/usr/share/icons/FontAwesome-6/brands/512x512/"
