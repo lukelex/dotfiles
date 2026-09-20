@@ -19,14 +19,10 @@ PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   bash "$temporary/linux/install/sync" --desktop --host laptop --dry-run --replace --restart-services
 cat > "$temporary/expected-full" <<EOF
 sync
---manifest
-$temporary/linux/packages.yaml
---state-file
-$temporary/state/dotfiles/install/state.yaml
 --profile
 desktop
 --host
-laptop
+$temporary/linux/hosts/laptop.yaml
 --dry-run
 --yes
 --resources
@@ -43,10 +39,6 @@ PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   bash "$temporary/linux/install/sync" --server --packages-only --dry-run
 cat > "$temporary/expected-packages" <<EOF
 sync
---manifest
-$temporary/linux/packages.yaml
---state-file
-$temporary/state/dotfiles/install/state.yaml
 --profile
 server
 --dry-run

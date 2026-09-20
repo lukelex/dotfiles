@@ -10,7 +10,7 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 
 ## Install flow
 
-- Entrypoint: `./linux/install/sync` (also reached through `./linux/install/all`) reconciles the selected manifest profile. Use committed `linux/hosts/<name>.yaml` overlays with `--host <name>` for machine-specific selections.
+- Entrypoint: `./linux/install/sync` (also reached through `./linux/install/all`) reconciles the selected profile through dotpkg. The first run seeds `$XDG_CONFIG_HOME/dotpkg/package.yaml` from `linux/packages.yaml` and migrates state to the adjacent `state.yaml`. Use committed `linux/hosts/<name>.yaml` overlays with `--host <name>` for machine-specific selections.
 - `linux/variables.env` sets `DOTFILES="$HOME/dotfiles"`, `XDG_CONFIG_HOME`, `DOT_CONFIG="$DOTFILES/linux/config"`. Install scripts hardcode `"$HOME/dotfiles"` and assume the repo is cloned there.
 - `dependencies` installs via `yay` (AUR) and is interactive (prompts).
 - `linux/install/binaries` symlinks every executable in `linux/scripts/` to `/usr/local/bin/u_<script>` (hence the `u_` prefix used across configs, e.g. `u_audio`, `u_screenshot`). Commands in configs refer to these `u_*` names, not the raw scripts. Exception: Quickshell keeps its helpers inside `linux/config/quickshell/scripts/` and invokes them by absolute path, so it needs no `u_*` links; `binaries` prunes any dangling `u_*` links it no longer owns.

@@ -8,7 +8,7 @@ usage() {
   cat <<'EOF'
 Usage: ./linux/install/sync [options]
 
-Reconcile the selected profile with linux/packages.yaml using dotpkg. The
+Reconcile the selected profile with the initialized dotpkg manifest. The
 standalone binary handles packages, groups, config links, and services.
 
 Options:
@@ -41,13 +41,8 @@ if [ ! -x "$dotpkg_bin" ]; then
   exit 2
 fi
 
-state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
-dotpkg_args=(sync
-  --manifest "$DOTFILES/linux/packages.yaml"
-  --state-file "$state_file"
-  --profile "$INSTALL_PROFILE"
-)
-[ -z "$INSTALL_HOST" ] || dotpkg_args+=(--host "$INSTALL_HOST")
+dotpkg_args=(sync --profile "$INSTALL_PROFILE")
+[ -z "$INSTALL_HOST" ] || dotpkg_args+=(--host "$DOTFILES/linux/hosts/$INSTALL_HOST.yaml")
 [ "$DRY_RUN" -eq 0 ] || dotpkg_args+=(--dry-run)
 [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
 

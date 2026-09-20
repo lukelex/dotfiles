@@ -5,7 +5,7 @@ set -Eeuo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$DOTFILES/linux/variables.env"
 
-state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
+state_file="${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg/state.yaml"
 
 has_wm() {
   [ -f "$state_file" ] && [ "$("$YQ" -r ".current.selections.$1" "$state_file")" = true ]

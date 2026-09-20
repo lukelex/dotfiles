@@ -29,8 +29,11 @@ $ cd dotfiles && ./linux/install/sync
 
 For a headless homelab server, run `./linux/install/sync --server`. The legacy
 `all` command is retained as a compatibility wrapper for `sync`.
-Profile packages, AppImages, groups, config links, and services are defined in
-`linux/packages.yaml` and reconciled by the pinned static `dotpkg` binary.
+Profile packages, AppImages, groups, config links, and services are reconciled
+by the pinned static `dotpkg` binary. On first use, the repository's
+`linux/packages.yaml` seed is copied to dotpkg's per-user manifest at
+`$XDG_CONFIG_HOME/dotpkg/package.yaml`; state is kept beside it in
+`state.yaml`.
 The `common` section applies to every profile; profile sections contain only
 their additions. The root `source: aur` makes `yay` the default resolver; it
 also resolves official repository packages. A package can override this with a
@@ -44,21 +47,22 @@ machine-specific package metadata. See `linux/hosts/README.md` for the overlay
 format.
 
 Run `./linux/install/sync --dry-run` to preview changes without touching the
-system. Config links and services are reconciled by dotpkg; conflicting
-targets are preserved unless `--replace` is passed.
+system. It initializes dotpkg and migrates the legacy state file on first use.
+Config links and services are reconciled by dotpkg; conflicting targets are
+preserved unless `--replace` is passed.
 
 Run `./linux/install/sync --server` (or `--desktop`) to reconcile a profile.
 Each package, group, service, and config-link stage requires confirmation.
-Only resources previously recorded under `$XDG_STATE_HOME/dotfiles/install` are
+Only resources previously recorded in dotpkg's adjacent `state.yaml` are
 eligible for removal.
 
 One-off setup that cannot be expressed as manifest resources (user directories,
 login shell, timezone, font/cache refreshes) is collected in
 `./linux/install/post`.
 
-Run `./linux/install/package validate [--host <name>]` to verify selected
-manifest packages. Repository packages use local pacman sync databases and AUR
-packages use batched AUR RPC requests.
+Run `dotpkg validate [--host <path>]` to verify selected manifest packages.
+Repository packages use local pacman sync databases and AUR packages use
+batched AUR RPC requests.
 
 Existing package metadata remains supported: `groups`, `configs`, and
 `services` declared on package entries are reconciled by the standalone sync.
@@ -69,12 +73,15 @@ Pinned AppImages can be declared as package entries with `source: appimage`, an
 HTTPS release address, and a `sha256` digest. Dotpkg verifies and tracks these
 artifacts alongside package reconciliation.
 
-Package-specific operations use `./linux/install/package`: run `package sync`
-to reconcile only packages, `package validate` to check the manifest, or
-`package add <name>` to declare, validate, install, and track a package. The
-add command prompts for a manifest scope unless `--scope` is provided.
+Use dotpkg directly for package operations:
 
-The package wrapper also exposes dotpkg's operational commands: `package diff`,
-`package doctor`, `package clean`, and `package recover`. Use `package clean
---yes` only to remove stale managed packages. Use `package recover --yes` after
-an interrupted transaction with a pending journal.
+```sh
+dotpkg add <name> --scope desktop --resources --root "$HOME/dotfiles"
+dotpkg diff --resources --root "$HOME/dotfiles"
+dotpkg doctor --resources --root "$HOME/dotfiles"
+dotpkg clean --yes
+dotpkg recover --yes
+```
+
+Use `dotpkg clean --yes` only to remove stale managed packages. Use
+`dotpkg recover --yes` after an interrupted transaction with a pending journal.

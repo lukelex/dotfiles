@@ -42,8 +42,8 @@ if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
 else
   compinit -C -d ~/.zcompdump
 fi
-autoload -Uz _dotfiles_package
-compdef _dotfiles_package "$DOTFILES/linux/install/package" "$HOME/dotfiles/linux/install/package" ./linux/install/package linux/install/package
+autoload -Uz _dotpkg
+compdef _dotpkg dotpkg
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors '=*=32'

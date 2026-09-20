@@ -1,0 +1,7 @@
+#compdef dotpkg
+
+_dotpkg() {
+  _arguments '1:command:(init validate plan diff sync clean recover add doctor completion version)' '*:option:(--manifest --host --state-file --profile --dry-run --check --yes --resources --root --replace --restart-services --output --timeout --backend-timeout --aur-retries --aur-retry-delay --verbose --desktop --server --help)'
+}
+
+_dotpkg "$@"

@@ -1,8 +1,10 @@
 # Host Overlays
 
-`linux/install/sync --host <name>` merges `linux/hosts/<name>.yaml` over
-`linux/packages.yaml`. Overlays are committed descriptions of a machine's
-differences; they replace the old mutable window-manager selection file.
+`linux/install/sync --host <name>` passes `linux/hosts/<name>.yaml` to dotpkg as
+an overlay over the initialized per-user manifest. The repository's
+`linux/packages.yaml` is used as the initial seed for that manifest. Overlays
+are committed descriptions of a machine's differences; they replace the old
+mutable window-manager selection file.
 
 For example:
 
