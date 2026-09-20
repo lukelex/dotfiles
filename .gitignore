@@ -4,3 +4,6 @@ README.html
 linux/config/eww/paths.yuck
 linux/config/lucide/png/
 linux/vendor/dotpkg/
+
+# opencode app-managed credential (written by the desktop app; keep out of git)
+linux/config/opencode/service.json

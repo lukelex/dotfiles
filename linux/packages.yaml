@@ -285,6 +285,14 @@ resources:
       target: $XDG_CONFIG_HOME/mimeapps.list
       profiles:
         - desktop
+    - source: linux/config/opencode-desktop/ai.opencode.desktop.desktop
+      target: $HOME/.local/share/applications/ai.opencode.desktop.desktop
+      profiles:
+        - desktop
+    - source: linux/config/opencode-desktop/ai.opencode.desktop.png
+      target: $HOME/.local/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png
+      profiles:
+        - desktop
   services:
     - name: sddm
       scope: system

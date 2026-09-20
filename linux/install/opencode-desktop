@@ -1,0 +1,62 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+DRY_RUN="${DRY_RUN:-0}"
+for arg in "$@"; do
+  [ "$arg" = --dry-run ] && DRY_RUN=1
+done
+
+run() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "dry-run: $*"
+    return 0
+  fi
+  "$@"
+}
+
+# Pinned OpenCode Desktop (V2, AppImage) release. Bump both values together;
+# OPCODE_DESKTOP_SHA256 is the sha256sum of the AppImage listed at
+# https://opencode.ai/files/bin/<version>/opencode-desktop-linux-x86_64.AppImage
+OPCODE_DESKTOP_VERSION="2.0.8"
+OPCODE_DESKTOP_SHA256="e5e59645631380f545449118c5dbb069a45d4c7a98a996e62b7ce42bfb661eb2"
+OPCODE_DESKTOP_URL="https://opencode.ai/files/bin/${OPCODE_DESKTOP_VERSION}/opencode-desktop-linux-x86_64.AppImage"
+OPCODE_DESKTOP_DIR="$HOME/.local/opt/opencode-desktop"
+OPCODE_DESKTOP_BIN="$OPCODE_DESKTOP_DIR/OpenCode.AppImage"
+OPCODE_DESKTOP_VERSIONED="$OPCODE_DESKTOP_DIR/OpenCode-${OPCODE_DESKTOP_VERSION}.AppImage"
+
+check_digest() {
+  local file="$1"
+  [ -f "$file" ] || return 1
+  printf '%s  %s\n' "$OPCODE_DESKTOP_SHA256" "$file" | sha256sum --check --status
+}
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "dry-run: opencode-desktop v${OPCODE_DESKTOP_VERSION} would be installed at $OPCODE_DESKTOP_BIN"
+  exit 0
+fi
+
+run mkdir -p "$OPCODE_DESKTOP_DIR"
+
+if check_digest "$OPCODE_DESKTOP_BIN"; then
+  echo "opencode-desktop v${OPCODE_DESKTOP_VERSION} already installed"
+  exit 0
+fi
+
+# Adopt a previously fetched versioned binary without re-downloading it.
+if check_digest "$OPCODE_DESKTOP_VERSIONED"; then
+  run mv -f "$OPCODE_DESKTOP_VERSIONED" "$OPCODE_DESKTOP_BIN"
+  exit 0
+fi
+
+temporary="$OPCODE_DESKTOP_BIN.$$"
+trap 'rm -f "$temporary"' EXIT
+run curl --fail --location --silent --show-error "$OPCODE_DESKTOP_URL" --output "$temporary"
+check_digest "$temporary" || {
+  echo "opencode-desktop: digest mismatch for downloaded AppImage" >&2
+  exit 1
+}
+run chmod 0755 "$temporary"
+run mv -f "$temporary" "$OPCODE_DESKTOP_BIN"
+trap - EXIT
+echo "opencode-desktop v${OPCODE_DESKTOP_VERSION} installed at $OPCODE_DESKTOP_BIN"
