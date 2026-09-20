@@ -264,6 +264,11 @@ resources:
       target: $HOME/.local/share/icons/Bibata-Modern-Amber
       profiles:
         - desktop
+    - source: linux/config/gitconfig
+      target: $HOME/.gitconfig
+      profiles:
+        - desktop
+        - server
     - source: linux/config/default-apps.list
       target: $HOME/.local/share/applications/defaults.list
       profiles:
