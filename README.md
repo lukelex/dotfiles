@@ -43,14 +43,18 @@ committed `linux/hosts/<name>.yaml` overlay with `--host <name>` for additional
 machine-specific package metadata. See `linux/hosts/README.md` for the overlay
 format.
 
-Run `./linux/install/all --dry-run` to preview every action without touching
-the system. The config stage skips links that would overwrite existing files;
-pass `--replace` (e.g. `./linux/install/configs --replace`) to overwrite them.
+Run `./linux/install/sync --dry-run` to preview changes without touching the
+system. Config links and services are reconciled by dotpkg; conflicting
+targets are preserved unless `--replace` is passed.
 
 Run `./linux/install/sync --server` (or `--desktop`) to reconcile a profile.
 Each package, group, service, and config-link stage requires confirmation.
 Only resources previously recorded under `$XDG_STATE_HOME/dotfiles/install` are
 eligible for removal.
+
+One-off setup that cannot be expressed as manifest resources (user directories,
+login shell, timezone, font/cache refreshes) is collected in
+`./linux/install/post`.
 
 Run `./linux/install/package validate [--host <name>]` to verify selected
 manifest packages. Repository packages use local pacman sync databases and AUR

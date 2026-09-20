@@ -1,0 +1,60 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+source "$DOTFILES/linux/variables.env"
+
+state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/install/state.yaml"
+
+has_wm() {
+  [ -f "$state_file" ] && [ "$("$YQ" -r ".current.selections.$1" "$state_file")" = true ]
+}
+
+# One-off setup steps that dotpkg cannot express as declarative resources:
+# user directories, interactive prompts, and host tweaks.
+
+run mkdir -p "$XDG_CONFIG_HOME"
+run mkdir -p "$HOME/.ssh"
+run mkdir -p "$HOME/projects"
+
+if ! is_server; then
+  run mkdir -p "$HOME/screenshots"
+  run mkdir -p "$HOME/.local/share/applications"
+  run mkdir -p "$HOME/backup_vim"
+
+  run "$DOTFILES/linux/scripts/theme" init
+  run update-desktop-database "$HOME/.local/share/applications"
+
+  run xset dpms 1200 0 0
+fi
+
+answer="$(ask 'Set your login shell to zsh? [Y/n] ')"
+case $answer in
+  [Yy]* | "")
+    run chsh -s /usr/bin/zsh
+    ;;
+  * ) ;;
+esac
+
+run fc-cache -r
+run tldr -u
+run sudo mandb
+
+answer="$(ask 'Set system timezone to CET? [Y/n] ')"
+case $answer in
+  [Yy]* | "")
+    run timedatectl set-timezone CET
+    ;;
+  * ) ;;
+esac
+
+run rustup default stable
+run sudo yay -Sc
+
+if has_wm i3 || has_wm hyprland; then
+  if [ -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service ] \
+    && [ ! -e /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled ]; then
+    run sudo mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service{,.disabled}
+  fi
+fi

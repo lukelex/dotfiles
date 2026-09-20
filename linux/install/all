@@ -8,8 +8,9 @@ usage() {
   cat <<'EOF'
 Usage: ./linux/install/all [options]
 
-Reconcile this dotfiles profile through the manifest. The legacy imperative
-helpers remain available as individual commands when explicitly needed.
+Reconcile this dotfiles profile through the manifest. The remaining imperative
+helpers (`configs-system`, `icons`, `post`, `kmonad-device-manager`,
+`opencode-desktop`) stay available when explicitly needed.
 
 Options:
   --desktop    Install the desktop profile (default).
