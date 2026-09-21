@@ -77,9 +77,11 @@ profiles:
               - gammastep.service
               - night-mode-sunset.timer
         google-chrome:
+        github-cli:
         ibus:
         imagemagick:
         inetutils:
+        libnotify:
         kitty:
           configs:
             - linux/config/kitty:$XDG_CONFIG_HOME/kitty
@@ -263,6 +265,14 @@ profiles:
 resources:
   configs:
     - linux/config/opencode:$XDG_CONFIG_HOME/opencode
+    - source: linux/config/github-review-notify/github-review-notify.service
+      target: $XDG_CONFIG_HOME/systemd/user/github-review-notify.service
+      profiles:
+        - desktop
+    - source: linux/config/github-review-notify/github-review-notify.timer
+      target: $XDG_CONFIG_HOME/systemd/user/github-review-notify.timer
+      profiles:
+        - desktop
     - source: linux/profile
       target: $HOME/.profile
       profiles:
@@ -301,6 +311,10 @@ resources:
       profiles:
         - desktop
   services:
+    - name: github-review-notify.timer
+      scope: user
+      profiles:
+        - desktop
     - name: sddm
       scope: system
       profiles:

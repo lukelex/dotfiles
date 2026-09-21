@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/github-review-notify"
+seen_reviews="$state_dir/reviews"
+mkdir -p "$state_dir"
+touch "$seen_reviews"
+bootstrap=0
+[ -s "$seen_reviews" ] || bootstrap=1
+
+# Do not overlap requests if a slow API call outlives the timer interval.
+exec 9>"$state_dir/lock"
+flock -n 9 || exit 0
+
+command -v gh >/dev/null 2>&1 || exit 0
+command -v notify-send >/dev/null 2>&1 || exit 0
+
+gh api --method GET /notifications --field participating=true --field per_page=50 --jq '
+  .[] | select(.subject.type == "PullRequest") | .subject.url
+' |
+while IFS= read -r pull_request_url; do
+  [ -n "$pull_request_url" ] || continue
+
+  pull_request_info="$(gh api "$pull_request_url" --jq '[.repository.full_name, .number, .title, .state, .draft, .merged] | @tsv')" || continue
+  IFS=$'\t' read -r repository number title pull_state draft merged <<< "$pull_request_info"
+  review_status="open"
+  [ "$draft" = true ] && review_status="draft"
+  [ "$pull_state" = closed ] && review_status="closed"
+  [ "$merged" = true ] && review_status="merged"
+
+  gh api "$pull_request_url/reviews?per_page=100" --jq '
+    .[]
+    | select(.submitted_at != null)
+    | [.id, .user.login, .state, (.body // "")] | @tsv
+  ' | while IFS=$'\t' read -r review_id author review_state body; do
+    [ -n "$review_id" ] || continue
+    grep -qxF "$review_id" "$seen_reviews" && continue
+
+    # Establish a baseline on first run instead of replaying old reviews.
+    if [ "${bootstrap:-0}" = 1 ]; then
+      printf '%s\n' "$review_id" >> "$seen_reviews"
+      continue
+    fi
+
+    summary="${body//$'\n'/ }"
+    summary="${summary//$'\r'/ }"
+    summary="${summary//$'\t'/ }"
+    summary="${summary:0:240}"
+    [ -n "$summary" ] || summary="Review submitted: $review_state"
+    pull_request_url="https://github.com/${repository}/pull/${number}"
+
+    notify-send \
+      --app-name="GitHub" \
+      --icon="$HOME/dotfiles/linux/config/lucide/svg/message-square-quote.svg" \
+      --expire-time=0 \
+      --hint="string:x-github-review-url:${pull_request_url}" \
+      --hint="string:x-github-review-repository:${repository}" \
+      --hint="string:x-github-review-number:${number}" \
+      --hint="string:x-github-review-title:${title}" \
+      --hint="string:x-github-review-status:${review_status}" \
+      --hint="string:x-github-review-author:${author}" \
+      --hint="string:x-github-review-state:${review_state}" \
+      "${repository}#${number}: review by ${author}" \
+      "${title}: $summary"
+
+    printf '%s\n' "$review_id" >> "$seen_reviews"
+  done
+done

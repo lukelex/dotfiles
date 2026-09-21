@@ -1,0 +1,11 @@
+[Unit]
+Description=Check GitHub pull request reviews periodically
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+Persistent=true
+Unit=github-review-notify.service
+
+[Install]
+WantedBy=timers.target

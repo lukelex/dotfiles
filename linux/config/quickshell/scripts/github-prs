@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+command -v gh >/dev/null 2>&1 || { printf '[]\n'; exit 0; }
+me="$(gh api user --jq .login 2>/dev/null || true)"
+
+search() {
+  local query="$1" needs_review="$2"
+  gh search prs $query --limit 100 --json number,title,state,isDraft,author,repository,url,updatedAt,closedAt \
+    --jq '[.[] | {number, title, state, isDraft, author: .author.login, repository: .repository.nameWithOwner, url, updatedAt, closedAt}]' 2>/dev/null \
+    | jq --argjson needsReview "$needs_review" 'map(. + {needsReview: $needsReview})' || printf '[]\n'
+}
+
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+
+search '--involves=@me --state=open' false > "$tmp.involves"
+search '--review-requested=@me --state=open' true > "$tmp.requested"
+search '--author=@me --state=closed --updated=>30d' false > "$tmp.authored"
+
+jq -s 'add | group_by(.url) | map(.[0] + {needsReview: any(.[]; .needsReview == true)})' "$tmp.involves" "$tmp.requested" "$tmp.authored" | jq -c '.[]' |
+while IFS= read -r pr; do
+  url="$(jq -r '.url' <<< "$pr")"
+  details="$(gh pr view "$url" --json number,title,state,isDraft,mergedAt,author,reviewDecision,reviewRequests,reviews,url,updatedAt \
+    --jq '{number,title,state,isDraft,mergedAt,author:.author.login,reviewDecision,reviewRequests:[.reviewRequests[].login],reviews:[.reviews[] | {id:.id,author:.author.login,state,submittedAt}],url,updatedAt}' 2>/dev/null || true)"
+  if [ -n "$details" ]; then
+    jq -c --argjson original "$pr" '$original * .' <<< "$details"
+  else
+    printf '%s\n' "$pr"
+  fi
+done | jq -s --arg me "$me" '
+  map(. + {
+    status: (if .mergedAt != null then "merged" elif .state == "CLOSED" then "closed" elif .isDraft then "draft" else "open" end),
+    action: (if .needsReview then "review-needed" elif .author == $me and .reviewDecision == "CHANGES_REQUESTED" then "changes-requested" elif .author == $me and .reviewDecision == "APPROVED" then "ready-to-merge" elif .author == $me then "awaiting-review" else "involved" end)
+  })
+  | map(. + {
+      event: (if .action == "review-needed" then "Review requested" elif .action == "changes-requested" then "Changes requested" elif .action == "ready-to-merge" then "Approved" elif .action == "awaiting-review" then "Updated" else "Following" end),
+      attention: (if .action == "review-needed" or .action == "changes-requested" or .action == "ready-to-merge" then 0 elif .action == "awaiting-review" then 1 else 2 end)
+    })
+  | sort_by(.updatedAt) | reverse | sort_by(.attention)
+'

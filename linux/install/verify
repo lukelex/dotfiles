@@ -29,6 +29,11 @@ if ! is_server; then
   check "Quickshell is available" command -v quickshell
   check "Quickshell user service is linked" test -e "$HOME/.config/systemd/user/quickshell.service"
 
+  if has_selection github-cli; then
+    check "GitHub CLI is available" command -v gh
+    check "GitHub review notification timer is linked" test -e "$HOME/.config/systemd/user/github-review-notify.timer"
+  fi
+
   for script in "$DOTFILES"/linux/scripts/*; do
     [ -x "$script" ] || continue
     check "helper u_$(basename "$script") is available" command -v "u_$(basename "$script")"

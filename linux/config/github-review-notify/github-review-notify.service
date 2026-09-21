@@ -1,0 +1,9 @@
+[Unit]
+Description=Check GitHub pull request reviews
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash %h/dotfiles/linux/scripts/github-review-notify
+TimeoutStartSec=50s

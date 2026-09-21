@@ -21,6 +21,8 @@ QtObject {
   property double now: 0
   property bool doNotDisturb: false
   property int osdSequence: 0
+  property var githubSeenIds: ({})
+  property int githubSeenRevision: 0
   property var historyGroups: []
   readonly property var popupGroups: service.groupPopup(service.popupReversed)
   signal popupRecordAdded(var record)
@@ -79,6 +81,7 @@ QtObject {
     id: settings
     location: "file://" + Quickshell.env("HOME") + "/.local/state/dotfiles/notifications.conf"
     property string historyJson: "[]"
+    property string githubSeenJson: "[]"
     property bool doNotDisturb: false
 
     onDoNotDisturbChanged: service.doNotDisturb = doNotDisturb
@@ -90,7 +93,7 @@ QtObject {
     actionsSupported: true
     imageSupported: true
     keepOnReload: false
-    extraHints: ["wired-tag", "value"]
+    extraHints: ["wired-tag", "value", "x-github-review-url", "x-github-review-repository", "x-github-review-number", "x-github-review-title", "x-github-review-status", "x-github-review-author", "x-github-review-state"]
 
     onNotification: n => service.handleNotification(n)
   }
@@ -133,10 +136,18 @@ QtObject {
   function loadInitial() {
     try {
       const parsed = JSON.parse(settings.historyJson)
-    if (Array.isArray(parsed))
-      service.history = parsed.slice(0, service.historyLimit)
+      if (Array.isArray(parsed))
+        service.history = parsed.slice(0, service.historyLimit)
     } catch (error) {
       service.history = []
+    }
+    try {
+      const seen = JSON.parse(settings.githubSeenJson)
+      if (Array.isArray(seen))
+        for (const id of seen)
+          service.githubSeenIds[String(id)] = true
+    } catch (error) {
+      service.githubSeenIds = {}
     }
     service.doNotDisturb = settings.doNotDisturb
     service.historyGroups = service.groupHistory(service.history)
@@ -273,6 +284,13 @@ QtObject {
       image: notification.image || "",
       summary: notification.summary || "",
       body: notification.body || "",
+      githubReviewUrl: String((notification.hints || {})["x-github-review-url"] || ""),
+      githubRepository: String((notification.hints || {})["x-github-review-repository"] || ""),
+      githubNumber: String((notification.hints || {})["x-github-review-number"] || ""),
+      githubTitle: String((notification.hints || {})["x-github-review-title"] || ""),
+      githubStatus: String((notification.hints || {})["x-github-review-status"] || ""),
+      githubAuthor: String((notification.hints || {})["x-github-review-author"] || ""),
+      githubReviewState: String((notification.hints || {})["x-github-review-state"] || ""),
       urgency: urgency,
       value: value,
       actions: actions,
@@ -481,6 +499,8 @@ QtObject {
   function activateRecord(id) {
     const notification = service.live[id]
     const record = service.history.find(entry => entry.id === id)
+    if (service.openGithubReview && service.openGithubReview(record))
+      return true
     const focused = service.focusRecord(record)
 
     if (notification) {
@@ -494,6 +514,33 @@ QtObject {
     }
 
     return focused
+  }
+
+  function isGithubReview(record) {
+    return String(record && record.githubReviewUrl || "").startsWith("https://github.com/")
+  }
+
+  function isGithubReviewSeen(record) {
+    service.githubSeenRevision
+    return service.isGithubReview(record) && !!service.githubSeenIds[String(record.id)]
+  }
+
+  function markGithubReviewSeen(id) {
+    const key = String(id || "")
+    if (!key || service.githubSeenIds[key])
+      return
+    service.githubSeenIds[key] = true
+    service.githubSeenRevision++
+    settings.githubSeenJson = JSON.stringify(Object.keys(service.githubSeenIds))
+  }
+
+  function openGithubReview(record) {
+    if (!service.isGithubReview(record))
+      return false
+
+    service.windowFocus.command = ["xdg-open", record.githubReviewUrl]
+    service.windowFocus.startDetached()
+    return true
   }
 
   function focusRecord(record) {
@@ -557,6 +604,7 @@ QtObject {
   function lucideIcon(record) {
     const name = String(record.appName).toLowerCase()
     const mappings = [
+      [["github"], "message-square-quote"],
       [["telegram desktop", "discord", "slack", "whatsapp"], "message-square"],
       [["kitty"], "monitor"],
       [["flameshot"], "camera"],

@@ -12,9 +12,12 @@ Scope {
   id: root
 
   required property var notificationService
+  required property var githubPrService
   property bool notificationCenterOpen: false
+  property bool githubReviewCenterOpen: false
   property var controlCenterTarget: null
   property var notificationCenterTarget: null
+  property var githubReviewCenterTarget: null
   property var dateTimeCenterTarget: null
   property var connectivityTarget: null
 
@@ -33,6 +36,12 @@ Scope {
   function closeDateTime() {
     if (root.dateTimeCenterTarget)
       root.dateTimeCenterTarget.requestClose()
+  }
+
+  function closeGitHubReviewCenter() {
+    if (root.githubReviewCenterTarget)
+      root.githubReviewCenterTarget.requestClose()
+    root.githubReviewCenterOpen = false
   }
 
   ConnectivityService {
@@ -180,12 +189,30 @@ Scope {
     root.cancelHoverClose()
     root.closeConnectivity()
     root.closeDateTime()
+    root.closeGitHubReviewCenter()
     root.controlCenterTarget.requestClose()
     if (root.notificationCenterOpen)
       root.notificationCenterTarget.requestClose()
     else
       root.notificationCenterTarget.requestOpen()
     root.notificationCenterOpen = !root.notificationCenterOpen
+  }
+
+  function openGitHubReviewCenter() {
+    if (root.githubReviewCenterTarget === null)
+      return
+
+    root.cancelHoverClose()
+    root.closeConnectivity()
+    root.closeDateTime()
+    root.controlCenterTarget.requestClose()
+    root.notificationCenterTarget.requestClose()
+    root.notificationCenterOpen = false
+    if (root.githubReviewCenterOpen)
+      root.githubReviewCenterTarget.requestClose()
+    else
+      root.githubReviewCenterTarget.requestOpen()
+    root.githubReviewCenterOpen = !root.githubReviewCenterOpen
   }
 
   function cancelHoverClose() {
@@ -568,6 +595,7 @@ Scope {
         root.dateTimeCenterTarget = dateTimeCenter
         controlCenter.requestClose()
         notificationCenter.requestClose()
+        root.closeGitHubReviewCenter()
         root.notificationCenterOpen = false
         dateTimeCenter.requestOpen(pin)
       }
@@ -579,6 +607,7 @@ Scope {
         root.connectivityTarget = connectivityCenter
         controlCenter.requestClose()
         notificationCenter.requestClose()
+        root.closeGitHubReviewCenter()
         root.closeDateTime()
         root.notificationCenterOpen = false
         connectivityCenter.requestOpen(pin)
@@ -621,6 +650,14 @@ Scope {
         service: root.notificationService
       }
 
+      GitHubReviewCenter {
+        id: githubReviewCenter
+        controller: root
+        panel: panel
+        service: root.notificationService
+        prs: root.githubPrService
+      }
+
       NotificationPopup {
         id: notificationPopup
         controller: root
@@ -646,6 +683,7 @@ Scope {
         if (root.controlCenterTarget === null || (modelData.x === 0 && modelData.y === 0)) {
           root.controlCenterTarget = controlCenter
           root.notificationCenterTarget = notificationCenter
+          root.githubReviewCenterTarget = githubReviewCenter
         }
       }
 
@@ -974,6 +1012,36 @@ Scope {
 
           LucideIcon {
             anchors.fill: parent
+            color: root.foreground
+            source: root.icon("message-square-quote")
+          }
+
+            Rectangle {
+            anchors {
+              right: parent.right
+              top: parent.top
+            }
+            color: root.urgent
+            height: 6
+            radius: 3
+            visible: root.githubPrService.prs.some(pr => ["review-needed", "changes-requested", "awaiting-review"].includes(pr.action))
+            width: 6
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onClicked: root.openGitHubReviewCenter()
+          }
+        }
+
+        Item {
+          height: root.barFontSize
+          width: root.barFontSize
+
+          LucideIcon {
+            anchors.fill: parent
             source: root.icon("bell")
             color: root.doNotDisturb ? root.urgent : root.foreground
           }
@@ -1001,6 +1069,7 @@ Scope {
               root.closeConnectivity()
               controlCenter.requestClose()
               root.closeDateTime()
+              root.closeGitHubReviewCenter()
               notificationCenter.requestOpen()
               root.notificationCenterOpen = true
               root.cancelHoverClose()
@@ -1024,6 +1093,7 @@ Scope {
               root.closeConnectivity()
               root.closeDateTime()
               notificationCenter.requestClose()
+              root.closeGitHubReviewCenter()
               root.notificationCenterOpen = false
               controlCenter.requestOpen()
               root.cancelHoverClose()
