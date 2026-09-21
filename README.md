@@ -57,6 +57,11 @@ Each package, group, service, and config-link stage requires confirmation.
 Only resources previously recorded in dotpkg's adjacent `state.yaml` are
 eligible for removal.
 
+Existing installs keep their local manifest so package selections and local
+changes are not overwritten. Run `./linux/install/sync --refresh-manifest` to
+adopt the repository's current `packages.yaml`; the previous local manifest is
+saved beside it with a timestamped `.bak` suffix.
+
 One-off setup that cannot be expressed as manifest resources (user directories,
 login shell, timezone, font/cache refreshes) is collected in
 `./linux/install/post`.

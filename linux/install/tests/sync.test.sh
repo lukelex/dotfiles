@@ -8,6 +8,8 @@ trap 'rm -rf "$temporary"' EXIT
 
 cp -a "$repo_root/linux" "$temporary/linux"
 mkdir -p "$temporary/bin" "$temporary/home" "$temporary/linux/hosts"
+mkdir -p "$temporary/home/.config/dotpkg"
+printf 'local manifest\n' > "$temporary/home/.config/dotpkg/package.yaml"
 printf '{}\n' > "$temporary/linux/hosts/laptop.yaml"
 printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/linux/install/preflight"
 printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/linux/install/bootstrap-yay"
@@ -16,7 +18,7 @@ printf '%s\n' '#!/usr/bin/bash' 'printf "%s\\n" "$@" > "$DOTPKG_TEST_ARGS"' > "$
 chmod +x "$temporary/linux/install/preflight" "$temporary/linux/install/bootstrap-yay" "$temporary/linux/install/binaries" "$temporary/bin/dotpkg"
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
-  XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
+  XDG_CONFIG_HOME="$temporary/home/.config" XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
   DOTPKG_YES=1 DOTPKG_TEST_ARGS="$temporary/full-args" DOTPKG_TEST_HELPERS="$temporary/helpers" \
   bash "$temporary/linux/install/sync" --desktop --host laptop --dry-run --replace --restart-services
 cat > "$temporary/expected-full" <<EOF
@@ -48,5 +50,12 @@ server
 EOF
 cmp "$temporary/expected-packages" "$temporary/packages-args"
 cmp <(printf 'binaries\n') "$temporary/helpers"
+
+PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
+  XDG_CONFIG_HOME="$temporary/home/.config" XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
+  DOTPKG_TEST_ARGS="$temporary/refresh-args" DOTPKG_TEST_HELPERS="$temporary/helpers" \
+  bash "$temporary/linux/install/sync" --server --packages-only --refresh-manifest
+cmp "$temporary/linux/packages.yaml" "$temporary/home/.config/dotpkg/package.yaml"
+find "$temporary/home/.config/dotpkg" -name 'package.yaml.bak.*' -type f -print -quit | grep -q .
 
 printf 'sync command: ok\n'

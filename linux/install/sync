@@ -16,6 +16,7 @@ Options:
   --server        Reconcile the headless server profile.
   --host NAME     Apply the committed linux/hosts/NAME.yaml overlay.
   --packages-only Reconcile packages only.
+  --refresh-manifest  Replace the local manifest with the repository version, preserving a backup.
   --dry-run       Print proposed changes without changing the system.
   --replace       Replace existing config paths when creating symlinks.
   --restart-services  Restart services backed by config links.
@@ -49,10 +50,22 @@ dotpkg_args=(sync --profile "$INSTALL_PROFILE")
 
 replace=0
 restart_services=0
+refresh_manifest=0
 for arg in "$@"; do
   [ "$arg" = --replace ] && replace=1
   [ "$arg" = --restart-services ] && restart_services=1
+  [ "$arg" = --refresh-manifest ] && refresh_manifest=1
 done
+
+if [ "$refresh_manifest" -eq 1 ]; then
+  manifest_dir="${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg"
+  manifest="$manifest_dir/package.yaml"
+  if ! cmp -s "$DOTFILES/linux/packages.yaml" "$manifest"; then
+    backup="$manifest.bak.$(date +%Y%m%d%H%M%S)"
+    run cp "$manifest" "$backup"
+    run cp "$DOTFILES/linux/packages.yaml" "$manifest"
+  fi
+fi
 
 if [ "$PACKAGES_ONLY" -eq 0 ]; then
   dotpkg_args+=(--resources --root "$DOTFILES")
