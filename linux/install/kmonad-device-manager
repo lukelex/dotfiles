@@ -6,11 +6,12 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 repo_url="https://github.com/lukelex/kmonad-device-manager.git"
+repo_version='v0.3.6'
 repo_dir="$HOME/.local/share/kmonad-device-manager"
 service_link="$HOME/.config/systemd/user/kmonad-device-manager.service"
 
 if [ "$DRY_RUN" -eq 1 ]; then
-  printf 'dry-run: clone %s to %s if needed\n' "$repo_url" "$repo_dir"
+  printf 'dry-run: clone %s at %s to %s if needed\n' "$repo_url" "$repo_version" "$repo_dir"
   printf 'dry-run: install KMonad device manager with %s\n' "$DOT_CONFIG/kmonad"
   exit 0
 fi
@@ -27,12 +28,18 @@ if [ -L "$service_link" ]; then
 fi
 
 if [ -d "$repo_dir/.git" ]; then
-  :
+  if [ -n "$(git -C "$repo_dir" status --porcelain)" ]; then
+    printf 'KMonad device manager checkout has local changes: %s\n' "$repo_dir" >&2
+    exit 1
+  fi
+  git -C "$repo_dir" fetch --depth 1 origin \
+    "refs/tags/$repo_version:refs/tags/$repo_version"
+  git -C "$repo_dir" checkout --detach "$repo_version"
 elif [ -e "$repo_dir" ]; then
   printf 'KMonad device manager path exists but is not a git repository: %s\n' "$repo_dir" >&2
   exit 1
 else
-  git clone "$repo_url" "$repo_dir"
+  git clone --branch "$repo_version" --depth 1 "$repo_url" "$repo_dir"
 fi
 
 "$repo_dir/install.sh" --config-dir "$DOT_CONFIG/kmonad"
