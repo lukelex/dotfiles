@@ -1,5 +1,6 @@
 return {
   "lukelex/railscasts.nvim",
+  version = "v1",
   priority = 1000,
   dependencies = {
     "rktjmp/lush.nvim",
