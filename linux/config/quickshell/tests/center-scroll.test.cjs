@@ -62,3 +62,10 @@ test('scroll clamps at the shortened bottom and respects user scrolling', () => 
   restore();
   assert.equal(historyView.contentY, 50);
 });
+
+test('Clear all fades each notification group parent with card dismissal timing', () => {
+  assert.match(source, /function startClearAllDismiss\(\) \{\s*clearAllDismissAnimation\.start\(\)/);
+  assert.match(source, /OpacityAnimator \{\s*id: clearAllDismissAnimation\s*target: notificationGroup\s*to: 0\s*duration: 200\s*easing\.type: Easing\.OutCubic/);
+  assert.match(source, /function startClearAllDismissals\(\)[^]*?group\.startClearAllDismiss\(\)/);
+  assert.match(source, /popup\.startClearAllDismissals\(\)\s*clearAllAnimation\.start\(\)/);
+});

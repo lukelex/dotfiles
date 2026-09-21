@@ -538,6 +538,19 @@ PopupWindow {
       easing.type: Easing.InCubic
     }
 
+    function startClearAllDismiss() {
+      clearAllDismissAnimation.start()
+    }
+
+    OpacityAnimator {
+      id: clearAllDismissAnimation
+
+      target: notificationGroup
+      to: 0
+      duration: 200
+      easing.type: Easing.OutCubic
+    }
+
     Item {
       id: groupHeader
 
@@ -787,6 +800,14 @@ PopupWindow {
         historyView.contentHeight - historyView.height))
   }
 
+  function startClearAllDismissals() {
+    for (let index = 0; index < historyGroups.count; index++) {
+      const group = historyGroups.itemAt(index)
+      if (group)
+        group.startClearAllDismiss()
+    }
+  }
+
   // Keep the same card in place through height animations, but never fight scrolling.
   Timer {
     id: anchorRelease
@@ -975,6 +996,7 @@ PopupWindow {
           enabled: !clearAllAnimation.running
           onClicked: {
             popup.clearingRecords = service.history.slice()
+            popup.startClearAllDismissals()
             clearAllAnimation.start()
           }
           visible: service.history.length > 0
