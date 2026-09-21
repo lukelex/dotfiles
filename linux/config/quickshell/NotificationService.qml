@@ -260,6 +260,8 @@ QtObject {
     else if (notification.urgency === NotificationUrgency.Low)
       urgency = "low"
 
+    urgency = service.effectiveUrgency(notification, urgency)
+
     return {
       id: notification.id,
       tag: tag,
@@ -278,11 +280,20 @@ QtObject {
   }
 
   function computeExpiry(notification, urgency) {
-    if (urgency === "critical" || notification.expireTimeout === 0)
+    if (urgency === "critical")
       return 0
+    if (notification.expireTimeout === 0)
+      return service.isTeamsNotification(notification) ? Date.now() + 20000 : 0
     if (notification.expireTimeout > 0)
       return Date.now() + notification.expireTimeout
     return Date.now() + 20000
+  }
+
+  function effectiveUrgency(notification, urgency) {
+    if (urgency === "critical" && service.isTeamsNotification(notification)
+        && !service.isTeamsUrgent(notification))
+      return "normal"
+    return urgency
   }
 
   function addHistory(record) {
@@ -561,9 +572,21 @@ QtObject {
   }
 
   function isTeamsNotification(record) {
+    const appName = String(record.appName || "")
+    const desktopEntry = String(record.desktopEntry || "")
     const body = String(record.body || "")
-    return service.isBrowserIcon(record.appIcon)
-      && /(?:^|\n)teams(?:\.cloud)?\.microsoft(?:\.com)?(?:\n|$)/i.test(body)
+    return /microsoft teams|teams\.microsoft/i.test(appName)
+      || /(?:^|\n)teams(?:\.cloud)?\.microsoft(?:\.com)?(?:\n|$)/i.test(body)
+      || (/teams/i.test(desktopEntry) && service.isBrowserIcon(record.appIcon))
+  }
+
+  function isTeamsUrgent(record) {
+    const hints = record.hints || {}
+    const priority = String(hints["teams-priority"] || hints.priority || "")
+    const text = String(record.summary || "") + "\n" + String(record.body || "")
+    return /^(?:urgent|high[- ]priority)$/i.test(priority)
+      || /(?:^|\b)(?:urgent message|priority message|high[- ]priority)\b/i.test(text)
+      || /\bincoming (?:audio |video )?call\b/i.test(text)
   }
 
   function displayBody(record) {

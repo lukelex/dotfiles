@@ -20,7 +20,7 @@ function serviceForTest() {
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
   const context = vm.createContext({ service, Date });
-  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'syncPopup', 'dismissRecords']) {
+  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -79,6 +79,40 @@ test('timeouts use milliseconds and zero stays persistent', () => {
   assert.ok(expiry >= before + 1000 && expiry <= Date.now() + 1000);
   assert.equal(service.computeExpiry({ expireTimeout: 0 }, 'normal'), 0);
   assert.equal(service.computeExpiry({ expireTimeout: 1000 }, 'critical'), 0);
+});
+
+test('ordinary Teams critical notifications are treated as normal', () => {
+  const { service } = serviceForTest();
+  const teams = {
+    appName: 'Chromium',
+    appIcon: 'chromium',
+    body: 'teams.microsoft.com\n\nCan you review this?'
+  };
+
+  assert.equal(service.isTeamsNotification(teams), true);
+  assert.equal(service.effectiveUrgency(teams, 'critical'), 'normal');
+  assert.ok(service.computeExpiry({ ...teams, expireTimeout: 0 }, 'normal') > Date.now());
+});
+
+test('explicitly urgent Teams notifications stay critical', () => {
+  const { service } = serviceForTest();
+  const teams = {
+    appName: 'Microsoft Teams',
+    summary: 'Urgent message from Mira',
+    body: 'Please join now.'
+  };
+
+  assert.equal(service.isTeamsUrgent(teams), true);
+  assert.equal(service.effectiveUrgency(teams, 'critical'), 'critical');
+  assert.equal(service.computeExpiry({ ...teams, expireTimeout: 0 }, 'critical'), 0);
+});
+
+test('non-Teams critical notifications remain critical', () => {
+  const { service } = serviceForTest();
+  const notification = { appName: 'PagerDuty', summary: 'Incident', body: 'Production is down' };
+
+  assert.equal(service.isTeamsNotification(notification), false);
+  assert.equal(service.effectiveUrgency(notification, 'critical'), 'critical');
 });
 
 test('hover protects an overdue notification from a full burst', () => {
