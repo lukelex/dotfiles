@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell
 import QtQuick
 import QtQml
@@ -301,7 +303,7 @@ PopupWindow {
             color: card.controller.controlSecondaryText
             font.family: card.controller.fontFamily
             font.pixelSize: 10
-            text: service.timeAgo(card.record)
+            text: popup.service.timeAgo(card.record)
           }
 
           DismissButton {
@@ -346,6 +348,8 @@ PopupWindow {
             model: card.record.actions
 
             delegate: Item {
+              id: actionDelegate
+
               required property var modelData
               required property int index
 
@@ -365,13 +369,13 @@ PopupWindow {
                 color: card.controller.controlPrimaryText
                 font.family: card.controller.fontFamily
                 font.pixelSize: 11
-                text: modelData.text
+                text: actionDelegate.modelData.text
               }
 
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: service.invokeAction(card.record.id, modelData.sourceIndex)
+              onClicked: popup.service.invokeAction(card.record.id, actionDelegate.modelData.sourceIndex)
               }
             }
           }
@@ -674,12 +678,14 @@ PopupWindow {
         model: recordModel
 
         delegate: NotificationCard {
+          id: historyCard
+
           required property int index
           required property var notification
 
           controller: notificationGroup.controller
           groupDismissing: notificationGroup.dismissing
-          groupDismissDelay: 60 + Math.max(0, index) * 70
+          groupDismissDelay: 60 + Math.max(0, historyCard.index) * 70
           groupDismissOffset: 0
           opacity: !notificationGroup.grouped || notificationGroup.expanded ? 1 : 0
           record: notification
@@ -688,7 +694,7 @@ PopupWindow {
 
           Behavior on opacity {
             SequentialAnimation {
-              PauseAnimation { duration: notificationGroup.expanded ? Math.max(0, index) * 70 : 0 }
+              PauseAnimation { duration: notificationGroup.expanded ? Math.max(0, historyCard.index) * 70 : 0 }
               NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
             }
           }
@@ -995,11 +1001,11 @@ PopupWindow {
           emphasized: true
           enabled: !clearAllAnimation.running
           onClicked: {
-            popup.clearingRecords = service.history.slice()
+            popup.clearingRecords = popup.service.history.slice()
             popup.startClearAllDismissals()
             clearAllAnimation.start()
           }
-          visible: service.history.length > 0
+          visible: popup.service.history.length > 0
         }
       }
 
@@ -1050,7 +1056,7 @@ PopupWindow {
         Column {
           anchors.centerIn: parent
           spacing: 8
-          visible: service.history.length === 0
+          visible: popup.service.history.length === 0
 
           Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter

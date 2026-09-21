@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell
 import QtQuick
 import QtQml
@@ -331,7 +333,7 @@ PopupWindow {
           color: toast.controller.controlSecondaryText
           font.family: toast.controller.fontFamily
           font.pixelSize: 10
-          text: service.timeAgo(toast.record)
+          text: popup.service.timeAgo(toast.record)
         }
       }
 
@@ -374,6 +376,8 @@ PopupWindow {
           model: toast.record.actions
 
           delegate: Item {
+            id: actionDelegate
+
             required property var modelData
             required property int index
 
@@ -393,13 +397,13 @@ PopupWindow {
               color: toast.controller.controlPrimaryText
               font.family: toast.controller.fontFamily
               font.pixelSize: 11
-              text: modelData.text
+              text: actionDelegate.modelData.text
             }
 
             MouseArea {
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
-              onClicked: service.invokeAction(toast.record.id, modelData.sourceIndex)
+              onClicked: popup.service.invokeAction(toast.record.id, actionDelegate.modelData.sourceIndex)
             }
           }
         }
@@ -669,6 +673,8 @@ PopupWindow {
         model: recordModel
 
         delegate: NotificationToast {
+          id: expandedCard
+
           required property int index
           required property var notification
 
@@ -681,19 +687,19 @@ PopupWindow {
           record: notification || popup.emptyRecord
           service: stack.service
           urgentAttention: notification && notification.urgency === "critical"
-          unfoldOffset: stack.expanded ? 0 : 16 + index * 3
-          y: expandedColumn.cardY(index, height)
+          unfoldOffset: stack.expanded ? 0 : 16 + expandedCard.index * 3
+          y: expandedColumn.cardY(expandedCard.index, height)
 
           Behavior on unfoldOffset {
             NumberAnimation {
-              duration: 360 + index * 70
+              duration: 360 + expandedCard.index * 70
               easing.type: Easing.OutCubic
             }
           }
 
           Behavior on opacity {
             SequentialAnimation {
-              PauseAnimation { duration: stack.expanded ? index * 140 : 0 }
+              PauseAnimation { duration: stack.expanded ? expandedCard.index * 140 : 0 }
               NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
             }
           }

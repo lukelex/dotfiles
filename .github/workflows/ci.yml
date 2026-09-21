@@ -47,7 +47,15 @@ jobs:
       - name: Lint Quickshell QML
         run: |
           qmllint_bin="$(command -v qmllint || printf '%s' /usr/lib/qt6/bin/qmllint)"
-          "$qmllint_bin" linux/config/quickshell/*.qml
+          # Standalone Qt lacks Quickshell's full native type metadata. Keep
+          # those environment-dependent diagnostics visible as info, while
+          # failing on all other QML warnings.
+          "$qmllint_bin" --max-warnings 0 \
+            --missing-property info \
+            --unresolved-type info \
+            --signal-handler-parameters info \
+            --uncreatable-type info \
+            linux/config/quickshell/*.qml
 
   installer-tests:
     runs-on: ubuntu-latest
