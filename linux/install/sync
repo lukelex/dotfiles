@@ -31,6 +31,7 @@ done
 
 source "$install_dir/common.sh" "$@"
 "$install_dir/preflight" "$@"
+"$install_dir/bootstrap-yay" "$@"
 
 dotpkg_bin="${DOTPKG_BIN:-}"
 if [ -z "$dotpkg_bin" ]; then

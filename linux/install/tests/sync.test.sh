@@ -10,8 +10,9 @@ cp -a "$repo_root/linux" "$temporary/linux"
 mkdir -p "$temporary/bin" "$temporary/home" "$temporary/linux/hosts"
 printf '{}\n' > "$temporary/linux/hosts/laptop.yaml"
 printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/linux/install/preflight"
+printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/linux/install/bootstrap-yay"
 printf '%s\n' '#!/usr/bin/bash' 'printf "%s\\n" "$@" > "$DOTPKG_TEST_ARGS"' > "$temporary/bin/dotpkg"
-chmod +x "$temporary/linux/install/preflight" "$temporary/bin/dotpkg"
+chmod +x "$temporary/linux/install/preflight" "$temporary/linux/install/bootstrap-yay" "$temporary/bin/dotpkg"
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \

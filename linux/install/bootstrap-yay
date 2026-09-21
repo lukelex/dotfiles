@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
+if command -v yay > /dev/null 2>&1; then
+  exit 0
+fi
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  printf 'dry-run: install base-devel and git with pacman, then build yay from the AUR\n'
+  exit 0
+fi
+
+printf 'yay is required to reconcile this manifest. Bootstrapping it from the AUR.\n'
+sudo pacman -S --needed base-devel git
+
+temporary="$(mktemp -d)"
+trap 'rm -rf "$temporary"' EXIT
+git clone --depth 1 https://aur.archlinux.org/yay.git "$temporary/yay"
+(
+  cd "$temporary/yay"
+  makepkg --syncdeps --install --needed
+)
