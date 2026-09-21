@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 usage() {
-  printf 'Usage: %s {battery|network|vpn|audio|dnd|media}\n' "${0##*/}" >&2
+  printf 'Usage: %s {battery|network|vpn|audio|dnd|media|privacy}\n' "${0##*/}" >&2
   exit 2
 }
 
@@ -85,6 +85,22 @@ media() {
   printf '%s %s%s\n' "$prefix" "$title" "${artist:+ · $artist}"
 }
 
+privacy() {
+  local indicators=()
+
+  if command -v wpctl > /dev/null 2>&1 \
+      && wpctl inspect @DEFAULT_AUDIO_SOURCE@ 2> /dev/null | grep -q 'node.state = "running"'; then
+    indicators+=("󰍬 Microphone active")
+  fi
+
+  if command -v fuser > /dev/null 2>&1 && compgen -G '/dev/video*' > /dev/null \
+      && fuser /dev/video* > /dev/null 2>&1; then
+    indicators+=("󰄀 Camera active")
+  fi
+
+  (IFS=' · '; printf '%s\n' "${indicators[*]}")
+}
+
 case "${1:-}" in
   battery) battery ;;
   network) network ;;
@@ -92,5 +108,6 @@ case "${1:-}" in
   audio) audio ;;
   dnd) dnd ;;
   media) media ;;
+  privacy) privacy ;;
   *) usage ;;
 esac
