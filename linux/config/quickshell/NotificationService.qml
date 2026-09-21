@@ -77,7 +77,7 @@ QtObject {
 
   property Settings settings: Settings {
     id: settings
-    location: "file:///home/lukas/.local/state/dotfiles/notifications.conf"
+    location: "file://" + Quickshell.env("HOME") + "/.local/state/dotfiles/notifications.conf"
     property string historyJson: "[]"
     property bool doNotDisturb: false
 

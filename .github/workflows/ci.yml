@@ -60,6 +60,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Check whitespace and conflict markers
-        run: git diff --check HEAD^ HEAD || exit 0
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          [ -n "$base" ] || base="${{ github.event.before }}"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            # Initial push or event payload without a base; use the parent of HEAD.
+            base="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          fi
+          if [ -n "$base" ]; then
+            git diff --check "$base" HEAD
+          else
+            git show --check --format= HEAD
+          fi
