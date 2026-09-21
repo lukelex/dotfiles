@@ -7,6 +7,7 @@ template="$dotfiles/linux/config/hypr/hyprlock.conf"
 theme_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/color-scheme"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles"
 config="$cache_dir/hyprlock.conf"
+primary_monitor=$(hyprctl monitors -j 2> /dev/null | jq -r '.[] | select(.focused) | .name' 2> /dev/null | head -n 1 || true)
 
 theme=dark
 if [ -r "$theme_file" ] && [ "$(tr -d '[:space:]' < "$theme_file")" = light ]; then
@@ -42,9 +43,13 @@ if [ "$theme" = light ]; then
     -e 's/rgb(62, 89, 120)/rgb(201, 225, 247)/g' \
     -e 's/rgb(140, 174, 216)/rgb(92, 148, 200)/g' \
     -e "s/$tint_target/$tint_color/g" \
+    -e "s/@PRIMARY_MONITOR@/$primary_monitor/g" \
     "$template" > "$config"
 else
-  sed -e "s/$tint_target/$tint_color/g" "$template" > "$config"
+  sed \
+    -e "s/$tint_target/$tint_color/g" \
+    -e "s/@PRIMARY_MONITOR@/$primary_monitor/g" \
+    "$template" > "$config"
 fi
 
 exec hyprlock --config "$config" "$@"
