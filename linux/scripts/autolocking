@@ -20,15 +20,19 @@ function clear_warning {
 }
 
 function should_lock {
-  local window_id
-  local fullscreen_window
-
-  window_id=$(xprop -root | grep "_NET_ACTIVE_WINDOW" | head -n 1 | awk '{print $5}')
-  fullscreen_window=$(xprop -id "$window_id" 2> /dev/null | grep -E "_NET_WM_STATE\(ATOM\).+?_NET_WM_STATE_FULLSCREEN" || true)
-
-  if [[ -z $fullscreen_window ]]; then
-    echo "yes"
-  fi
+  case "$XDG_SESSION_TYPE" in
+    x11)
+      local window_id fullscreen_window
+      window_id=$(xprop -root | grep "_NET_ACTIVE_WINDOW" | head -n 1 | awk '{print $5}')
+      fullscreen_window=$(xprop -id "$window_id" 2> /dev/null | grep -E "_NET_WM_STATE\(ATOM\).+?_NET_WM_STATE_FULLSCREEN" || true)
+      [[ -z $fullscreen_window ]] && echo "yes"
+      ;;
+    wayland)
+      local fullscreen
+      fullscreen=$(hyprctl activewindow -j 2> /dev/null | jq -r '.fullscreen // 0' 2> /dev/null || echo 0)
+      [[ $fullscreen == 0 ]] && echo "yes"
+      ;;
+  esac
 }
 
 case $1 in
