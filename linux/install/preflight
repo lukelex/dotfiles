@@ -23,6 +23,8 @@ printf 'Preflight\n'
 check "not running as root" test "$(id -u)" -ne 0
 check "sudo is available" command -v sudo
 check "running on Arch Linux (pacman found)" command -v pacman
+check "curl is available to download dotpkg" command -v curl
+check "sha256sum is available to verify dotpkg" command -v sha256sum
 check "repo root matches installer" test "$dotfiles" = "$DOTFILES"
 check "repo is installed at \$HOME/dotfiles" test "$dotfiles" = "$HOME/dotfiles"
 if ! is_server; then
