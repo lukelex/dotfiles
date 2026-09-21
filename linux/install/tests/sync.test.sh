@@ -11,12 +11,13 @@ mkdir -p "$temporary/bin" "$temporary/home" "$temporary/linux/hosts"
 printf '{}\n' > "$temporary/linux/hosts/laptop.yaml"
 printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/linux/install/preflight"
 printf '%s\n' '#!/usr/bin/bash' 'exit 0' > "$temporary/linux/install/bootstrap-yay"
+printf '%s\n' '#!/usr/bin/bash' 'printf "%s\\n" binaries >> "$DOTPKG_TEST_HELPERS"' > "$temporary/linux/install/binaries"
 printf '%s\n' '#!/usr/bin/bash' 'printf "%s\\n" "$@" > "$DOTPKG_TEST_ARGS"' > "$temporary/bin/dotpkg"
-chmod +x "$temporary/linux/install/preflight" "$temporary/linux/install/bootstrap-yay" "$temporary/bin/dotpkg"
+chmod +x "$temporary/linux/install/preflight" "$temporary/linux/install/bootstrap-yay" "$temporary/linux/install/binaries" "$temporary/bin/dotpkg"
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
-  DOTPKG_YES=1 DOTPKG_TEST_ARGS="$temporary/full-args" \
+  DOTPKG_YES=1 DOTPKG_TEST_ARGS="$temporary/full-args" DOTPKG_TEST_HELPERS="$temporary/helpers" \
   bash "$temporary/linux/install/sync" --desktop --host laptop --dry-run --replace --restart-services
 cat > "$temporary/expected-full" <<EOF
 sync
@@ -33,10 +34,11 @@ $temporary
 --restart-services
 EOF
 cmp "$temporary/expected-full" "$temporary/full-args"
+cmp <(printf 'binaries\n') "$temporary/helpers"
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
-  DOTPKG_TEST_ARGS="$temporary/packages-args" \
+  DOTPKG_TEST_ARGS="$temporary/packages-args" DOTPKG_TEST_HELPERS="$temporary/helpers" \
   bash "$temporary/linux/install/sync" --server --packages-only --dry-run
 cat > "$temporary/expected-packages" <<EOF
 sync
@@ -45,5 +47,6 @@ server
 --dry-run
 EOF
 cmp "$temporary/expected-packages" "$temporary/packages-args"
+cmp <(printf 'binaries\n') "$temporary/helpers"
 
 printf 'sync command: ok\n'

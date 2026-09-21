@@ -60,4 +60,8 @@ if [ "$PACKAGES_ONLY" -eq 0 ]; then
   [ "$restart_services" -eq 1 ] && dotpkg_args+=(--restart-services)
 fi
 
-exec "$dotpkg_bin" "${dotpkg_args[@]}"
+"$dotpkg_bin" "${dotpkg_args[@]}"
+
+if ! is_server && [ "$PACKAGES_ONLY" -eq 0 ]; then
+  "$install_dir/binaries" "$@"
+fi
