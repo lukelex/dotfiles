@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import Quickshell.I3
 import Quickshell.Io
 import Quickshell.Wayland
+import QtCore
 import QtQuick
 
 Scope {
@@ -276,13 +277,17 @@ Scope {
     lockScreenProcess.startDetached()
   }
 
+  function applyKeepAwake(value) {
+    root.keepAwake = value
+    if (!root.hyprlandSession && !keepAwakeProcess.running)
+      keepAwakeProcess.running = true
+  }
+
   function toggleKeepAwake() {
     if (keepAwakeProcess.running)
       return
 
-    root.keepAwake = !root.keepAwake
-    if (!root.hyprlandSession)
-      keepAwakeProcess.running = true
+    keepAwakeSettings.keepAwake = !root.keepAwake
   }
 
   function toggleTheme() {
@@ -386,6 +391,13 @@ Scope {
     command: ["sh", "-c", root.keepAwake
       ? "xautolock -disable; xset s off -dpms"
       : "xautolock -enable; xset s on +dpms; xset dpms 1200 0 0"]
+  }
+
+  property Settings keepAwakeSettings: Settings {
+    id: keepAwakeSettings
+    location: "file://" + Quickshell.env("HOME") + "/.local/state/dotfiles/keep-awake.conf"
+    property bool keepAwake: false
+    onKeepAwakeChanged: root.applyKeepAwake(keepAwakeSettings.keepAwake)
   }
 
   Process {
