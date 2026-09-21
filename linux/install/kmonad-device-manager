@@ -6,7 +6,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 source "$HOME/dotfiles/linux/variables.env"
 
 repo_url="https://github.com/lukelex/kmonad-device-manager.git"
-repo_version='v0.3.6'
+repo_version='v0.6.0'
 repo_dir="$HOME/.local/share/kmonad-device-manager"
 service_link="$HOME/.config/systemd/user/kmonad-device-manager.service"
 
