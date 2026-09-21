@@ -44,7 +44,7 @@ test('lock notification renderer emits themed cards with escaped content', () =>
     assert.match(result.source, /^<svg [^>]+>/);
     assert.match(result.source, /fill="#E8EBEF"/);
     assert.match(result.source, /&lt;Unsafe&gt;/);
-    assert.match(result.source, /&lt;two&gt; &amp; more/);
+    assert.doesNotMatch(result.source, /first &lt;two&gt; &amp; more words/);
     assert.doesNotMatch(result.source, /teams\.cloud\.microsoft/);
     assert.match(result.source, /#5059c9/);
     assert.doesNotMatch(result.source, /<b>|<span /);

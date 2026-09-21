@@ -38,31 +38,6 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
   def clip($limit):
     if length > $limit then .[0:($limit - 3)] + "..." else . end;
 
-  def displayBody($record):
-    (($record.body // "") | tostring) as $body
-    | if (($record.browserNotification // false)
-         or (($record.appIcon // "") | tostring | ascii_downcase | test("brave|chromium|firefox|google-chrome|google[.]chrome|microsoft-edge"))
-         or (($record.appName // "") | tostring | ascii_downcase | test("brave|chromium|firefox|google-chrome|google[.]chrome|microsoft-edge"))
-         or (($record.appName // "") | tostring | ascii_downcase | test("microsoft teams"))) then
-        ($body | sub("^[^\\n]+\\n[ \\t]*"; ""))
-      else $body end;
-
-  def wrap($width):
-    if . == "" then
-      []
-    else
-      reduce (split(" ")[]) as $word
-        ({lines: [], line: ""};
-          if .line == "" then
-            .line = $word
-          elif ((.line | length) + 1 + ($word | length) <= $width) then
-            .line += " " + $word
-          else
-            .lines += [.line] | .line = $word
-          end)
-      | if .line == "" then .lines else .lines + [.line] end
-    end;
-
   def age($time):
     ((now | floor) - (($time // 0) | tonumber? // 0)) as $seconds
     | (if $seconds < 0 then 0 else $seconds end) as $value
@@ -73,8 +48,7 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
       else (($value / 604800 | floor) | tostring) + "w"
       end;
 
-  def cardHeight($record):
-    64 + (if ($record.bodyLines | length) == 0 then 0 else 3 + 14 * ($record.bodyLines | length) end);
+   def cardHeight($record): 64;
 
   def icon($record; $x; $y; $primary):
     if (($record.app | ascii_downcase) | contains("microsoft teams")) then
@@ -109,14 +83,7 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
          "<text x=\"88\" y=\"" + (($y + 48) | tostring) + "\" fill=\"" + $colors.primary + "\" font-size=\"12\">"
           + ($record.summary | @html) + "</text>"
        end)
-    + (if ($record.bodyLines | length) == 0 then "" else
-         "<text x=\"88\" y=\"" + (($y + 65) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"11\">"
-          + ($record.bodyLines | to_entries | map(
-               "<tspan x=\"88\" dy=\"" + (if .key == 0 then "0" else "14" end) + "\">" + (.value | @html) + "</tspan>"
-            ) | join(""))
-          + "</text>"
-       end)
-     + "<rect x=\"24\" y=\"" + ($y | tostring) + "\" width=\"552\" height=\"" + ($height | tostring)
+      + "<rect x=\"24\" y=\"" + ($y | tostring) + "\" width=\"552\" height=\"" + ($height | tostring)
       + "\" rx=\"18\" fill=\"none\" stroke=\"" + $colors.border + "\" stroke-width=\"1\"/>";
 
   (if $theme == "light" then
@@ -128,13 +95,10 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
   | map(select(type == "object" and ((.summary // "") | type == "string")))
    | .[0:4]
   | map(
-      ((displayBody(.) | clean | clip(120))) as $body
-      | ($body | wrap(56) | .[0:2]) as $bodyLines
-      | {
-          app: ((.appName // "Notification") | tostring | clean | clip(32)),
-          summary: ((.summary // "") | clean | clip(58)),
-          bodyLines: $bodyLines,
-          critical: ((.urgency // "") == "critical"),
+       {
+           app: ((.appName // "Notification") | tostring | clean | clip(32)),
+           summary: ((.summary // "") | clean | clip(58)),
+           critical: ((.urgency // "") == "critical"),
           time: age(.time)
         }
     ) as $records
