@@ -4,7 +4,7 @@
 
 - [x] Show a persistent "Screen will lock in 10 seconds" warning before idle locking in X11 and Hyprland.
 - [x] Dismiss the idle-lock warning when activity resumes or locking begins.
-- [ ] Add a 60-second advance idle-lock warning.
+- [x] Add a 60-second advance idle-lock warning.
 - [ ] Defer idle locking while Hyprland has an active fullscreen window or idle inhibitor.
 - [ ] Show concise feedback while the lock screen is launching.
 - [ ] Hide notification message bodies on the lock screen.
