@@ -6,17 +6,89 @@ source "$HOME/dotfiles/linux/variables.env"
 
 function show_warning {
   case "$XDG_SESSION_TYPE" in
-    x11|wayland) notify-send -a System \
+    x11) notify-send -a System \
         -i "$LUCIDE_PATH/alarm-clock.svg" \
         -h string:wired-tag:lock-warning \
         -t 0 \
         "Screen will lock in $1 seconds" ;;
+    wayland)
+      if should_defer; then
+        clear_warning
+      else
+        notify-send -a System \
+          -i "$LUCIDE_PATH/alarm-clock.svg" \
+          -h string:wired-tag:lock-warning \
+          -t 0 \
+          "Screen will lock in $1 seconds"
+      fi
+      ;;
   esac
+}
+
+function deferred_lock_pid_file {
+  printf '%s/autolocking-deferred.pid\n' "${XDG_RUNTIME_DIR:-$HOME/.cache}"
+}
+
+function cancel_deferred_lock {
+  local pid_file pid
+  pid_file=$(deferred_lock_pid_file)
+  if [[ -r $pid_file ]]; then
+    pid=$(cat "$pid_file")
+    kill "$pid" 2> /dev/null || true
+    rm -f "$pid_file"
+  fi
 }
 
 function clear_warning {
   qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" \
     ipc call notifications dismissTag lock-warning 2> /dev/null || true
+  cancel_deferred_lock
+}
+
+function should_defer {
+  [[ $XDG_SESSION_TYPE == wayland ]] || return 1
+
+  local fullscreen
+  fullscreen=$(hyprctl activewindow -j 2> /dev/null | jq -r '.fullscreen // 0' 2> /dev/null || echo 0)
+  [[ $fullscreen != 0 ]] && return 0
+
+  if command -v playerctl > /dev/null 2>&1 \
+      && [[ $(playerctl status 2> /dev/null || true) == Playing ]]; then
+    return 0
+  fi
+
+  if command -v wpctl > /dev/null 2>&1 \
+      && wpctl inspect @DEFAULT_AUDIO_SOURCE@ 2> /dev/null | grep -q 'node.state = "running"'; then
+    return 0
+  fi
+
+  if command -v fuser > /dev/null 2>&1 && compgen -G '/dev/video*' > /dev/null \
+      && fuser /dev/video* > /dev/null 2>&1; then
+    return 0
+  fi
+
+  return 1
+}
+
+function wait_for_idle {
+  local pid_file pid_file_directory
+  pid_file=$(deferred_lock_pid_file)
+  pid_file_directory=${pid_file%/*}
+  mkdir -p "$pid_file_directory"
+  if [[ -r $pid_file ]] && kill -0 "$(cat "$pid_file")" 2> /dev/null; then
+    return
+  fi
+
+  (
+    while should_defer; do
+      sleep 15
+    done
+    if [[ -n "$(should_lock)" ]]; then
+      u_exit lock
+    fi
+    rm -f "$pid_file"
+  ) &
+  printf '%s\n' "$!" > "$pid_file"
 }
 
 function should_lock {
@@ -28,9 +100,7 @@ function should_lock {
       [[ -z $fullscreen_window ]] && echo "yes"
       ;;
     wayland)
-      local fullscreen
-      fullscreen=$(hyprctl activewindow -j 2> /dev/null | jq -r '.fullscreen // 0' 2> /dev/null || echo 0)
-      [[ $fullscreen == 0 ]] && echo "yes"
+      ! should_defer && echo "yes"
       ;;
   esac
 }
@@ -38,6 +108,12 @@ function should_lock {
 case $1 in
   warn) show_warning "$2" ;;
   clear-warning) clear_warning ;;
-  lock) [ ! -z "$(should_lock)" ] && u_exit lock ;;
+  lock)
+    if [[ -n "$(should_lock)" ]]; then
+      u_exit lock
+    else
+      wait_for_idle
+    fi
+    ;;
   *) exit 0 ;;
 esac

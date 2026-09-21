@@ -8,7 +8,7 @@
 - [x] Improve keyboard-state feedback, including Num Lock and failed-password guidance.
 - [x] Polish multi-monitor locking with a primary authentication surface and secondary status displays.
 - [x] Add a smooth unlock transition.
-- [ ] Defer idle locking for calls, presentations, fullscreen video, and media playback.
+- [x] Defer idle locking for calls, presentations, fullscreen video, and media playback.
 - [ ] Add a private lock-screen mode that hides notification titles.
 - [ ] Add low-power OLED burn-in mitigation while locked.
 - [ ] Consider authenticated emergency power controls.
