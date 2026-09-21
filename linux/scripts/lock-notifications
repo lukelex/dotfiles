@@ -90,33 +90,33 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
         + " fill=\"none\" stroke=\"" + $primary + "\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
     end;
 
-  def card($record; $y; $colors):
+   def card($record; $y; $colors):
     (if $record.critical then $colors.urgent else $colors.active end) as $iconColor
     | (cardHeight($record)) as $height
-    | "<rect x=\"168\" y=\"" + ($y | tostring) + "\" width=\"432\" height=\"" + ($height | tostring)
+     | "<rect x=\"24\" y=\"" + ($y | tostring) + "\" width=\"552\" height=\"" + ($height | tostring)
       + "\" rx=\"18\" fill=\"" + $colors.surface + "\"/>"
     + (if $record.critical then
-        "<rect x=\"169\" y=\"" + (($y + 1) | tostring) + "\" width=\"430\" height=\"" + (($height - 2) | tostring)
+        "<rect x=\"25\" y=\"" + (($y + 1) | tostring) + "\" width=\"550\" height=\"" + (($height - 2) | tostring)
           + "\" rx=\"17\" fill=\"" + $colors.urgent + "\" fill-opacity=\"0.12\"/>"
        else "" end)
-    + "<rect x=\"180\" y=\"" + (($y + 12) | tostring) + "\" width=\"40\" height=\"40\" rx=\"12\" fill=\"" + $iconColor + "\"/>"
-    + icon($record; 190; ($y + 22); $colors.primary)
-    + "<text x=\"232\" y=\"" + (($y + 27) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"10\">"
+     + "<rect x=\"36\" y=\"" + (($y + 12) | tostring) + "\" width=\"40\" height=\"40\" rx=\"12\" fill=\"" + $iconColor + "\"/>"
+     + icon($record; 46; ($y + 22); $colors.primary)
+     + "<text x=\"88\" y=\"" + (($y + 27) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"10\">"
       + ($record.app | @html) + "</text>"
-    + "<text x=\"586\" y=\"" + (($y + 27) | tostring) + "\" text-anchor=\"end\" fill=\"" + $colors.secondary + "\" font-size=\"10\">"
+     + "<text x=\"562\" y=\"" + (($y + 27) | tostring) + "\" text-anchor=\"end\" fill=\"" + $colors.secondary + "\" font-size=\"10\">"
       + ($record.time | @html) + "</text>"
     + (if $record.summary == "" then "" else
-        "<text x=\"232\" y=\"" + (($y + 48) | tostring) + "\" fill=\"" + $colors.primary + "\" font-size=\"12\">"
+         "<text x=\"88\" y=\"" + (($y + 48) | tostring) + "\" fill=\"" + $colors.primary + "\" font-size=\"12\">"
           + ($record.summary | @html) + "</text>"
        end)
     + (if ($record.bodyLines | length) == 0 then "" else
-        "<text x=\"232\" y=\"" + (($y + 65) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"11\">"
+         "<text x=\"88\" y=\"" + (($y + 65) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"11\">"
           + ($record.bodyLines | to_entries | map(
-              "<tspan x=\"232\" dy=\"" + (if .key == 0 then "0" else "14" end) + "\">" + (.value | @html) + "</tspan>"
+               "<tspan x=\"88\" dy=\"" + (if .key == 0 then "0" else "14" end) + "\">" + (.value | @html) + "</tspan>"
             ) | join(""))
           + "</text>"
        end)
-    + "<rect x=\"168\" y=\"" + ($y | tostring) + "\" width=\"432\" height=\"" + ($height | tostring)
+     + "<rect x=\"24\" y=\"" + ($y | tostring) + "\" width=\"552\" height=\"" + ($height | tostring)
       + "\" rx=\"18\" fill=\"none\" stroke=\"" + $colors.border + "\" stroke-width=\"1\"/>";
 
   (if $theme == "light" then
@@ -126,7 +126,7 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
    end) as $colors
   | (if type == "array" then . else [] end)
   | map(select(type == "object" and ((.summary // "") | type == "string")))
-  | .[0:5]
+   | .[0:4]
   | map(
       ((displayBody(.) | clean | clip(120))) as $body
       | ($body | wrap(56) | .[0:2]) as $bodyLines
@@ -138,17 +138,24 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
           time: age(.time)
         }
     ) as $records
-  | ($records | map(cardHeight(.)) | add // 0) as $recordHeight
+   | length as $total
+   | ($records | map(cardHeight(.)) | add // 0) as $recordHeight
   | ($records | length) as $count
   | ($recordHeight + (if $count > 0 then ($count - 1) * 10 else 0 end)) as $listHeight
-  | ((600 - $listHeight) / 2) as $startY
+   | 64 as $startY
   | (reduce $records[] as $record
       ({svg: "", y: $startY};
         .svg += card($record; .y; $colors)
         | .y += cardHeight($record) + 10
       )) as $rendered
   | "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"600\" viewBox=\"0 0 600 600\" font-family=\"Hack Nerd Font Mono, Hack, monospace\">"
-    + $rendered.svg
+     + "<text x=\"24\" y=\"28\" fill=\"" + $colors.primary + "\" font-size=\"16\" font-weight=\"bold\">Notifications</text>"
+     + "<text x=\"576\" y=\"28\" text-anchor=\"end\" fill=\"" + $colors.secondary + "\" font-size=\"12\">"
+     + ($total | tostring) + (if $total == 1 then " message" else " messages" end) + "</text>"
+     + $rendered.svg
+     + (if $total > $count then
+          "<text x=\"24\" y=\"" + (($startY + $listHeight + 24) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"11\">+" + (($total - $count) | tostring) + " more in history</text>"
+        else "" end)
     + "</svg>"
  ' > "$temporary_source"
 

@@ -1,0 +1,82 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+usage() {
+  printf 'Usage: %s {battery|network|vpn|audio|dnd}\n' "${0##*/}" >&2
+  exit 2
+}
+
+battery() {
+  local device details state percentage time
+
+  device=$(upower -e 2>/dev/null | grep -m 1 'BAT' || true)
+  [ -n "$device" ] || return 0
+  details=$(upower -i "$device" 2>/dev/null || true)
+  state=$(awk '/^[[:space:]]*state:/{print $2; exit}' <<< "$details")
+  percentage=$(awk '/^[[:space:]]*percentage:/{print $2; exit}' <<< "$details")
+  time=$(awk '/^[[:space:]]*time to (empty|full):/{print $4 " " $5; exit}' <<< "$details")
+
+  case "$state" in
+    charging) printf '󰂄 %s%s\n' "${percentage:-Battery}" "${time:+ · full in $time}" ;;
+    discharging) printf '󰁹 %s%s\n' "${percentage:-Battery}" "${time:+ · $time left}" ;;
+    fully-charged) printf '󰁹 %s · full\n' "${percentage:-100%}" ;;
+    *) printf '󰁹 %s\n' "${percentage:-Battery}" ;;
+  esac
+}
+
+network() {
+  local connection type
+
+  command -v nmcli > /dev/null 2>&1 || return 0
+  IFS=: read -r connection type < <(nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | head -n 1 || true)
+  [ -n "${connection:-}" ] || { printf '󰤭 Offline\n'; return; }
+
+  case "$type" in
+    wifi) printf '󰤨 %s\n' "$connection" ;;
+    ethernet) printf '󰈀 %s\n' "$connection" ;;
+    *) printf '󰛳 %s\n' "$connection" ;;
+  esac
+}
+
+vpn() {
+  command -v nordvpn > /dev/null 2>&1 || return 0
+
+  if nordvpn status 2>/dev/null | grep -q '^Status: Connected'; then
+    printf '󰦝 VPN connected\n'
+  else
+    printf '󰦞 VPN off\n'
+  fi
+}
+
+audio() {
+  local volume muted
+
+  command -v wpctl > /dev/null 2>&1 || return 0
+  volume=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || true)
+  [ -n "$volume" ] || return 0
+  muted=$(grep -o '\[MUTED\]' <<< "$volume" || true)
+  volume=$(awk '{printf "%d", $2 * 100}' <<< "$volume")
+  if [ -n "$muted" ]; then
+    printf '󰝟 Muted\n'
+  else
+    printf '󰕾 %s%%\n' "$volume"
+  fi
+}
+
+dnd() {
+  local state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/notifications.conf"
+
+  if [ -r "$state_file" ] && grep -q '^doNotDisturb=true$' "$state_file"; then
+    printf '󰂛 Do Not Disturb\n'
+  fi
+}
+
+case "${1:-}" in
+  battery) battery ;;
+  network) network ;;
+  vpn) vpn ;;
+  audio) audio ;;
+  dnd) dnd ;;
+  *) usage ;;
+esac

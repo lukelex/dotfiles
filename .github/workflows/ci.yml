@@ -29,6 +29,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck zsh
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f -print0 | xargs -0 shellcheck -S error
+      - name: Run lock-launcher regression test
+        run: bash linux/scripts/tests/lock-launcher.test.sh
       - name: Check zsh syntax
         run: find linux/config/zsh -type f -print0 | xargs -0 zsh -n
       - name: Guard 1Password refs against plaintext secrets

@@ -1,0 +1,31 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+dotfiles="$HOME/dotfiles"
+template="$dotfiles/linux/config/hypr/hyprlock.conf"
+theme_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/color-scheme"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles"
+config="$cache_dir/hyprlock.conf"
+
+theme=dark
+if [ -r "$theme_file" ] && [ "$(tr -d '[:space:]' < "$theme_file")" = light ]; then
+  theme=light
+fi
+
+mkdir -p "$cache_dir"
+
+if [ "$theme" = light ]; then
+  sed \
+    -e 's/rgba(248, 249, 251,/rgba(32, 36, 42,/g' \
+    -e 's/rgba(183, 190, 201,/rgba(89, 97, 109,/g' \
+    -e 's/rgba(43, 48, 58,/rgba(232, 235, 239,/g' \
+    -e 's/rgba(51, 64, 77,/rgba(215, 220, 227,/g' \
+    -e 's/rgb(62, 89, 120)/rgb(201, 225, 247)/g' \
+    -e 's/rgb(140, 174, 216)/rgb(92, 148, 200)/g' \
+    "$template" > "$config"
+else
+  cp "$template" "$config"
+fi
+
+exec hyprlock --config "$config" "$@"

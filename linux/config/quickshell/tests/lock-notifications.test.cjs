@@ -53,12 +53,14 @@ test('lock notification renderer emits themed cards with escaped content', () =>
   }
 });
 
-test('lock notification renderer clears the asset when history is empty', () => {
+test('lock notification renderer keeps an informative empty notification state', () => {
   const result = render([]);
 
   try {
     assert.deepEqual([...fs.readFileSync(result.output).subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-    assert.match(result.source, /^<svg [^>]+><\/svg>\n$/);
+    assert.match(result.source, /^<svg [^>]+>/);
+    assert.match(result.source, />Notifications<\/text>/);
+    assert.match(result.source, />0 messages<\/text>/);
   } finally {
     fs.rmSync(result.temporary, { recursive: true, force: true });
   }

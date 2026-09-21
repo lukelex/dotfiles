@@ -19,7 +19,9 @@ case "$1" in
     fi
     case "$session_type" in
       x11) u_blurlock ;;
-      wayland) exec hyprlock ;; # Hyprland rejects duplicate session locks.
+      # Use the repository path directly. A stale, removed u_hyprlock symlink
+      # can still be returned by a shell command hash, causing a failed lock.
+      wayland) exec "$HOME/dotfiles/linux/scripts/hyprlock" ;; # Hyprland rejects duplicate session locks.
     esac ;;
   logout)
     case "$XDG_SESSION_DESKTOP" in
