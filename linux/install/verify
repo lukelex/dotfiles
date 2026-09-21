@@ -1,0 +1,53 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh" "$@"
+
+failures=0
+state_file="${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg/state.yaml"
+
+check() {
+  local description="$1"
+  shift
+  if "$@" > /dev/null 2>&1; then
+    printf '  ok   %s\n' "$description"
+  else
+    printf '  FAIL %s\n' "$description" >&2
+    failures=$((failures + 1))
+  fi
+}
+
+has_selection() {
+  [ -f "$state_file" ] && [ "$("$YQ" -r ".current.selections.$1" "$state_file")" = true ]
+}
+
+printf 'Post-install verification\n'
+check "dotpkg is available" command -v dotpkg
+
+if ! is_server; then
+  check "Quickshell is available" command -v quickshell
+  check "Quickshell user service is linked" test -e "$HOME/.config/systemd/user/quickshell.service"
+
+  for script in "$DOTFILES"/linux/scripts/*; do
+    [ -x "$script" ] || continue
+    check "helper u_$(basename "$script") is available" command -v "u_$(basename "$script")"
+  done
+
+  if has_selection hyprland; then
+    for command in hyprland kanshi wl-paste xwaylandvideobridge; do
+      check "Hyprland dependency $command is available" command -v "$command"
+    done
+  fi
+
+  if has_selection i3; then
+    for command in i3 picom play; do
+      check "i3 dependency $command is available" command -v "$command"
+    done
+  fi
+fi
+
+if [ "$failures" -gt 0 ]; then
+  printf 'verify: %d check(s) failed; rerun sync or inspect the reported dependency\n' "$failures" >&2
+  exit 1
+fi

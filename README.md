@@ -62,6 +62,9 @@ changes are not overwritten. Run `./linux/install/sync --refresh-manifest` to
 adopt the repository's current `packages.yaml`; the previous local manifest is
 saved beside it with a timestamped `.bak` suffix.
 
+After syncing, run `./linux/install/verify` to check that the selected desktop
+configuration, helper links, and window-manager dependencies are available.
+
 One-off setup that cannot be expressed as manifest resources (user directories,
 login shell, timezone, font/cache refreshes) is collected in
 `./linux/install/post`.
