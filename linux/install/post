@@ -14,6 +14,16 @@ has_wm() {
 # One-off setup steps that dotpkg cannot express as declarative resources:
 # user directories, interactive prompts, and host tweaks.
 
+# Run a command only when the tool is actually installed; optional tools
+# (rustup, tldr, desktop-file-utils, xorg-xset) are not guaranteed by the
+# manifest, and post must not abort the whole install when one is missing.
+if_available() {
+  if command -v "$1" >/dev/null 2>&1; then
+    shift
+    run "$@"
+  fi
+}
+
 run mkdir -p "$XDG_CONFIG_HOME"
 run mkdir -p "$HOME/.ssh"
 run mkdir -p "$HOME/projects"
@@ -24,9 +34,9 @@ if ! is_server; then
   run mkdir -p "$HOME/.vim-cache/undodir" "$HOME/.vim-cache/backup"
 
   run "$DOTFILES/linux/scripts/theme" init
-  run update-desktop-database "$HOME/.local/share/applications"
+  if_available update-desktop-database update-desktop-database "$HOME/.local/share/applications"
 
-  run xset dpms 1200 0 0
+  if_available xset xset dpms 1200 0 0
 fi
 
 answer="$(ask 'Set your login shell to zsh? [Y/n] ')"
@@ -38,7 +48,7 @@ case $answer in
 esac
 
 run fc-cache -r
-run tldr -u
+if_available tldr tldr -u
 run sudo mandb
 
 answer="$(ask 'Set system timezone to CET? [Y/n] ')"
@@ -49,7 +59,7 @@ case $answer in
   * ) ;;
 esac
 
-run rustup default stable
+if_available rustup rustup default stable
 run sudo yay -Sc
 
 if has_wm i3 || has_wm hyprland; then
