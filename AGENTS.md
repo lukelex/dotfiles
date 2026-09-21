@@ -33,5 +33,5 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 
 ## Validation
 
-- `Dockerfile` is a minimal Debian image with `shellcheck` only — the intended local validation path for shell scripts (`linux/scripts`, `linux/install`).
+- Before committing any shell-script change, run `docker compose run --rm shellcheck`. The `shellcheck` service in `docker-compose.yml` builds the minimal Debian `Dockerfile` image and lints `linux/scripts`, `linux/install`, and Quickshell shell helpers with `shellcheck -S error`.
 - `.github/workflows/ci.yml` runs on push/PR to `master`: the Quickshell Node test suite (`node --test .../tests/*.test.cjs`), shellcheck over the shell scripts, and whitespace/conflict-marker checks. For nvim changes there is no CI; verify by reloading nvim (`nvim -u linux/config/nvim/init.lua` loads the repo config directly).
