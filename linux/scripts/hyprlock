@@ -13,6 +13,24 @@ if [ -r "$theme_file" ] && [ "$(tr -d '[:space:]' < "$theme_file")" = light ]; t
   theme=light
 fi
 
+# Keep the current wallpaper as the backdrop, then shift the overlay slightly
+# warmer at night so the lock screen feels connected to the time of day.
+tint_target="rgba(43, 48, 58, 0.78)"
+tint_color="$tint_target"
+case "$(date +%H)" in
+  00|01|02|03|04|05) tint_color="rgba(20, 29, 43, 0.84)" ;;
+  18|19|20|21|22|23) tint_color="rgba(52, 39, 43, 0.82)" ;;
+esac
+
+if [ "$theme" = light ]; then
+  tint_target="rgba(232, 235, 239, 0.78)"
+  case "$(date +%H)" in
+    00|01|02|03|04|05) tint_color="rgba(220, 229, 242, 0.84)" ;;
+    18|19|20|21|22|23) tint_color="rgba(242, 229, 232, 0.82)" ;;
+    *) tint_color="$tint_target" ;;
+  esac
+fi
+
 mkdir -p "$cache_dir"
 
 if [ "$theme" = light ]; then
@@ -23,9 +41,10 @@ if [ "$theme" = light ]; then
     -e 's/rgba(51, 64, 77,/rgba(215, 220, 227,/g' \
     -e 's/rgb(62, 89, 120)/rgb(201, 225, 247)/g' \
     -e 's/rgb(140, 174, 216)/rgb(92, 148, 200)/g' \
+    -e "s/$tint_target/$tint_color/g" \
     "$template" > "$config"
 else
-  cp "$template" "$config"
+  sed -e "s/$tint_target/$tint_color/g" "$template" > "$config"
 fi
 
 exec hyprlock --config "$config" "$@"
