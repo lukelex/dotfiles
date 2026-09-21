@@ -24,9 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck zsh
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f -print0 | xargs -0 shellcheck -S error
+      - name: Check zsh syntax
+        run: find linux/config/zsh -type f -print0 | xargs -0 zsh -n
       - name: Guard 1Password refs against plaintext secrets
         run: |
           bad="$(grep -nEH '^[A-Za-z_][A-Za-z0-9_]*=' linux/config/oprefs/*.env 2>/dev/null | grep -vE 'op://' || true)"
@@ -35,6 +37,17 @@ jobs:
             echo "linux/config/oprefs/*.env must contain only op:// secret references, never plaintext values" >&2
             exit 1
           fi
+
+  qml-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt QML linter
+        run: sudo apt-get update && sudo apt-get install -y qt6-declarative-dev-tools
+      - name: Lint Quickshell QML
+        run: |
+          qmllint_bin="$(command -v qmllint || printf '%s' /usr/lib/qt6/bin/qmllint)"
+          "$qmllint_bin" linux/config/quickshell/*.qml
 
   installer-tests:
     runs-on: ubuntu-latest
