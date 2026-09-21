@@ -169,6 +169,7 @@ profiles:
         hyprlock:
         hyprpanel-bin:
         hyprshot:
+        kanshi:
         kooha:
         slurp:
         sox:
@@ -178,6 +179,8 @@ profiles:
             - linux/config/tofi.conf:$XDG_CONFIG_HOME/tofi/config
         wdisplays:
         wf-recorder:
+        wl-clipboard:
+        xwaylandvideobridge:
         xdg-desktop-portal-hyprland:
       i3:
         arandr:
