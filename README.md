@@ -23,9 +23,12 @@ supporting my preferred workflows.
 Configuration is done through symlinks and relative paths.
 
 ```sh
-$ git clone --recurse-submodules git@github.com:lukelex/dotfiles.git
-$ cd dotfiles && ./linux/install/sync
+$ git clone --recurse-submodules git@github.com:lukelex/dotfiles.git "$HOME/dotfiles"
+$ cd "$HOME/dotfiles" && ./linux/install/sync
 ```
+
+The desktop configuration uses `$HOME/dotfiles` at runtime; install this
+repository at that path.
 
 For a headless homelab server, run `./linux/install/sync --server`. The legacy
 `all` command is retained as a compatibility wrapper for `sync`.
