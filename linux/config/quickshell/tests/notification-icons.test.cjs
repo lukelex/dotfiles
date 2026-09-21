@@ -46,7 +46,7 @@ function multipleFunctions(names) {
 function displayBody(record) {
   const service = {};
   const context = vm.createContext({ service });
-  for (const name of ['isBrowserIcon', 'displayBody']) {
+  for (const name of ['isBrowserIcon', 'isTeamsNotification', 'displayBody']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -212,6 +212,24 @@ test('Teams notifications sent through Chrome or Edge use the Teams icon', () =>
 });
 
 test('browser notification previews omit a hostname origin and retain the message', () => {
+  assert.equal(displayBody({
+    appIcon: 'google-chrome',
+    body: 'teams.cloud.microsoft\nPersonal message from Ada: Can you review this?',
+  }), 'Personal message from Ada: Can you review this?');
+  assert.equal(displayBody({
+    appName: 'Microsoft Teams',
+    body: 'teams.cloud.microsoft\nPersonal message from Ada: Can you review this?',
+  }), 'Personal message from Ada: Can you review this?');
+  assert.equal(displayBody({
+    appIcon: '',
+    browserNotification: true,
+    body: 'calendar.google.com\nStandup starts in 10 minutes',
+  }), 'Standup starts in 10 minutes');
+  assert.equal(displayBody({
+    appName: 'Firefox',
+    appIcon: '',
+    body: 'example.com\nYour report is ready',
+  }), 'Your report is ready');
   assert.equal(displayBody({
     appIcon: 'google-chrome',
     body: 'teams.cloud.microsoft\n\nI did address your comments',

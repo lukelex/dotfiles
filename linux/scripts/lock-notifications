@@ -40,8 +40,11 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
 
   def displayBody($record):
     (($record.body // "") | tostring) as $body
-    | if (($record.appIcon // "") | tostring | ascii_downcase | test("brave|chromium|firefox|google-chrome|google[.]chrome|microsoft-edge")) then
-        ($body | sub("^[^\\n]+\\n\\n[ \\t]*"; ""))
+    | if (($record.browserNotification // false)
+         or (($record.appIcon // "") | tostring | ascii_downcase | test("brave|chromium|firefox|google-chrome|google[.]chrome|microsoft-edge"))
+         or (($record.appName // "") | tostring | ascii_downcase | test("brave|chromium|firefox|google-chrome|google[.]chrome|microsoft-edge"))
+         or (($record.appName // "") | tostring | ascii_downcase | test("microsoft teams"))) then
+        ($body | sub("^[^\\n]+\\n[ \\t]*"; ""))
       else $body end;
 
   def wrap($width):

@@ -248,6 +248,7 @@ QtObject {
 
   function buildRecord(notification, tag, value) {
     const actions = []
+    const browserNotification = service.isBrowserIcon(notification.appIcon)
     for (let index = 0; index < notification.actions.length; index++) {
       const action = notification.actions[index]
       if (action.text)
@@ -262,11 +263,12 @@ QtObject {
 
     urgency = service.effectiveUrgency(notification, urgency)
 
-    return {
+    const record = {
       id: notification.id,
       tag: tag,
       appName: service.isTeamsNotification(notification) ? "Microsoft Teams" : notification.appName || "",
       appIcon: notification.appIcon || "",
+      browserNotification: browserNotification,
       desktopEntry: notification.desktopEntry || "",
       image: notification.image || "",
       summary: notification.summary || "",
@@ -277,6 +279,10 @@ QtObject {
       time: Math.floor(Date.now() / 1000),
       expiresAt: service.computeExpiry(notification, urgency)
     }
+    // Store the visible body rather than Chromium's transient origin prefix, so
+    // the message stays correct after its browser icon is discarded from history.
+    record.body = service.displayBody(record)
+    return record
   }
 
   function computeExpiry(notification, urgency) {
@@ -591,11 +597,15 @@ QtObject {
 
   function displayBody(record) {
     const body = String(record && record.body || "")
-    if (!record || !service.isBrowserIcon(record.appIcon))
+    const isBrowser = record && (record.browserNotification
+      || service.isBrowserIcon(record.appIcon) || service.isBrowserIcon(record.appName))
+    if (!record || (!isBrowser && !service.isTeamsNotification(record)))
       return body
 
     // Chromium prefixes web notifications with their origin on a separate line.
-    return body.replace(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+[ \t]*(?:\r?\n[ \t]*){2}/i, "")
+    // Keep recognizing Teams after its temporary browser icon is stripped from
+    // persisted history records. Personal messages use one newline.
+    return body.replace(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+[ \t]*(?:\r?\n[ \t]*)+/i, "")
   }
 
   function isEphemeralSource(source) {

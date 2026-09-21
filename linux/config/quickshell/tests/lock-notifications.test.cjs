@@ -32,9 +32,9 @@ function render(history, theme = 'dark') {
 test('lock notification renderer emits themed cards with escaped content', () => {
   const result = render([{
     appName: 'Microsoft Teams',
-    appIcon: 'google-chrome',
+    appIcon: '',
     summary: '<Unsafe>',
-    body: 'teams.cloud.microsoft\n\nfirst <two> & more words',
+    body: 'teams.cloud.microsoft\nfirst <two> & more words',
     urgency: 'critical',
     time: Math.floor(Date.now() / 1000),
   }], 'light');
