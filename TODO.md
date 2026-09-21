@@ -2,7 +2,7 @@
 
 ## Screen locking
 
-- [ ] Add a read-only now-playing glance with album art to Hyprlock.
+- [x] Add a read-only now-playing glance with album art to Hyprlock.
 - [ ] Add a contextual wallpaper treatment with time-of-day tinting.
 - [ ] Show dynamic mic/camera-in-use status on the lock screen.
 - [ ] Improve keyboard-state feedback, including Num Lock and failed-password guidance.

@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles"
+cache_file="$cache_dir/lock-media-art.png"
+
+mkdir -p "$cache_dir"
+
+art_url=$(playerctl metadata mpris:artUrl 2> /dev/null || true)
+art_path=${art_url#file://}
+
+if [[ $art_url == file://* && -f $art_path ]]; then
+  temporary=$(mktemp "$cache_dir/lock-media-art.XXXXXX")
+  trap 'rm -f "$temporary"' EXIT
+  magick "${art_path}[0]" -resize '144x144^' -gravity center -extent 144x144 "PNG32:$temporary"
+  mv -f "$temporary" "$cache_file"
+elif [[ ! -f $cache_file ]]; then
+  magick -size 1x1 xc:none "PNG32:$cache_file"
+fi
+
+printf '%s\n' "$cache_file"

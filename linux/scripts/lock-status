@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 usage() {
-  printf 'Usage: %s {battery|network|vpn|audio|dnd}\n' "${0##*/}" >&2
+  printf 'Usage: %s {battery|network|vpn|audio|dnd|media}\n' "${0##*/}" >&2
   exit 2
 }
 
@@ -72,11 +72,25 @@ dnd() {
   fi
 }
 
+media() {
+  local status artist title prefix
+
+  command -v playerctl > /dev/null 2>&1 || return 0
+  status=$(playerctl status 2> /dev/null || true)
+  title=$(playerctl metadata --format '{{title}}' 2> /dev/null || true)
+  [ -n "$title" ] || return 0
+  artist=$(playerctl metadata --format '{{artist}}' 2> /dev/null || true)
+  prefix='󰎆'
+  [ "$status" = Paused ] && prefix='󰏤'
+  printf '%s %s%s\n' "$prefix" "$title" "${artist:+ · $artist}"
+}
+
 case "${1:-}" in
   battery) battery ;;
   network) network ;;
   vpn) vpn ;;
   audio) audio ;;
   dnd) dnd ;;
+  media) media ;;
   *) usage ;;
 esac
