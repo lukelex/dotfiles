@@ -5,7 +5,7 @@
 - [x] Add a read-only now-playing glance with album art to Hyprlock.
 - [x] Add a contextual wallpaper treatment with time-of-day tinting.
 - [x] Show dynamic mic/camera-in-use status on the lock screen.
-- [ ] Improve keyboard-state feedback, including Num Lock and failed-password guidance.
+- [x] Improve keyboard-state feedback, including Num Lock and failed-password guidance.
 - [ ] Polish multi-monitor locking with a primary authentication surface and secondary status displays.
 - [ ] Add a smooth unlock transition.
 - [ ] Defer idle locking for calls, presentations, fullscreen video, and media playback.
