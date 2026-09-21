@@ -777,14 +777,15 @@ Scope {
                 }
 
                 if (marker.active) {
-                  context.fillStyle = marker.urgent ? root.urgent : "#FFD43B"
                   context.beginPath()
                   context.moveTo(centerX, centerY)
                   context.arc(centerX, centerY, 8, marker.mouthAngle, Math.PI * 2 - marker.mouthAngle)
                   context.closePath()
-                  context.fill()
+                  context.lineWidth = 2
+                  context.strokeStyle = marker.urgent ? root.urgent : root.foreground
+                  context.stroke()
 
-                  context.fillStyle = "#000000"
+                  context.fillStyle = root.foreground
                   context.beginPath()
                   context.arc(centerX - 2, centerY - 3, 1, 0, Math.PI * 2)
                   context.fill()
