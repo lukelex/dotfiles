@@ -18,15 +18,13 @@ function icon_mic {
   value=$(get_mic)
 
   if mic_is_mute; then
-    echo $MIC_MUTE
-  elif [[ 1 -eq $(echo "$value > 85" | bc -l) ]]; then
-    echo "%{F#FF0000}$MIC_HIGH%{F-}"
+    echo "$MIC_MUTE"
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
-    echo $MIC_HIGH
+    echo "$MIC_HIGH"
   elif [[ 1 -eq $(echo "$value > 25" | bc -l) ]]; then
-    echo $MIC_MEDIUM
+    echo "$MIC_MEDIUM"
   else
-    echo $MIC_LOW
+    echo "$MIC_LOW"
   fi
 }
 
@@ -34,15 +32,13 @@ function icon_volume {
   value=$(get_volume)
 
   if [[ $(vol_is_mute) ]]; then
-    echo $VOL_MUTE
-  elif [[ 1 -eq $(echo "$value > 85" | bc -l) ]]; then
-    echo $VOL_HIGH
+    echo "$VOL_MUTE"
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
-    echo $VOL_HIGH
+    echo "$VOL_HIGH"
   elif [[ 1 -eq $(echo "$value > 25" | bc -l) ]]; then
-    echo $VOL_MEDIUM
+    echo "$VOL_MEDIUM"
   else
-    echo $VOL_LOW
+    echo "$VOL_LOW"
   fi
 }
 

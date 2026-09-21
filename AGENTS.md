@@ -26,7 +26,7 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 
 ## Conventions
 
-- Commit messages use an area prefix: `[nvim]`, `[eww/linux]`, `zsh:`, `vim:`. Match the current style (bracketed `[area]` lowercase description; `zsh:`/`vim:` variants also seen). Group changes by area into separate commits.
+- Commit messages use an area prefix: `[nvim]`, `[quickshell]`, `zsh:`, `vim:`. Match the current style (bracketed `[area]` lowercase description; `zsh:`/`vim:` variants also seen). Group changes by area into separate commits.
 - `.editorconfig`: 2-space indent, LF, utf-8, final newline.
 - `.gitignore` ignores `linux/bin/*` and `linux/config/nvim/plugin/` (legacy vim paths, likely stale).
 - Git submodules: `fonts` (lukelex/FontAwesome).

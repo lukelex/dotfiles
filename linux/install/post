@@ -21,7 +21,7 @@ run mkdir -p "$HOME/projects"
 if ! is_server; then
   run mkdir -p "$HOME/screenshots"
   run mkdir -p "$HOME/.local/share/applications"
-  run mkdir -p "$HOME/backup_vim"
+  run mkdir -p "$HOME/.vim-cache/undodir" "$HOME/.vim-cache/backup"
 
   run "$DOTFILES/linux/scripts/theme" init
   run update-desktop-database "$HOME/.local/share/applications"

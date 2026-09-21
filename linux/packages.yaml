@@ -173,7 +173,6 @@ profiles:
         kanshi:
         kooha:
         slurp:
-        swhkd-bin:
         tofi:
           configs:
             - linux/config/tofi.conf:$XDG_CONFIG_HOME/tofi/config

@@ -1,7 +1,6 @@
 workspace*.json
 README.html
 
-linux/config/eww/paths.yuck
 linux/config/lucide/png/
 linux/vendor/dotpkg/
 

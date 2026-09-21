@@ -1,41 +1,6 @@
 #!/usr/bin/bash
 
-trim() {
-  local text=$1
-  local scale_rate=175
-  local horizontal_size
-
-  horizontal_size=$(hyprctl monitors -j 2>/dev/null | jq -r 'map(select(.focused))[0].width // .[0].width' | head -n 1)
-  [ "$horizontal_size" = "null" ] && horizontal_size=""
-  if [ -z "$horizontal_size" ]; then
-    horizontal_size=$(xrandr 2>/dev/null | grep '\*' | head -n 1 | cut -d 'x' -f 1 | xargs)
-  fi
-
-  # Maximum length for the title
-  max_length=$(echo "$horizontal_size" | xargs -I _ echo "_ / $scale_rate" | bc -l | cut -d '.' -f 1)
-
-  if [ ${#text} -gt "$max_length" ]; then
-    trimmed_title="${text:0:$max_length}..."
-  else
-    trimmed_title="$text"
-  fi
-
-  echo "$trimmed_title"
-}
-
-get_title() {
-  local title
-  title=$(playerctl -p spotify metadata --format '{{ title }}')
-  printf '%s\n' "${title//%\{/\{}"
-}
-
 case $1 in
-  show)
-    case "$2" in
-      trimmed) trim "$(get_title)" ;;
-      *) get_title ;;
-    esac
-    ;;
   previous)
     playerctl -p spotify previous &
     ;;
