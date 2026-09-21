@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh" "$@"
 source "$DOTFILES/linux/variables.env"
 
 DOT_CONFIG="$DOTFILES/linux/config"

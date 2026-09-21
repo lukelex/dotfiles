@@ -28,8 +28,9 @@ $ cd "$HOME/dotfiles" && ./linux/install/sync
 The desktop configuration uses `$HOME/dotfiles` at runtime; install this
 repository at that path.
 
-For a headless homelab server, run `./linux/install/sync --server`. The legacy
-`all` command is retained as a compatibility wrapper for `sync`.
+For a headless homelab server, run `./linux/install/all --server`. `sync`
+reconciles only the declarative manifest; `all` also applies every active
+imperative setup concern and runs post-install verification.
 Profile packages, AppImages, groups, config links, and services are reconciled
 by the pinned static `dotpkg` binary. On first use, the repository's
 `linux/packages.yaml` seed is copied to dotpkg's per-user manifest at

@@ -8,14 +8,15 @@ usage() {
   cat <<'EOF'
 Usage: ./linux/install/all [options]
 
-Reconcile this dotfiles profile through the manifest. The remaining imperative
-helpers (`configs-system`, `icons`, `post`, and `kmonad-device-manager`) stay
-available when explicitly needed.
+Install every active concern for this dotfiles profile: declarative manifest
+resources, system configuration, icons, KMonad management, post-setup, and
+post-install verification.
 
 Options:
   --desktop    Install the desktop profile (default).
   --server     Reconcile the headless server profile.
   --host NAME  Apply the committed linux/hosts/NAME.yaml overlay.
+  --packages-only  Reconcile packages only, without resources or imperative setup.
   --dry-run    Print actions without changing the system.
   --replace    Replace existing config paths when creating symlinks.
   --help       Show this help message.
@@ -28,6 +29,23 @@ for arg in "$@"; do
   esac
 done
 
-source "$install_dir/common.sh"
+source "$install_dir/common.sh" "$@"
 
-exec "$install_dir/sync" "$@"
+"$install_dir/sync" "$@"
+
+if [ "$PACKAGES_ONLY" -eq 1 ]; then
+  exit 0
+fi
+
+if ! is_server; then
+  "$install_dir/configs-system" "$@"
+  "$install_dir/icons" "$@"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    "$install_dir/kmonad-device-manager" --dry-run
+  else
+    "$install_dir/kmonad-device-manager"
+  fi
+fi
+
+"$install_dir/post" "$@"
+"$install_dir/verify" "$@"
