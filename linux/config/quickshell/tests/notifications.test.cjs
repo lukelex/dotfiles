@@ -12,6 +12,7 @@ function serviceForTest() {
     history: [],
     popup: [],
     live: {},
+    tagMap: {},
     hovered: {},
     popupLimit: 5,
     popupGroupWindow: 30,
@@ -20,7 +21,7 @@ function serviceForTest() {
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
   const context = vm.createContext({ service, Date });
-  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords']) {
+  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -79,6 +80,18 @@ test('timeouts use milliseconds and zero stays persistent', () => {
   assert.ok(expiry >= before + 1000 && expiry <= Date.now() + 1000);
   assert.equal(service.computeExpiry({ expireTimeout: 0 }, 'normal'), 0);
   assert.equal(service.computeExpiry({ expireTimeout: 1000 }, 'critical'), 0);
+});
+
+test('a tagged notification can be dismissed through IPC', () => {
+  const { service } = serviceForTest();
+  const dismissed = [];
+  service.dismissRecord = id => dismissed.push(id);
+  service.tagMap['lock-warning'] = { id: 42 };
+
+  service.dismissTag('lock-warning');
+  service.dismissTag('missing');
+
+  assert.deepEqual(dismissed, [42]);
 });
 
 test('ordinary Teams critical notifications are treated as normal', () => {

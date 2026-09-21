@@ -448,6 +448,12 @@ QtObject {
     service.syncPopup()
   }
 
+  function dismissTag(tag) {
+    const notification = service.tagMap[String(tag || "")]
+    if (notification)
+      service.dismissRecord(notification.id)
+  }
+
   function clearHistory() {
     for (const id of Object.keys(service.live)) {
       const notification = service.live[id]
