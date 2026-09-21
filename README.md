@@ -9,13 +9,11 @@ supporting my preferred workflows.
 <img src="preview.jpg" alt="Rice Showcase" align="right" width="400px">
 
 - Operating System is [Arch Linux](https://archlinux.org/);
-- Window Management is handled by [Hyprland](https://github.com/hyprwm/Hyprland);
-- Top & Bottom bars are built with [Polybar](https://github.com/polybar/polybar);
-- Widgets are built with [Eww](https://github.com/elkowar/eww);
-- Notifications are provided by [Wired](https://github.com/Toqozz/wired-notify);
+- Window management is handled by [Hyprland](https://github.com/hyprwm/Hyprland) or [i3](https://i3wm.org/);
+- The bar, control center, and notifications are built with [Quickshell](https://quickshell.outfoxxed.me/);
 - Window decoration and animations are from [Picom](https://github.com/yshui/picom);
 - Wallpapers are by the talented [Byrotek](https://www.patreon.com/byrotek);
-- Application Launcher is [rofi](https://github.com/davatorium/rofi);
+- Application launchers are [rofi](https://github.com/davatorium/rofi) for i3 and [tofi](https://github.com/philj56/tofi) for Hyprland;
 - Code editing using [NeoVim](https://neovim.io/).
 
 ## Installation
