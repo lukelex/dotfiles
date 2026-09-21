@@ -7,7 +7,7 @@
 - [x] Show dynamic mic/camera-in-use status on the lock screen.
 - [x] Improve keyboard-state feedback, including Num Lock and failed-password guidance.
 - [x] Polish multi-monitor locking with a primary authentication surface and secondary status displays.
-- [ ] Add a smooth unlock transition.
+- [x] Add a smooth unlock transition.
 - [ ] Defer idle locking for calls, presentations, fullscreen video, and media playback.
 - [ ] Add a private lock-screen mode that hides notification titles.
 - [ ] Add low-power OLED burn-in mitigation while locked.
