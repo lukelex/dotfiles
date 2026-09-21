@@ -16,6 +16,7 @@ assert_equal "${desktop_level[*]}" 'packages options'
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.dotfiles.configs | map(select(. == "linux/xinitrc:$HOME/.xinitrc")) | length == 0' "$repo_root/linux/packages.yaml" >/dev/null
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.hyprland.hyprland.configs | map(select(. == "linux/config/hypr:$XDG_CONFIG_HOME/hypr")) | length > 0' "$repo_root/linux/packages.yaml" >/dev/null
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.hyprland | (has("kanshi") and has("wl-clipboard") and has("xwaylandvideobridge"))' "$repo_root/linux/packages.yaml" >/dev/null
+"$repo_root/linux/install/yq" -e '.profiles.desktop.packages.desktop | has("sox")' "$repo_root/linux/packages.yaml" >/dev/null
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.desktop."opencode-desktop".source == "appimage" and .profiles.desktop.packages.desktop."opencode-desktop".sha256 == "e5e59645631380f545449118c5dbb069a45d4c7a98a996e62b7ce42bfb661eb2"' "$repo_root/linux/packages.yaml" >/dev/null
 
 printf 'manifest structure: ok\n'

@@ -128,6 +128,7 @@ profiles:
         rubygems:
         rust:
         seadrive-gui:
+        sox:
         spotify:
         system-config-printer:
           groups:
@@ -172,7 +173,6 @@ profiles:
         kanshi:
         kooha:
         slurp:
-        sox:
         swhkd-bin:
         tofi:
           configs:
