@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
+      - name: Install notification image renderer
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
       - name: Run quickshell test suite
         run: node --test linux/config/quickshell/tests/*.test.cjs
 
@@ -46,16 +48,25 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y qt6-declarative-dev-tools
       - name: Lint Quickshell QML
         run: |
-          qmllint_bin="$(command -v qmllint || printf '%s' /usr/lib/qt6/bin/qmllint)"
+          if [ -x /usr/lib/qt6/bin/qmllint ]; then
+            qmllint_bin=/usr/lib/qt6/bin/qmllint
+          else
+            qmllint_bin="$(command -v qmllint)"
+          fi
+          output="$(mktemp)"
+          trap 'rm -f "$output"' EXIT
+          if ! "$qmllint_bin" linux/config/quickshell/*.qml >"$output" 2>&1; then
+            cat "$output"
+            exit 1
+          fi
+          cat "$output"
           # Standalone Qt lacks Quickshell's full native type metadata. Keep
-          # those environment-dependent diagnostics visible as info, while
-          # failing on all other QML warnings.
-          "$qmllint_bin" --max-warnings 0 \
-            --missing-property info \
-            --unresolved-type info \
-            --signal-handler-parameters info \
-            --uncreatable-type info \
-            linux/config/quickshell/*.qml
+          # those environment-dependent diagnostics visible, but fail on any
+          # other warning.
+          if grep -E '^Warning:' "$output" \
+            | grep -vE '\[(import|missing-property|missing-type|uncreatable-type|unresolved-type|signal-handler-parameters)\]'; then
+            exit 1
+          fi
 
   installer-tests:
     runs-on: ubuntu-latest
@@ -83,7 +94,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check whitespace and conflict markers
-        run: |
+        run: |-
           base="${{ github.event.pull_request.base.sha }}"
           [ -n "$base" ] || base="${{ github.event.before }}"
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
