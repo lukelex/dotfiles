@@ -23,6 +23,21 @@
 - [ ] Show the idle-lock timeout and active-inhibitor state in Control Center.
 - [ ] Add a critical-battery lock and suspend policy.
 
+## Lock-screen wow factors
+
+- [x] Add fingerprint-first unlock feedback when an enrolled reader is available.
+- [ ] Add an animated ambient background with subtle parallax or grain.
+- [ ] Add an unlock progress state with verifying and success feedback.
+- [ ] Add a security event indicator for failed attempts and the last failed-attempt time.
+- [ ] Add adaptive layout based on wallpaper contrast and monitor orientation.
+- [ ] Add a battery ring/status capsule.
+- [ ] Show the current DND/focus state prominently.
+- [ ] Add safe locked-screen quick actions for brightness, volume, microphone mute, and media.
+- [ ] Move the clock subtly between locks to reduce OLED burn-in.
+- [ ] Add optional weather and condition-only status.
+- [ ] Add a session handoff animation after unlocking.
+- [ ] Add an optional time-aware personal greeting.
+
 ## Hyprlock / Quickshell theme revamp
 
 - [x] Match Hyprlock's dark and light palettes to Quickshell's bar tokens.

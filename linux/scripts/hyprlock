@@ -9,6 +9,15 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles"
 config="$cache_dir/hyprlock.conf"
 primary_monitor=$(hyprctl monitors -j 2> /dev/null | jq -r '.[] | select(.focused) | .name' 2> /dev/null | head -n 1 || true)
 
+fingerprint_enabled=0
+if command -v fprintd-list > /dev/null 2>&1; then
+  fingerprint_status=$(fprintd-list "$USER" 2> /dev/null || true)
+  if grep -qE 'Device at|Using device' <<< "$fingerprint_status" \
+      && grep -qE '^[[:space:]]*-[[:space:]]*#[0-9]+' <<< "$fingerprint_status"; then
+    fingerprint_enabled=1
+  fi
+fi
+
 theme=dark
 if [ -r "$theme_file" ] && [ "$(tr -d '[:space:]' < "$theme_file")" = light ]; then
   theme=light
@@ -34,22 +43,41 @@ fi
 
 mkdir -p "$cache_dir"
 
-if [ "$theme" = light ]; then
-  sed \
-    -e 's/rgba(248, 249, 251,/rgba(32, 36, 42,/g' \
-    -e 's/rgba(183, 190, 201,/rgba(89, 97, 109,/g' \
-    -e 's/rgba(43, 48, 58,/rgba(232, 235, 239,/g' \
-    -e 's/rgba(51, 64, 77,/rgba(215, 220, 227,/g' \
-    -e 's/rgb(62, 89, 120)/rgb(201, 225, 247)/g' \
-    -e 's/rgb(140, 174, 216)/rgb(92, 148, 200)/g' \
+render_config() {
+  local color_args=()
+  if [ "$theme" = light ]; then
+    color_args=(
+      -e 's/rgba(248, 249, 251,/rgba(32, 36, 42,/g'
+      -e 's/rgba(183, 190, 201,/rgba(89, 97, 109,/g'
+      -e 's/rgba(43, 48, 58,/rgba(232, 235, 239,/g'
+      -e 's/rgba(51, 64, 77,/rgba(215, 220, 227,/g'
+      -e 's/rgb(62, 89, 120)/rgb(201, 225, 247)/g'
+      -e 's/rgb(140, 174, 216)/rgb(92, 148, 200)/g'
+    )
+  fi
+
+  sed "${color_args[@]}" \
     -e "s/$tint_target/$tint_color/g" \
     -e "s/@PRIMARY_MONITOR@/$primary_monitor/g" \
-    "$template" > "$config"
-else
-  sed \
-    -e "s/$tint_target/$tint_color/g" \
-    -e "s/@PRIMARY_MONITOR@/$primary_monitor/g" \
-    "$template" > "$config"
-fi
+    "$template" \
+  | awk -v fingerprint="$fingerprint_enabled" '
+      /# @FINGERPRINT_AUTH@/ {
+        if (fingerprint) {
+          print "auth {"
+          print "  fingerprint {"
+          print "    enabled = true"
+          print "    ready_message = Touch fingerprint sensor to unlock"
+          print "    present_message = Scanning fingerprint..."
+          print "    retry_delay = 250"
+          print "  }"
+          print "}"
+        }
+        next
+      }
+      { print }
+    '
+}
+
+render_config > "$config"
 
 exec hyprlock --config "$config" "$@"
