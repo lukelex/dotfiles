@@ -17,7 +17,7 @@
 - [x] Dismiss the idle-lock warning when activity resumes or locking begins.
 - [x] Add a 60-second advance idle-lock warning.
 - [x] Defer idle locking while Hyprland has an active fullscreen window or idle inhibitor.
-- [ ] Show concise feedback while the lock screen is launching.
+- [x] Show concise feedback while the lock screen is launching.
 - [x] Hide notification message bodies on the lock screen.
 - [x] Make suspend and lid-close locking complete before the display powers down.
 - [ ] Show the idle-lock timeout and active-inhibitor state in Control Center.
@@ -32,7 +32,7 @@
 - [x] Add adaptive layout based on wallpaper contrast and monitor orientation.
 - [x] Add a battery ring/status capsule.
 - [x] Show the current DND/focus state prominently.
-- [ ] Add safe locked-screen quick actions for brightness, volume, microphone mute, and media.
+- [x] Add safe locked-screen quick actions for brightness, volume, microphone mute, and media.
 - [ ] Move the clock subtly between locks to reduce OLED burn-in.
 - [x] Add optional weather and condition-only status.
 - [x] Add a session handoff animation after unlocking.
