@@ -34,7 +34,8 @@ if (( ${#lock_args[@]} == 0 )); then
 fi
 
 lock_black() {
-  exec i3lock --color 000000 "${lock_args[@]}"
+  i3lock --color 000000 "${lock_args[@]}"
+  play "$HOME/dotfiles/sounds/desktop-login2.ogg" trim 0 1.2 &> /dev/null &
 }
 
 build_image() {
@@ -90,7 +91,8 @@ if output_img=$(build_image); then
   if [[ "$dry_run" == true ]]; then
     exit 0
   fi
-  exec i3lock --image "$output_img" "${lock_args[@]}"
+  i3lock --image "$output_img" "${lock_args[@]}"
+  play "$HOME/dotfiles/sounds/desktop-login2.ogg" trim 0 1.2 &> /dev/null &
 fi
 
 lock_black
