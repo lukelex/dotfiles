@@ -9,6 +9,11 @@ playerctld daemon &
 udiskie -a &
 seadrive-gui &
 
+if command -v u_battery-policy > /dev/null 2>&1
+then
+  u_battery-policy &
+fi
+
 case "$XDG_SESSION_TYPE" in
   wayland)
     "$HOME/dotfiles/linux/config/quickshell/scripts/quickshell" --session-start &

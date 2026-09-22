@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+readonly CRITICAL_PERCENTAGE=5
+readonly POLL_INTERVAL=30
+
+while :; do
+  device=$(upower -e 2> /dev/null | grep -m 1 'BAT' || true)
+  if [[ -n $device ]]; then
+    details=$(upower -i "$device" 2> /dev/null || true)
+    state=$(awk '/^[[:space:]]*state:/{print $2; exit}' <<< "$details")
+    percentage=$(awk '/^[[:space:]]*percentage:/{gsub(/%/, "", $2); print $2; exit}' <<< "$details")
+
+    if [[ $state == discharging && $percentage =~ ^[0-9]+$ ]] \
+        && (( percentage <= CRITICAL_PERCENTAGE )); then
+      exec u_exit suspend
+    fi
+  fi
+  sleep "$POLL_INTERVAL"
+done

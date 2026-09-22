@@ -21,7 +21,7 @@
 - [x] Hide notification message bodies on the lock screen.
 - [x] Make suspend and lid-close locking complete before the display powers down.
 - [ ] Show the idle-lock timeout and active-inhibitor state in Control Center.
-- [ ] Add a critical-battery lock and suspend policy.
+- [x] Add a critical-battery lock and suspend policy.
 
 ## Lock-screen wow factors
 
