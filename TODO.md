@@ -28,8 +28,8 @@
 - [x] Add fingerprint-first unlock feedback when an enrolled reader is available.
 - [x] Add an animated ambient background with subtle parallax or grain.
 - [x] Add an unlock progress state with verifying and success feedback.
-- [ ] Add a security event indicator for failed attempts and the last failed-attempt time.
-- [ ] Add adaptive layout based on wallpaper contrast and monitor orientation.
+- [x] Add a security event indicator for failed attempts and the last failed-attempt time.
+- [x] Add adaptive layout based on wallpaper contrast and monitor orientation.
 - [ ] Add a battery ring/status capsule.
 - [ ] Show the current DND/focus state prominently.
 - [ ] Add safe locked-screen quick actions for brightness, volume, microphone mute, and media.
