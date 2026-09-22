@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 usage() {
-  printf 'Usage: %s {battery|network|vpn|audio|dnd|media|privacy|security}\n' "${0##*/}" >&2
+  printf 'Usage: %s {battery|network|vpn|audio|dnd|media|privacy|security|weather}\n' "${0##*/}" >&2
   exit 2
 }
 
@@ -117,6 +117,18 @@ security() {
   fi
 }
 
+weather() {
+  local current_file="${XDG_CACHE_HOME:-$HOME/.cache}/weather/current.json"
+  local description temperature
+
+  [ -r "$current_file" ] || return 0
+  description=$(jq -r '.weather[0].description // empty' "$current_file" 2> /dev/null || true)
+  temperature=$(jq -r '.main.temp // empty' "$current_file" 2> /dev/null || true)
+  [ -n "$description" ] && [ -n "$temperature" ] || return 0
+  temperature=$(awk -v value="$temperature" 'BEGIN { printf "%.0f", value }')
+  printf '󰖐 %s°C · %s\n' "$temperature" "$description"
+}
+
 case "${1:-}" in
   battery) battery ;;
   network) network ;;
@@ -126,5 +138,6 @@ case "${1:-}" in
   media) media ;;
   privacy) privacy ;;
   security) security ;;
+  weather) weather ;;
   *) usage ;;
 esac
