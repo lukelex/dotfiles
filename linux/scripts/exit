@@ -9,6 +9,7 @@ function reset_ui {
 case "$1" in
   lock)
     reset_ui
+    play "$HOME/dotfiles/sounds/desktop-login2.ogg" reverse trim 0 0.8 &> /dev/null &
     session_type="${XDG_SESSION_TYPE:-}"
     if [[ -z "$session_type" ]]; then
       if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
@@ -23,11 +24,7 @@ case "$1" in
       # can still be returned by a shell command hash, causing a failed lock.
       wayland)
         if "$HOME/dotfiles/linux/scripts/hyprlock"; then
-          notify-send -a "Session Lock" \
-            -i "$HOME/dotfiles/linux/config/lucide/svg/circle-check.svg" \
-            -h string:wired-tag:lock-welcome \
-            -t 1400 \
-            "Welcome back, $USER" "Your desktop is ready."
+          play "$HOME/dotfiles/sounds/desktop-login2.ogg" trim 0 1.2 &> /dev/null &
         fi
         ;;
     esac ;;
