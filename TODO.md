@@ -27,7 +27,7 @@
 
 - [x] Add fingerprint-first unlock feedback when an enrolled reader is available.
 - [x] Add an animated ambient background with subtle parallax or grain.
-- [ ] Add an unlock progress state with verifying and success feedback.
+- [x] Add an unlock progress state with verifying and success feedback.
 - [ ] Add a security event indicator for failed attempts and the last failed-attempt time.
 - [ ] Add adaptive layout based on wallpaper contrast and monitor orientation.
 - [ ] Add a battery ring/status capsule.
