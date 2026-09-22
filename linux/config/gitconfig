@@ -8,6 +8,8 @@
 	show = hunk-pager
 [diff]
 	context = 2
+[hunk]
+	theme = railscasts
 [color]
 	ui = true
 [color "diff"]
