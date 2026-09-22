@@ -12,7 +12,7 @@
 - [ ] Add a private lock-screen mode that hides notification titles.
 - [ ] Add low-power OLED burn-in mitigation while locked.
 - [ ] Consider authenticated emergency power controls.
-- [ ] Add optional rotating quotes, focus intention, or weather.
+- [x] Add optional rotating quotes, focus intention, or weather.
 - [x] Show a persistent "Screen will lock in 10 seconds" warning before idle locking in X11 and Hyprland.
 - [x] Dismiss the idle-lock warning when activity resumes or locking begins.
 - [x] Add a 60-second advance idle-lock warning.

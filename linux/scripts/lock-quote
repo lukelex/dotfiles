@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+# Keep this deliberately local and dependency-free. Hyprlock invokes this as a
+# decorative label; it must never make lock acquisition depend on a service.
+quotes=(
+  "Small steps still count. So do quiet days."
+  "Make room for something that makes you smile."
+  "You do not have to earn a restful evening."
+  "One thing at a time. Preferably with snacks."
+  "Today is allowed to be pleasantly ordinary."
+  "A little progress is still progress."
+  "Be where your feet are, then take the next small step."
+  "Soft mornings and second chances are both useful."
+  "You can do less and still have done enough."
+  "Let the day be kind in at least one small way."
+  "Rest is part of the plan, not a detour."
+  "Cozy is a valid destination."
+  "The little things are doing more work than they admit."
+  "It is okay to take the scenic route today."
+  "Your future self appreciates the gentle approach."
+  "A warm drink counts as a strategy."
+  "Nothing urgent is improved by panic."
+  "You are allowed to begin again after lunch."
+  "A good day can be small."
+  "Keep going, gently."
+  "Today's forecast: a reasonable chance of figuring it out."
+  "Achievement unlocked: you showed up."
+  "The plan is simple: breathe, begin, adjust."
+  "Some problems improve after a snack."
+  "You are not behind. You are currently here."
+  "Tiny victories are still victories with excellent branding."
+  "Future you has left a little kindness here."
+  "The bar is low today, and that is excellent ergonomics."
+  "Do the next useful thing. Then perhaps a less useful one."
+  "A quiet win is still a win."
+)
+
+day=$(date +%j 2> /dev/null || printf '1')
+index=$((10#$day % ${#quotes[@]}))
+printf '%s\n' "${quotes[index]}"
