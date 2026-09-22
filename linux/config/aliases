@@ -19,7 +19,7 @@ alias ls="ls --group-directories-first --color=auto"
 # GIT
 alias g="git"
 alias gs="git status"
-alias gd="git diff --color"
+alias gd="git diff"
 alias ga="git add"
 alias gal="git add ."
 alias gb="git branch --sort committerdate"
