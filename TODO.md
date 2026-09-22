@@ -31,7 +31,7 @@
 - [x] Add a security event indicator for failed attempts and the last failed-attempt time.
 - [x] Add adaptive layout based on wallpaper contrast and monitor orientation.
 - [x] Add a battery ring/status capsule.
-- [ ] Show the current DND/focus state prominently.
+- [x] Show the current DND/focus state prominently.
 - [ ] Add safe locked-screen quick actions for brightness, volume, microphone mute, and media.
 - [ ] Move the clock subtly between locks to reduce OLED burn-in.
 - [ ] Add optional weather and condition-only status.

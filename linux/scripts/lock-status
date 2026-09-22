@@ -68,7 +68,7 @@ dnd() {
   local state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/notifications.conf"
 
   if [ -r "$state_file" ] && grep -q '^doNotDisturb=true$' "$state_file"; then
-    printf '󰂛 Do Not Disturb\n'
+    printf '󰂛 Do Not Disturb · notifications muted\n'
   fi
 }
 
