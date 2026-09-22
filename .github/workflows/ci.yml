@@ -57,11 +57,11 @@ jobs:
           fi
           output="$(mktemp)"
           trap 'rm -f "$output"' EXIT
-          if ! "$qmllint_bin" linux/config/quickshell/*.qml >"$output" 2>&1; then
-            cat "$output"
+          "$qmllint_bin" linux/config/quickshell/*.qml >"$output" 2>&1 || true
+          cat "$output"
+          if grep -Ei '(^|[[:space:]])error:' "$output"; then
             exit 1
           fi
-          cat "$output"
           # Standalone Qt lacks Quickshell's full native type metadata. Keep
           # those environment-dependent diagnostics visible, but fail on any
           # other warning.
