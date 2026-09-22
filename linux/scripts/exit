@@ -21,7 +21,15 @@ case "$1" in
       x11) u_blurlock ;;
       # Use the repository path directly. A stale, removed u_hyprlock symlink
       # can still be returned by a shell command hash, causing a failed lock.
-      wayland) exec "$HOME/dotfiles/linux/scripts/hyprlock" ;; # Hyprland rejects duplicate session locks.
+      wayland)
+        if "$HOME/dotfiles/linux/scripts/hyprlock"; then
+          notify-send -a "Session Lock" \
+            -i "$HOME/dotfiles/linux/config/lucide/svg/circle-check.svg" \
+            -h string:wired-tag:lock-welcome \
+            -t 1400 \
+            "Welcome back, $USER" "Your desktop is ready."
+        fi
+        ;;
     esac ;;
   logout)
     case "$XDG_SESSION_DESKTOP" in

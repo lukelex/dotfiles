@@ -220,7 +220,8 @@ QtObject {
     }
 
     service.addHistory(record)
-    service.playNotificationSound()
+    if (tag !== "lock-welcome")
+      service.playNotificationSound()
     service.pendingPopupRecords = service.pendingPopupRecords
       .filter(entry => entry.id !== record.id).concat([record]).slice(-service.popupLimit)
     popupUpdateTimer.start()

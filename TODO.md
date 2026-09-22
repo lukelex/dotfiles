@@ -35,7 +35,7 @@
 - [ ] Add safe locked-screen quick actions for brightness, volume, microphone mute, and media.
 - [ ] Move the clock subtly between locks to reduce OLED burn-in.
 - [x] Add optional weather and condition-only status.
-- [ ] Add a session handoff animation after unlocking.
+- [x] Add a session handoff animation after unlocking.
 - [ ] Add an optional time-aware personal greeting.
 
 ## Hyprlock / Quickshell theme revamp
