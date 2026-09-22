@@ -19,7 +19,7 @@
 - [x] Defer idle locking while Hyprland has an active fullscreen window or idle inhibitor.
 - [ ] Show concise feedback while the lock screen is launching.
 - [x] Hide notification message bodies on the lock screen.
-- [ ] Make suspend and lid-close locking complete before the display powers down.
+- [x] Make suspend and lid-close locking complete before the display powers down.
 - [ ] Show the idle-lock timeout and active-inhibitor state in Control Center.
 - [ ] Add a critical-battery lock and suspend policy.
 

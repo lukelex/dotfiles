@@ -36,10 +36,12 @@ case "$1" in
     esac ;;
   sleep|suspend)
     reset_ui
-    $0 lock &
+    u_lock-before-sleep
     systemctl suspend ;;
   hibernate)
-    reset_ui && systemctl hibernate ;;
+    reset_ui
+    u_lock-before-sleep
+    systemctl hibernate ;;
   reboot|reset)
     systemctl reboot ;;
   shutdown|poweroff)
