@@ -18,6 +18,19 @@ common:
       fzf:
       git:
       git-delta:
+      hunk:
+        source: github
+        repo: lukelex/hunk
+        ref: 4845407d43400c5fa0ff9af81d4cd8180ae21e6c
+        archive: source
+        sha256: fae307569375d791feece0e8daf3d022da3193e72fafa78053c94c346d9fedd7
+        files:
+          - source: bin/hunk-pager
+            target: $HOME/.local/bin/hunk-pager
+          - source: bin/git-hunk
+            target: $HOME/.local/bin/git-hunk
+          - source: share/hunk/delta.gitconfig
+            target: $HOME/.local/share/hunk/delta.gitconfig
       jq:
       man-db:
       neovim:
