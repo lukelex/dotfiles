@@ -69,6 +69,12 @@ return {
       }
     })
 
+    vim.lsp.config("sqlls", {
+      cmd_env = {
+        NODE_OPTIONS = "--require=" .. vim.fn.stdpath("config") .. "/scripts/sqlls-node-compat.js",
+      },
+    })
+
     local filetypes = {
       ruby =             { "solargraph", "standardrb" },
       javascript =       { "ts_ls", "eslint", "tailwindcss" },
