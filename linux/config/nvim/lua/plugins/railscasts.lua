@@ -1,6 +1,6 @@
 return {
   "lukelex/railscasts.nvim",
-  version = "v2",
+  version = ">=2",
   priority = 1000,
   config = function()
     vim.cmd.colorscheme "railscasts"
