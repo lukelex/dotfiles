@@ -21,6 +21,7 @@ Scope {
   property var githubReviewCenterTarget: null
   property var dateTimeCenterTarget: null
   property var connectivityTarget: null
+  property var audioOutputTarget: null
 
   WeatherService { id: weatherService }
   QuoteService { id: quoteService }
@@ -53,6 +54,11 @@ Scope {
   function closeConnectivity() {
     if (root.connectivityTarget)
       root.connectivityTarget.requestClose()
+  }
+
+  function closeAudioOutput() {
+    if (root.audioOutputTarget)
+      root.audioOutputTarget.requestClose()
   }
 
   property int hoverCloseCandidate: 0
@@ -192,6 +198,7 @@ Scope {
     root.closeConnectivity()
     root.closeDateTime()
     root.closeGitHubReviewCenter()
+    root.closeAudioOutput()
     root.controlCenterTarget.requestClose()
     if (root.notificationCenterOpen)
       root.notificationCenterTarget.requestClose()
@@ -207,6 +214,7 @@ Scope {
     root.cancelHoverClose()
     root.closeConnectivity()
     root.closeDateTime()
+    root.closeAudioOutput()
     root.controlCenterTarget.requestClose()
     root.notificationCenterTarget.requestClose()
     root.notificationCenterOpen = false
@@ -608,6 +616,7 @@ Scope {
       function openDateTime(pin = false) {
         root.cancelHoverClose()
         root.closeConnectivity()
+        root.closeAudioOutput()
         if (root.dateTimeCenterTarget !== dateTimeCenter)
           root.closeDateTime()
         root.dateTimeCenterTarget = dateTimeCenter
@@ -620,6 +629,7 @@ Scope {
 
       function openConnectivity(pin = false) {
         root.cancelHoverClose()
+        root.closeAudioOutput()
         if (root.connectivityTarget !== connectivityCenter)
           root.closeConnectivity()
         root.connectivityTarget = connectivityCenter
@@ -634,6 +644,7 @@ Scope {
       function openControlCenter() {
         root.closeConnectivity()
         root.closeDateTime()
+        root.closeAudioOutput()
         notificationCenter.requestClose()
         root.closeGitHubReviewCenter()
         root.notificationCenterOpen = false
@@ -641,11 +652,33 @@ Scope {
         root.cancelHoverClose()
       }
 
+      function openAudioOutput(pin = false) {
+        root.cancelHoverClose()
+        root.closeConnectivity()
+        root.closeDateTime()
+        controlCenter.requestClose()
+        notificationCenter.requestClose()
+        root.closeGitHubReviewCenter()
+        root.notificationCenterOpen = false
+        if (root.audioOutputTarget !== audioOutputCenter)
+          root.closeAudioOutput()
+        root.audioOutputTarget = audioOutputCenter
+        audioOutputCenter.requestOpen(pin)
+      }
+
       ConnectivityCenter {
         id: connectivityCenter
         controller: root
         panel: panel
         service: connectivity
+      }
+
+      AudioOutputCenter {
+        id: audioOutputCenter
+        controller: root
+        panel: panel
+        service: root.audioService
+        trigger: volumeWidget
       }
 
       IdleInhibitor {
@@ -668,7 +701,6 @@ Scope {
       ControlCenter {
         id: controlCenter
         controller: root
-        audioService: root.audioService
         panel: panel
       }
 
@@ -1021,11 +1053,13 @@ Scope {
         }
 
         Item {
+          id: volumeWidget
+
           height: root.barFontSize
           width: root.barFontSize
           Accessible.role: Accessible.Button
-          Accessible.name: "Sound output and volume controls"
-          Accessible.onPressAction: panel.openControlCenter()
+          Accessible.name: "Select sound devices"
+          Accessible.onPressAction: panel.openAudioOutput(true)
 
           LucideIcon {
             anchors.fill: parent
@@ -1038,9 +1072,9 @@ Scope {
             anchors.margins: -4
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: panel.openControlCenter()
-            onExited: root.requestHoverClose(2)
-            onClicked: panel.openControlCenter()
+            onEntered: panel.openAudioOutput()
+            onExited: audioOutputCenter.scheduleClose()
+            onClicked: panel.openAudioOutput(true)
           }
         }
 
@@ -1113,6 +1147,7 @@ Scope {
             hoverEnabled: true
             onEntered: {
               root.closeConnectivity()
+              root.closeAudioOutput()
               controlCenter.requestClose()
               root.closeDateTime()
               root.closeGitHubReviewCenter()

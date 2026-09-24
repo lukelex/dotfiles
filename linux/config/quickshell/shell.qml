@@ -10,6 +10,7 @@ Scope {
     id: githubPrs
   }
 
+  // One shared device snapshot backs the output picker on each screen.
   AudioService {
     id: audioService
   }

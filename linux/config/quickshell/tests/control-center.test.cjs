@@ -13,7 +13,6 @@ function loadFunction(file, name, globals) {
 
 test('reopening Control Center cancels closing without resetting its position', () => {
   const popup = { visible: true, closePending: true };
-  popup.audioService = { refresh() {} };
   const content = { opacity: 0.6, y: 3 };
   let opened = false;
   const closeAnim = {
@@ -33,7 +32,6 @@ test('reopening Control Center cancels closing without resetting its position', 
 
 test('opening a hidden Control Center initializes the entry animation', () => {
   const popup = { visible: false, closePending: false };
-  popup.audioService = { refresh() {} };
   const content = { opacity: 1, y: 0 };
   loadFunction('ControlCenter.qml', 'requestOpen', {
     popup, content,
@@ -98,7 +96,7 @@ test('Control Center attaches temperature to each available processor label', ()
 });
 
 test('hover centers do not grab focus from their bar triggers', () => {
-  for (const file of ['ControlCenter.qml', 'NotificationCenter.qml']) {
+  for (const file of ['ControlCenter.qml', 'NotificationCenter.qml', 'AudioOutputCenter.qml']) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
     assert.match(source, /grabFocus: false/);
   }

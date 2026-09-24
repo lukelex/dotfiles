@@ -9,7 +9,6 @@ PopupWindow {
 
   required property var controller
   required property var panel
-  required property var audioService
 
   anchor.window: panel
   anchor.rect.x: Math.max(0, panel.width - width - 12)
@@ -21,12 +20,6 @@ PopupWindow {
   implicitWidth: Math.min(432, panel.screen.width - 24)
 
   surfaceFormat.opaque: false
-  property bool _audioPanelActive: false
-
-  Component.onDestruction: {
-    if (popup._audioPanelActive)
-      popup.audioService.panelClosed()
-  }
 
   component ControlTile: Item {
     id: tile
@@ -349,122 +342,12 @@ PopupWindow {
     }
   }
 
-  component OutputDeviceRow: Item {
-    id: outputRow
-
-    required property var controller
-    required property var device
-    required property var service
-    readonly property bool isDefault: service.defaultSink === device.name
-    readonly property bool isPending: service.pendingSink === device.name
-
-    height: 48
-    width: parent.width
-    enabled: !service.busy
-    activeFocusOnTab: enabled
-    Accessible.role: Accessible.RadioButton
-    Accessible.name: device.description
-    Accessible.description: isPending ? "Switching output device"
-      : isDefault ? "Current output device" : "Select output device"
-    Accessible.checkable: true
-    Accessible.checked: isDefault
-    Accessible.onPressAction: outputRow.activate()
-    Keys.onSpacePressed: event => { if (!event.isAutoRepeat) outputRow.activate() }
-    Keys.onReturnPressed: event => { if (!event.isAutoRepeat) outputRow.activate() }
-
-    function activate() {
-      if (outputRow.enabled)
-        outputRow.service.setDefaultSink(outputRow.device.name)
-    }
-
-    Rectangle {
-      anchors.fill: parent
-      border.color: outputRow.isPending ? outputRow.controller.controlActiveIcon
-        : outputRow.isDefault ? outputRow.controller.controlActive : outputRow.controller.darkMode ? "#33404D" : "#D7DCE3"
-      border.width: 1
-      color: outputRow.isDefault ? outputRow.controller.controlActive
-        : area.containsMouse ? outputRow.controller.controlActive : outputRow.controller.controlSurface
-      radius: 12
-    }
-
-    LucideIcon {
-      id: typeIcon
-
-      anchors {
-        left: parent.left
-        leftMargin: 12
-        verticalCenter: parent.verticalCenter
-      }
-      color: outputRow.isDefault ? outputRow.controller.controlActiveIcon : outputRow.controller.controlSecondaryText
-      height: 18
-      source: outputRow.controller.icon(outputRow.device.iconName || "speaker")
-      width: 18
-    }
-
-    Column {
-      anchors {
-        left: typeIcon.right
-        leftMargin: 10
-        right: statusIcon.left
-        rightMargin: 8
-        verticalCenter: parent.verticalCenter
-      }
-      spacing: 2
-
-      Text {
-        color: outputRow.controller.controlPrimaryText
-        elide: Text.ElideRight
-        font.family: outputRow.controller.fontFamily
-        font.pixelSize: 12
-        text: outputRow.device.description
-        textFormat: Text.PlainText
-        width: parent.width
-      }
-
-      Text {
-        color: outputRow.isPending ? outputRow.controller.controlActiveIcon : outputRow.controller.controlSecondaryText
-        elide: Text.ElideRight
-        font.family: outputRow.controller.fontFamily
-        font.pixelSize: 10
-        text: outputRow.isPending ? "Switching…" : outputRow.isDefault ? "Current output" : ""
-        visible: text !== ""
-        width: parent.width
-      }
-    }
-
-    LucideIcon {
-      id: statusIcon
-
-      anchors {
-        right: parent.right
-        rightMargin: 12
-        verticalCenter: parent.verticalCenter
-      }
-      color: outputRow.isDefault ? outputRow.controller.controlActiveIcon
-        : outputRow.isPending ? outputRow.controller.controlPrimaryText : outputRow.controller.controlSecondaryText
-      height: 17
-      source: outputRow.controller.icon(outputRow.isPending ? "refresh-cw" : outputRow.isDefault ? "circle-check" : "volume-2")
-      width: 17
-    }
-
-    MouseArea {
-      id: area
-
-      anchors.fill: parent
-      cursorShape: outputRow.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-      enabled: outputRow.enabled
-      hoverEnabled: true
-      onClicked: outputRow.activate()
-    }
-  }
-
   property bool closePending: false
 
   function requestOpen() {
     if (popup.visible && !closeAnim.running)
       return
     popup.closePending = false
-    popup.audioService.refresh(true)
     closeAnim.stop()
     if (!popup.visible) {
       content.opacity = 0
@@ -626,60 +509,6 @@ PopupWindow {
               text: popup.controller.idleLockStatus
               textFormat: Text.PlainText
               visible: text.length > 0
-              width: parent.width
-              wrapMode: Text.Wrap
-            }
-          }
-        }
-
-        Rectangle {
-          height: outputDevices.implicitHeight + 28
-          width: parent.width
-          color: popup.controller.controlSurface
-          radius: 18
-
-          Column {
-            id: outputDevices
-            x: 14
-            y: 14
-            width: parent.width - 28
-            spacing: 8
-
-            Text {
-              color: popup.controller.controlPrimaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 12
-              text: "Output device"
-            }
-
-            Text {
-              color: popup.controller.controlSecondaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 11
-              text: popup.audioService.loaded ? "No output devices found." : "Looking for output devices…"
-              visible: popup.audioService.outputs.length === 0
-            }
-
-            Repeater {
-              model: popup.audioService.outputs
-
-              OutputDeviceRow {
-                required property var modelData
-
-                controller: popup.controller
-                device: modelData
-                service: popup.audioService
-                width: outputDevices.width
-              }
-            }
-
-            Text {
-              color: popup.controller.urgent
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 11
-              text: popup.audioService.error
-              textFormat: Text.PlainText
-              visible: popup.audioService.error !== ""
               width: parent.width
               wrapMode: Text.Wrap
             }
@@ -883,17 +712,9 @@ PopupWindow {
   }
 
   onVisibleChanged: {
-    if (visible) {
-      if (!popup._audioPanelActive) {
-        popup._audioPanelActive = true
-        popup.audioService.panelOpened()
-      }
+    if (visible)
       controller.refreshControlStatus()
-    } else {
-      if (popup._audioPanelActive) {
-        popup._audioPanelActive = false
-        popup.audioService.panelClosed()
-      }
+    else {
       openAnim.stop()
       closeAnim.stop()
       popup.closePending = false
