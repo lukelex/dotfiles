@@ -24,7 +24,7 @@ case "$1" in
       # can still be returned by a shell command hash, causing a failed lock.
       wayland)
         if "$HOME/dotfiles/linux/scripts/hyprlock"; then
-          play "$HOME/dotfiles/sounds/desktop-login2.ogg" trim 0 1.2 &> /dev/null &
+          play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
         fi
         ;;
     esac ;;

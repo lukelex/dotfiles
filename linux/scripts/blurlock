@@ -35,7 +35,7 @@ fi
 
 lock_black() {
   i3lock --color 000000 "${lock_args[@]}"
-  play "$HOME/dotfiles/sounds/desktop-login2.ogg" trim 0 1.2 &> /dev/null &
+  play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
 }
 
 build_image() {
@@ -92,7 +92,7 @@ if output_img=$(build_image); then
     exit 0
   fi
   i3lock --image "$output_img" "${lock_args[@]}"
-  play "$HOME/dotfiles/sounds/desktop-login2.ogg" trim 0 1.2 &> /dev/null &
+  play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
 fi
 
 lock_black
