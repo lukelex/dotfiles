@@ -2,6 +2,11 @@ require("workspaces")
 require("windowrules")
 require("keybindings")
 
+hl.layer_rule({
+  match = { namespace = "^fuzzel$" },
+  blur = true,
+})
+
 hl.env("EDITOR", "nvim")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")
