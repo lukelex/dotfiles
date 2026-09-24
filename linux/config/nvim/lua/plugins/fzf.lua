@@ -75,10 +75,23 @@ return {
         },
       },
       winopts = {
+        -- fzf-lua enables Tree-sitter highlighting by default. Its first
+        -- parser initialization can fail while searching Rails/Ruby files;
+        -- this highlighting is optional and normal buffer highlighting stays
+        -- enabled by nvim-treesitter.
+        treesitter = false,
         preview = {
           layout = "vertical"
-        }
-      }
+        },
+      },
+      -- The previewer has a separate Tree-sitter path from the fzf window.
+      -- Disable it too; otherwise the first Ruby preview can still trigger
+      -- the parser error even when main-window highlighting is off.
+      previewers = {
+        builtin = {
+          treesitter = { enabled = false },
+        },
+      },
     })
   end,
 }
