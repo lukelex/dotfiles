@@ -242,6 +242,8 @@ Scope {
       root.notificationCenterTarget.requestClose()
     } else if (root.hoverCloseCandidate === 2) {
       root.controlCenterTarget.requestClose()
+    } else if (root.hoverCloseCandidate === 3) {
+      root.closeGitHubReviewCenter()
     }
     root.hoverCloseCandidate = 0
   }
@@ -666,6 +668,21 @@ Scope {
         audioOutputCenter.requestOpen(pin)
       }
 
+      function showGitHubReviewCenter() {
+        root.cancelHoverClose()
+        root.closeConnectivity()
+        root.closeDateTime()
+        root.closeAudioOutput()
+        controlCenter.requestClose()
+        notificationCenter.requestClose()
+        root.notificationCenterOpen = false
+        if (root.githubReviewCenterTarget !== githubReviewCenter)
+          root.closeGitHubReviewCenter()
+        root.githubReviewCenterTarget = githubReviewCenter
+        root.githubReviewCenterOpen = true
+        githubReviewCenter.requestOpen()
+      }
+
       ConnectivityCenter {
         id: connectivityCenter
         controller: root
@@ -1052,32 +1069,6 @@ Scope {
           }
         }
 
-        Item {
-          id: volumeWidget
-
-          height: root.barFontSize
-          width: root.barFontSize
-          Accessible.role: Accessible.Button
-          Accessible.name: "Select sound devices"
-          Accessible.onPressAction: panel.openAudioOutput(true)
-
-          LucideIcon {
-            anchors.fill: parent
-            source: root.icon(root.audioIcon())
-            color: root.audioAvailable && !root.audioMuted ? root.foreground : root.muted
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            anchors.margins: -4
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            onEntered: panel.openAudioOutput()
-            onExited: audioOutputCenter.scheduleClose()
-            onClicked: panel.openAudioOutput(true)
-          }
-        }
-
         LucideIcon {
           height: root.barFontSize
           width: root.barFontSize
@@ -1112,7 +1103,35 @@ Scope {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onClicked: root.openGitHubReviewCenter()
+            onEntered: panel.showGitHubReviewCenter()
+            onExited: root.requestHoverClose(3, 500)
+            onClicked: panel.showGitHubReviewCenter()
+          }
+        }
+
+        Item {
+          id: volumeWidget
+
+          height: root.barFontSize
+          width: root.barFontSize
+          Accessible.role: Accessible.Button
+          Accessible.name: "Select sound devices"
+          Accessible.onPressAction: panel.openAudioOutput(true)
+
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(root.audioIcon())
+            color: root.audioAvailable && !root.audioMuted ? root.foreground : root.muted
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: panel.openAudioOutput()
+            onExited: audioOutputCenter.scheduleClose()
+            onClicked: panel.openAudioOutput(true)
           }
         }
 

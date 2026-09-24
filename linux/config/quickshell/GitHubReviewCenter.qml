@@ -24,6 +24,8 @@ PopupWindow {
   implicitWidth: Math.min(560, panel.screen.width - 24)
   surfaceFormat.opaque: false
 
+  onVisibleChanged: popup.controller.githubReviewCenterOpen = visible
+
   function requestOpen() { prs.refresh(true); popup.visible = true }
   function requestClose() { popup.visible = false }
 
@@ -313,6 +315,15 @@ PopupWindow {
     border.width: 1
     color: popup.controller.controlBackground
     radius: 26
+  }
+
+  HoverHandler {
+    onHoveredChanged: {
+      if (hovered)
+        popup.controller.cancelHoverClose()
+      else
+        popup.controller.requestHoverClose(3, 500)
+    }
   }
 
   Column {
