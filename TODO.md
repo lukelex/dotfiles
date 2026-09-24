@@ -50,5 +50,5 @@
 - [x] Generate a theme-aware Hyprlock config immediately before lock acquisition; keep direct Hyprlock invocation usable with the dark default.
 - [x] Make logind/hypridle lock requests launch the actual locker rather than merely calling `loginctl`.
 - [x] Keep the lock path independent of generated `u_*` links and cover it with a CI regression test.
-- [ ] Validate manual lock, idle lock, suspend/resume, no-battery desktops, unavailable network/VPN services, light/dark themes, scaled displays, and notification updates while locked.
+- [x] Validate manual lock, idle lock, suspend/resume, no-battery desktops, unavailable network/VPN services, light/dark themes, scaled displays, and notification updates while locked.
 - [ ] Run shellcheck, notification-renderer tests, `hyprlock --config`, and `git diff --check` after implementation.
