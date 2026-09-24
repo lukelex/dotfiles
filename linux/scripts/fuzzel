@@ -1,0 +1,32 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+themes="$HOME/dotfiles/linux/config/fuzzel/themes"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/fuzzel"
+theme=slate
+if [[ -f "$state_dir/theme" ]]; then
+  read -r theme < "$state_dir/theme" || theme=slate
+fi
+case "$theme" in
+  slate|graphite|porcelain) ;;
+  *) theme=slate ;;
+esac
+
+if [[ "${1:-}" == --theme ]]; then
+  choice="$(printf '%s\n' Slate Graphite Porcelain | fuzzel \
+    --config="$themes/$theme.ini" --dmenu --only-match --no-sort \
+    --select="$theme" --lines=3 --prompt='Theme: ' \
+    --placeholder='Choose a launcher theme' --cache=/dev/null)" || exit 0
+  case "$choice" in
+    Slate) theme=slate ;;
+    Graphite) theme=graphite ;;
+    Porcelain) theme=porcelain ;;
+    *) exit 0 ;;
+  esac
+  mkdir -p "$state_dir"
+  printf '%s\n' "$theme" > "$state_dir/theme"
+  # Reopen the launcher so the selected design is immediately visible.
+  exec fuzzel --config="$themes/$theme.ini"
+fi
+
+exec fuzzel --config="$themes/$theme.ini" "$@"

@@ -188,9 +188,9 @@ profiles:
         kanshi:
         kooha:
         slurp:
-        tofi:
+        fuzzel:
           configs:
-            - linux/config/tofi.conf:$XDG_CONFIG_HOME/tofi/config
+            - linux/config/fuzzel:$XDG_CONFIG_HOME/fuzzel
         wdisplays:
         wf-recorder:
         wl-clipboard:
