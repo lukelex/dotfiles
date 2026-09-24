@@ -13,6 +13,7 @@ Scope {
 
   required property var notificationService
   required property var githubPrService
+  required property var audioService
   property bool notificationCenterOpen: false
   property bool githubReviewCenterOpen: false
   property var controlCenterTarget: null
@@ -613,6 +614,16 @@ Scope {
         connectivityCenter.requestOpen(pin)
       }
 
+      function openControlCenter() {
+        root.closeConnectivity()
+        root.closeDateTime()
+        notificationCenter.requestClose()
+        root.closeGitHubReviewCenter()
+        root.notificationCenterOpen = false
+        controlCenter.requestOpen()
+        root.cancelHoverClose()
+      }
+
       ConnectivityCenter {
         id: connectivityCenter
         controller: root
@@ -640,6 +651,7 @@ Scope {
       ControlCenter {
         id: controlCenter
         controller: root
+        audioService: root.audioService
         panel: panel
       }
 
@@ -991,11 +1003,28 @@ Scope {
           }
         }
 
-        LucideIcon {
+        Item {
           height: root.barFontSize
-          source: root.icon(root.audioIcon())
           width: root.barFontSize
-          color: root.audioAvailable && !root.audioMuted ? root.foreground : root.muted
+          Accessible.role: Accessible.Button
+          Accessible.name: "Sound output and volume controls"
+          Accessible.onPressAction: panel.openControlCenter()
+
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(root.audioIcon())
+            color: root.audioAvailable && !root.audioMuted ? root.foreground : root.muted
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: panel.openControlCenter()
+            onExited: root.requestHoverClose(2)
+            onClicked: panel.openControlCenter()
+          }
         }
 
         LucideIcon {
@@ -1089,20 +1118,9 @@ Scope {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: {
-              root.closeConnectivity()
-              root.closeDateTime()
-              notificationCenter.requestClose()
-              root.closeGitHubReviewCenter()
-              root.notificationCenterOpen = false
-              controlCenter.requestOpen()
-              root.cancelHoverClose()
-            }
+            onEntered: panel.openControlCenter()
             onExited: root.requestHoverClose(2)
-            onClicked: {
-              root.closeConnectivity()
-              controlCenter.requestOpen()
-            }
+            onClicked: panel.openControlCenter()
           }
         }
       }

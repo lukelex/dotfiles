@@ -13,6 +13,7 @@ function loadFunction(file, name, globals) {
 
 test('reopening Control Center cancels closing without resetting its position', () => {
   const popup = { visible: true, closePending: true };
+  popup.audioService = { refresh() {} };
   const content = { opacity: 0.6, y: 3 };
   let opened = false;
   const closeAnim = {
@@ -23,7 +24,8 @@ test('reopening Control Center cancels closing without resetting its position', 
     },
   };
   loadFunction('ControlCenter.qml', 'requestOpen', {
-    popup, content, closeAnim, openAnim: { start() { opened = true; } },
+    popup, content, closeAnim,
+    openAnim: { start() { opened = true; } },
   })();
   assert.equal(opened, true);
   assert.deepEqual(content, { opacity: 0.6, y: 3 });
@@ -31,9 +33,11 @@ test('reopening Control Center cancels closing without resetting its position', 
 
 test('opening a hidden Control Center initializes the entry animation', () => {
   const popup = { visible: false, closePending: false };
+  popup.audioService = { refresh() {} };
   const content = { opacity: 1, y: 0 };
   loadFunction('ControlCenter.qml', 'requestOpen', {
-    popup, content, closeAnim: { running: false, stop() {} }, openAnim: { start() {} },
+    popup, content,
+    closeAnim: { running: false, stop() {} }, openAnim: { start() {} },
   })();
   assert.equal(popup.visible, true);
   assert.deepEqual(content, { opacity: 0, y: 10 });
