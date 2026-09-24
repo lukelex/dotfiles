@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 usage() {
-  printf 'Usage: %s {battery|network|vpn|audio|dnd|media|privacy|security|weather}\n' "${0##*/}" >&2
+  printf 'Usage: %s {battery|network|vpn|audio|dnd|media|privacy|security|weather|idle}\n' "${0##*/}" >&2
   exit 2
 }
 
@@ -129,6 +129,25 @@ weather() {
   printf '󰖐 %s°C · %s\n' "$temperature" "$description"
 }
 
+idle() {
+  local timeout config inhibitors minutes
+
+  timeout=300
+  config="$HOME/dotfiles/linux/config/hypr/hypridle.conf"
+  if [ -r "$config" ]; then
+    timeout=$(awk -F= '/idle-lock-timeout/{gsub(/[^0-9]/, "", $2); print $2; exit}' "$config")
+    timeout=${timeout:-300}
+  fi
+  minutes=$((timeout / 60))
+  inhibitors=$(systemd-inhibit --list --no-legend 2> /dev/null \
+    | awk '$1 ~ /(^|:)idle(:|$)/ { found=1; exit } END { print found + 0 }')
+  if [ "$inhibitors" -eq 1 ]; then
+    printf 'Idle lock: %s min · inhibitor active\n' "$minutes"
+  else
+    printf 'Idle lock: %s min · no active inhibitor\n' "$minutes"
+  fi
+}
+
 case "${1:-}" in
   battery) battery ;;
   network) network ;;
@@ -139,5 +158,6 @@ case "${1:-}" in
   privacy) privacy ;;
   security) security ;;
   weather) weather ;;
+  idle) idle ;;
   *) usage ;;
 esac

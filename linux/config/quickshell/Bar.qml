@@ -79,6 +79,7 @@ Scope {
   property int batteryPercentage: 0
   property string batteryTime: ""
   property bool batteryAvailable: false
+  property string idleLockStatus: ""
   readonly property bool doNotDisturb: root.notificationService.doNotDisturb
   readonly property bool brightnessBusy: brightnessSet.running
   property int brightness: 0
@@ -473,6 +474,15 @@ Scope {
   }
 
   Process {
+    id: idleLockStatus
+    command: ["u_lock-status", "idle"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: root.idleLockStatus = this.text.trim()
+    }
+  }
+
+  Process {
     id: systemStatus
     command: ["sh", "-c", "awk '/^cpu / { total = 0; for (i = 2; i <= NF; i++) total += $i; print total, $5 + $6; exit }' /proc/stat; awk '/^MemTotal:/ { total = $2 } /^MemAvailable:/ { available = $2 } END { print total, available }' /proc/meminfo; awk '{ print $1 }' /proc/loadavg; gpu_usage=; for gpu_path in /sys/class/drm/card*/device/gpu_busy_percent; do [ -r \"$gpu_path\" ] || continue; read -r gpu_usage < \"$gpu_path\"; break; done; printf '%s\\n' \"$gpu_usage\"; sensors -j 2>/dev/null | tr -d '\\n'; printf '\\n'"]
     running: true
@@ -541,6 +551,13 @@ Scope {
     running: true
     repeat: true
     onTriggered: batteryStatus.running = true
+  }
+
+  Timer {
+    interval: 30000
+    running: true
+    repeat: true
+    onTriggered: idleLockStatus.running = true
   }
 
   Timer {

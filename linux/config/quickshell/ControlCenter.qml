@@ -618,6 +618,17 @@ PopupWindow {
                 popup.controller.setBrightness(value)
               }
             }
+
+            Text {
+              color: popup.controller.controlSecondaryText
+              font.family: popup.controller.fontFamily
+              font.pixelSize: 11
+              text: popup.controller.idleLockStatus
+              textFormat: Text.PlainText
+              visible: text.length > 0
+              width: parent.width
+              wrapMode: Text.Wrap
+            }
           }
         }
 
