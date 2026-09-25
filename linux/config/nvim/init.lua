@@ -1,6 +1,9 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
+-- Avoid an unhighlighted redraw while Tree-sitter reparses a reloaded buffer.
+vim.g._ts_force_sync_parsing = true
+
 require "core.editor"
 require "core.keymaps"
 require "core.appearance"
