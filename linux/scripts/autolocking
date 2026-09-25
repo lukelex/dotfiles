@@ -52,11 +52,6 @@ function should_defer {
   fullscreen=$(hyprctl activewindow -j 2> /dev/null | jq -r '.fullscreen // 0' 2> /dev/null || echo 0)
   [[ $fullscreen != 0 ]] && return 0
 
-  if command -v playerctl > /dev/null 2>&1 \
-      && [[ $(playerctl status 2> /dev/null || true) == Playing ]]; then
-    return 0
-  fi
-
   if command -v wpctl > /dev/null 2>&1 \
       && wpctl inspect @DEFAULT_AUDIO_SOURCE@ 2> /dev/null | grep -q 'node.state = "running"'; then
     return 0
