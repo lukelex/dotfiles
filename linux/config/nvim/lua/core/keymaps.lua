@@ -27,7 +27,13 @@ map("-", "^")
 map("<leader>e", function()
   vim.diagnostic.open_float(0, { scope = "line" })
 end)
-map("K", vim.lsp.buf.hover)
+map("K", function()
+  if vim.bo.filetype == "ruby" then
+    require("core.hover").ruby()
+  else
+    vim.lsp.buf.hover()
+  end
+end)
 map("gi", vim.lsp.buf.implementation)
 
 map("gdn", vim.diagnostic.goto_next)
