@@ -12,6 +12,8 @@
 
 <br>
 
+<p align="center"><a href="screenshots/desktop.png"><img src="screenshots/desktop.png" alt="Empty i3 desktop with the Quickshell calendar and weather panel open" width="100%"></a></p>
+
 ## Desktop
 
 | Component | Setup |
@@ -31,7 +33,7 @@ setups familiar across Wayland and X11.
 <table>
   <tr>
     <td width="50%">
-      <a href="screenshots/desktop.png"><img src="screenshots/desktop.png" alt="Quickshell Control Center volume and brightness controls" width="100%"></a>
+      <a href="screenshots/control-center.png"><img src="screenshots/control-center.png" alt="Full desktop with the Quickshell Control Center open" width="100%"></a>
       <p align="center"><sub>Quickshell · Control Center</sub></p>
     </td>
     <td width="50%">
