@@ -12,12 +12,6 @@
 
 <br>
 
-<p align="center">
-  <img src="screenshots/desktop.png" alt="Arch Linux desktop with Quickshell bar, Control Center, and volume OSD" width="100%">
-</p>
-
-<p align="center"><sub>Quickshell status bar, Control Center, and on-screen volume display.</sub></p>
-
 ## Desktop
 
 | Component | Setup |
@@ -37,17 +31,15 @@ setups familiar across Wayland and X11.
 <table>
   <tr>
     <td width="50%">
-      <a href="screenshots/desktop.png"><img src="screenshots/desktop.png" alt="Desktop with the Quickshell Control Center open" width="100%"></a>
-      <p align="center"><sub>Desktop and Control Center</sub></p>
+      <a href="screenshots/desktop.png"><img src="screenshots/desktop.png" alt="Quickshell Control Center volume and brightness controls" width="100%"></a>
+      <p align="center"><sub>Quickshell · Control Center</sub></p>
     </td>
     <td width="50%">
-      <a href="screenshots/calion.png"><img src="screenshots/calion.png" alt="Desktop with calendar, weather, and recent notifications" width="100%"></a>
-      <p align="center"><sub>Calendar, weather, and notifications</sub></p>
+      <a href="screenshots/calion.png"><img src="screenshots/calion.png" alt="Quickshell calendar with weather forecast" width="100%"></a>
+      <p align="center"><sub>Quickshell · Calendar and weather</sub></p>
     </td>
   </tr>
 </table>
-
-<p align="center"><sub>Archived desktop captures from 2022; details may differ from the current configuration.</sub></p>
 
 ### Fuzzel themes
 
