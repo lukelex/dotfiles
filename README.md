@@ -1,98 +1,117 @@
-# Dotfiles
+<div align="center">
 
-This is a collection of configurations and customizations I've hoarded,
-throughout the years, in order to tweak my various desktops into
-supporting my preferred workflows.
+<h1>Dotfiles</h1>
 
-## Information
+<h3>A considered Linux desktop, built around the way I work.</h3>
 
-<img src="preview.jpg" alt="Rice Showcase" align="right" width="400px">
+<p>Arch Linux · Hyprland / i3 · Quickshell · Neovim</p>
 
-- Operating System is [Arch Linux](https://archlinux.org/);
-- Window management is handled by [Hyprland](https://github.com/hyprwm/Hyprland) or [i3](https://i3wm.org/);
-- The bar, control center, and notifications are built with [Quickshell](https://quickshell.outfoxxed.me/);
-- i3 uses [Picom](https://github.com/yshui/picom) for X11 compositing; Hyprland handles its own effects;
-- Wallpapers are by the talented [Byrotek](https://www.patreon.com/byrotek);
-- Application launchers are [rofi](https://github.com/davatorium/rofi) for i3 and [Fuzzel](https://codeberg.org/dnkl/fuzzel) for Hyprland;
-- Code editing using [NeoVim](https://neovim.io/).
+<p><a href="#desktop">Desktop setup</a> · <a href="#screenshots">Screenshots</a> · <a href="#install">Install</a> · <a href="#repository-guide">Repository guide</a></p>
 
-## Installation
+</div>
 
-Configuration is done through symlinks and relative paths.
+<br>
 
-```sh
-$ git clone --recurse-submodules git@github.com:lukelex/dotfiles.git "$HOME/dotfiles"
-$ cd "$HOME/dotfiles" && ./linux/install/sync
-```
+<p align="center">
+  <img src="screenshots/desktop.png" alt="Arch Linux desktop with Quickshell bar, Control Center, and volume OSD" width="100%">
+</p>
 
-The desktop configuration uses `$HOME/dotfiles` at runtime; install this
-repository at that path.
+<p align="center"><sub>Quickshell status bar, Control Center, and on-screen volume display.</sub></p>
 
-For a headless homelab server, run `./linux/install/all --server`. `sync`
-reconciles only the declarative manifest; `all` also applies every active
-imperative setup concern and runs post-install verification.
-Profile packages, AppImages, groups, config links, and services are reconciled
-by the pinned static `dotpkg` binary. On first use, the repository's
-`linux/packages.yaml` seed is copied to dotpkg's per-user manifest at
-`$XDG_CONFIG_HOME/dotpkg/package.yaml`; state is kept beside it in
-`state.yaml`.
-The `common` section applies to every profile; profile sections contain only
-their additions. The root `source: aur` makes `yay` the default resolver; it
-also resolves official repository packages. A package can override this with a
-`source` child when needed. Package values can list Unix groups required by
-that package.
-Packages can also declare repository-to-target config links, such as
-`linux/config/nvim:$XDG_CONFIG_HOME/nvim`.
-The first interactive desktop sync records its package selections locally. Use a
-committed `linux/hosts/<name>.yaml` overlay with `--host <name>` for additional
-machine-specific package metadata. See `linux/hosts/README.md` for the overlay
-format.
+## Desktop
 
-Run `./linux/install/sync --dry-run` to preview resource and package changes
-without applying them. The first run still bootstraps dotpkg and initializes its
-local manifest and state.
-Config links and services are reconciled by dotpkg; conflicting targets are
-preserved unless `--replace` is passed.
+| Component | Setup |
+| --- | --- |
+| **Window managers** | [Hyprland](https://github.com/hyprwm/Hyprland) on Wayland · [i3](https://i3wm.org/) on X11 |
+| **Desktop shell** | [Quickshell](https://quickshell.outfoxxed.me/) bar, panels, notifications, and OSDs |
+| **Launchers** | [Fuzzel](https://codeberg.org/dnkl/fuzzel) on Hyprland · [rofi](https://github.com/davatorium/rofi) on i3 |
+| **Compositor** | Hyprland effects · [Picom](https://github.com/yshui/picom) for i3 |
+| **Editor** | [Neovim](https://neovim.io/) with lazy.nvim |
 
-Run `./linux/install/sync --server` (or `--desktop`) to reconcile a profile.
-Each package, group, service, and config-link stage requires confirmation.
-Only resources previously recorded in dotpkg's adjacent `state.yaml` are
-eligible for removal.
+The configs favor a quiet status surface, quick keyboard workflows, and panels
+that reveal detail only when needed. Shared helpers keep the Hyprland and i3
+setups familiar across Wayland and X11.
 
-Existing installs keep their local manifest so package selections and local
-changes are not overwritten. Run `./linux/install/sync --refresh-manifest` to
-adopt the repository's current `packages.yaml`; the previous local manifest is
-saved beside it with a timestamped `.bak` suffix.
+## Screenshots
 
-After syncing, run `./linux/install/verify` to check that the selected desktop
-configuration, helper links, and window-manager dependencies are available.
+<table>
+  <tr>
+    <td width="50%">
+      <a href="screenshots/desktop.png"><img src="screenshots/desktop.png" alt="Desktop with the Quickshell Control Center open" width="100%"></a>
+      <p align="center"><sub>Desktop and Control Center</sub></p>
+    </td>
+    <td width="50%">
+      <a href="screenshots/calion.png"><img src="screenshots/calion.png" alt="Desktop with calendar, weather, and recent notifications" width="100%"></a>
+      <p align="center"><sub>Calendar, weather, and notifications</sub></p>
+    </td>
+  </tr>
+</table>
 
-One-off setup that cannot be expressed as manifest resources (user directories,
-login shell, timezone, font/cache refreshes) is collected in
-`./linux/install/post`.
+<p align="center"><sub>Archived desktop captures from 2022; details may differ from the current configuration.</sub></p>
 
-Run `dotpkg validate [--host <path>]` to verify selected manifest packages.
-Repository packages use local pacman sync databases and AUR packages use
-batched AUR RPC requests.
+### Fuzzel themes
 
-Package entries may define `groups`, `configs`, and `services`, which dotpkg
-reconciles along with packages.
-Use top-level `resources.configs` and `resources.services` for custom resources
-that are not owned by a package.
+Three launcher palettes, including a light theme. These are design previews of
+the launcher configuration.
 
-Pinned AppImages can be declared as package entries with `source: appimage`, an
-HTTPS release address, and a `sha256` digest. Dotpkg verifies and tracks these
-artifacts alongside package reconciliation.
+<table>
+  <tr>
+    <td width="33%"><a href="designs/fuzzel/01-slate.png"><img src="designs/fuzzel/01-slate.png" alt="Slate Fuzzel theme preview" width="100%"></a><p align="center"><sub>Slate · default</sub></p></td>
+    <td width="33%"><a href="designs/fuzzel/02-graphite.png"><img src="designs/fuzzel/02-graphite.png" alt="Graphite Fuzzel theme preview" width="100%"></a><p align="center"><sub>Graphite · compact</sub></p></td>
+    <td width="33%"><a href="designs/fuzzel/03-porcelain.png"><img src="designs/fuzzel/03-porcelain.png" alt="Porcelain light Fuzzel theme preview" width="100%"></a><p align="center"><sub>Porcelain · light</sub></p></td>
+  </tr>
+</table>
 
-Use dotpkg directly for package operations:
+## Install
+
+The desktop configuration expects the repository at **`$HOME/dotfiles`** on
+Arch Linux.
 
 ```sh
-dotpkg add <name> --scope desktop --resources --root "$HOME/dotfiles"
-dotpkg diff --resources --root "$HOME/dotfiles"
-dotpkg doctor --resources --root "$HOME/dotfiles"
-dotpkg clean --yes
-dotpkg recover --yes
+git clone --recurse-submodules git@github.com:lukelex/dotfiles.git "$HOME/dotfiles"
+cd "$HOME/dotfiles"
+./linux/install/sync
 ```
 
-Use `dotpkg clean --yes` only to remove stale managed packages. Use
-`dotpkg recover --yes` after an interrupted transaction with a pending journal.
+For a headless server, use `./linux/install/all --server`. For a specific
+machine, pass a committed host overlay, for example:
+
+```sh
+./linux/install/sync --host <name>
+```
+
+## Repository guide
+
+- [`linux/packages.yaml`](linux/packages.yaml) — desktop and server package selections, config links, and services.
+- [`linux/install/`](linux/install/) — sync, full setup, verification, and supporting installer steps.
+- [`linux/config/`](linux/config/) — application and desktop configurations.
+- [`linux/scripts/`](linux/scripts/) — system helpers, installed as `u_*` commands on desktop setups.
+- [`linux/hosts/README.md`](linux/hosts/README.md) — host overlay format.
+- [`linux/config/fuzzel/README.md`](linux/config/fuzzel/README.md) — launcher themes and shortcuts.
+
+<details>
+<summary><strong>How installation works</strong></summary>
+
+`sync` reconciles packages, groups, config links, and services from the selected
+profile using the pinned `dotpkg` binary. On first use, it seeds
+`$XDG_CONFIG_HOME/dotpkg/package.yaml` from `linux/packages.yaml`; dotpkg stores
+its state beside that manifest.
+
+Preview the reconciliation with:
+
+```sh
+./linux/install/sync --dry-run
+```
+
+The first run can still bootstrap `yay` and initialize dotpkg's local manifest
+and state. Existing installs keep their local manifest; use
+`--refresh-manifest` to adopt the repository version (a backup is saved beside
+it). Config conflicts are preserved unless `--replace` is passed. Use
+`./linux/install/all` to include system setup, post-install steps, and
+verification, or `./linux/install/verify` to check an existing setup.
+
+For package and resource maintenance, see `dotpkg --help`. `dotpkg clean` only
+removes stale managed packages; `dotpkg recover` handles an interrupted
+transaction.
+
+</details>
