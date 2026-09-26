@@ -25,7 +25,6 @@ case "$XDG_SESSION_TYPE" in
   *)
     autorandr --change
 
-    xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10' &
     xss-lock --transfer-sleep-lock -- u_exit lock &
 
     sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
