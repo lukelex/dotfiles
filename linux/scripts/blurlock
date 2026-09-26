@@ -93,6 +93,7 @@ if output_img=$(build_image); then
   fi
   i3lock --image "$output_img" "${lock_args[@]}"
   play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
+  exit 0
 fi
 
 lock_black
