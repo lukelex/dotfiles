@@ -25,9 +25,9 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 
 - Reuse the theme colors in `Bar.qml` (`controlBackground`, `controlSurface`, `controlPrimaryText`, `controlSecondaryText`, `controlActive`, and related tokens). Support both light and dark themes.
 - Use `LucideIcon.qml` and SVGs in `../lucide/svg/`. Verify each asset exists; preserve its license when adding variants.
-- Use the controller's `fontFamily` and `barFontSize`; do not introduce another font family or independent bar icon sizing. Current defaults are Hack Nerd Font Mono and 17px.
+- Use the controller's `fontFamily` and `barFontSize`; do not introduce another font family or independent bar icon sizing. Current defaults are Hack Nerd Font Mono and 18px.
 - Preserve the existing layout: workspaces left, time/date centered, compact status/actions right. Current bar height is 40px.
-- Follow the established panel proportions: approximately 432px wide, 12px below the bar, 16px content padding, 26px outer corners, and smaller rounded inner surfaces. Treat these as shared defaults, not an excuse to ignore screen bounds.
+- Control Center and Connectivity use panels up to 432px wide; the calendar and GitHub reviews need more space. Panels sit 12px below the bar with roughly 16px content padding and rounded surfaces. Constrain them to the screen bounds.
 - Use muted styling for inactive state, restrained blue for active state, and warning color for conditions that genuinely need attention. Do not convey important distinctions through color alone.
 - Battery icons use critical at 0–14%, low at 15–39%, medium at 40–64%, high at 65–89%, and full at 90–100%; charging has its own icon.
 - Keep short status text legible and detailed lists bounded. One long list must not push another section's overview out of reach.
@@ -37,7 +37,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 
 - Hover previews must not steal keyboard focus. Allow enough time to cross the gap into a popup; connectivity uses a local 500ms grace period. Cancel delayed closure when the pointer returns.
 - A click can pin a detail panel for deliberate interaction. A pinned panel must support Close, Escape, and outside-click dismissal; leaving it with the pointer must not close it.
-- Preserve existing explicit bar shortcuts unless asked to change them; for example, clicking the notification bell toggles DND. Do not silently redefine all bar clicks as pinning.
+- Preserve existing explicit bar shortcuts; clicking the notification bell toggles DND.
 - Opening a panel should close sibling panels and cancel stale close requests. Route actions and timers to the actual screen's panel, not an assumed primary-screen instance.
 - Separate navigation from state changes. Clicking a network name selects a connection; only its explicit radio switch turns Wi-Fi off. Give icons generous hit areas without overlapping neighboring controls.
 - Show pending state immediately, prevent competing duplicate actions, and report success only after backend confirmation. Errors belong near the attempted action.
@@ -55,18 +55,17 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Clear All acts on a snapshot taken at the click. Later arrivals and independent volume/brightness OSDs must survive.
 - Notification dismissal is routine housekeeping, not deletion of the underlying message. Use a subdued `x` with a generous hit target, neutral hover feedback, and a descriptive tooltip/accessibility label for cards and groups; use a separate "Clear all" text action for history. Keep exits slide-and-fade without red trash-reveal layers.
 - Keep system OSDs distinct from notification history. Release references when native notifications close; do not invoke methods on destroyed objects.
-- System notification senders should supply a specific icon with `notify-send -i` (for example, `$LUCIDE_PATH/battery-charging.svg`), rather than relying on the generic `System` app name. The shared `NotificationService.iconFor()` resolver preserves sender-selected variants and routes this repository's Lucide SVGs through theme-colored rendering. Keep explicit imagery ahead of semantic fallbacks and never recolor arbitrary application icons or avatars.
-- Notification icons can already be `image://icon/...` or other native image-provider URLs; preserve them rather than resolving them again as theme names. Quickshell's `Qt.resolvedUrl()` can block paths outside the shell directory, so the sibling Lucide assets use the repository's installed `$HOME/dotfiles` location.
-- Never persist or replay pixmaps that only exist while a notification is alive. `image://qsimage/...` URLs are in-memory notification-server handles and Chromium-family `scoped_dir` icons are transient temp files; both are stripped by `isLiveOnlySource`/`isEphemeralSource` before `saveHistory` persists, and `usableAppIcon`/`usableImage` refuse them for records that are no longer live. For a durable theme name that `Quickshell.iconPath()` misses (Qt caches the icon theme per process, so icons installed after the shell started stay invisible until restart), `resolveIcon` falls back to an async `sh` filesystem search cached in `iconFileCache`; bumping `iconRevision` re-evaluates the icon bindings.
-- Respect explicit persistent timeouts. The installed Quickshell 0.3.1 build was live-verified to expose notification timeouts in milliseconds despite conflicting documentation; verify units again when changing versions.
+- System notification senders should supply a specific icon with `notify-send -i`. `NotificationService.iconFor()` prefers sender-selected imagery over semantic fallbacks, colors only this repository's Lucide SVGs, and preserves native image-provider URLs.
+- Never persist or replay transient notification images (`image://qsimage/...` pixmaps or Chromium `scoped_dir` temp files); use a durable icon for saved history. Keep fallback resolution for theme icons that Quickshell has not yet cached.
+- Respect explicit persistent notification timeouts; verify the installed Quickshell version's timeout units when changing this behavior.
 
 ## Architecture And Platform
 
 - `shell.qml` composes the shell. `Bar.qml` owns shared visual tokens and per-screen panel wiring.
-- Both window managers start Quickshell through `linux/config/quickshell/scripts/quickshell --session-start`. The launcher validates a Hyprland socket pair when `HYPRLAND_INSTANCE_SIGNATURE` is set, otherwise validates i3's display/socket. It imports only the selected session's plumbing and clears stale variables from the other backend before starting the shared systemd user service. Repeated calls use `start`, not `restart`. The unit is linked but not enabled on `default.target`; do not restore boot-time enablement or import the entire login environment.
+- Both window managers start Quickshell through `linux/config/quickshell/scripts/quickshell --session-start`. The launcher validates the active session's socket/display, imports only its environment into the user manager, and starts the shared systemd user service. The unit is linked but not enabled on `default.target`.
 - Runtime helpers the shell invokes live beside the config in `linux/config/quickshell/scripts/` and are called by absolute path (`scripts/battery`, `scripts/nightmode`, `scripts/weather`, plus this launcher), never through the global `u_*` links that `linux/install/binaries` creates for `linux/scripts/`. Keep the quickshell stack self-contained; do not move its helpers back to `linux/scripts/`.
 - `*Center.qml` files own panel presentation and interaction. `NotificationService.qml` and `ConnectivityService.qml` own backend state and lifecycle; do not duplicate their state through independent polling in a panel.
-- `WeatherService.qml` owns one shared weather snapshot from the colocated `scripts/weather snapshot`; retain the helper's existing CLI modes (`icon`/`show`/`details`/`forecast`) for the snapshot pipeline and manual use. The helper validates payloads before replacing its 20-minute cache, preserves valid cached data on failure, and bounds requests with a cooldown. Expose loading, freshness, update time, and errors honestly; a retry button must indicate when cooldown prevents action.
+- `WeatherService.qml` owns one shared weather snapshot from `scripts/weather snapshot`; the helper also supports `icon`/`show`/`details`/`forecast` for manual use. The helper validates payloads before replacing its 20-minute cache, preserves valid cached data on failure, and bounds requests with a cooldown. Expose loading, freshness, update time, and errors honestly.
 - Forecast low/high values aggregate complete three-hourly coverage of each of the next three city-local dates, using the provider's UTC offset. Do not label noon samples as daily ranges or silently fill gaps with later days. Use condition-specific icons and display partial/stale data as such.
 - Weather credentials come from `OPEN_WEATHER_API_KEY`, with the existing `~/Dropbox/secrets.env` as fallback when absent from the desktop service environment. Never embed or log the key. Weather tests use isolated fixture caches and mocked requests, not the user's secrets or live cache.
 - Prefer native, event-driven Quickshell modules when available. Connectivity uses `Quickshell.Networking` over NetworkManager and `Quickshell.Bluetooth` over BlueZ. Do not bypass NetworkManager by controlling its iwd backend directly.
@@ -74,10 +73,9 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Enable Wi-Fi scanning only while the connectivity panel is open. Do not continuously discover Bluetooth devices just to show connected-device batteries.
 - Bluetooth battery and native Wi-Fi strength values are fractions (0-1). Check `batteryAvailable`; unavailable battery data is not 0%.
 - Delegate advanced networking and pairing to `nm-connection-editor` and `blueman-manager`. Release popup grabs before opening another application.
-- Native Qt `Popup.Window` surfaces ignore their requested position when parented to the Hyprland layer-shell bar. `DateTimeCenter.qml` and `ConnectivityCenter.qml` use anchored `PopupWindow` surfaces for both hover and pinned views, with focus grabbing enabled only while pinned. Verify keyboard and outside-click behavior in X11 before changing this arrangement. During pin promotion, keep a snapshot in the preview above the destination until the destination's first `frameSwapped`, matching the DateTimeCenter pattern to avoid a single-frame blink when a control is clicked in the hover-opened panel.
-- DateTimeCenter uses that same preview/pinned distinction with a screen-local 600ms close timer. Both bar date/time entry points must route to the actual screen's instance; do not restore the old primary-screen delayed-close shortcut. At narrow widths, stack weather below the calendar and constrain height with scrolling.
-- In `../picom.conf`, allow background blur for both Quickshell tooltip previews and normal pinned windows. Excluding tooltip windows makes the same panel visibly change blur when pinned; keep the dock/bar exclusion separate.
-- During date/time promotion, keep a snapshot in the preview above the destination until the destination's first `frameSwapped`. Qt's `opened` signal and QML visibility/opacity values alone do not prove a populated frame has reached the screen; test first-click transitions with rendered-frame capture, not only mocked lifecycle tests.
+- `DateTimeCenter.qml` and `ConnectivityCenter.qml` use anchored `PopupWindow` surfaces for hover and pinned views, with focus grabbing only while pinned. During pin promotion, retain the preview snapshot until the destination's first `frameSwapped` to avoid a visible blink.
+- DateTimeCenter uses that same preview/pinned distinction with a screen-local 600ms close timer. Both bar date/time entry points route to the actual screen's instance. At narrow widths, stack weather below the calendar and constrain height with scrolling.
+- On i3, `../picom.conf` allows background blur for both Quickshell previews and pinned panels while excluding the bar. Test first-click pin transitions with rendered frames, not only lifecycle mocks.
 - Prefer the smallest correct change. Extract shared code when there is actual reuse, not to build a generic widget framework. Do not add compatibility fallbacks without a concrete supported consumer.
 
 ## Validation And Safe Development
@@ -86,20 +84,20 @@ Commands below run from the repository root:
 
 ```sh
 node --test linux/config/quickshell/tests/*.test.cjs
-/usr/lib/qt6/bin/qmllint linux/config/quickshell/ConnectivityCenter.qml
+/usr/lib/qt6/bin/qmllint linux/config/quickshell/Bar.qml
 git diff --check -- linux/config/quickshell linux/config/lucide
 quickshell list --all
 quickshell log --pid <current-pid> --tail 30
 ```
 
-- Run Qt 6's linter on every changed QML file. `/usr/bin/qmllint` may select an older Qt version and fail without useful diagnostics. Native Quickshell type metadata can produce unresolved-type warnings; inspect and report them rather than calling a warning-producing run clean.
+- Run Qt 6's linter on every changed QML file (substitute its path in the example). `/usr/bin/qmllint` may select an older Qt version and fail without useful diagnostics. Native Quickshell type metadata can produce unresolved-type warnings; inspect and report them rather than calling a warning-producing run clean.
 - The Node tests extract JavaScript from QML and mock native services. They cover logic, not QML bindings, rendering, focus, D-Bus delivery, or actual hardware behavior.
-- Startup tests exercise the launcher with isolated Unix sockets and mocked system commands. For startup changes, also validate the unit and both i3 and Hyprland session entries, check boot journal timestamps and restart counts, and distinguish a measured live restart from an actual reboot/login test.
+- Startup tests exercise the launcher with isolated Unix sockets and mocked system commands. For startup changes, validate the unit and both i3 and Hyprland session entries, and inspect the user-service journal.
 - Inspect installed `.qmltypes` under `/usr/lib/qt6/qml/Quickshell/` and matching upstream source when API behavior is uncertain. Confirm units and lifecycle semantics rather than relying on names or documentation alone.
 - Configs are symlinked and Quickshell reloads on edits. Check the current instance and its logs; do not launch a second full shell or run provisioning scripts just to validate a component.
-- Confirm the reload log timestamp is newer than the edit before live-testing. Atomic file replacement by a formatter can leave the running instance watching an old inode; an edit to the shell entry point can trigger a fresh reload and restore component watches. Do not infer that new code loaded from an old "Configuration Loaded" message.
+- Confirm the reload log timestamp is newer than the edit before live-testing. Atomic file replacement may leave the running instance watching an old inode.
 - For UI changes, exercise hover-to-panel traversal, pinning, Escape/outside closure, sibling-panel changes, rapid reversal, and list updates. Check light/dark appearance and relevant screen sizes; multi-monitor behavior needs explicit verification.
 - For notifications, check arrivals during dismissal, burst expiry, hovered cards, Clear All snapshots, and reading position midway through and near the bottom of history.
 - Do not toggle radios, switch networks, pair devices, clear real notification history, or change system settings merely to test without user approval. Use mocks or narrowly scoped synthetic data, and disclose what was not live-tested.
 - Remove temporary IPC diagnostics, test notifications, and screenshots. Preserve unrelated worktree changes and never commit credentials, personal state, screenshots, or unresolved conflicts.
-- Update this guide when an intentional design decision changes; do not turn it into a session log or freeze incidental implementation details as permanent requirements.
+- Update this guide when an intentional design decision changes; keep it focused on current behavior and reusable guidance.

@@ -11,9 +11,9 @@ supporting my preferred workflows.
 - Operating System is [Arch Linux](https://archlinux.org/);
 - Window management is handled by [Hyprland](https://github.com/hyprwm/Hyprland) or [i3](https://i3wm.org/);
 - The bar, control center, and notifications are built with [Quickshell](https://quickshell.outfoxxed.me/);
-- Window decoration and animations are from [Picom](https://github.com/yshui/picom);
+- i3 uses [Picom](https://github.com/yshui/picom) for X11 compositing; Hyprland handles its own effects;
 - Wallpapers are by the talented [Byrotek](https://www.patreon.com/byrotek);
-- Application launchers are [rofi](https://github.com/davatorium/rofi) for i3 and [tofi](https://github.com/philj56/tofi) for Hyprland;
+- Application launchers are [rofi](https://github.com/davatorium/rofi) for i3 and [Fuzzel](https://codeberg.org/dnkl/fuzzel) for Hyprland;
 - Code editing using [NeoVim](https://neovim.io/).
 
 ## Installation
@@ -48,8 +48,9 @@ committed `linux/hosts/<name>.yaml` overlay with `--host <name>` for additional
 machine-specific package metadata. See `linux/hosts/README.md` for the overlay
 format.
 
-Run `./linux/install/sync --dry-run` to preview changes without touching the
-system. It initializes dotpkg and migrates the legacy state file on first use.
+Run `./linux/install/sync --dry-run` to preview resource and package changes
+without applying them. The first run still bootstraps dotpkg and initializes its
+local manifest and state.
 Config links and services are reconciled by dotpkg; conflicting targets are
 preserved unless `--replace` is passed.
 
@@ -74,8 +75,8 @@ Run `dotpkg validate [--host <path>]` to verify selected manifest packages.
 Repository packages use local pacman sync databases and AUR packages use
 batched AUR RPC requests.
 
-Existing package metadata remains supported: `groups`, `configs`, and
-`services` declared on package entries are reconciled by the standalone sync.
+Package entries may define `groups`, `configs`, and `services`, which dotpkg
+reconciles along with packages.
 Use top-level `resources.configs` and `resources.services` for custom resources
 that are not owned by a package.
 

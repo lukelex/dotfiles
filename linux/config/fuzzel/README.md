@@ -13,7 +13,5 @@ Run `u_fuzzel --theme` to choose from a terminal.
 Direct `fuzzel` invocations use Slate; use `u_fuzzel` for the remembered theme.
 App-launch frequency is shared between themes through Fuzzel's standard cache.
 
-After updating from the old single-file configuration, apply the manifest with
-`./linux/install/sync --desktop --refresh-manifest --replace`. This also installs
-the `u_fuzzel` helper link. The replacement flag allows the new config directory
-link to replace the old directory containing `fuzzel.ini`.
+The desktop manifest links this config directory to `~/.config/fuzzel`, and
+`linux/install/binaries` installs the `u_fuzzel` helper.

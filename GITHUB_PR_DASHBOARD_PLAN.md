@@ -1,9 +1,21 @@
 # GitHub PR Dashboard Plan
 
+## Status
+
+This is a proposal for a future cross-platform application, not a description
+of the current desktop implementation. Today, Quickshell's
+`linux/config/quickshell/GitHubReviewCenter.qml` displays PRs from
+`GitHubPrService.qml` and `linux/config/quickshell/scripts/github-prs`; a
+separate `linux/config/github-review-notify/github-review-notify.timer` runs
+`linux/scripts/github-review-notify` for review notifications. The shared
+cross-platform core, PR-level read/snooze state, and macOS/Windows applications
+below are still proposed.
+
 ## Decision
 
 Build this as a cross-platform native application with a platform-neutral core.
-Quickshell should be a Linux integration surface, not the product boundary.
+The existing Quickshell panel should become a Linux integration surface, not
+the product boundary.
 
 The app must eventually support macOS and Windows, where Quickshell is not
 available. A native application can provide a consistent dashboard, local state,
@@ -161,8 +173,8 @@ loading/empty/stale/error states.
 
 ### 4. Platform integrations
 
-Add a Quickshell launcher and Linux notifications first, then macOS menu-bar and
-Windows tray integrations using the same core state.
+Connect the existing Quickshell panel and Linux notifications to the new core,
+then add macOS menu-bar and Windows tray integrations using the same core state.
 
 **Exit:** each platform presents the same ranked PR state without reimplementing
 GitHub logic.
