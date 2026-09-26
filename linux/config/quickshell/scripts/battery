@@ -7,7 +7,6 @@ source "$HOME/dotfiles/linux/variables.env"
 CHARGING=$(printf "\ue054")
 CRITICAL=$(printf "\ue3ac")
 LOW=$(printf "\ue056")
-QUARTER=$(printf "\ue056")
 HALF=$(printf "\ue057")
 THREE_QUARTERS=$(printf "\ue057")
 FULL=$(printf "\ue055")
@@ -37,15 +36,13 @@ icon() {
 
   if is_charging; then
     echo $CHARGING
-  elif [[ 1 -eq $(echo "$value < 6" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value < 15" | bc -l) ]]; then
     echo "%{F#FF0000}$CRITICAL%{F-}"
-  elif [[ 1 -eq $(echo "$value < 16" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value < 40" | bc -l) ]]; then
     echo $LOW
-  elif [[ 1 -eq $(echo "$value < 26" | bc -l) ]]; then
-    echo $QUARTER
-  elif [[ 1 -eq $(echo "$value < 51" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value < 65" | bc -l) ]]; then
     echo $HALF
-  elif [[ 1 -eq $(echo "$value < 91" | bc -l) ]]; then
+  elif [[ 1 -eq $(echo "$value < 90" | bc -l) ]]; then
     echo $THREE_QUARTERS
   else
     echo $FULL
@@ -59,14 +56,14 @@ notification_icon() {
 
   if is_charging; then
     echo "$LUCIDE_PATH/battery-charging.svg"
-  elif [[ $value -lt 6 ]]; then
+  elif [[ $value -lt 15 ]]; then
     echo "$LUCIDE_PATH/battery-warning.svg"
-  elif [[ $value -lt 26 ]]; then
+  elif [[ $value -lt 40 ]]; then
     echo "$LUCIDE_PATH/battery-low.svg"
-  elif [[ $value -lt 51 ]]; then
+  elif [[ $value -lt 65 ]]; then
     echo "$LUCIDE_PATH/battery-medium.svg"
-  elif [[ $value -lt 91 ]]; then
-    echo "$LUCIDE_PATH/battery.svg"
+  elif [[ $value -lt 90 ]]; then
+    echo "$LUCIDE_PATH/battery-high.svg"
   else
     echo "$LUCIDE_PATH/battery-full.svg"
   fi

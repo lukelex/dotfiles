@@ -29,6 +29,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Preserve the existing layout: workspaces left, time/date centered, compact status/actions right. Current bar height is 40px.
 - Follow the established panel proportions: approximately 432px wide, 12px below the bar, 16px content padding, 26px outer corners, and smaller rounded inner surfaces. Treat these as shared defaults, not an excuse to ignore screen bounds.
 - Use muted styling for inactive state, restrained blue for active state, and warning color for conditions that genuinely need attention. Do not convey important distinctions through color alone.
+- Battery icons use critical at 0–14%, low at 15–39%, medium at 40–64%, high at 65–89%, and full at 90–100%; charging has its own icon.
 - Keep short status text legible and detailed lists bounded. One long list must not push another section's overview out of reach.
 - Avoid decorative gradients, oversized headings, constant motion, redundant borders, and dashboard-style tiles without a functional purpose.
 

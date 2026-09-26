@@ -618,7 +618,7 @@ PopupWindow {
               height: 18
               width: 18
               source: popup.controller.icon(popup.controller.batteryIcon())
-              color: popup.controller.batteryAvailable && popup.controller.batteryPercentage <= 5
+              color: popup.controller.batteryAvailable && popup.controller.batteryPercentage < 15
                 ? popup.controller.urgent : popup.controller.controlSecondaryText
             }
 

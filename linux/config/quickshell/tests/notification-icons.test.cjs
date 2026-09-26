@@ -84,7 +84,7 @@ function invokeAction(service, id, index) {
   return serviceFunction(service, 'invokeAction')(id, index);
 }
 
-for (const variant of ['battery', 'battery-charging', 'battery-warning', 'battery-low', 'battery-medium', 'battery-full']) {
+for (const variant of ['battery', 'battery-charging', 'battery-warning', 'battery-low', 'battery-medium', 'battery-high', 'battery-full']) {
   test(`sender-selected ${variant} is preserved and themeable`, () => {
     const iconFor = resolver({ icon: 'custom-icon' });
     for (const prefix of ['', 'file://', 'image://icon/']) {

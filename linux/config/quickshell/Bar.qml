@@ -162,12 +162,14 @@ Scope {
   function batteryIcon() {
     if (root.batteryState === "charging")
       return "battery-charging"
-    if (root.batteryPercentage <= 5)
+    if (root.batteryPercentage < 15)
       return "battery-warning"
-    if (root.batteryPercentage <= 33)
+    if (root.batteryPercentage < 40)
       return "battery-low"
-    if (root.batteryPercentage <= 66)
+    if (root.batteryPercentage < 65)
       return "battery-medium"
+    if (root.batteryPercentage < 90)
+      return "battery-high"
     return "battery-full"
   }
 
@@ -1073,7 +1075,7 @@ Scope {
           height: root.barFontSize
           width: root.barFontSize
           visible: root.batteryAvailable
-          color: root.batteryAvailable && root.batteryPercentage <= 5 ? root.urgent : root.batteryAvailable ? root.foreground : root.muted
+          color: root.batteryAvailable && root.batteryPercentage < 15 ? root.urgent : root.batteryAvailable ? root.foreground : root.muted
           source: root.icon(root.batteryIcon())
         }
 
