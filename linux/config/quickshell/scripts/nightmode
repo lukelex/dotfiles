@@ -26,7 +26,8 @@ case $1 in
     fi
     ;;
   get)
-    echo "$([[ "$(is_active)" == active ]] && echo true || echo false)"
+    state=$(systemctl --user show gammastep --property=ActiveState --value 2>/dev/null || true)
+    echo "$([[ $state == active || $state == activating || $state == reloading ]] && echo true || echo false)"
     ;;
   *)
     exit 1
