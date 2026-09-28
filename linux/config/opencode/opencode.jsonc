@@ -24,6 +24,14 @@
         "type": "remote",
         "url": "https://mcp.linear.app/mcp",
       },
+      "railway": {
+        "type": "remote",
+        "url": "https://mcp.railway.com"
+      },
+      "cloudflare": {
+        "type": "remote",
+        "url": "https://mcp.cloudflare.com/mcp"
+      },
     },
   },
 }
