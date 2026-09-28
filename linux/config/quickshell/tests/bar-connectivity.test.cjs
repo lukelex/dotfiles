@@ -18,6 +18,35 @@ test('battery status is hidden when no battery is available', () => {
   assert.match(source, /visible: root\.batteryAvailable\n          color: root\.batteryAvailable && root\.batteryPercentage < 15/);
 });
 
+test('power-source changes notify once per transition after the battery is ready', () => {
+  const match = source.match(/  function updatePowerSource\(\) \{[^]*?\n  \}/);
+  assert.ok(match);
+  assert.match(source, /function onOnBatteryChanged\(\) \{ root\.updatePowerSource\(\) \}/);
+  assert.match(source, /function onReadyChanged\(\) \{ root\.updatePowerSource\(\) \}/);
+
+  const root = { previousOnBattery: null, quickshellScripts: '/scripts' };
+  const UPower = { onBattery: false, displayDevice: { ready: false, isPresent: true, percentage: 0.724 } };
+  const powerNotification = { command: null, running: false };
+  const batteryStatus = { running: false };
+  const updatePowerSource = vm.runInNewContext(`(${match[0]})`, { root, UPower, powerNotification, batteryStatus });
+
+  updatePowerSource();
+  assert.equal(root.previousOnBattery, null);
+  UPower.displayDevice.ready = true;
+  updatePowerSource();
+  assert.equal(powerNotification.command, null);
+  UPower.onBattery = true;
+  updatePowerSource();
+  assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'unplugged', '72']);
+  assert.equal(batteryStatus.running, true);
+  powerNotification.running = false;
+  updatePowerSource();
+  assert.equal(powerNotification.running, false);
+  UPower.onBattery = false;
+  updatePowerSource();
+  assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'plugged', '72']);
+});
+
 test('battery icon reserves critical for 0–14% and full for 90–100%', () => {
   const match = source.match(/  function batteryIcon\(\) \{[^]*?\n  \}/);
   assert.ok(match);

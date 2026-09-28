@@ -7,6 +7,28 @@ const { test } = require('node:test');
 const source = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
 const assetPath = '/home/test/dotfiles/linux/config/lucide/svg/';
 
+test('silent cable notifications stay visible without playing the notification sound', () => {
+  assert.match(source, /extraHints: \[[^\n]*"suppress-sound"/);
+  const match = source.match(/  function handleNotification\([^]*?\n  \}/);
+  assert.ok(match);
+  const played = [];
+  const service = {
+    doNotDisturb: false, tagMap: {}, live: {}, popupLimit: 5, pendingPopupRecords: [],
+    buildRecord: notification => ({ id: notification.id }),
+    isSystemOsd: () => false,
+    addHistory: () => {},
+    playNotificationSound: () => played.push('sound'),
+  };
+  const context = vm.createContext({ service, popupUpdateTimer: { start: () => {} } });
+  service.handleNotification = vm.runInContext(`(${match[0]})`, context);
+
+  for (const [id, silent] of [['plugged', true], ['unplugged', true], ['other', false]]) {
+    service.handleNotification({ id, hints: { 'suppress-sound': silent }, closed: { connect: () => {} } });
+  }
+  assert.deepEqual(played, ['sound']);
+  assert.equal(service.pendingPopupRecords.length, 3);
+});
+
 function resolver(appLookup = null, env = {}, options = {}) {
   const service = {
     iconFileCache: {},

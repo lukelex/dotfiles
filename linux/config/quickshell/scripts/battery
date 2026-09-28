@@ -11,13 +11,14 @@ HALF=$(printf "\ue057")
 THREE_QUARTERS=$(printf "\ue057")
 FULL=$(printf "\ue055")
 LOW_BATTERY_THRESHOLD=15
-CRITICAL_BATTERY_THRESHOLD=5
 LOW_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-low-notified"
-CRITICAL_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-critical-notified"
-CHARGING_STATE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-charging-state"
+CRITICAL_BATTERY_THRESHOLDS=(14 10 5)
+BATTERY_NOTIFICATION_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/battery-critical-notified"
 
-device=$(upower -e | grep 'BAT' | head -n 1)
-stats=$(upower -i "$(echo $device)" | grep -E "state|to full|percentage|time to empty")
+if [[ ${1:-} != power ]]; then
+  device=$(upower -e | grep 'BAT' | head -n 1)
+  stats=$(upower -i "$device" | grep -E "state|to full|percentage|time to empty")
+fi
 
 get_percentage() {
   echo "$stats" | grep percentage | awk '{print $2}' | sed 's/%//'
@@ -70,7 +71,6 @@ notification_icon() {
 }
 
 get() {
-  track_charging
   state=$(echo "$stats" | grep state | awk '{print $2}')
   charge=$(echo "$stats" | grep percentage | awk '{print $2}')
   time=$(echo "$stats" | grep time | awk '{print $4" "$5}')
@@ -87,24 +87,27 @@ shorten_time() {
   esac
 }
 
-track_charging() {
-  local state previous charge
+power() {
+  local state=$1 charge=$2
 
-  state=$(get_state)
-  previous=""
-  [[ -r "$CHARGING_STATE_FILE" ]] && read -r previous < "$CHARGING_STATE_FILE"
-  mkdir -p "$(dirname "$CHARGING_STATE_FILE")"
-
-  if [[ -n "$previous" && "$previous" != charging && "$state" == charging ]]; then
-    charge=$(get_percentage)
-    notify-send -a System \
-      -i "$LUCIDE_PATH/battery-charging.svg" \
-      -h string:wired-tag:battery-charging \
-      -h int:value:"$charge" \
-      "Charging started" "$charge% charged"
-  fi
-
-  printf '%s\n' "$state" > "$CHARGING_STATE_FILE"
+  case "$state" in
+    plugged)
+      notify-send -a System \
+        -i "$LUCIDE_PATH/battery-charging.svg" \
+        -h string:wired-tag:battery-charging \
+        -h boolean:suppress-sound:true \
+        -h int:value:"$charge" \
+        "Charging started" "$charge% charged"
+      ;;
+    unplugged)
+      notify-send -a System \
+        -i "$LUCIDE_PATH/battery.svg" \
+        -h string:wired-tag:battery \
+        -h boolean:suppress-sound:true \
+        -h int:value:"$charge" \
+        "Running on battery" "$charge% remaining"
+      ;;
+  esac
 }
 
 show_battery() {
@@ -138,21 +141,11 @@ warn() {
 
   if [[ $state != discharging ]]; then
     rm -f "$LOW_BATTERY_NOTIFICATION_FILE"
-    rm -f "$CRITICAL_BATTERY_NOTIFICATION_FILE"
+    rm -rf "$BATTERY_NOTIFICATION_DIR"
     return
   fi
 
-  if [[ $charge -le $CRITICAL_BATTERY_THRESHOLD ]]; then
-    if [[ ! -e $CRITICAL_BATTERY_NOTIFICATION_FILE ]]; then
-      mkdir -p "$(dirname "$CRITICAL_BATTERY_NOTIFICATION_FILE")"
-      notify-send -u critical -t 86400000 -a System \
-        -i "$LUCIDE_PATH/battery-warning.svg" \
-        -h string:wired-tag:battery-critical \
-        -h int:value:"$charge" \
-        "Battery critical" "$charge% remaining - plug in now"
-      : > "$CRITICAL_BATTERY_NOTIFICATION_FILE"
-    fi
-  elif [[ $charge -le $LOW_BATTERY_THRESHOLD ]]; then
+  if [[ $charge -le $LOW_BATTERY_THRESHOLD && $charge -gt ${CRITICAL_BATTERY_THRESHOLDS[0]} ]]; then
     if [[ ! -e $LOW_BATTERY_NOTIFICATION_FILE ]]; then
       mkdir -p "$(dirname "$LOW_BATTERY_NOTIFICATION_FILE")"
       notify-send -a System \
@@ -162,9 +155,24 @@ warn() {
         "Battery low" "$charge% remaining"
       : > "$LOW_BATTERY_NOTIFICATION_FILE"
     fi
+  fi
+
+  if [[ $charge -le ${CRITICAL_BATTERY_THRESHOLDS[0]} ]]; then
+    mkdir -p "$BATTERY_NOTIFICATION_DIR"
+    for threshold in "${CRITICAL_BATTERY_THRESHOLDS[@]}"; do
+      marker="$BATTERY_NOTIFICATION_DIR/$threshold"
+      if [[ $charge -le $threshold && ! -e $marker ]]; then
+        notify-send -u critical -t 86400000 -a System \
+          -i "$LUCIDE_PATH/battery-warning.svg" \
+          -h string:wired-tag:battery-critical \
+          -h int:value:"$charge" \
+          "Battery critical" "$charge% remaining - plug in now"
+        : > "$marker"
+      fi
+    done
   else
     rm -f "$LOW_BATTERY_NOTIFICATION_FILE"
-    rm -f "$CRITICAL_BATTERY_NOTIFICATION_FILE"
+    rm -rf "$BATTERY_NOTIFICATION_DIR"
   fi
 }
 
@@ -174,4 +182,5 @@ case $1 in
   show) show_battery ;;
   icon_and_warn) warn && icon ;;
   get) echo -e "$(get)" ;;
+  power) power "$2" "$3" ;;
 esac

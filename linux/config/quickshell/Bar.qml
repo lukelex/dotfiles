@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.I3
 import Quickshell.Io
+import Quickshell.Services.UPower
 import Quickshell.Wayland
 import QtCore
 import QtQuick
@@ -51,6 +52,8 @@ Scope {
     wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
   }
 
+  Component.onCompleted: root.updatePowerSource()
+
   function closeConnectivity() {
     if (root.connectivityTarget)
       root.connectivityTarget.requestClose()
@@ -85,6 +88,7 @@ Scope {
   property int batteryPercentage: 0
   property string batteryTime: ""
   property bool batteryAvailable: false
+  property var previousOnBattery: null
   property string idleLockStatus: ""
   readonly property bool doNotDisturb: root.notificationService.doNotDisturb
   readonly property bool brightnessBusy: brightnessSet.running
@@ -483,6 +487,34 @@ Scope {
         }
       }
     }
+  }
+
+  Process {
+    id: powerNotification
+  }
+
+  function updatePowerSource() {
+    if (!UPower.displayDevice.ready || !UPower.displayDevice.isPresent)
+      return
+
+    const onBattery = UPower.onBattery
+    if (root.previousOnBattery !== null && root.previousOnBattery !== onBattery) {
+      powerNotification.command = [root.quickshellScripts + "/battery", "power",
+        onBattery ? "unplugged" : "plugged", String(Math.round(UPower.displayDevice.percentage * 100))]
+      powerNotification.running = true
+      batteryStatus.running = true
+    }
+    root.previousOnBattery = onBattery
+  }
+
+  Connections {
+    target: UPower
+    function onOnBatteryChanged() { root.updatePowerSource() }
+  }
+
+  Connections {
+    target: UPower.displayDevice
+    function onReadyChanged() { root.updatePowerSource() }
   }
 
   Process {

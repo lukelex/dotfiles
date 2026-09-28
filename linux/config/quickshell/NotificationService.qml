@@ -93,7 +93,7 @@ QtObject {
     actionsSupported: true
     imageSupported: true
     keepOnReload: false
-    extraHints: ["wired-tag", "value", "x-github-review-url", "x-github-review-repository", "x-github-review-number", "x-github-review-title", "x-github-review-status", "x-github-review-author", "x-github-review-state"]
+    extraHints: ["wired-tag", "value", "suppress-sound", "x-github-review-url", "x-github-review-repository", "x-github-review-number", "x-github-review-title", "x-github-review-status", "x-github-review-author", "x-github-review-state"]
 
     onNotification: n => service.handleNotification(n)
   }
@@ -220,7 +220,8 @@ QtObject {
     }
 
     service.addHistory(record)
-    service.playNotificationSound()
+    if (hints["suppress-sound"] !== true)
+      service.playNotificationSound()
     service.pendingPopupRecords = service.pendingPopupRecords
       .filter(entry => entry.id !== record.id).concat([record]).slice(-service.popupLimit)
     popupUpdateTimer.start()
