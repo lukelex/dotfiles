@@ -44,6 +44,10 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Preserve the reader's place. Removing an item must not rebuild unrelated list rows, jump to the top, collapse surviving expanded groups, or reorder targets under the pointer.
 - Anchor list updates to a surviving visible item and its viewport offset when layout changes require compensation. Clamp only to the remaining scroll range, and never fight manual scrolling.
 
+## Future Improvement
+
+- Verify keyboard access to bar actions: `PanelWindow` is intentionally non-focusable, so bar-level Tab/Enter/Space handlers may not be reachable. Find a keyboard-access path that does not steal focus from the active application, then validate it in both i3 and Hyprland.
+
 ## Motion And Notifications
 
 - Animate to explain a state transition, not to decorate it. Existing panel entry/exit timings are roughly 160/120ms; notification dismissals are roughly 180-260ms. Keep transitions short and consistent with their neighbors.
