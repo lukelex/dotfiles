@@ -7,11 +7,11 @@ import Quickshell.Io
 QtObject {
   id: service
 
-  readonly property bool available: _snapshot.available === true && quote !== ""
+  readonly property bool available: quote !== ""
   readonly property string quote: _snapshot.quote || ""
   readonly property string date: _snapshot.date || ""
-  readonly property bool stale: _snapshot.stale !== false
-  readonly property string error: _failure || _snapshot.error || ""
+  readonly property bool stale: false
+  readonly property string error: _failure
   property bool loading: false
   property var _snapshot: ({})
   property string _failure: ""
@@ -23,7 +23,7 @@ QtObject {
     service._now = now
     if (service.loading || now - service._lastAttempt < 60)
       return
-    if (!force && service.available && !service.stale)
+    if (!force && service.available)
       return
     service._lastAttempt = now
     service.loading = true
@@ -33,14 +33,10 @@ QtObject {
 
   function _accept(text) {
     try {
-      const data = JSON.parse(text)
-      if (!data || typeof data.available !== "boolean"
-          || typeof data.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(data.date)
-          || typeof data.quote !== "string" || data.quote.length > 1000
-          || /[<>\u0000-\u001f\u007f]/.test(data.quote)
-          || typeof data.stale !== "boolean" || typeof data.error !== "string")
-        throw new Error("Invalid quote snapshot")
-      service._snapshot = data
+      const quote = text.trim()
+      if (!quote || quote.length > 1000 || /[<>\u0000-\u001f\u007f]/.test(quote))
+        throw new Error("Invalid quote")
+      service._snapshot = { quote, date: new Date().toISOString().slice(0, 10) }
       service._failure = ""
     } catch (_) {
       service._failure = "Quote snapshot unavailable."
@@ -49,15 +45,15 @@ QtObject {
     service._now = Date.now() / 1000
   }
 
-  readonly property string _quoteScript: Quickshell.env("HOME") + "/dotfiles/linux/scripts/quotes"
+  readonly property string _quoteScript: Quickshell.env("HOME") + "/dotfiles/linux/scripts/lock-quote"
   readonly property Process _process: Process {
-    command: [service._quoteScript, "snapshot"]
+    command: [service._quoteScript]
     stdout: StdioCollector {
       onStreamFinished: service._accept(this.text)
     }
     onExited: (exitCode, exitStatus) => {
       if (exitCode !== 0 || exitStatus !== 0) {
-        service._failure = "Quote process failed."
+        service._failure = "Quote unavailable."
         service.loading = false
       }
     }
@@ -79,7 +75,7 @@ QtObject {
     running: service.loading
     onTriggered: {
       service._process.running = false
-      service._failure = "Quote request timed out."
+      service._failure = "Quote lookup timed out."
       service.loading = false
     }
   }

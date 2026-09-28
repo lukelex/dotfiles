@@ -27,22 +27,21 @@ test('quote service starts lazily, deduplicates requests, and validates snapshot
   service.refresh(true);
   assert.equal(service._lastAttempt, attempt);
 
-  service._accept(JSON.stringify({ available: true, date: '2026-09-16', quote: 'Keep going.', stale: false, error: '' }));
+  service._accept('Keep going.\n');
   assert.equal(service._snapshot.quote, 'Keep going.');
   assert.equal(service._failure, '');
   const previous = service._snapshot;
-  service._accept('{bad');
+  service._accept('');
   assert.equal(service._snapshot, previous);
   assert.equal(service._failure, 'Quote snapshot unavailable.');
 });
 
 test('quote service rejects unsafe or malformed quote data', () => {
   const service = serviceForTest();
-  const valid = { available: true, date: '2026-09-16', quote: 'Keep going.', stale: false, error: '' };
-  service._accept(JSON.stringify(valid));
+  service._accept('Keep going.\n');
   const previous = service._snapshot;
   for (const quote of ['<b>bad</b>', 'bad\nline']) {
-    service._accept(JSON.stringify({ ...valid, quote }));
+    service._accept(quote);
     assert.equal(service._snapshot, previous);
     assert.equal(service._failure, 'Quote snapshot unavailable.');
   }
