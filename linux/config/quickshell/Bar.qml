@@ -706,7 +706,7 @@ Scope {
   }
 
   Timer {
-    interval: 5000
+    interval: 10000
     running: true
     repeat: true
     onTriggered: systemStatus.running = true
@@ -1264,8 +1264,10 @@ Scope {
 
           Accessible.role: Accessible.StatusBar
           Accessible.name: "Battery " + root.batteryPercentage + "%"
+            + (root.batteryTime ? ", " + root.batteryTime
+              + (root.batteryState === "charging" ? " until full" : root.batteryState === "discharging" ? " remaining" : "") : "")
           Controls.ToolTip.visible: batteryHover.containsMouse
-          Controls.ToolTip.text: "Battery " + root.batteryPercentage + "%"
+          Controls.ToolTip.text: Accessible.name
 
           MouseArea {
             id: batteryHover
