@@ -367,6 +367,11 @@ Scope {
           Accessible.role: Accessible.Button
           Accessible.name: "Close connectivity"
           Accessible.onPressAction: popup.requestClose()
+          Rectangle {
+            anchors.fill: parent
+            color: closeArea.containsMouse ? popup.controller.controlActive : popup.controller.controlSurface
+            radius: 10
+          }
           LucideIcon {
             anchors.centerIn: parent
             width: 16
@@ -375,8 +380,10 @@ Scope {
             color: popup.controller.controlSecondaryText
           }
           MouseArea {
+            id: closeArea
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
             onClicked: popup.requestClose()
           }
         }
