@@ -358,13 +358,18 @@ PopupWindow {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         color: popup.controller.controlSecondaryText
-        font.pixelSize: 18
-        text: "×"
+        font.family: popup.controller.fontFamily
+        font.pixelSize: 12
+        text: "Close"
+        Accessible.role: Accessible.Button
+        Accessible.name: "Close GitHub reviews"
 
         MouseArea {
           anchors.fill: parent
           anchors.margins: -8
           cursorShape: Qt.PointingHandCursor
+          Accessible.role: Accessible.Button
+          Accessible.name: "Close GitHub reviews"
           onClicked: popup.requestClose()
         }
       }
