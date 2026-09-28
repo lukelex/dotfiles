@@ -946,10 +946,6 @@ Scope {
 
             height: 26
             width: 24
-            Accessible.role: Accessible.Button
-            Accessible.name: "Workspace " + workspaceNumber
-            Accessible.onPressAction: root.activateWorkspace(workspaceNumber, workspace)
-
             Canvas {
               id: marker
 
@@ -1081,12 +1077,35 @@ Scope {
               }
             }
 
+            Rectangle {
+              anchors.fill: parent
+              color: "transparent"
+              border.color: root.controlActiveIcon
+              border.width: 1
+              radius: 5
+              visible: workspaceMouse.activeFocus
+            }
+
             MouseArea {
               id: workspaceMouse
 
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
+              activeFocusOnTab: true
+              Accessible.role: Accessible.Button
+              Accessible.name: "Workspace " + workspaceItem.workspaceNumber
+              Accessible.onPressAction: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
               hoverEnabled: true
+              Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                border.color: root.controlActiveIcon
+                border.width: 1
+                radius: 5
+                visible: parent.activeFocus
+              }
+              Keys.onReturnPressed: event => { if (!event.isAutoRepeat) root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace) }
+              Keys.onSpacePressed: event => { if (!event.isAutoRepeat) root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace) }
               onClicked: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
             }
           }
@@ -1139,9 +1158,14 @@ Scope {
             anchors.fill: parent
             anchors.margins: -4
             Accessible.role: Accessible.Button
-            Accessible.name: "GitHub review requests"
+            Accessible.name: "Open calendar and weather"
+            Accessible.onPressAction: panel.openDateTime(true)
+            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openDateTime()
             onExited: todayCenter.scheduleClose()
             onClicked: panel.openDateTime(true)
@@ -1179,8 +1203,15 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            Accessible.role: Accessible.Button
+            Accessible.name: "Open calendar and weather"
+            Accessible.onPressAction: panel.openDateTime(true)
+            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openDateTime()
             onExited: todayCenter.scheduleClose()
             onClicked: panel.openDateTime(true)
@@ -1225,8 +1256,15 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            Accessible.role: Accessible.Button
+            Accessible.name: "GitHub review requests"
+            Accessible.onPressAction: panel.showGitHubReviewCenter()
+            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.showGitHubReviewCenter() }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.showGitHubReviewCenter() }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.showGitHubReviewCenter()
             onExited: root.requestHoverClose(3, 500)
             onClicked: panel.showGitHubReviewCenter()
@@ -1264,8 +1302,13 @@ Scope {
             anchors.margins: -5
             Accessible.role: Accessible.Button
             Accessible.name: "Wi-Fi and Bluetooth"
+            Accessible.onPressAction: panel.openConnectivity(true)
+            activeFocusOnTab: true
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openConnectivity(true) }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openConnectivity(true) }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openConnectivity()
             onExited: connectivityCenter.scheduleClose()
             onClicked: panel.openConnectivity(true)
@@ -1293,7 +1336,6 @@ Scope {
           width: root.barFontSize
           Accessible.role: Accessible.Button
           Accessible.name: "Select sound devices"
-          Accessible.onPressAction: panel.openAudioOutput(true)
 
           LucideIcon {
             anchors.fill: parent
@@ -1304,8 +1346,15 @@ Scope {
           MouseArea {
             anchors.fill: parent
             anchors.margins: -4
+            Accessible.role: Accessible.Button
+            Accessible.name: "Select sound devices"
+            Accessible.onPressAction: panel.openAudioOutput(true)
             cursorShape: Qt.PointingHandCursor
+            activeFocusOnTab: true
             hoverEnabled: true
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openAudioOutput(true) }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openAudioOutput(true) }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openAudioOutput()
             onExited: audioOutputCenter.scheduleClose()
             onClicked: panel.openAudioOutput(true)
@@ -1342,8 +1391,13 @@ Scope {
             anchors.margins: -4
             Accessible.role: Accessible.Button
             Accessible.name: root.doNotDisturb ? "Notifications; Do Not Disturb on" : "Notifications; Do Not Disturb off"
+            Accessible.onPressAction: root.toggleDoNotDisturb()
+            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) root.toggleDoNotDisturb() }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) root.toggleDoNotDisturb() }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: {
               root.closeConnectivity()
               root.closeAudioOutput()
@@ -1370,8 +1424,13 @@ Scope {
             anchors.margins: -4
             Accessible.role: Accessible.Button
             Accessible.name: "Control Center"
+            Accessible.onPressAction: panel.openControlCenter()
+            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
+            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openControlCenter() }
+            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openControlCenter() }
+            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openControlCenter()
             onExited: root.requestHoverClose(2)
             onClicked: panel.openControlCenter()
