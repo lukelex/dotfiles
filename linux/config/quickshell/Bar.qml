@@ -1189,12 +1189,14 @@ Scope {
             source: root.icon("message-square-quote")
           }
 
-            Rectangle {
+          Rectangle {
             anchors {
               right: parent.right
               top: parent.top
             }
-            color: root.urgent
+            color: "transparent"
+            border.color: root.urgent
+            border.width: 2
             height: 6
             radius: 3
             visible: root.githubPrService.prs.some(pr => ["review-needed", "changes-requested", "awaiting-review"].includes(pr.action))
