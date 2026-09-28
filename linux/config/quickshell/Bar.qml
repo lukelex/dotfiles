@@ -82,6 +82,11 @@ Scope {
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  readonly property int focusedWorkspaceNumber: {
+    const workspaces = root.hyprlandSession ? Hyprland.workspaces.values : I3.workspaces.values
+    const focused = workspaces.find(workspace => workspace.focused)
+    return focused ? (root.hyprlandSession ? focused.id : focused.number) : 1
+  }
   property int workspaceTransition: 0
 
   readonly property var defaultAudioSink: Pipewire.defaultAudioSink
@@ -929,7 +934,7 @@ Scope {
         }
 
         Repeater {
-          model: root.workspaceNumbers
+          model: panel.width < 620 ? [root.focusedWorkspaceNumber] : root.workspaceNumbers
 
           delegate: Item {
             id: workspaceItem

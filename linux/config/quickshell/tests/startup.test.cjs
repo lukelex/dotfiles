@@ -288,7 +288,8 @@ test('bar selects the native workspace model for the active session', () => {
   assert.match(bar, /^import Quickshell\.I3$/m);
   assert.match(bar, /hyprlandSession: !!Quickshell\.env\("HYPRLAND_INSTANCE_SIGNATURE"\)/);
   assert.match(bar, /workspaceNumbers: \[1, 2, 3, 4, 5, 6, 7, 8, 9, 10\]/);
-  assert.match(bar, /model: root\.workspaceNumbers/);
+  assert.match(bar, /model: panel\.width < 620 \? \[root\.focusedWorkspaceNumber\] : root\.workspaceNumbers/);
+  assert.match(bar, /readonly property int focusedWorkspaceNumber/);
   assert.match(bar, /function workspaceFor\(number\)/);
   assert.match(bar, /function activateWorkspace\(number, workspace\)/);
   assert.match(bar, /Hyprland\.dispatch\("workspace " \+ number\)/);
