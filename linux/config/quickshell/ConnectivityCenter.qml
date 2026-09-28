@@ -355,7 +355,7 @@ Scope {
         height: 32
         spacing: 8
         Label {
-          width: parent.width - 80
+          width: parent.width - 40
           anchors.verticalCenter: parent.verticalCenter
           text: "Connectivity"
           font.pixelSize: 16
