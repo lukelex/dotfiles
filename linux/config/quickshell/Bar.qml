@@ -1140,6 +1140,7 @@ Scope {
           Row {
             id: timeContent
 
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 6
 
             LucideIcon {
@@ -1187,6 +1188,7 @@ Scope {
           Row {
             id: dateContent
 
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 6
 
             LucideIcon {
