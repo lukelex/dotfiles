@@ -718,7 +718,7 @@ Scope {
   }
 
   Timer {
-    interval: 10000
+    interval: root.controlCenterTarget && root.controlCenterTarget.visible ? 2000 : 30000
     running: true
     repeat: true
     onTriggered: systemStatus.running = true
@@ -805,6 +805,7 @@ Scope {
         root.closeGitHubReviewCenter()
         root.notificationCenterOpen = false
         controlCenter.requestOpen()
+        systemStatus.running = true
         root.cancelHoverClose()
       }
 
