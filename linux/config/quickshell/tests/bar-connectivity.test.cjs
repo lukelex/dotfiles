@@ -22,13 +22,17 @@ test('power-source changes notify once per transition after the battery is ready
   const match = source.match(/  function updatePowerSource\(\) \{[^]*?\n  \}/);
   assert.ok(match);
   assert.match(source, /function onOnBatteryChanged\(\) \{ root\.updatePowerSource\(\) \}/);
-  assert.match(source, /function onReadyChanged\(\) \{ root\.updatePowerSource\(\) \}/);
+  assert.match(source, /function onReadyChanged\(\) \{ root\.updatePowerSource\(\); root\.checkBatteryWarnings\(\) \}/);
 
-  const root = { previousOnBattery: null, quickshellScripts: '/scripts' };
+  const root = {
+    previousOnBattery: null, quickshellScripts: '/scripts', batteryState: 'discharging',
+    batteryPercentage: 72,
+    updateBatteryStatus() { this.batteryAvailable = UPower.displayDevice.ready; },
+  };
   const UPower = { onBattery: false, displayDevice: { ready: false, isPresent: true, percentage: 0.724 } };
   const powerNotification = { command: null, running: false };
-  const batteryStatus = { running: false };
-  const updatePowerSource = vm.runInNewContext(`(${match[0]})`, { root, UPower, powerNotification, batteryStatus });
+  const batteryWarnings = { running: false };
+  const updatePowerSource = vm.runInNewContext(`(${match[0]})`, { root, UPower, powerNotification, batteryWarnings });
 
   updatePowerSource();
   assert.equal(root.previousOnBattery, null);
@@ -37,14 +41,48 @@ test('power-source changes notify once per transition after the battery is ready
   assert.equal(powerNotification.command, null);
   UPower.onBattery = true;
   updatePowerSource();
-  assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'unplugged', '72']);
-  assert.equal(batteryStatus.running, true);
+  assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'unplugged', '72', 'discharging']);
+  assert.equal(batteryWarnings.running, true);
   powerNotification.running = false;
   updatePowerSource();
   assert.equal(powerNotification.running, false);
   UPower.onBattery = false;
   updatePowerSource();
-  assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'plugged', '72']);
+  assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'plugged', '72', 'discharging']);
+});
+
+test('UPower battery changes update charge, state, health, and time without polling', () => {
+  const stateNames = {
+    Unknown: 0, Charging: 1, Discharging: 2, Empty: 3, FullyCharged: 4,
+    PendingCharge: 5, PendingDischarge: 6,
+  };
+  const context = vm.createContext({
+    UPowerDeviceState: stateNames,
+    UPower: { displayDevice: {
+      ready: true, isPresent: true, percentage: 0.934, state: 2,
+      healthSupported: true, healthPercentage: 87.6,
+      timeToEmpty: 3660, timeToFull: 0,
+    } },
+  });
+  const root = { batteryAvailable: false, batteryHealthAvailable: false };
+  for (const name of ['batteryStateName', 'formatBatteryTime']) {
+    const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+    assert.ok(match, `Missing ${name}`);
+    root[name] = vm.runInContext(`(${match[0]})`, context);
+  }
+  context.root = root;
+  const updateMatch = source.match(/  function updateBatteryStatus\([^]*?\n  \}/);
+  assert.ok(updateMatch);
+  root.updateBatteryStatus = vm.runInContext(`(${updateMatch[0]})`, context);
+  root.updateBatteryStatus();
+
+  assert.equal(root.batteryPercentage, 93);
+  assert.equal(root.batteryState, 'discharging');
+  assert.equal(root.batteryTime, '1 hr 1 min');
+  assert.equal(root.batteryHealthAvailable, true);
+  assert.equal(root.batteryHealth, 87.6);
+  assert.match(source, /function onPercentageChanged\(\) \{ root\.updateBatteryStatus\(\); root\.checkBatteryWarnings\(\) \}/);
+  assert.doesNotMatch(source, /interval: 30000\n\s+running: true\n\s+repeat: true\n\s+onTriggered: batteryStatus/);
 });
 
 test('battery icon reserves critical for 0–14% and full for 90–100%', () => {
@@ -72,5 +110,5 @@ test('battery icon reserves critical for 0–14% and full for 90–100%', () => 
 
 test('NordVPN status exposes its active location', () => {
   assert.match(source, /property string vpnLocation: ""/);
-  assert.match(source, /root\.vpnLocation = output\[6\] \|\| ""/);
+  assert.match(source, /root\.vpnLocation = output\[4\] \|\| ""/);
 });

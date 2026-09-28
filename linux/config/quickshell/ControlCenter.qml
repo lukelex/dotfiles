@@ -640,21 +640,35 @@ PopupWindow {
               font.family: popup.controller.fontFamily
               font.pixelSize: 11
               text: !popup.controller.batteryAvailable ? ""
-                : popup.controller.batteryTime ? popup.controller.batteryTime
-                  + (popup.controller.batteryState === "charging" ? " until full" : " remaining")
-                : popup.controller.batteryState === "charging" ? "Charging" : ""
+                : popup.controller.batteryState === "discharging"
+                  ? popup.controller.batteryTime ? popup.controller.batteryTime + " remaining" : "On battery"
+                : popup.controller.batteryState === "charging"
+                  ? popup.controller.batteryTime ? popup.controller.batteryTime + " until full" : "Charging"
+                : popup.controller.batteryState === "pending-charge" ? "Charging paused"
+                : popup.controller.batteryState === "pending-discharge" ? "Power connected"
+                : popup.controller.batteryState === "fully-charged" ? "Fully charged" : ""
             }
           }
 
+          Text {
+            visible: popup.controller.batteryHealthAvailable
+            color: popup.controller.controlSecondaryText
+            font.family: popup.controller.fontFamily
+            font.pixelSize: 11
+            text: "Battery health " + Math.round(popup.controller.batteryHealth) + "%"
+            x: 26
+            width: parent.width - 26
+          }
+
           ControlTile {
-            active: popup.controller.powerProfile === "performance"
+            active: popup.controller.powerProfile !== "balanced"
             enabled: popup.controller.powerProfileAvailable
             visible: popup.controller.powerProfileAvailable
             controller: popup.controller
             height: 64
             iconName: "gauge"
-            subtitle: "Click to switch profile"
-            title: "Power: " + popup.controller.powerProfile
+            subtitle: popup.controller.powerProfileDegradation || "Click to switch profile"
+            title: "Power: " + popup.controller.powerProfile.replace("-", " ")
             width: parent.width
             onActivated: popup.controller.cyclePowerProfile()
           }

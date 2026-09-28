@@ -93,12 +93,26 @@ power() {
 
   case "$state" in
     plugged)
+      local battery_state=${3:-charging}
+      local summary="Power connected"
+      local body="Battery is at $charge%"
+      icon="$LUCIDE_PATH/battery.svg"
+      if [[ $battery_state == fully-charged ]]; then
+        icon="$LUCIDE_PATH/battery-full.svg"
+        body="Battery already fully charged"
+      elif [[ $battery_state == pending-charge ]]; then
+        body="Charging is pending at $charge%"
+      elif [[ $battery_state == charging ]]; then
+        summary="Charging started"
+        icon="$LUCIDE_PATH/battery-charging.svg"
+        body="$charge% charged"
+      fi
       notify-send -a System \
-        -i "$LUCIDE_PATH/battery-charging.svg" \
+        -i "$icon" \
         -h string:wired-tag:battery-charging \
         -h boolean:suppress-sound:true \
         -h int:value:"$charge" \
-        "Charging started" "$charge% charged"
+        "$summary" "$body"
       ;;
     unplugged)
       if [[ $charge -lt 15 ]]; then
@@ -194,5 +208,6 @@ case $1 in
   show) show_battery ;;
   icon_and_warn) warn && icon ;;
   get) echo -e "$(get)" ;;
-  power) power "$2" "$3" ;;
+  warn) warn ;;
+  power) power "$2" "$3" "${4:-charging}" ;;
 esac

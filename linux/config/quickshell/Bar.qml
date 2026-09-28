@@ -52,8 +52,6 @@ Scope {
     wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
   }
 
-  Component.onCompleted: root.updatePowerSource()
-
   function closeConnectivity() {
     if (root.connectivityTarget)
       root.connectivityTarget.requestClose()
@@ -88,6 +86,9 @@ Scope {
   property int batteryPercentage: 0
   property string batteryTime: ""
   property bool batteryAvailable: false
+  property real batteryHealth: 0
+  property bool batteryHealthAvailable: false
+  property bool batteryWarningPending: false
   property var previousOnBattery: null
   property string idleLockStatus: ""
   readonly property bool doNotDisturb: root.notificationService.doNotDisturb
@@ -102,7 +103,9 @@ Scope {
   property var vpnLocations: []
   readonly property bool vpnBusy: vpnToggle.running
   property bool powerProfileAvailable: false
+  property bool nativePowerProfilesAvailable: false
   property string powerProfile: ""
+  property string powerProfileDegradation: ""
   property bool systemStatsAvailable: false
   property int cpuUsage: 0
   property int memoryPercentage: 0
@@ -164,7 +167,7 @@ Scope {
   }
 
   function batteryIcon() {
-    if (root.batteryState === "charging")
+    if (root.batteryState === "charging" || root.batteryState === "pending-charge")
       return "battery-charging"
     if (root.batteryPercentage < 15)
       return "battery-warning"
@@ -175,6 +178,76 @@ Scope {
     if (root.batteryPercentage < 90)
       return "battery-high"
     return "battery-full"
+  }
+
+  function batteryStateName(state) {
+    switch (state) {
+    case UPowerDeviceState.Charging: return "charging"
+    case UPowerDeviceState.Discharging: return "discharging"
+    case UPowerDeviceState.PendingCharge: return "pending-charge"
+    case UPowerDeviceState.PendingDischarge: return "pending-discharge"
+    case UPowerDeviceState.FullyCharged: return "fully-charged"
+    default: return "unknown"
+    }
+  }
+
+  function formatBatteryTime(seconds) {
+    if (!(seconds > 0))
+      return ""
+
+    const minutes = Math.ceil(seconds / 60)
+    const hours = Math.floor(minutes / 60)
+    const remainingMinutes = minutes % 60
+    return hours ? hours + " hr" + (remainingMinutes ? " " + remainingMinutes + " min" : "") : minutes + " min"
+  }
+
+  function updateBatteryStatus() {
+    const device = UPower.displayDevice
+    if (!device.ready || !device.isPresent) {
+      root.batteryAvailable = false
+      root.batteryHealthAvailable = false
+      return
+    }
+
+    root.batteryPercentage = Math.round(device.percentage * 100)
+    root.batteryState = root.batteryStateName(device.state)
+    root.batteryHealthAvailable = device.healthSupported
+    root.batteryHealth = device.healthPercentage
+    root.batteryTime = root.formatBatteryTime(root.batteryState === "discharging"
+      ? device.timeToEmpty : root.batteryState === "charging" ? device.timeToFull : 0)
+    root.batteryAvailable = true
+  }
+
+  function checkBatteryWarnings() {
+    if (!root.batteryAvailable || root.batteryState !== "discharging") {
+      root.batteryWarningPending = false
+      return
+    }
+
+    if (batteryWarnings.running)
+      root.batteryWarningPending = true
+    else
+      batteryWarnings.running = true
+  }
+
+  function powerProfileName(profile) {
+    switch (profile) {
+    case PowerProfile.PowerSaver: return "power-saver"
+    case PowerProfile.Balanced: return "balanced"
+    case PowerProfile.Performance: return "performance"
+    default: return "balanced"
+    }
+  }
+
+  function syncPowerProfile() {
+    if (!root.nativePowerProfilesAvailable)
+      return
+
+    root.powerProfile = root.powerProfileName(PowerProfiles.profile)
+    root.powerProfileDegradation = PowerProfiles.degradationReason === PerformanceDegradationReason.HighTemperature
+      ? "Performance reduced due to high temperature"
+      : PowerProfiles.degradationReason === PerformanceDegradationReason.LapDetected
+        ? "Performance reduced by lap detection" : ""
   }
 
   function refreshControlStatus() {
@@ -291,6 +364,15 @@ Scope {
     if (!root.powerProfileAvailable)
       return
 
+    if (root.nativePowerProfilesAvailable) {
+      const profiles = PowerProfiles.hasPerformanceProfile
+        ? [PowerProfile.PowerSaver, PowerProfile.Balanced, PowerProfile.Performance]
+        : [PowerProfile.PowerSaver, PowerProfile.Balanced]
+      const currentIndex = profiles.indexOf(PowerProfiles.profile)
+      PowerProfiles.profile = profiles[(currentIndex + 1 + profiles.length) % profiles.length]
+      return
+    }
+
     powerProfileNext.running = true
     controlRefreshTimer.restart()
   }
@@ -357,7 +439,7 @@ Scope {
 
   Process {
     id: controlStatus
-    command: ["sh", "-c", "vpn_status=\"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null || true)\"; printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$($HOME/dotfiles/linux/config/quickshell/scripts/brightness get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(printf '%s\\n' \"$vpn_status\" | awk -F ': ' '/^Status:/{ print $2; exit }')\" \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\" \"$(printf '%s\\n' \"$vpn_status\" | awk -F ': ' '/^Country:/{ country=$2 } /^City:/{ city=$2 } END { if (country) print country (city ? \" / \" city : \"\") }')\""]
+    command: ["sh", "-c", "vpn_status=\"$(command -v nordvpn >/dev/null && nordvpn status 2>/dev/null || true)\"; printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$($HOME/dotfiles/linux/config/quickshell/scripts/brightness get 2>/dev/null)\" \"$(command -v nordvpn >/dev/null && printf true || printf false)\" \"$(printf '%s\\n' \"$vpn_status\" | awk -F ': ' '/^Status:/{ print $2; exit }')\" \"$(printf '%s\\n' \"$vpn_status\" | awk -F ': ' '/^Country:/{ country=$2 } /^City:/{ city=$2 } END { if (country) print country (city ? \" / \" city : \"\") }')\""]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
@@ -370,9 +452,7 @@ Scope {
 
         root.nordVpnInstalled = output[2] === "true"
         root.vpnConnected = output[3] === "Connected"
-        root.powerProfileAvailable = output[4] === "true"
-        root.powerProfile = output[5] || ""
-        root.vpnLocation = output[6] || ""
+        root.vpnLocation = output[4] || ""
       }
     }
   }
@@ -403,6 +483,52 @@ Scope {
   Process {
     id: powerProfileNext
     command: ["u_performance-profile", "next"]
+    onExited: fallbackProfileStatus.running = true
+  }
+
+  Process {
+    id: fallbackProfileStatus
+    command: ["sh", "-c", "printf '%s\\n' \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
+    running: !root.nativePowerProfilesAvailable
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const output = this.text.trim().split("\n")
+        if (!root.nativePowerProfilesAvailable) {
+          root.powerProfileAvailable = output[0] === "true"
+          root.powerProfile = output[1] || ""
+        }
+      }
+    }
+  }
+
+  Process {
+    id: batteryWarnings
+    command: [root.quickshellScripts + "/battery", "warn"]
+    onExited: {
+      if (root.batteryWarningPending) {
+        root.batteryWarningPending = false
+        batteryWarnings.running = true
+      }
+    }
+  }
+
+  Process {
+    id: nativePowerProfilesCheck
+    command: ["sh", "-c", "busctl --system --no-pager list 2>/dev/null | grep -q '^org\\.freedesktop\\.UPower\\.PowerProfiles[[:space:]]' && printf true || printf false"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: {
+        root.nativePowerProfilesAvailable = this.text.trim() === "true"
+        root.powerProfileAvailable = root.powerProfileAvailable || root.nativePowerProfilesAvailable
+        root.syncPowerProfile()
+      }
+    }
+  }
+
+  Connections {
+    target: PowerProfiles
+    function onProfileChanged() { root.syncPowerProfile() }
+    function onDegradationReasonChanged() { root.syncPowerProfile() }
   }
 
   Process {
@@ -471,40 +597,27 @@ Scope {
   }
 
   Process {
-    id: batteryStatus
-    command: [root.quickshellScripts + "/battery", "get"]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const output = this.text.trim().split(" | ")
-        const percentage = Number(output[1]?.replace("%", ""))
-
-        if (!isNaN(percentage)) {
-          root.batteryState = output[0]
-          root.batteryPercentage = percentage
-          root.batteryTime = output[2] || ""
-          root.batteryAvailable = true
-        }
-      }
-    }
-  }
-
-  Process {
     id: powerNotification
   }
 
   function updatePowerSource() {
-    if (!UPower.displayDevice.ready || !UPower.displayDevice.isPresent)
+    root.updateBatteryStatus()
+    if (!root.batteryAvailable)
       return
 
     const onBattery = UPower.onBattery
     if (root.previousOnBattery !== null && root.previousOnBattery !== onBattery) {
       powerNotification.command = [root.quickshellScripts + "/battery", "power",
-        onBattery ? "unplugged" : "plugged", String(Math.round(UPower.displayDevice.percentage * 100))]
+        onBattery ? "unplugged" : "plugged", String(root.batteryPercentage), root.batteryState]
       powerNotification.running = true
-      batteryStatus.running = true
+      batteryWarnings.running = true
     }
     root.previousOnBattery = onBattery
+  }
+
+  Component.onCompleted: {
+    root.updatePowerSource()
+    root.checkBatteryWarnings()
   }
 
   Connections {
@@ -514,7 +627,13 @@ Scope {
 
   Connections {
     target: UPower.displayDevice
-    function onReadyChanged() { root.updatePowerSource() }
+    function onReadyChanged() { root.updatePowerSource(); root.checkBatteryWarnings() }
+    function onPercentageChanged() { root.updateBatteryStatus(); root.checkBatteryWarnings() }
+    function onStateChanged() { root.updateBatteryStatus(); root.checkBatteryWarnings() }
+    function onTimeToEmptyChanged() { root.updateBatteryStatus() }
+    function onTimeToFullChanged() { root.updateBatteryStatus() }
+    function onHealthPercentageChanged() { root.updateBatteryStatus() }
+    function onHealthSupportedChanged() { root.updateBatteryStatus() }
   }
 
   Process {
@@ -594,13 +713,6 @@ Scope {
     interval: 30000
     running: true
     repeat: true
-    onTriggered: batteryStatus.running = true
-  }
-
-  Timer {
-    interval: 30000
-    running: true
-    repeat: true
     onTriggered: idleLockStatus.running = true
   }
 
@@ -609,6 +721,13 @@ Scope {
     running: true
     repeat: true
     onTriggered: systemStatus.running = true
+  }
+
+  Timer {
+    interval: 5000
+    running: !root.nativePowerProfilesAvailable
+    repeat: true
+    onTriggered: fallbackProfileStatus.running = true
   }
 
   Timer {
