@@ -1176,6 +1176,39 @@ Scope {
 
         Item {
           height: root.barFontSize
+          width: root.barFontSize
+
+          LucideIcon {
+            anchors.fill: parent
+            color: root.foreground
+            source: root.icon("message-square-quote")
+          }
+
+            Rectangle {
+            anchors {
+              right: parent.right
+              top: parent.top
+            }
+            color: root.urgent
+            height: 6
+            radius: 3
+            visible: root.githubPrService.prs.some(pr => ["review-needed", "changes-requested", "awaiting-review"].includes(pr.action))
+            width: 6
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: panel.showGitHubReviewCenter()
+            onExited: root.requestHoverClose(3, 500)
+            onClicked: panel.showGitHubReviewCenter()
+          }
+        }
+
+
+        Item {
+          height: root.barFontSize
           width: root.barFontSize * 2 + 8
 
           Row {
@@ -1218,37 +1251,6 @@ Scope {
           source: root.icon(root.batteryIcon())
         }
 
-        Item {
-          height: root.barFontSize
-          width: root.barFontSize
-
-          LucideIcon {
-            anchors.fill: parent
-            color: root.foreground
-            source: root.icon("message-square-quote")
-          }
-
-            Rectangle {
-            anchors {
-              right: parent.right
-              top: parent.top
-            }
-            color: root.urgent
-            height: 6
-            radius: 3
-            visible: root.githubPrService.prs.some(pr => ["review-needed", "changes-requested", "awaiting-review"].includes(pr.action))
-            width: 6
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            onEntered: panel.showGitHubReviewCenter()
-            onExited: root.requestHoverClose(3, 500)
-            onClicked: panel.showGitHubReviewCenter()
-          }
-        }
 
         Item {
           id: volumeWidget
