@@ -1381,7 +1381,7 @@ Scope {
             color: root.urgent
             height: 6
             radius: 3
-            visible: root.notificationService.history.length > 0
+            visible: root.notificationService.popup.length > 0
             width: 6
             z: 1
           }
@@ -1390,7 +1390,9 @@ Scope {
             anchors.fill: parent
             anchors.margins: -4
             Accessible.role: Accessible.Button
-            Accessible.name: root.doNotDisturb ? "Notifications; Do Not Disturb on" : "Notifications; Do Not Disturb off"
+            Accessible.name: "Notifications"
+              + (root.notificationService.popup.length > 0 ? "; active notifications" : "; no active notifications")
+              + (root.doNotDisturb ? "; Do Not Disturb on" : "; Do Not Disturb off")
             Accessible.onPressAction: root.toggleDoNotDisturb()
             activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor

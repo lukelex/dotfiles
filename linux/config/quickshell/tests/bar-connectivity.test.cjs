@@ -15,7 +15,13 @@ test('wired connectivity is exposed and replaces a disconnected Wi-Fi icon', () 
 });
 
 test('battery status is hidden when no battery is available', () => {
-  assert.match(source, /visible: root\.batteryAvailable\n          color: root\.batteryAvailable && root\.batteryPercentage < 15/);
+  assert.match(source, /visible: root\.batteryAvailable && panel\.width >= 840\n          color: root\.batteryAvailable && root\.batteryPercentage < 15/);
+});
+
+test('notification indicator reflects active notifications, not retained history', () => {
+  assert.match(source, /visible: root\.notificationService\.popup\.length > 0/);
+  assert.match(source, /active notifications/);
+  assert.doesNotMatch(source, /visible: root\.notificationService\.history\.length > 0/);
 });
 
 test('power-source changes notify once per transition after the battery is ready', () => {
