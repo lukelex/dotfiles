@@ -361,11 +361,24 @@ Scope {
           font.pixelSize: 16
           color: popup.controller.controlPrimaryText
         }
-        Action {
-          width: 72
+        Item {
+          width: 32
           height: 32
-          title: "Close"
-          onActivated: popup.requestClose()
+          Accessible.role: Accessible.Button
+          Accessible.name: "Close connectivity"
+          Accessible.onPressAction: popup.requestClose()
+          LucideIcon {
+            anchors.centerIn: parent
+            width: 16
+            height: 16
+            source: popup.controller.icon("x")
+            color: popup.controller.controlSecondaryText
+          }
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: popup.requestClose()
+          }
         }
       }
 

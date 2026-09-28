@@ -353,20 +353,25 @@ PopupWindow {
         text: popup.stacks.length + (popup.stacks.length === 1 ? " PR" : " PRs")
       }
 
-      Text {
+      Item {
         id: closeButton
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        color: popup.controller.controlSecondaryText
-        font.family: popup.controller.fontFamily
-        font.pixelSize: 12
-        text: "Close"
+        width: 32
+        height: 32
         Accessible.role: Accessible.Button
         Accessible.name: "Close GitHub reviews"
 
+        LucideIcon {
+          anchors.centerIn: parent
+          width: 16
+          height: 16
+          source: popup.controller.icon("x")
+          color: popup.controller.controlSecondaryText
+        }
+
         MouseArea {
           anchors.fill: parent
-          anchors.margins: -8
           cursorShape: Qt.PointingHandCursor
           Accessible.role: Accessible.Button
           Accessible.name: "Close GitHub reviews"

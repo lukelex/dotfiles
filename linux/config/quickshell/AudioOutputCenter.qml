@@ -385,7 +385,7 @@ Scope {
         Item {
           id: closeButton
 
-          width: 64
+          width: 32
           height: 32
           activeFocusOnTab: popup.pinned
           Accessible.role: Accessible.Button
@@ -400,10 +400,12 @@ Scope {
             radius: 10
           }
 
-          Label {
+          LucideIcon {
             anchors.centerIn: parent
-            color: popup.controller.controlPrimaryText
-            text: "Close"
+            width: 16
+            height: 16
+            source: popup.controller.icon("x")
+            color: popup.controller.controlSecondaryText
           }
 
           MouseArea {
