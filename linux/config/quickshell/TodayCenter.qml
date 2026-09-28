@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Controls.Basic as Controls
+import Qt5Compat.GraphicalEffects
 
 Scope {
   id: popup
@@ -51,8 +52,18 @@ Scope {
 
   function otherMediaPlayers() {
     const active = popup.activeMediaPlayer
-    return active ? popup.availableMediaPlayers().filter(player =>
-      popup.mediaPlayerKey(player) !== popup.mediaPlayerKey(active) && !player.isPlaying).slice(0, 2) : []
+    if (!active)
+      return []
+    const seen = new Set()
+    if (active.trackTitle)
+      seen.add(active.trackTitle + "\n" + active.trackArtist)
+    return popup.availableMediaPlayers().filter(player => {
+      const track = player.trackTitle ? player.trackTitle + "\n" + player.trackArtist : ""
+      if (popup.mediaPlayerKey(player) === popup.mediaPlayerKey(active) || player.isPlaying || !track || seen.has(track))
+        return false
+      seen.add(track)
+      return true
+    }).slice(0, 2)
   }
 
   function activateMediaPlayer(player) {
@@ -83,6 +94,38 @@ Scope {
       player.pause()
     else if (!player.isPlaying && player.canPlay)
       player.play()
+  }
+
+  function hasMediaProgress(player) {
+    return player && player.positionSupported && player.lengthSupported
+      && Number.isFinite(player.length) && player.length > 0
+  }
+
+  function mediaProgress(player) {
+    return popup.hasMediaProgress(player)
+      ? Math.max(0, Math.min(1, player.position / player.length)) : 0
+  }
+
+  function formatMediaTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0)
+      return "0:00"
+    const time = Math.floor(seconds)
+    const minutes = Math.floor(time / 60)
+    const remainder = String(time % 60).padStart(2, "0")
+    return time >= 3600 ? Math.floor(time / 3600) + ":" + String(minutes % 60).padStart(2, "0") + ":" + remainder
+      : minutes + ":" + remainder
+  }
+
+  function seekMediaPlayer(player, fraction) {
+    if (popup.hasMediaProgress(player) && player.canSeek && Number.isFinite(fraction))
+      player.position = Math.max(0, Math.min(1, fraction)) * player.length
+  }
+
+  Timer {
+    interval: 1000
+    repeat: true
+    running: popup.visible && popup.hasMediaProgress(popup.activeMediaPlayer) && popup.activeMediaPlayer.isPlaying
+    onTriggered: popup.activeMediaPlayer.positionChanged()
   }
 
   function resetMonth() {
@@ -783,15 +826,18 @@ Scope {
         }
 
         Rectangle {
+          id: mediaSection
           visible: popup.activeMediaPlayer !== null
           width: parent.width
-          height: 128 + (popup.inactiveMediaPlayers.length > 0 ? 60 : 0)
+          readonly property bool narrow: width < 360
+          readonly property int cardHeight: narrow ? 164 : 128
+          height: cardHeight + (popup.inactiveMediaPlayers.length > 0 ? 60 : 0)
           color: popup.controller.controlSurface
           radius: 18
 
           Rectangle {
             width: parent.width
-            height: 128
+            height: mediaSection.cardHeight
             radius: 18
             color: "#252D3A"
             clip: true
@@ -850,6 +896,77 @@ Scope {
               }
             }
 
+            Item {
+              id: mediaTimeline
+              x: 18
+              y: mediaSection.narrow ? 125 : 87
+              width: Math.max(1, parent.width - (mediaSection.narrow ? 36 : 180))
+              height: 34
+              visible: popup.hasMediaProgress(popup.activeMediaPlayer)
+
+              Item {
+                id: progressTrack
+                width: parent.width
+                height: 18
+
+                Rectangle {
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width
+                  height: 3
+                  radius: 2
+                  color: "#70DDE7F4"
+                }
+
+                Rectangle {
+                  anchors.left: parent.left
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width * (seekArea.pressed ? seekArea.dragFraction : popup.mediaProgress(popup.activeMediaPlayer))
+                  height: 3
+                  radius: 2
+                  color: "white"
+                }
+
+                MouseArea {
+                  id: seekArea
+                  anchors.fill: parent
+                  enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canSeek
+                  cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                  property real dragFraction: 0
+                  property var dragPlayer: null
+                  onPressed: mouse => {
+                    dragPlayer = popup.activeMediaPlayer
+                    dragFraction = Math.max(0, Math.min(1, mouse.x / width))
+                  }
+                  onPositionChanged: mouse => {
+                    if (pressed)
+                      dragFraction = Math.max(0, Math.min(1, mouse.x / width))
+                  }
+                  onReleased: {
+                    if (dragPlayer === popup.activeMediaPlayer)
+                      popup.seekMediaPlayer(dragPlayer, dragFraction)
+                    dragPlayer = null
+                  }
+                  onCanceled: dragPlayer = null
+                }
+              }
+
+              Label {
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                text: popup.formatMediaTime(seekArea.pressed ? seekArea.dragFraction * popup.activeMediaPlayer.length
+                  : popup.activeMediaPlayer.position)
+                color: "#DDE7F4"
+                font.pixelSize: 10
+              }
+              Label {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                text: popup.formatMediaTime(popup.activeMediaPlayer.length)
+                color: "#DDE7F4"
+                font.pixelSize: 10
+              }
+            }
+
             Row {
               anchors.right: parent.right
               anchors.bottom: parent.bottom
@@ -893,7 +1010,7 @@ Scope {
           Flickable {
             id: inactivePlayersStrip
             x: 12
-            y: 136
+            y: mediaSection.cardHeight + 8
             width: parent.width - 24
             height: 44
             visible: popup.inactiveMediaPlayers.length > 0
@@ -936,7 +1053,6 @@ Scope {
                       radius: 18
                       anchors.verticalCenter: parent.verticalCenter
                       color: popup.controller.controlBackground
-                      clip: true
 
                       Image {
                         id: inactiveArt
@@ -945,6 +1061,14 @@ Scope {
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         visible: status === Image.Ready
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                          maskSource: Rectangle {
+                            width: inactiveArt.width
+                            height: inactiveArt.height
+                            radius: width / 2
+                          }
+                        }
                       }
 
                       LucideIcon {

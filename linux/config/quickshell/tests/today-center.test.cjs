@@ -87,7 +87,10 @@ test('media source switching exposes at most two alternatives and hands playback
   const target = { dbusName: 'target', ready: true, canControl: true, isPlaying: false,
     canRaise: true, raise: () => calls.push('raise target'), canPlay: true,
     play: () => calls.push('play target') };
-  const extras = [target, { dbusName: 'third', isPlaying: false }, { dbusName: 'fourth', isPlaying: false }];
+  const extras = [target, { dbusName: 'third', isPlaying: false, trackTitle: 'Third track' },
+    { dbusName: 'fourth', isPlaying: false, trackTitle: 'Fourth track' }];
+  playing.trackTitle = 'Current track';
+  target.trackTitle = 'Target track';
   const popup = { selectedMediaPlayerKey: '', mediaPlayerKey: player => player.dbusName,
     availableMediaPlayers: () => [playing, ...extras] };
   popup.selectMediaPlayer = loadFunction('selectMediaPlayer', { popup });
@@ -96,12 +99,15 @@ test('media source switching exposes at most two alternatives and hands playback
   popup.activateMediaPlayer = loadFunction('activateMediaPlayer', { popup });
 
   assert.deepEqual(popup.otherMediaPlayers(), extras.slice(0, 2));
-  popup.availableMediaPlayers = () => [playing, { ...playing }, ...extras, { dbusName: 'other playing', isPlaying: true }];
+  popup.availableMediaPlayers = () => [playing, { ...playing },
+    { dbusName: 'duplicate browser', trackTitle: 'Current track', isPlaying: false },
+    { dbusName: 'empty', trackTitle: '', isPlaying: false },
+    ...extras, { dbusName: 'other playing', isPlaying: true }];
   assert.deepEqual(popup.otherMediaPlayers(), extras.slice(0, 2));
   popup.activateMediaPlayer(target);
   assert.equal(popup.selectedMediaPlayerKey, 'target');
   assert.deepEqual(calls, ['pause current', 'raise target', 'play target']);
-  assert.match(source, /height: 128 \+ \(popup\.inactiveMediaPlayers\.length > 0 \? 60 : 0\)/);
+  assert.match(source, /height: cardHeight \+ \(popup\.inactiveMediaPlayers\.length > 0 \? 60 : 0\)/);
   assert.match(source, /flickableDirection: Flickable\.HorizontalFlick/);
   assert.match(source, /popup\.activateMediaPlayer\(modelData\)/);
   assert.match(source, /inactivePlayerButton\.modelData\.trackTitle \|\| "No track information"/);
@@ -115,6 +121,34 @@ test('media playback toggle respects player capabilities', () => {
   toggleMediaPlayback({ canTogglePlaying: false, isPlaying: true, canPause: true, pause: () => calls.push('pause') });
   toggleMediaPlayback({ canTogglePlaying: false, isPlaying: false, canPlay: true, play: () => calls.push('play') });
   assert.deepEqual(calls, ['toggle', 'pause', 'play']);
+});
+
+test('MPRIS timeline needs valid position and duration, and only seeks when supported', () => {
+  const player = { positionSupported: true, lengthSupported: true, length: 245, position: 61, canSeek: true };
+  const popup = { hasMediaProgress: loadFunction('hasMediaProgress', {}) };
+  const progress = loadFunction('mediaProgress', { popup });
+  const seek = loadFunction('seekMediaPlayer', { popup });
+  const format = loadFunction('formatMediaTime', {});
+
+  assert.equal(popup.hasMediaProgress(player), true);
+  assert.equal(progress(player), 61 / 245);
+  seek(player, 0.5);
+  assert.equal(player.position, 122.5);
+  seek(player, 2);
+  assert.equal(player.position, 245);
+  player.canSeek = false;
+  seek(player, 0);
+  assert.equal(player.position, 245);
+  player.lengthSupported = false;
+  assert.equal(popup.hasMediaProgress(player), false);
+  player.lengthSupported = true;
+  player.length = 0;
+  assert.equal(popup.hasMediaProgress(player), false);
+  assert.equal(format(61.8), '1:01');
+  assert.equal(format(3661), '1:01:01');
+  assert.equal(format(NaN), '0:00');
+  assert.match(source, /running: popup\.visible && popup\.hasMediaProgress\(popup\.activeMediaPlayer\) && popup\.activeMediaPlayer\.isPlaying/);
+  assert.match(source, /onTriggered: popup\.activeMediaPlayer\.positionChanged\(\)/);
 });
 
 test('Monday-first calendar has 42 consecutive dates, including leap day and adjacent months', () => {
