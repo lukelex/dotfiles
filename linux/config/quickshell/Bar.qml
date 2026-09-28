@@ -13,6 +13,14 @@ import QtQuick
 Scope {
   id: root
 
+  Connections {
+    target: I3
+    function onConnected() {
+      if (!root.hyprlandSession)
+        I3.refreshWorkspaces()
+    }
+  }
+
   required property var notificationService
   required property var githubPrService
   required property var audioService

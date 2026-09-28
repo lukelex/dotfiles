@@ -286,6 +286,7 @@ test('bar selects the native workspace model for the active session', () => {
   const bar = fs.readFileSync(path.resolve(__dirname, '../Bar.qml'), 'utf8');
   assert.match(bar, /^import Quickshell\.Hyprland$/m);
   assert.match(bar, /^import Quickshell\.I3$/m);
+  assert.match(bar, /function onConnected\(\)[\s\S]*?I3\.refreshWorkspaces\(\)/);
   assert.match(bar, /hyprlandSession: !!Quickshell\.env\("HYPRLAND_INSTANCE_SIGNATURE"\)/);
   assert.match(bar, /workspaceNumbers: \[1, 2, 3, 4, 5, 6, 7, 8, 9, 10\]/);
   assert.match(bar, /model: panel\.width < 620 \? \[root\.focusedWorkspaceNumber\] : root\.workspaceNumbers/);
