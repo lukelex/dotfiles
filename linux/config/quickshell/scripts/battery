@@ -89,6 +89,7 @@ shorten_time() {
 
 power() {
   local state=$1 charge=$2
+  local icon
 
   case "$state" in
     plugged)
@@ -100,8 +101,19 @@ power() {
         "Charging started" "$charge% charged"
       ;;
     unplugged)
+      if [[ $charge -lt 15 ]]; then
+        icon="$LUCIDE_PATH/battery-warning.svg"
+      elif [[ $charge -lt 40 ]]; then
+        icon="$LUCIDE_PATH/battery-low.svg"
+      elif [[ $charge -lt 65 ]]; then
+        icon="$LUCIDE_PATH/battery-medium.svg"
+      elif [[ $charge -lt 90 ]]; then
+        icon="$LUCIDE_PATH/battery-high.svg"
+      else
+        icon="$LUCIDE_PATH/battery-full.svg"
+      fi
       notify-send -a System \
-        -i "$LUCIDE_PATH/battery.svg" \
+        -i "$icon" \
         -h string:wired-tag:battery \
         -h boolean:suppress-sound:true \
         -h int:value:"$charge" \
