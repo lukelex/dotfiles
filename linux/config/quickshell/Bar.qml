@@ -1094,12 +1094,24 @@ Scope {
       }
 
       Row {
-        anchors.centerIn: parent
-        spacing: 16
+        id: centerWidgets
+
+        anchors {
+          left: leftWidgets.right
+          right: rightWidgets.left
+          leftMargin: 8
+          rightMargin: 8
+          verticalCenter: parent.verticalCenter
+        }
+        spacing: 8
+        visible: width >= 200
 
         Item {
+          id: timeItem
+
           height: timeContent.height
-          width: timeContent.width
+          width: (centerWidgets.width - centerWidgets.spacing) / 2
+          clip: true
 
           Row {
             id: timeContent
@@ -1118,6 +1130,8 @@ Scope {
               font.family: root.fontFamily
               font.pixelSize: root.barFontSize
               text: Qt.formatTime(clock.date, "HH:mm")
+              width: Math.max(0, timeItem.width - root.barFontSize - timeContent.spacing)
+              elide: Text.ElideRight
             }
           }
 
@@ -1135,8 +1149,11 @@ Scope {
         }
 
         Item {
+          id: dateItem
+
           height: dateContent.height
-          width: dateContent.width
+          width: (centerWidgets.width - centerWidgets.spacing) / 2
+          clip: true
 
           Row {
             id: dateContent
@@ -1155,6 +1172,8 @@ Scope {
               font.family: root.fontFamily
               font.pixelSize: root.barFontSize
               text: Qt.formatDate(clock.date, "dd MMM - dddd")
+              width: Math.max(0, dateItem.width - root.barFontSize - dateContent.spacing)
+              elide: Text.ElideRight
             }
           }
 
@@ -1170,16 +1189,19 @@ Scope {
       }
 
       Row {
+        id: rightWidgets
+
         anchors {
           right: parent.right
-          rightMargin: 28
+          rightMargin: panel.width < 900 ? 12 : 28
           verticalCenter: parent.verticalCenter
         }
-        spacing: 12
+        spacing: panel.width < 900 ? 8 : 12
 
         Item {
           height: root.barFontSize
           width: root.barFontSize
+          visible: panel.width >= 720
 
           LucideIcon {
             anchors.fill: parent
@@ -1253,7 +1275,7 @@ Scope {
         LucideIcon {
           height: root.barFontSize
           width: root.barFontSize
-          visible: root.batteryAvailable
+          visible: root.batteryAvailable && panel.width >= 840
           color: root.batteryAvailable && root.batteryPercentage < 15 ? root.urgent : root.batteryAvailable ? root.foreground : root.muted
           source: root.icon(root.batteryIcon())
 
