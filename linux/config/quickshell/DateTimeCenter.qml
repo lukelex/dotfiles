@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell
+import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Controls.Basic as Controls
 
@@ -23,10 +24,28 @@ Scope {
   readonly property date today: controller.currentDate
   property date displayedMonth: new Date(today.getFullYear(), today.getMonth(), 1, 12)
   readonly property bool currentMonth: displayedMonth.getFullYear() === today.getFullYear() && displayedMonth.getMonth() === today.getMonth()
-  readonly property real width: Math.max(1, Math.min(584, (panel.screen ? panel.screen.width : panel.width) - 24))
+  readonly property real width: Math.max(1, Math.min(640, (panel.screen ? panel.screen.width : panel.width) - 24))
   readonly property bool stacked: width < 520
+  readonly property bool compactMediaControls: width < 460
   readonly property real availableHeight: Math.max(1, (panel.screen ? panel.screen.height : 768) - panel.height - 24)
   readonly property real height: Math.min(availableHeight, sections.implicitHeight + 32)
+  readonly property var activeMediaPlayer: popup.selectMediaPlayer()
+
+  function selectMediaPlayer() {
+    const players = Mpris.players.values.filter(player => player.ready && player.canControl)
+    return players.find(player => player.isPlaying)
+      || players.find(player => player.trackTitle !== "")
+      || players[0] || null
+  }
+
+  function toggleMediaPlayback(player) {
+    if (player.canTogglePlaying)
+      player.togglePlaying()
+    else if (player.isPlaying && player.canPause)
+      player.pause()
+    else if (!player.isPlaying && player.canPlay)
+      player.play()
+  }
 
   function resetMonth() {
     popup.displayedMonth = new Date(popup.today.getFullYear(), popup.today.getMonth(), 1, 12)
@@ -661,17 +680,20 @@ Scope {
           width: parent.width
           color: popup.controller.controlSurface
           radius: 18
-          implicitHeight: quoteSection.implicitHeight + 24
+          implicitHeight: quoteLayout.implicitHeight + 32
 
-          Column {
-            id: quoteSection
+          Grid {
+            id: quoteLayout
             x: 16
-            y: 12
+            y: 16
             width: parent.width - 32
-            spacing: 7
+            columns: width >= 460 ? 2 : 1
+            columnSpacing: 16
+            rowSpacing: 10
 
             Row {
-              width: parent.width
+              id: quoteHeading
+              width: quoteLayout.columns === 1 ? quoteLayout.width : 150
               spacing: 8
               LucideIcon {
                 width: 18
@@ -680,39 +702,151 @@ Scope {
                 color: popup.controller.controlActiveIcon
               }
               Label {
-                width: parent.width - 26
                 text: "Quote of the day"
-                color: popup.controller.controlPrimaryText
+                color: popup.controller.controlSecondaryText
                 font.pixelSize: 12
               }
             }
-            Label {
-              width: parent.width
-              text: popup.quote.loading ? "Loading quote..." : popup.quote.available ? "\u201c" + popup.quote.quote + "\u201d" : "No quote available"
-              visible: text !== ""
-              wrapMode: Text.Wrap
-              elide: Text.ElideNone
-              color: popup.controller.controlPrimaryText
-              font.pixelSize: 13
-            }
-            Label {
-              width: parent.width
-              text: popup.quote.stale && popup.quote.available ? "Using a cached quote" : popup.quote.error
-              visible: text !== ""
-              wrapMode: Text.Wrap
-              elide: Text.ElideNone
-            }
-            Action {
-              text: popup.quote.loading ? "Refreshing..." : "Retry"
-              enabled: !popup.quote.loading
-              visible: !popup.quote.available || popup.quote.stale || popup.quote.error !== ""
-              onClicked: {
-                popup.requestOpen(true)
-                popup.quote.refresh(true)
+
+            Column {
+              width: quoteLayout.columns === 1 ? quoteLayout.width : quoteLayout.width - quoteHeading.width - quoteLayout.columnSpacing
+              spacing: 8
+
+              Label {
+                width: parent.width
+                text: popup.quote.loading ? "Loading quote..." : popup.quote.available ? "\u201c" + popup.quote.quote + "\u201d" : "No quote available"
+                wrapMode: Text.Wrap
+                elide: Text.ElideNone
+                horizontalAlignment: Text.AlignRight
+                color: popup.controller.controlPrimaryText
+                font.pixelSize: 15
+              }
+              Label {
+                width: parent.width
+                text: popup.quote.error
+                visible: text !== ""
+                wrapMode: Text.Wrap
+                horizontalAlignment: Text.AlignRight
+              }
+              Action {
+                anchors.right: parent.right
+                text: popup.quote.loading ? "Refreshing..." : "Retry"
+                enabled: !popup.quote.loading
+                visible: !popup.quote.available || popup.quote.error !== ""
+                onClicked: {
+                  popup.requestOpen(true)
+                  popup.quote.refresh(true)
+                }
               }
             }
           }
         }
+
+        Rectangle {
+          visible: popup.activeMediaPlayer !== null
+          width: parent.width
+          height: 80
+          color: popup.controller.controlSurface
+          radius: 18
+
+          Row {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: popup.compactMediaControls ? 6 : 10
+
+            Item {
+              id: mediaArtwork
+              width: popup.width < 300 ? 0 : 56
+              height: 56
+              anchors.verticalCenter: parent.verticalCenter
+
+              Rectangle {
+                anchors.fill: parent
+                color: popup.controller.controlBackground
+                radius: 10
+              }
+
+              Image {
+                id: coverArt
+                anchors.fill: parent
+                source: popup.activeMediaPlayer ? popup.activeMediaPlayer.trackArtUrl : ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                cache: true
+                visible: status === Image.Ready
+              }
+
+              LucideIcon {
+                anchors.centerIn: parent
+                width: 24
+                height: 24
+                source: popup.controller.icon("headphones")
+                color: popup.controller.controlSecondaryText
+                visible: !coverArt.visible
+              }
+            }
+
+            Column {
+              anchors.verticalCenter: parent.verticalCenter
+              width: Math.max(1, parent.width - mediaArtwork.width - mediaControls.width - parent.spacing * 2)
+              spacing: 2
+
+              Label {
+                width: parent.width
+                visible: !popup.compactMediaControls
+                text: popup.activeMediaPlayer ? popup.activeMediaPlayer.identity : ""
+                font.pixelSize: 10
+              }
+              Label {
+                width: parent.width
+                text: popup.activeMediaPlayer && popup.activeMediaPlayer.trackTitle
+                  ? popup.activeMediaPlayer.trackTitle : "No track information"
+                color: popup.controller.controlPrimaryText
+                font.pixelSize: 13
+              }
+              Label {
+                width: parent.width
+                visible: !popup.compactMediaControls
+                text: popup.activeMediaPlayer ? popup.activeMediaPlayer.trackArtist : ""
+                font.pixelSize: 11
+              }
+            }
+
+            Row {
+              id: mediaControls
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: popup.compactMediaControls ? 2 : 4
+
+              Action {
+                width: 34
+                iconName: "skip-back"
+                text: "Previous track"
+                Accessible.name: "Previous track"
+                enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canGoPrevious
+                onClicked: popup.activeMediaPlayer.previous()
+              }
+              Action {
+                width: 34
+                iconName: popup.activeMediaPlayer && popup.activeMediaPlayer.isPlaying ? "pause" : "play"
+                text: popup.activeMediaPlayer && popup.activeMediaPlayer.isPlaying ? "Pause" : "Play"
+                Accessible.name: popup.activeMediaPlayer && popup.activeMediaPlayer.isPlaying ? "Pause" : "Play"
+                enabled: popup.activeMediaPlayer && (popup.activeMediaPlayer.canTogglePlaying
+                  || popup.activeMediaPlayer.isPlaying && popup.activeMediaPlayer.canPause
+                  || !popup.activeMediaPlayer.isPlaying && popup.activeMediaPlayer.canPlay)
+                onClicked: popup.toggleMediaPlayback(popup.activeMediaPlayer)
+              }
+              Action {
+                width: 34
+                iconName: "skip-forward"
+                text: "Next track"
+                Accessible.name: "Next track"
+                enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canGoNext
+                onClicked: popup.activeMediaPlayer.next()
+              }
+            }
+          }
+        }
+
       }
     }
   }

@@ -47,6 +47,43 @@ function dateParts(date) {
   return [date.getFullYear(), date.getMonth() + 1, date.getDate()];
 }
 
+function loadFunction(name, globals) {
+  const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+  assert.ok(match, `Missing DateTimeCenter function ${name}`);
+  return vm.runInNewContext(`(${match[0]})`, globals);
+}
+
+test('media player selection prefers a controllable player that is currently playing', () => {
+  const pausedPlayer = { ready: true, canControl: true, isPlaying: false, trackTitle: 'Paused song' };
+  const playingPlayer = { ready: true, canControl: true, isPlaying: true, trackTitle: 'Current song' };
+  const unavailablePlayer = { ready: false, canControl: true, isPlaying: true, trackTitle: 'Not ready' };
+  const Mpris = { players: { values: [unavailablePlayer, pausedPlayer, playingPlayer] } };
+  const selectMediaPlayer = loadFunction('selectMediaPlayer', { Mpris });
+
+  assert.equal(selectMediaPlayer.call({}), playingPlayer);
+  Mpris.players.values = [pausedPlayer];
+  assert.equal(selectMediaPlayer.call({}), pausedPlayer);
+  Mpris.players.values = [];
+  assert.equal(selectMediaPlayer.call({}), null);
+  assert.match(source, /readonly property real width: Math\.max\(1, Math\.min\(640,/);
+  assert.match(source, /visible: popup\.activeMediaPlayer !== null/);
+  for (const icon of ['skip-back', 'play', 'pause', 'skip-forward']) {
+    assert.ok(fs.existsSync(path.join(__dirname, '../../lucide/svg', `${icon}.svg`)), `${icon} icon exists`);
+  }
+  assert.match(source, /iconName: "skip-back"/);
+  assert.match(source, /iconName: popup\.activeMediaPlayer && popup\.activeMediaPlayer\.isPlaying \? "pause" : "play"/);
+  assert.match(source, /iconName: "skip-forward"/);
+});
+
+test('media playback toggle respects player capabilities', () => {
+  const calls = [];
+  const toggleMediaPlayback = loadFunction('toggleMediaPlayback', {});
+  toggleMediaPlayback({ canTogglePlaying: true, togglePlaying: () => calls.push('toggle') });
+  toggleMediaPlayback({ canTogglePlaying: false, isPlaying: true, canPause: true, pause: () => calls.push('pause') });
+  toggleMediaPlayback({ canTogglePlaying: false, isPlaying: false, canPlay: true, play: () => calls.push('play') });
+  assert.deepEqual(calls, ['toggle', 'pause', 'play']);
+});
+
 test('Monday-first calendar has 42 consecutive dates, including leap day and adjacent months', () => {
   const { popup } = fixture();
   popup.resetMonth();
