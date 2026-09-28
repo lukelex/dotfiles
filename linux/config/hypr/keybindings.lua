@@ -65,6 +65,7 @@ hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Applications
 hl.bind(SUPER .. " + RETURN", hl.dsp.exec_cmd("kitty"))
+hl.bind("SUPER + SHIFT + p", hl.dsp.exec_cmd("systemctl --user restart quickshell.service"))
 hl.bind("SUPER + CTRL + s", hl.dsp.exec_cmd('wf-recorder --geometry "$(slurp)"'))
 hl.bind("SUPER + CTRL + p", hl.dsp.exec_cmd("1password --quick-access"))
 hl.bind("SUPER + CTRL + f", hl.dsp.exec_cmd("kitty yazi"))
