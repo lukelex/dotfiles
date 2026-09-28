@@ -9,6 +9,7 @@ import Quickshell.Services.UPower
 import Quickshell.Wayland
 import QtCore
 import QtQuick
+import QtQuick.Controls as Controls
 
 Scope {
   id: root
@@ -1123,6 +1124,10 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            Accessible.role: Accessible.Button
+            Accessible.name: "GitHub review requests"
+            Controls.ToolTip.visible: containsMouse
+            Controls.ToolTip.text: "GitHub review requests"
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: panel.openDateTime()
@@ -1235,6 +1240,10 @@ Scope {
           MouseArea {
             anchors.fill: parent
             anchors.margins: -5
+            Accessible.role: Accessible.Button
+            Accessible.name: "Wi-Fi and Bluetooth"
+            Controls.ToolTip.visible: containsMouse
+            Controls.ToolTip.text: "Wi-Fi and Bluetooth"
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onEntered: panel.openConnectivity()
@@ -1249,6 +1258,18 @@ Scope {
           visible: root.batteryAvailable
           color: root.batteryAvailable && root.batteryPercentage < 15 ? root.urgent : root.batteryAvailable ? root.foreground : root.muted
           source: root.icon(root.batteryIcon())
+
+          Accessible.role: Accessible.StatusBar
+          Accessible.name: "Battery " + root.batteryPercentage + "%"
+          Controls.ToolTip.visible: batteryHover.containsMouse
+          Controls.ToolTip.text: "Battery " + root.batteryPercentage + "%"
+
+          MouseArea {
+            id: batteryHover
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+          }
         }
 
 
@@ -1270,6 +1291,8 @@ Scope {
           MouseArea {
             anchors.fill: parent
             anchors.margins: -4
+            Controls.ToolTip.visible: containsMouse
+            Controls.ToolTip.text: "Sound devices"
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: panel.openAudioOutput()
@@ -1305,6 +1328,10 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            Accessible.role: Accessible.Button
+            Accessible.name: root.doNotDisturb ? "Notifications; Do Not Disturb on" : "Notifications; Do Not Disturb off"
+            Controls.ToolTip.visible: containsMouse
+            Controls.ToolTip.text: root.doNotDisturb ? "Notifications · Do Not Disturb on" : "Notifications · Do Not Disturb off"
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: {
@@ -1330,6 +1357,10 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            Accessible.role: Accessible.Button
+            Accessible.name: "Control Center"
+            Controls.ToolTip.visible: containsMouse
+            Controls.ToolTip.text: "Control Center"
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: panel.openControlCenter()
