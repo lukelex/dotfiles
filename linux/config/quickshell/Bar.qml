@@ -1124,6 +1124,7 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            anchors.margins: -4
             Accessible.role: Accessible.Button
             Accessible.name: "GitHub review requests"
             Controls.ToolTip.visible: containsMouse
@@ -1330,6 +1331,7 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            anchors.margins: -4
             Accessible.role: Accessible.Button
             Accessible.name: root.doNotDisturb ? "Notifications; Do Not Disturb on" : "Notifications; Do Not Disturb off"
             Controls.ToolTip.visible: containsMouse
@@ -1359,6 +1361,7 @@ Scope {
 
           MouseArea {
             anchors.fill: parent
+            anchors.margins: -4
             Accessible.role: Accessible.Button
             Accessible.name: "Control Center"
             Controls.ToolTip.visible: containsMouse
