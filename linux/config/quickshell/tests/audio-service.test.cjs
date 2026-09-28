@@ -5,12 +5,48 @@ const vm = require('node:vm');
 const { test } = require('node:test');
 
 const serviceSource = fs.readFileSync(path.join(__dirname, '..', 'AudioService.qml'), 'utf8');
+const barSource = fs.readFileSync(path.join(__dirname, '..', 'Bar.qml'), 'utf8');
 
 function loadFunction(name, globals) {
   const match = serviceSource.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
   assert.ok(match, `Missing AudioService function ${name}`);
   return vm.runInNewContext(`(${match[0]})`, globals);
 }
+
+function loadBarFunction(name, globals) {
+  const match = barSource.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+  assert.ok(match, `Missing Bar function ${name}`);
+  return vm.runInNewContext(`(${match[0]})`, globals);
+}
+
+test('bar audio volume and mute state use the live PipeWire default sink', () => {
+  assert.match(barSource, /import Quickshell\.Services\.Pipewire/);
+  assert.match(barSource, /PwObjectTracker \{\n\s+objects: \[Pipewire\.defaultAudioSink, Pipewire\.defaultAudioSource\]/);
+  assert.match(barSource, /readonly property real audioVolume: root\.audioAvailable \? root\.defaultAudioSink\.audio\.volume \* 100 : 0/);
+  assert.doesNotMatch(barSource, /id: audioStatus|interval: 1000[\s\S]{0,100}audioStatus/);
+
+  const root = {
+    audioAvailable: true,
+    audioMuted: false,
+    notificationService: { showOsd: (...args) => { root.osd = args; } },
+    audioIcon: () => 'volume-2',
+  };
+  const audioSet = { value: 0, running: false };
+  const audioToggle = { running: false };
+  const controlRefreshTimer = { restart() {} };
+  loadBarFunction('setAudioVolume', { root, audioSet })(65);
+  assert.deepEqual(audioSet, { value: 65, running: true });
+  assert.deepEqual(root.osd, ['Volume', 65, 'volume-2']);
+
+  loadBarFunction('toggleAudio', { root, audioToggle, controlRefreshTimer })();
+  assert.equal(audioToggle.running, true);
+});
+
+test('native default-device changes refresh the audio picker immediately when open', () => {
+  assert.match(serviceSource, /import Quickshell\.Services\.Pipewire/);
+  assert.match(serviceSource, /function onDefaultAudioSinkChanged\(\) \{\n\s+if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
+  assert.match(serviceSource, /function onDefaultAudioSourceChanged\(\) \{\n\s+if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
+});
 
 function serviceState(overrides = {}) {
   return {

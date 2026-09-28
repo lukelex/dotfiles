@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell.Io
+import Quickshell.Services.Pipewire
 import QtQml
 
 QtObject {
@@ -310,5 +311,17 @@ QtObject {
     running: service.activePanels > 0
     repeat: true
     onTriggered: service.refresh()
+  }
+
+  property Connections pipewireConnections: Connections {
+    target: Pipewire
+    function onDefaultAudioSinkChanged() {
+      if (service.activePanels > 0)
+        service.refresh(true)
+    }
+    function onDefaultAudioSourceChanged() {
+      if (service.activePanels > 0)
+        service.refresh(true)
+    }
   }
 }

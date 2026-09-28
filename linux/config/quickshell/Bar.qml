@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.I3
 import Quickshell.Io
+import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import Quickshell.Wayland
 import QtCore
@@ -26,6 +27,10 @@ Scope {
 
   WeatherService { id: weatherService }
   QuoteService { id: quoteService }
+
+  PwObjectTracker {
+    objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource].filter(node => node !== null)
+  }
 
   Connections {
     target: Hyprland
@@ -79,9 +84,11 @@ Scope {
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   property int workspaceTransition: 0
 
-  property real audioVolume: 0
-  property bool audioMuted: false
-  property bool audioAvailable: false
+  readonly property var defaultAudioSink: Pipewire.defaultAudioSink
+  readonly property bool audioAvailable: Pipewire.ready && !!root.defaultAudioSink
+    && root.defaultAudioSink.ready && !!root.defaultAudioSink.audio
+  readonly property real audioVolume: root.audioAvailable ? root.defaultAudioSink.audio.volume * 100 : 0
+  readonly property bool audioMuted: root.audioAvailable && root.defaultAudioSink.audio.muted
   property string batteryState: ""
   property int batteryPercentage: 0
   property string batteryTime: ""
@@ -383,11 +390,17 @@ Scope {
   }
 
   function toggleAudio() {
+    if (!root.audioAvailable)
+      return
+
     audioToggle.running = true
     controlRefreshTimer.restart()
   }
 
   function setAudioVolume(value) {
+    if (!root.audioAvailable)
+      return
+
     audioSet.value = Math.round(value)
     audioSet.running = true
     root.notificationService.showOsd("Volume", root.audioMuted ? 0 : value, root.audioIcon())
@@ -487,6 +500,17 @@ Scope {
   }
 
   Process {
+    id: audioToggle
+    command: ["u_audio", "vol", "toggle"]
+  }
+
+  Process {
+    id: audioSet
+    property int value: 0
+    command: ["u_audio", "vol", "set", value.toString()]
+  }
+
+  Process {
     id: fallbackProfileStatus
     command: ["sh", "-c", "printf '%s\\n' \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
     running: !root.nativePowerProfilesAvailable
@@ -537,17 +561,6 @@ Scope {
   }
 
   Process {
-    id: audioToggle
-    command: ["u_audio", "vol", "toggle"]
-  }
-
-  Process {
-    id: audioSet
-    property int value: 0
-    command: ["u_audio", "vol", "set", value.toString()]
-  }
-
-  Process {
     id: brightnessSet
     property int value: 0
     command: [root.quickshellScripts + "/brightness", "set", value.toString()]
@@ -576,24 +589,6 @@ Scope {
   Process {
     id: themeToggle
     command: ["u_theme", "toggle"]
-  }
-
-  Process {
-    id: audioStatus
-    command: ["sh", "-c", "u_audio vol get; pactl get-sink-mute @DEFAULT_SINK@"]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const output = this.text.trim().split("\n")
-        const volume = Number(output[0])
-
-        if (!isNaN(volume)) {
-          root.audioVolume = volume
-          root.audioMuted = output[1] === "Mute: yes"
-          root.audioAvailable = true
-        }
-      }
-    }
   }
 
   Process {
@@ -700,13 +695,6 @@ Scope {
           root.gpuTemperature = gpuTemperature
       }
     }
-  }
-
-  Timer {
-    interval: 1000
-    running: true
-    repeat: true
-    onTriggered: audioStatus.running = true
   }
 
   Timer {
