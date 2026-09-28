@@ -58,13 +58,18 @@ test('media player selection prefers a controllable player that is currently pla
   const playingPlayer = { ready: true, canControl: true, isPlaying: true, trackTitle: 'Current song' };
   const unavailablePlayer = { ready: false, canControl: true, isPlaying: true, trackTitle: 'Not ready' };
   const Mpris = { players: { values: [unavailablePlayer, pausedPlayer, playingPlayer] } };
-  const selectMediaPlayer = loadFunction('selectMediaPlayer', { Mpris });
+  const popup = { selectedMediaPlayerKey: '', mediaPlayerKey: player => player.dbusName,
+    availableMediaPlayers: loadFunction('availableMediaPlayers', { Mpris }) };
+  popup.selectMediaPlayer = loadFunction('selectMediaPlayer', { popup });
 
-  assert.equal(selectMediaPlayer.call({}), playingPlayer);
+  assert.equal(popup.selectMediaPlayer(), playingPlayer);
+  popup.selectedMediaPlayerKey = pausedPlayer.dbusName;
+  assert.equal(popup.selectMediaPlayer(), pausedPlayer);
   Mpris.players.values = [pausedPlayer];
-  assert.equal(selectMediaPlayer.call({}), pausedPlayer);
+  popup.selectedMediaPlayerKey = '';
+  assert.equal(popup.selectMediaPlayer(), pausedPlayer);
   Mpris.players.values = [];
-  assert.equal(selectMediaPlayer.call({}), null);
+  assert.equal(popup.selectMediaPlayer(), null);
   assert.match(source, /readonly property real width: Math\.max\(1, Math\.min\(640,/);
   assert.match(source, /visible: popup\.activeMediaPlayer !== null/);
   for (const icon of ['skip-back', 'play', 'pause', 'skip-forward']) {
@@ -73,6 +78,34 @@ test('media player selection prefers a controllable player that is currently pla
   assert.match(source, /iconName: "skip-back"/);
   assert.match(source, /iconName: popup\.activeMediaPlayer && popup\.activeMediaPlayer\.isPlaying \? "pause" : "play"/);
   assert.match(source, /iconName: "skip-forward"/);
+});
+
+test('media source switching exposes at most two alternatives and hands playback over', () => {
+  const calls = [];
+  const playing = { dbusName: 'playing', ready: true, canControl: true, isPlaying: true,
+    canPause: true, pause: () => calls.push('pause current') };
+  const target = { dbusName: 'target', ready: true, canControl: true, isPlaying: false,
+    canRaise: true, raise: () => calls.push('raise target'), canPlay: true,
+    play: () => calls.push('play target') };
+  const extras = [target, { dbusName: 'third', isPlaying: false }, { dbusName: 'fourth', isPlaying: false }];
+  const popup = { selectedMediaPlayerKey: '', mediaPlayerKey: player => player.dbusName,
+    availableMediaPlayers: () => [playing, ...extras] };
+  popup.selectMediaPlayer = loadFunction('selectMediaPlayer', { popup });
+  Object.defineProperty(popup, 'activeMediaPlayer', { get: () => popup.selectMediaPlayer() });
+  popup.otherMediaPlayers = loadFunction('otherMediaPlayers', { popup });
+  popup.activateMediaPlayer = loadFunction('activateMediaPlayer', { popup });
+
+  assert.deepEqual(popup.otherMediaPlayers(), extras.slice(0, 2));
+  popup.availableMediaPlayers = () => [playing, { ...playing }, ...extras, { dbusName: 'other playing', isPlaying: true }];
+  assert.deepEqual(popup.otherMediaPlayers(), extras.slice(0, 2));
+  popup.activateMediaPlayer(target);
+  assert.equal(popup.selectedMediaPlayerKey, 'target');
+  assert.deepEqual(calls, ['pause current', 'raise target', 'play target']);
+  assert.match(source, /height: 128 \+ \(popup\.inactiveMediaPlayers\.length > 0 \? 60 : 0\)/);
+  assert.match(source, /flickableDirection: Flickable\.HorizontalFlick/);
+  assert.match(source, /popup\.activateMediaPlayer\(modelData\)/);
+  assert.match(source, /inactivePlayerButton\.modelData\.trackTitle \|\| "No track information"/);
+  assert.match(source, /inactivePlayerButton\.modelData\.trackArtist \|\| "Unknown artist"/);
 });
 
 test('media playback toggle respects player capabilities', () => {

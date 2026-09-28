@@ -20,6 +20,7 @@ Scope {
   property var promotionWindow: null
   property int pinRequest: 0
   property bool detailsExpanded: false
+  property string selectedMediaPlayerKey: ""
   readonly property bool visible: preview.visible || pinnedPopup.visible
   readonly property date today: controller.currentDate
   property date displayedMonth: new Date(today.getFullYear(), today.getMonth(), 1, 12)
@@ -30,12 +31,49 @@ Scope {
   readonly property real availableHeight: Math.max(1, (panel.screen ? panel.screen.height : 768) - panel.height - 24)
   readonly property real height: Math.min(availableHeight, sections.implicitHeight + 32)
   readonly property var activeMediaPlayer: popup.selectMediaPlayer()
+  readonly property var inactiveMediaPlayers: popup.otherMediaPlayers()
+
+  function availableMediaPlayers() {
+    return Mpris.players.values.filter(player => player.ready && player.canControl)
+  }
+
+  function mediaPlayerKey(player) {
+    return player.dbusName || String(player.uniqueId)
+  }
 
   function selectMediaPlayer() {
-    const players = Mpris.players.values.filter(player => player.ready && player.canControl)
-    return players.find(player => player.isPlaying)
+    const players = popup.availableMediaPlayers()
+    return players.find(player => popup.mediaPlayerKey(player) === popup.selectedMediaPlayerKey)
+      || players.find(player => player.isPlaying)
       || players.find(player => player.trackTitle !== "")
       || players[0] || null
+  }
+
+  function otherMediaPlayers() {
+    const active = popup.activeMediaPlayer
+    return active ? popup.availableMediaPlayers().filter(player =>
+      popup.mediaPlayerKey(player) !== popup.mediaPlayerKey(active) && !player.isPlaying).slice(0, 2) : []
+  }
+
+  function activateMediaPlayer(player) {
+    const current = popup.activeMediaPlayer
+    if (current === player)
+      return
+
+    if (current && current.isPlaying) {
+      if (current.canPause)
+        current.pause()
+      else if (current.canTogglePlaying)
+        current.togglePlaying()
+    }
+
+    popup.selectedMediaPlayerKey = popup.mediaPlayerKey(player)
+    if (player.canRaise)
+      player.raise()
+    if (!player.isPlaying && player.canPlay)
+      player.play()
+    else if (!player.isPlaying && player.canTogglePlaying)
+      player.togglePlaying()
   }
 
   function toggleMediaPlayback(player) {
@@ -297,6 +335,8 @@ Scope {
   component Action: Controls.AbstractButton {
     id: action
     property string iconName: ""
+    property color iconColor: popup.controller.controlSecondaryText
+    property bool highlighted: false
     implicitWidth: iconName ? 32 : Math.max(56, actionLabel.implicitWidth + 16)
     implicitHeight: 32
     opacity: enabled ? 1 : 0.55
@@ -304,8 +344,8 @@ Scope {
     focusPolicy: popup.pinned ? Qt.StrongFocus : Qt.NoFocus
     Accessible.name: text
     background: Rectangle {
-      radius: 8
-      color: action.hovered || action.down ? popup.controller.controlSurface : "transparent"
+      radius: action.highlighted ? width / 2 : 8
+      color: action.highlighted ? "#E4EDF7" : action.hovered || action.down ? popup.controller.controlSurface : "transparent"
       border.width: action.visualFocus ? 1 : 0
       border.color: popup.controller.controlActiveIcon
     }
@@ -323,7 +363,7 @@ Scope {
         height: 16
         visible: action.iconName !== ""
         source: action.iconName ? popup.controller.icon(action.iconName) : ""
-        color: popup.controller.controlSecondaryText
+        color: action.iconColor
       }
     }
     Controls.ToolTip {
@@ -745,103 +785,197 @@ Scope {
         Rectangle {
           visible: popup.activeMediaPlayer !== null
           width: parent.width
-          height: 80
+          height: 128 + (popup.inactiveMediaPlayers.length > 0 ? 60 : 0)
           color: popup.controller.controlSurface
           radius: 18
 
-          Row {
-            anchors.fill: parent
-            anchors.margins: 12
-            spacing: popup.compactMediaControls ? 6 : 10
+          Rectangle {
+            width: parent.width
+            height: 128
+            radius: 18
+            color: "#252D3A"
+            clip: true
 
-            Item {
-              id: mediaArtwork
-              width: popup.width < 300 ? 0 : 56
-              height: 56
-              anchors.verticalCenter: parent.verticalCenter
+            Image {
+              anchors.fill: parent
+              source: popup.activeMediaPlayer ? popup.activeMediaPlayer.trackArtUrl : ""
+              fillMode: Image.PreserveAspectCrop
+              asynchronous: true
+              visible: status === Image.Ready
+            }
 
-              Rectangle {
-                anchors.fill: parent
-                color: popup.controller.controlBackground
-                radius: 10
-              }
-
-              Image {
-                id: coverArt
-                anchors.fill: parent
-                source: popup.activeMediaPlayer ? popup.activeMediaPlayer.trackArtUrl : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: true
-                visible: status === Image.Ready
-              }
-
-              LucideIcon {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: popup.controller.icon("headphones")
-                color: popup.controller.controlSecondaryText
-                visible: !coverArt.visible
-              }
+            Rectangle {
+              anchors.fill: parent
+              color: "#C91A2431"
             }
 
             Column {
-              anchors.verticalCenter: parent.verticalCenter
-              width: Math.max(1, parent.width - mediaArtwork.width - mediaControls.width - parent.spacing * 2)
-              spacing: 2
+              x: 18
+              y: 12
+              width: parent.width - 36
+              spacing: 7
 
-              Label {
-                width: parent.width
-                visible: !popup.compactMediaControls
-                text: popup.activeMediaPlayer ? popup.activeMediaPlayer.identity : ""
-                font.pixelSize: 10
+              Row {
+                spacing: 6
+                LucideIcon {
+                  width: 14
+                  height: 14
+                  source: popup.controller.icon("disc")
+                  color: "#DDE7F4"
+                }
+                Label {
+                  width: Math.min(implicitWidth, Math.max(1, parent.parent.width - 20))
+                  text: popup.activeMediaPlayer ? popup.activeMediaPlayer.identity : ""
+                  elide: Text.ElideRight
+                  color: "#DDE7F4"
+                  font.pixelSize: 11
+                }
               }
+
               Label {
                 width: parent.width
                 text: popup.activeMediaPlayer && popup.activeMediaPlayer.trackTitle
                   ? popup.activeMediaPlayer.trackTitle : "No track information"
-                color: popup.controller.controlPrimaryText
-                font.pixelSize: 13
+                elide: Text.ElideRight
+                color: "white"
+                font.pixelSize: 16
+                font.bold: true
               }
               Label {
-                width: parent.width
-                visible: !popup.compactMediaControls
+                width: Math.max(1, parent.width - 132)
                 text: popup.activeMediaPlayer ? popup.activeMediaPlayer.trackArtist : ""
-                font.pixelSize: 11
+                elide: Text.ElideRight
+                color: "#DDE7F4"
+                font.pixelSize: 12
               }
             }
 
             Row {
-              id: mediaControls
-              anchors.verticalCenter: parent.verticalCenter
-              spacing: popup.compactMediaControls ? 2 : 4
+              anchors.right: parent.right
+              anchors.bottom: parent.bottom
+              anchors.rightMargin: 12
+              anchors.bottomMargin: 9
+              spacing: 4
 
               Action {
-                width: 34
+                width: 36
+                height: 36
                 iconName: "skip-back"
                 text: "Previous track"
-                Accessible.name: "Previous track"
+                iconColor: "white"
                 enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canGoPrevious
                 onClicked: popup.activeMediaPlayer.previous()
               }
               Action {
-                width: 34
+                width: 40
+                height: 40
                 iconName: popup.activeMediaPlayer && popup.activeMediaPlayer.isPlaying ? "pause" : "play"
                 text: popup.activeMediaPlayer && popup.activeMediaPlayer.isPlaying ? "Pause" : "Play"
-                Accessible.name: popup.activeMediaPlayer && popup.activeMediaPlayer.isPlaying ? "Pause" : "Play"
+                iconColor: "#1A2431"
+                highlighted: true
                 enabled: popup.activeMediaPlayer && (popup.activeMediaPlayer.canTogglePlaying
                   || popup.activeMediaPlayer.isPlaying && popup.activeMediaPlayer.canPause
                   || !popup.activeMediaPlayer.isPlaying && popup.activeMediaPlayer.canPlay)
                 onClicked: popup.toggleMediaPlayback(popup.activeMediaPlayer)
               }
               Action {
-                width: 34
+                width: 36
+                height: 36
                 iconName: "skip-forward"
                 text: "Next track"
-                Accessible.name: "Next track"
+                iconColor: "white"
                 enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canGoNext
                 onClicked: popup.activeMediaPlayer.next()
+              }
+            }
+          }
+
+          Flickable {
+            id: inactivePlayersStrip
+            x: 12
+            y: 136
+            width: parent.width - 24
+            height: 44
+            visible: popup.inactiveMediaPlayers.length > 0
+            clip: true
+            contentWidth: inactivePlayersRow.implicitWidth
+            contentHeight: height
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.HorizontalFlick
+
+            Row {
+              id: inactivePlayersRow
+              height: parent.height
+              spacing: 6
+
+              Repeater {
+                model: popup.inactiveMediaPlayers
+
+                Controls.AbstractButton {
+                  id: inactivePlayerButton
+                  required property var modelData
+                  width: Math.min(268, Math.max(154, (inactivePlayersStrip.width - 6) / 2))
+                  height: 44
+                  hoverEnabled: true
+                  Accessible.name: "Play " + (modelData.trackTitle || "untitled track")
+                  onClicked: popup.activateMediaPlayer(modelData)
+
+                  background: Rectangle {
+                    radius: 22
+                    color: inactivePlayerButton.hovered || inactivePlayerButton.down
+                      ? popup.controller.controlBackground : "transparent"
+                  }
+
+                  contentItem: Row {
+                    spacing: 6
+                    anchors.centerIn: parent
+
+                    Rectangle {
+                      width: 36
+                      height: 36
+                      radius: 18
+                      anchors.verticalCenter: parent.verticalCenter
+                      color: popup.controller.controlBackground
+                      clip: true
+
+                      Image {
+                        id: inactiveArt
+                        anchors.fill: parent
+                        source: inactivePlayerButton.modelData.trackArtUrl || ""
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        visible: status === Image.Ready
+                      }
+
+                      LucideIcon {
+                        anchors.centerIn: parent
+                        width: 15
+                        height: 15
+                        visible: !inactiveArt.visible
+                        source: popup.controller.icon("disc")
+                        color: popup.controller.controlSecondaryText
+                      }
+                    }
+
+                    Column {
+                      width: inactivePlayerButton.width - 54
+                      anchors.verticalCenter: parent.verticalCenter
+                      spacing: 1
+
+                      Label {
+                        width: parent.width
+                        text: inactivePlayerButton.modelData.trackTitle || "No track information"
+                        color: popup.controller.controlPrimaryText
+                        font.pixelSize: 11
+                      }
+                      Label {
+                        width: parent.width
+                        text: inactivePlayerButton.modelData.trackArtist || "Unknown artist"
+                        font.pixelSize: 10
+                      }
+                    }
+                  }
+                }
               }
             }
           }
