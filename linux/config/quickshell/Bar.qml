@@ -21,7 +21,7 @@ Scope {
   property var controlCenterTarget: null
   property var notificationCenterTarget: null
   property var githubReviewCenterTarget: null
-  property var dateTimeCenterTarget: null
+  property var todayCenterTarget: null
   property var connectivityTarget: null
   property var audioOutputTarget: null
 
@@ -42,8 +42,8 @@ Scope {
   }
 
   function closeDateTime() {
-    if (root.dateTimeCenterTarget)
-      root.dateTimeCenterTarget.requestClose()
+    if (root.todayCenterTarget)
+      root.todayCenterTarget.requestClose()
   }
 
   function closeGitHubReviewCenter() {
@@ -760,14 +760,14 @@ Scope {
         root.cancelHoverClose()
         root.closeConnectivity()
         root.closeAudioOutput()
-        if (root.dateTimeCenterTarget !== dateTimeCenter)
+        if (root.todayCenterTarget !== todayCenter)
           root.closeDateTime()
-        root.dateTimeCenterTarget = dateTimeCenter
+        root.todayCenterTarget = todayCenter
         controlCenter.requestClose()
         notificationCenter.requestClose()
         root.closeGitHubReviewCenter()
         root.notificationCenterOpen = false
-        dateTimeCenter.requestOpen(pin)
+        todayCenter.requestOpen(pin)
       }
 
       function openConnectivity(pin = false) {
@@ -890,8 +890,8 @@ Scope {
         service: root.notificationService
       }
 
-      DateTimeCenter {
-        id: dateTimeCenter
+      TodayCenter {
+        id: todayCenter
         controller: root
         panel: panel
         weather: weatherService
@@ -1126,7 +1126,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: panel.openDateTime()
-            onExited: dateTimeCenter.scheduleClose()
+            onExited: todayCenter.scheduleClose()
             onClicked: panel.openDateTime(true)
           }
         }
@@ -1160,7 +1160,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: panel.openDateTime()
-            onExited: dateTimeCenter.scheduleClose()
+            onExited: todayCenter.scheduleClose()
             onClicked: panel.openDateTime(true)
           }
         }

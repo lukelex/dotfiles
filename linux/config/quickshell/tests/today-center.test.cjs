@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 
-const source = fs.readFileSync(path.join(__dirname, '../DateTimeCenter.qml'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../TodayCenter.qml'), 'utf8');
 
 function fixture() {
   const later = [];
@@ -49,7 +49,7 @@ function dateParts(date) {
 
 function loadFunction(name, globals) {
   const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
-  assert.ok(match, `Missing DateTimeCenter function ${name}`);
+  assert.ok(match, `Missing TodayCenter function ${name}`);
   return vm.runInNewContext(`(${match[0]})`, globals);
 }
 
