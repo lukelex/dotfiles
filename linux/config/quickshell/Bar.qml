@@ -1117,111 +1117,125 @@ Scope {
         }
       }
 
-      Row {
+      Item {
         id: centerWidgets
 
         anchors {
-          left: leftWidgets.right
-          right: rightWidgets.left
-          leftMargin: 8
-          rightMargin: 8
+          horizontalCenter: parent.horizontalCenter
           verticalCenter: parent.verticalCenter
         }
-        spacing: 8
+        width: Math.max(0, 2 * Math.min(
+          panel.width / 2 - leftWidgets.x - leftWidgets.width - 8,
+          rightWidgets.x - panel.width / 2 - 8))
+        height: parent.height
         visible: width >= 200
 
-        Item {
-          id: timeItem
+        Row {
+          id: centerContent
 
-          height: timeContent.height
-          width: (centerWidgets.width - centerWidgets.spacing) / 2
-          clip: true
+          anchors.centerIn: parent
+          width: timeItem.width + dateItem.width + spacing
+          spacing: 16
 
-          Row {
-            id: timeContent
+          Item {
+            id: timeItem
 
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 6
+            height: timeContent.height
+            width: Math.min(root.barFontSize + timeContent.spacing + timeText.implicitWidth,
+              Math.max(0, (centerWidgets.width - centerContent.spacing) / 2))
+            clip: true
 
-            LucideIcon {
-              height: root.barFontSize
-              source: root.icon("clock")
-              width: root.barFontSize
-              color: root.foreground
+            Row {
+              id: timeContent
+
+              anchors.horizontalCenter: parent.horizontalCenter
+              spacing: 6
+
+              LucideIcon {
+                height: root.barFontSize
+                source: root.icon("clock")
+                width: root.barFontSize
+                color: root.foreground
+              }
+
+              Text {
+                id: timeText
+
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: root.barFontSize
+                text: Qt.formatTime(clock.date, "HH:mm")
+                width: Math.max(0, timeItem.width - root.barFontSize - timeContent.spacing)
+                elide: Text.ElideRight
+              }
             }
 
-            Text {
-              color: root.foreground
-              font.family: root.fontFamily
-              font.pixelSize: root.barFontSize
-              text: Qt.formatTime(clock.date, "HH:mm")
-              width: Math.max(0, timeItem.width - root.barFontSize - timeContent.spacing)
-              elide: Text.ElideRight
-            }
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            anchors.margins: -4
-            Accessible.role: Accessible.Button
-            Accessible.name: "Open calendar and weather"
-            Accessible.onPressAction: panel.openDateTime(true)
-            activeFocusOnTab: true
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
-            onEntered: panel.openDateTime()
-            onExited: todayCenter.scheduleClose()
-            onClicked: panel.openDateTime(true)
-          }
-        }
-
-        Item {
-          id: dateItem
-
-          height: dateContent.height
-          width: (centerWidgets.width - centerWidgets.spacing) / 2
-          clip: true
-
-          Row {
-            id: dateContent
-
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 6
-
-            LucideIcon {
-              height: root.barFontSize
-              source: root.icon("calendar")
-              width: root.barFontSize
-              color: root.foreground
-            }
-
-            Text {
-              color: root.foreground
-              font.family: root.fontFamily
-              font.pixelSize: root.barFontSize
-              text: Qt.formatDate(clock.date, "dd MMM - dddd")
-              width: Math.max(0, dateItem.width - root.barFontSize - dateContent.spacing)
-              elide: Text.ElideRight
+            MouseArea {
+              anchors.fill: parent
+              anchors.margins: -4
+              Accessible.role: Accessible.Button
+              Accessible.name: "Open calendar and weather"
+              Accessible.onPressAction: panel.openDateTime(true)
+              activeFocusOnTab: true
+              cursorShape: Qt.PointingHandCursor
+              hoverEnabled: true
+              Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+              Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+              Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
+              onEntered: panel.openDateTime()
+              onExited: todayCenter.scheduleClose()
+              onClicked: panel.openDateTime(true)
             }
           }
 
-          MouseArea {
-            anchors.fill: parent
-            Accessible.role: Accessible.Button
-            Accessible.name: "Open calendar and weather"
-            Accessible.onPressAction: panel.openDateTime(true)
-            activeFocusOnTab: true
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
-            onEntered: panel.openDateTime()
-            onExited: todayCenter.scheduleClose()
-            onClicked: panel.openDateTime(true)
+          Item {
+            id: dateItem
+
+            height: dateContent.height
+            width: Math.min(root.barFontSize + dateContent.spacing + dateText.implicitWidth,
+              Math.max(0, (centerWidgets.width - centerContent.spacing) / 2))
+            clip: true
+
+            Row {
+              id: dateContent
+
+              anchors.horizontalCenter: parent.horizontalCenter
+              spacing: 6
+
+              LucideIcon {
+                height: root.barFontSize
+                source: root.icon("calendar")
+                width: root.barFontSize
+                color: root.foreground
+              }
+
+              Text {
+                id: dateText
+
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: root.barFontSize
+                text: Qt.formatDate(clock.date, "dd MMM - dddd")
+                width: Math.max(0, dateItem.width - root.barFontSize - dateContent.spacing)
+                elide: Text.ElideRight
+              }
+            }
+
+            MouseArea {
+              anchors.fill: parent
+              Accessible.role: Accessible.Button
+              Accessible.name: "Open calendar and weather"
+              Accessible.onPressAction: panel.openDateTime(true)
+              activeFocusOnTab: true
+              cursorShape: Qt.PointingHandCursor
+              hoverEnabled: true
+              Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+              Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
+              Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
+              onEntered: panel.openDateTime()
+              onExited: todayCenter.scheduleClose()
+              onClicked: panel.openDateTime(true)
+            }
           }
         }
       }
