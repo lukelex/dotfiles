@@ -33,6 +33,16 @@ take() {
     --output-filename "$OUTFILE"
 
   audio_tick
+
+  action=$(notify-send -a System \
+    -i "$LUCIDE_PATH/camera.svg" \
+    -t 10000 \
+    -A copy='Copy path' \
+    'Screenshot saved' "$OUTFILE" || true)
+
+  if [[ $action == copy ]]; then
+    printf '%s' "$OUTFILE" | wl-copy
+  fi
 }
 
 take "$1"
