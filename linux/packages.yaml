@@ -179,6 +179,7 @@ profiles:
         awww:
         cliphist:
         hypridle:
+        nwg-hello:
         hyprland:
           configs:
             - linux/config/hypr:$XDG_CONFIG_HOME/hypr

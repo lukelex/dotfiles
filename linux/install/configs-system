@@ -18,6 +18,12 @@ run sudo systemd-tmpfiles --create "/etc/tmpfiles.d/platform-profile.conf"
 run sudo mkdir -p "/etc/ly"
 run sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
 
+# nwg-hello runs as the unprivileged greetd user, so install copies of its
+# theme rather than symlinks into the user's dotfiles (which may be private).
+run sudo install -d "/etc/nwg-hello"
+run sudo install -m 0644 "$DOT_CONFIG/nwg-hello/nwg-hello.json" "/etc/nwg-hello/nwg-hello.json"
+run sudo install -m 0644 "$DOT_CONFIG/nwg-hello/nwg-hello.css" "/etc/nwg-hello/nwg-hello.css"
+
 run sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
 
 run sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"

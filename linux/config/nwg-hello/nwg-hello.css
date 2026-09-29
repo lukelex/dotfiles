@@ -1,0 +1,81 @@
+/* Shared visual language with hyprlock.conf: slate surfaces, cool blue
+ * accents, soft corners, and Hack Nerd Font Mono. */
+window {
+  background-color: #2b303e;
+  background-image: linear-gradient(
+    135deg,
+    rgba(43, 48, 62, 0.78),
+    rgba(32, 38, 49, 0.92)
+  );
+  background-size: cover;
+  color: #f8f9fb;
+  font-family: "Hack Nerd Font Mono", monospace;
+}
+
+#form-wrapper {
+  background-color: rgba(43, 48, 58, 0.78);
+  border: 1px solid rgba(140, 174, 216, 0.32);
+  border-radius: 18px;
+  padding: 24px;
+}
+
+#welcome-label {
+  color: #f8f9fb;
+  font-family: "Hack Nerd Font Mono", monospace;
+  font-size: 30px;
+  font-weight: 500;
+}
+
+#clock-label {
+  color: #f8f9fb;
+  font-family: "Hack Nerd Font Mono", monospace;
+  font-size: 76px;
+  font-weight: 400;
+}
+
+#date-label {
+  color: #b7bec9;
+  font-family: "Hack Nerd Font Mono", monospace;
+  font-size: 18px;
+}
+
+#form-label,
+label {
+  color: #b7bec9;
+  font-family: "Hack Nerd Font Mono", monospace;
+}
+
+entry,
+button,
+combobox {
+  color: #f8f9fb;
+  font-family: "Hack Nerd Font Mono", monospace;
+  background-color: rgba(43, 48, 58, 0.94);
+  border: 1px solid #3e5978;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+entry:focus,
+combobox:focus {
+  border-color: #8caed8;
+  box-shadow: 0 0 0 1px #8caed8;
+}
+
+button:hover {
+  background-color: rgba(62, 89, 120, 0.72);
+}
+
+button:active {
+  background-color: #3e5978;
+}
+
+#power-button {
+  background: none;
+  border: none;
+  border-radius: 12px;
+}
+
+#power-button:hover {
+  background-color: rgba(140, 174, 216, 0.18);
+}
