@@ -302,6 +302,27 @@ test('bar selects the native workspace model for the active session', () => {
   assert.match(bar, /id: biteAnimation/);
 });
 
+test('bar keyboard shortcuts open pinned panels without making the bar focusable', () => {
+  const quickshell = path.resolve(__dirname, '..');
+  const bar = fs.readFileSync(path.join(quickshell, 'Bar.qml'), 'utf8');
+  const i3 = fs.readFileSync(path.resolve(quickshell, '../i3/bindings.conf'), 'utf8');
+  const hypr = fs.readFileSync(path.resolve(quickshell, '../hypr/keybindings.lua'), 'utf8');
+
+  assert.match(bar, /focusable: false/);
+  assert.match(bar, /function openCalendar\(\) \{ root\.openCalendarFromKeyboard\(\) \}/);
+  assert.match(bar, /function focusedPanel\(\)/);
+  assert.match(bar, /root\.panelsByScreen\[monitorName\]/);
+  assert.match(bar, /panel\.openDateTime\(true\)/);
+  assert.match(bar, /panel\.openConnectivity\(true\)/);
+  assert.match(bar, /panel\.openAudioOutput\(true\)/);
+  for (const [key, action] of [
+    ['t', 'openCalendar'], ['w', 'openConnectivity'], ['v', 'openAudioOutput'], ['m', 'toggleDoNotDisturb'],
+  ]) {
+    assert.match(i3, new RegExp(`\\$mod\\+Ctrl\\+${key} exec --no-startup-id qs ipc call bar ${action}`));
+    assert.ok(hypr.includes(`hl.bind(SUPER .. " + CTRL + ${key.toUpperCase()}", hl.dsp.exec_cmd("qs ipc call bar ${action}"))`));
+  }
+});
+
 test('i3 explicitly runs the existing session startup helper', () => {
   const config = fs.readFileSync(path.resolve(__dirname, '../../i3/main.conf'), 'utf8');
   assert.match(config, /^\s*exec(?:_always)?\s+--no-startup-id\s+"\$HOME\/dotfiles\/linux\/config\/quickshell\/scripts\/quickshell --session-start"\s*$/m);

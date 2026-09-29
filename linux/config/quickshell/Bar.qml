@@ -32,6 +32,7 @@ Scope {
   property var todayCenterTarget: null
   property var connectivityTarget: null
   property var audioOutputTarget: null
+  property var panelsByScreen: ({})
 
   WeatherService { id: weatherService }
   QuoteService { id: quoteService }
@@ -73,6 +74,38 @@ Scope {
   function closeAudioOutput() {
     if (root.audioOutputTarget)
       root.audioOutputTarget.requestClose()
+  }
+
+  function focusedPanel() {
+    let monitorName = ""
+    if (root.hyprlandSession && Hyprland.focusedMonitor)
+      monitorName = Hyprland.focusedMonitor.name
+    else if (!root.hyprlandSession && I3.focusedMonitor)
+      monitorName = I3.focusedMonitor.name
+    const panel = monitorName ? root.panelsByScreen[monitorName] : null
+    return panel || (root.controlCenterTarget ? root.controlCenterTarget.panel : null)
+  }
+
+  function openCalendarFromKeyboard() {
+    const panel = root.focusedPanel()
+    if (panel)
+      panel.openDateTime(true)
+  }
+
+  function openConnectivityFromKeyboard() {
+    const panel = root.focusedPanel()
+    if (panel)
+      panel.openConnectivity(true)
+  }
+
+  function openAudioOutputFromKeyboard() {
+    const panel = root.focusedPanel()
+    if (panel)
+      panel.openAudioOutput(true)
+  }
+
+  function toggleDoNotDisturbFromKeyboard() {
+    root.toggleDoNotDisturb()
   }
 
   property int hoverCloseCandidate: 0
@@ -756,6 +789,15 @@ Scope {
     }
   }
 
+  IpcHandler {
+    target: "bar"
+
+    function openCalendar() { root.openCalendarFromKeyboard() }
+    function openConnectivity() { root.openConnectivityFromKeyboard() }
+    function openAudioOutput() { root.openAudioOutputFromKeyboard() }
+    function toggleDoNotDisturb() { root.toggleDoNotDisturbFromKeyboard() }
+  }
+
   SystemClock {
     id: clock
     precision: SystemClock.Minutes
@@ -913,6 +955,7 @@ Scope {
       }
 
       Component.onCompleted: {
+        root.panelsByScreen[modelData.name] = panel
         if (root.controlCenterTarget === null || (modelData.x === 0 && modelData.y === 0)) {
           root.controlCenterTarget = controlCenter
           root.notificationCenterTarget = notificationCenter
@@ -1091,35 +1134,15 @@ Scope {
               }
             }
 
-            Rectangle {
-              anchors.fill: parent
-              color: "transparent"
-              border.color: root.controlActiveIcon
-              border.width: 1
-              radius: 5
-              visible: workspaceMouse.activeFocus
-            }
-
             MouseArea {
               id: workspaceMouse
 
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
-              activeFocusOnTab: true
               Accessible.role: Accessible.Button
               Accessible.name: "Workspace " + workspaceItem.workspaceNumber
               Accessible.onPressAction: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
               hoverEnabled: true
-              Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: root.controlActiveIcon
-                border.width: 1
-                radius: 5
-                visible: parent.activeFocus
-              }
-              Keys.onReturnPressed: event => { if (!event.isAutoRepeat) root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace) }
-              Keys.onSpacePressed: event => { if (!event.isAutoRepeat) root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace) }
               onClicked: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
             }
           }
@@ -1185,12 +1208,8 @@ Scope {
               Accessible.role: Accessible.Button
               Accessible.name: "Open calendar and weather"
               Accessible.onPressAction: panel.openDateTime(true)
-              activeFocusOnTab: true
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
-              Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-              Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-              Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
               onEntered: panel.openDateTime()
               onExited: todayCenter.scheduleClose()
               onClicked: panel.openDateTime(true)
@@ -1235,12 +1254,8 @@ Scope {
               Accessible.role: Accessible.Button
               Accessible.name: "Open calendar and weather"
               Accessible.onPressAction: panel.openDateTime(true)
-              activeFocusOnTab: true
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
-              Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-              Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openDateTime(true) }
-              Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
               onEntered: panel.openDateTime()
               onExited: todayCenter.scheduleClose()
               onClicked: panel.openDateTime(true)
@@ -1289,12 +1304,8 @@ Scope {
             Accessible.role: Accessible.Button
             Accessible.name: "GitHub review requests"
             Accessible.onPressAction: panel.showGitHubReviewCenter()
-            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.showGitHubReviewCenter() }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.showGitHubReviewCenter() }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.showGitHubReviewCenter()
             onExited: root.requestHoverClose(3, 500)
             onClicked: panel.showGitHubReviewCenter()
@@ -1333,12 +1344,8 @@ Scope {
             Accessible.role: Accessible.Button
             Accessible.name: "Wi-Fi and Bluetooth"
             Accessible.onPressAction: panel.openConnectivity(true)
-            activeFocusOnTab: true
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openConnectivity(true) }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openConnectivity(true) }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openConnectivity()
             onExited: connectivityCenter.scheduleClose()
             onClicked: panel.openConnectivity(true)
@@ -1380,11 +1387,7 @@ Scope {
             Accessible.name: "Select sound devices"
             Accessible.onPressAction: panel.openAudioOutput(true)
             cursorShape: Qt.PointingHandCursor
-            activeFocusOnTab: true
             hoverEnabled: true
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openAudioOutput(true) }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openAudioOutput(true) }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openAudioOutput()
             onExited: audioOutputCenter.scheduleClose()
             onClicked: panel.openAudioOutput(true)
@@ -1424,12 +1427,8 @@ Scope {
               + (root.notificationService.popup.length > 0 ? "; active notifications" : "; no active notifications")
               + (root.doNotDisturb ? "; Do Not Disturb on" : "; Do Not Disturb off")
             Accessible.onPressAction: root.toggleDoNotDisturb()
-            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) root.toggleDoNotDisturb() }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) root.toggleDoNotDisturb() }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: {
               root.closeConnectivity()
               root.closeAudioOutput()
@@ -1457,12 +1456,8 @@ Scope {
             Accessible.role: Accessible.Button
             Accessible.name: "Control Center"
             Accessible.onPressAction: panel.openControlCenter()
-            activeFocusOnTab: true
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            Keys.onReturnPressed: event => { if (!event.isAutoRepeat) panel.openControlCenter() }
-            Keys.onSpacePressed: event => { if (!event.isAutoRepeat) panel.openControlCenter() }
-            Rectangle { anchors.fill: parent; color: "transparent"; border.color: root.controlActiveIcon; border.width: 1; radius: 5; visible: parent.activeFocus }
             onEntered: panel.openControlCenter()
             onExited: root.requestHoverClose(2)
             onClicked: panel.openControlCenter()

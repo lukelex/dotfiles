@@ -36,6 +36,10 @@ hl.bind(SUPER .. " + SHIFT + SPACE", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(SUPER .. " + SPACE", hl.dsp.exec_cmd("u_hypr-focus-mode-toggle"))
 
 hl.bind(SUPER .. " + b", hl.dsp.focus({ workspace = "previous" }))
+hl.bind(SUPER .. " + CTRL + T", hl.dsp.exec_cmd("qs ipc call bar openCalendar"))
+hl.bind(SUPER .. " + CTRL + W", hl.dsp.exec_cmd("qs ipc call bar openConnectivity"))
+hl.bind(SUPER .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call bar openAudioOutput"))
+hl.bind(SUPER .. " + CTRL + M", hl.dsp.exec_cmd("qs ipc call bar toggleDoNotDisturb"))
 hl.bind(SUPER .. " + q", hl.dsp.window.close())
 hl.bind(SUPER .. " + SHIFT + Q", hl.dsp.window.kill())
 

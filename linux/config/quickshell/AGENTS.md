@@ -38,15 +38,12 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Hover previews must not steal keyboard focus. Allow enough time to cross the gap into a popup; connectivity uses a local 500ms grace period. Cancel delayed closure when the pointer returns.
 - A click can pin a detail panel for deliberate interaction. A pinned panel must support Close, Escape, and outside-click dismissal; leaving it with the pointer must not close it.
 - Preserve existing explicit bar shortcuts; clicking the notification bell toggles DND.
+- Keyboard entry points are available through i3/Hyprland shortcuts: calendar (`Super+Ctrl+T`), connectivity (`Super+Ctrl+W`), audio output (`Super+Ctrl+V`), and Do Not Disturb (`Super+Ctrl+M`). Keep the bar `PanelWindow` non-focusable; the first three open the focused monitor's existing pinned, focusable panel, while DND toggles directly. Escape from a pinned panel returns focus to the previous application.
 - Opening a panel should close sibling panels and cancel stale close requests. Route actions and timers to the actual screen's panel, not an assumed primary-screen instance.
 - Separate navigation from state changes. Clicking a network name selects a connection; only its explicit radio switch turns Wi-Fi off. Give icons generous hit areas without overlapping neighboring controls.
 - Show pending state immediately, prevent competing duplicate actions, and report success only after backend confirmation. Errors belong near the attempted action.
 - Preserve the reader's place. Removing an item must not rebuild unrelated list rows, jump to the top, collapse surviving expanded groups, or reorder targets under the pointer.
 - Anchor list updates to a surviving visible item and its viewport offset when layout changes require compensation. Clamp only to the remaining scroll range, and never fight manual scrolling.
-
-## Future Improvement
-
-- Verify keyboard access to bar actions: `PanelWindow` is intentionally non-focusable, so bar-level Tab/Enter/Space handlers may not be reachable. Find a keyboard-access path that does not steal focus from the active application, then validate it in both i3 and Hyprland.
 
 ## Motion And Notifications
 
