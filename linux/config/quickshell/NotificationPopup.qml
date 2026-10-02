@@ -414,10 +414,21 @@ PopupWindow {
 
     MouseArea {
       anchors.fill: parent
+      acceptedButtons: Qt.LeftButton | Qt.RightButton
       cursorShape: Qt.PointingHandCursor
       enabled: toast.interactive
       hoverEnabled: true
-      onClicked: toast.activate()
+      onClicked: mouse => {
+        if (mouse.button === Qt.RightButton) {
+          if (toast.dismissing)
+            return
+          toast.dismissing = true
+          toast.dismissingRecordId = toast.record.id
+          dismissAnimation.start()
+        } else {
+          toast.activate()
+        }
+      }
       z: -1
     }
   }

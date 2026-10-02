@@ -216,9 +216,15 @@ PopupWindow {
     // Declared first so the buttons inside the surface keep their clicks.
     MouseArea {
       anchors.fill: parent
+      acceptedButtons: Qt.LeftButton | Qt.RightButton
       cursorShape: Qt.PointingHandCursor
       hoverEnabled: true
-      onClicked: card.activate()
+      onClicked: mouse => {
+        if (mouse.button === Qt.RightButton)
+          card.startDismiss()
+        else
+          card.activate()
+      }
     }
 
     Item {
@@ -566,8 +572,14 @@ PopupWindow {
 
       MouseArea {
         anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-        onClicked: notificationGroup.toggleExpanded()
+        onClicked: mouse => {
+          if (mouse.button === Qt.RightButton)
+            notificationGroup.dismissGroup()
+          else
+            notificationGroup.toggleExpanded()
+        }
         z: -1
       }
 
