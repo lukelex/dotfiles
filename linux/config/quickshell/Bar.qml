@@ -21,6 +21,104 @@ Scope {
     }
   }
 
+  // I3.rawEvent only receives workspace/output events; mode needs its own subscription.
+  I3IpcListener {
+    subscriptions: root.hyprlandSession ? [] : ["mode"]
+    onIpcEvent: event => root.handleI3ModeEvent(event)
+  }
+
+  function handleI3ModeEvent(event) {
+    if (root.hyprlandSession)
+      return
+    if (event.type === "subscribe") {
+      // Query only after subscribing; newer mode events take precedence over the result.
+      if (!i3BindingState.running) {
+        i3BindingState.revision = root.resizeModeRevision
+        i3BindingState.running = true
+      }
+    } else if (event.type === "mode") {
+      try {
+        const mode = JSON.parse(event.data).change
+        if (typeof mode === "string") {
+          root.resizeModeRevision++
+          root.resizeMode = mode === "resize"
+        }
+      } catch (error) {
+        console.warn("Invalid i3 mode event:", error)
+      }
+    }
+  }
+
+  function applyI3BindingState(data, revision) {
+    if (root.hyprlandSession || revision !== root.resizeModeRevision)
+      return
+    try {
+      const mode = JSON.parse(data).name
+      if (typeof mode === "string")
+        root.resizeMode = mode === "resize"
+    } catch (error) {
+      console.warn("Invalid i3 binding state:", error)
+    }
+  }
+
+  Process {
+    id: i3BindingState
+
+    property int revision: 0
+    command: ["i3-msg", "-t", "get_binding_state"]
+    stdout: StdioCollector {
+      onStreamFinished: root.applyI3BindingState(text, i3BindingState.revision)
+    }
+  }
+
+  function refreshHyprlandSubmap() {
+    // The first focused monitor arrives after native IPC initialization. On reload
+    // it already exists, so Component.onCompleted restores the current submap.
+    if (!root.hyprlandSession || !Hyprland.focusedMonitor || hyprlandSubmap.running)
+      return
+    hyprlandSubmap.revision = root.resizeModeRevision
+    hyprlandSubmap.running = true
+  }
+
+  function handleHyprlandEvent(event) {
+    if (!root.hyprlandSession)
+      return
+    if (event.name === "activespecial" || event.name === "activespecialv2") {
+      Hyprland.refreshMonitors()
+    } else if (event.name === "submap") {
+      root.resizeModeRevision++
+      root.resizeMode = String(event.data || "") === "resize"
+      root.hyprlandModeInitialized = true
+    } else if (event.name === "configreloaded") {
+      root.refreshHyprlandSubmap()
+    }
+  }
+
+  function applyHyprlandSubmap(data, revision) {
+    if (!root.hyprlandSession || revision !== root.resizeModeRevision)
+      return
+    try {
+      // hyprctl -j submap returns a JSON string, not an object.
+      const mode = JSON.parse(data)
+      if (typeof mode === "string") {
+        root.resizeMode = mode === "resize"
+        root.hyprlandModeInitialized = true
+      }
+    } catch (error) {
+      console.warn("Invalid Hyprland submap state:", error)
+    }
+  }
+
+  Process {
+    id: hyprlandSubmap
+
+    property int revision: 0
+    command: ["hyprctl", "-j", "submap"]
+    stdout: StdioCollector {
+      onStreamFinished: root.applyHyprlandSubmap(text, hyprlandSubmap.revision)
+    }
+  }
+
   required property var notificationService
   required property var githubPrService
   required property var audioService
@@ -33,6 +131,9 @@ Scope {
   property var connectivityTarget: null
   property var audioOutputTarget: null
   property var panelsByScreen: ({})
+  property bool resizeMode: false
+  property int resizeModeRevision: 0
+  property bool hyprlandModeInitialized: false
 
   WeatherService { id: weatherService }
   QuoteService { id: quoteService }
@@ -44,9 +145,10 @@ Scope {
   Connections {
     target: Hyprland
 
-    function onRawEvent(event) {
-      if (event.name === "activespecial" || event.name === "activespecialv2")
-        Hyprland.refreshMonitors()
+    function onRawEvent(event) { root.handleHyprlandEvent(event) }
+    function onFocusedMonitorChanged() {
+      if (!root.hyprlandModeInitialized)
+        root.refreshHyprlandSubmap()
     }
   }
 
@@ -657,6 +759,7 @@ Scope {
   }
 
   Component.onCompleted: {
+    root.refreshHyprlandSubmap()
     root.updatePowerSource()
     root.checkBatteryWarnings()
   }
@@ -1146,6 +1249,41 @@ Scope {
               onClicked: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
             }
           }
+        }
+
+        Rectangle {
+          anchors.verticalCenter: parent.verticalCenter
+          color: root.controlActive
+          height: 24
+          radius: 8
+          visible: root.resizeMode
+          width: visible ? resizeModeContent.width + 14 : 0
+
+          Row {
+            id: resizeModeContent
+
+            anchors.centerIn: parent
+            spacing: 5
+
+            LucideIcon {
+              anchors.verticalCenter: parent.verticalCenter
+              color: root.controlActiveIcon
+              height: 14
+              source: root.icon("scan-line")
+              width: 14
+            }
+
+            Text {
+              anchors.verticalCenter: parent.verticalCenter
+              color: root.controlPrimaryText
+              font.family: root.fontFamily
+              font.pixelSize: 11
+              text: "Resize"
+            }
+          }
+
+          Accessible.name: "Window manager resize mode"
+          Accessible.role: Accessible.Indicator
         }
       }
 

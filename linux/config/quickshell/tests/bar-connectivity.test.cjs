@@ -24,6 +24,14 @@ test('notification indicator reflects active notifications, not retained history
   assert.doesNotMatch(source, /visible: root\.notificationService\.history\.length > 0/);
 });
 
+test('resize mode follows i3 mode and Hyprland submap events with a themed bar indicator', () => {
+  assert.match(source, /I3IpcListener \{\s+subscriptions: root\.hyprlandSession \? \[\] : \["mode"\]\s+onIpcEvent: event => root\.handleI3ModeEvent\(event\)/);
+  assert.match(source, /event\.name === "submap"[\s\S]*?String\(event\.data \|\| ""\) === "resize"/);
+  assert.match(source, /color: root\.controlActive[\s\S]*?visible: root\.resizeMode/);
+  assert.match(source, /text: "Resize"/);
+  assert.ok(fs.existsSync(path.join(__dirname, '../../lucide/svg/scan-line.svg')));
+});
+
 test('power-source changes notify once per transition after the battery is ready', () => {
   const match = source.match(/  function updatePowerSource\(\) \{[^]*?\n  \}/);
   assert.ok(match);
