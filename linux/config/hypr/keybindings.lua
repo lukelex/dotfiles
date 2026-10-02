@@ -56,11 +56,16 @@ hl.bind(SUPER .. " + minus", hl.dsp.workspace.toggle_special(""))
 hl.bind(SUPER .. " + r", hl.dsp.submap("resize"))
 
 hl.define_submap("resize", function()
+  hl.bind("h", hl.dsp.window.resize({ x = -50, y = 0, relative = true }), { repeating = true })
+  hl.bind("j", hl.dsp.window.resize({ x = 0, y = 15, relative = true }), { repeating = true })
+  hl.bind("k", hl.dsp.window.resize({ x = 0, y = -15, relative = true }), { repeating = true })
+  hl.bind("l", hl.dsp.window.resize({ x = 50, y = 0, relative = true }), { repeating = true })
   hl.bind("right", hl.dsp.window.resize({ x = 50, y = 0, relative = true }), { repeating = true })
   hl.bind("left", hl.dsp.window.resize({ x = -50, y = 0, relative = true }), { repeating = true })
   hl.bind("up", hl.dsp.window.resize({ x = 0, y = -15, relative = true }), { repeating = true })
   hl.bind("down", hl.dsp.window.resize({ x = 0, y = 15, relative = true }), { repeating = true })
   hl.bind("escape", hl.dsp.submap("reset"))
+  hl.bind("RETURN", hl.dsp.submap("reset"))
 end)
 
 -- Mouse
