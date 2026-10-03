@@ -104,6 +104,7 @@ case $1 in
   warn) show_warning "$2" ;;
   clear-warning) clear_warning ;;
   lock)
+    clear_warning
     if [[ -n "$(should_lock)" ]]; then
       u_exit lock
     else
