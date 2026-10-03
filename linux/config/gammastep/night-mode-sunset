@@ -6,6 +6,7 @@ source "$HOME/dotfiles/linux/variables.env"
 
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/weather/current.json"
 state_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/night-mode-sunset-notified"
+notification_id_file="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/night-mode-sunset-notification-id"
 
 night_is_active() {
   local sunrise sunset now
@@ -55,11 +56,13 @@ mkdir -p "$(dirname "$state_file")"
 printf '%s\n' "$sunset" > "$state_file"
 
 action=$(notify-send -a System \
+  --id-fd=3 3>"$notification_id_file" \
   -i "$LUCIDE_PATH/moon-star.svg" \
   -h string:wired-tag:night-mode \
   -t 3300000 \
   -A turn-on='Turn on' \
   'Night mode' 'It is nighttime. Turn on night mode?' || true)
+rm -f -- "$notification_id_file"
 
 if [[ $action == turn-on ]]; then
   "$DOTFILES/linux/config/quickshell/scripts/nightmode" on

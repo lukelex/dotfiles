@@ -9,10 +9,26 @@ is_active() {
   systemctl --user is-active gammastep 2>/dev/null || true
 }
 
+dismiss_sunset_offer() {
+  local notification_id_file notification_id
+
+  notification_id_file="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/night-mode-sunset-notification-id"
+  [[ -r $notification_id_file ]] || return 0
+  notification_id=$(< "$notification_id_file")
+  [[ $notification_id =~ ^[0-9]+$ ]] || return 0
+  gdbus call --session \
+    --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.CloseNotification \
+    "$notification_id" >/dev/null 2>&1 || true
+  rm -f -- "$notification_id_file"
+}
+
 case $1 in
   on)
     command -v gammastep &>/dev/null || exit 1
     systemctl --user start gammastep
+    dismiss_sunset_offer
     ;;
   off)
     systemctl --user stop gammastep 2>/dev/null || true
