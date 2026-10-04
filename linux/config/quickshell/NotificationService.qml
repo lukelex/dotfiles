@@ -187,9 +187,6 @@ QtObject {
   }
 
   function handleNotification(notification) {
-    if (service.doNotDisturb)
-      return
-
     const hints = notification.hints || {}
     const tag = String(hints["wired-tag"] || "")
     const value = typeof hints["value"] === "number" ? hints["value"] : -1
@@ -224,6 +221,8 @@ QtObject {
     }
 
     service.addHistory(record)
+    if (service.doNotDisturb)
+      return
     if (hints["suppress-sound"] !== true)
       service.playNotificationSound()
     service.pendingPopupRecords = service.pendingPopupRecords

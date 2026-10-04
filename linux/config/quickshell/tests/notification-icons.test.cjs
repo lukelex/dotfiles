@@ -29,6 +29,27 @@ test('silent cable notifications stay visible without playing the notification s
   assert.equal(service.pendingPopupRecords.length, 3);
 });
 
+test('DND suppresses popup and sound but still captures history', () => {
+  const match = source.match(/  function handleNotification\([^]*?\n  \}/);
+  assert.ok(match);
+  const played = [];
+  const history = [];
+  const service = {
+    doNotDisturb: true, tagMap: {}, live: {}, popupLimit: 5, pendingPopupRecords: [],
+    buildRecord: notification => ({ id: notification.id }),
+    isSystemOsd: () => false,
+    addHistory: record => history.push(record),
+    playNotificationSound: () => played.push('sound'),
+  };
+  const context = vm.createContext({ service, popupUpdateTimer: { start: () => {} } });
+  service.handleNotification = vm.runInContext(`(${match[0]})`, context);
+
+  service.handleNotification({ id: 1, hints: {}, closed: { connect: () => {} } });
+  assert.deepEqual(history, [{ id: 1 }]);
+  assert.deepEqual(played, []);
+  assert.equal(service.pendingPopupRecords.length, 0);
+});
+
 function resolver(appLookup = null, env = {}, options = {}) {
   const service = {
     iconFileCache: {},
