@@ -24,10 +24,10 @@ PopupWindow {
   })
 
   anchor.window: panel
-  anchor.rect.x: parentWindow.width - width - 12 + wiggleMargin
+  anchor.rect.x: Math.max(0, parentWindow.width - width - 12 + wiggleMargin)
   anchor.rect.y: parentWindow.height + 12
   color: "transparent"
-  implicitWidth: 396 + wiggleMargin * 2
+  implicitWidth: Math.min(396, panel.screen.width - 24) + wiggleMargin * 2
   implicitHeight: column.height
   surfaceFormat.opaque: false
 
@@ -209,7 +209,7 @@ PopupWindow {
       id: background
 
       anchors.fill: parent
-      border.color: toast.controller.darkMode ? "#3A4654" : "#D4DAE1"
+      border.color: toast.controller.controlSurfaceBorder
       border.width: 1
       color: toast.controller.controlSurface
       radius: 18
@@ -225,7 +225,7 @@ PopupWindow {
       visible: toast.record.urgency === "critical" || toast.urgentAttention
 
       SequentialAnimation {
-        loops: Animation.Infinite
+        loops: 1
         running: urgentBreath.visible
 
         NumberAnimation {
@@ -319,7 +319,7 @@ PopupWindow {
         Text {
           id: countLabelText
 
-          color: toast.controller.urgent
+          color: toast.controller.controlSecondaryText
           font.family: toast.controller.fontFamily
           font.pixelSize: 10
           text: toast.countLabel
@@ -596,7 +596,7 @@ PopupWindow {
       delegate: Rectangle {
         required property int index
 
-        border.color: stack.controller.darkMode ? "#3A4654" : "#D4DAE1"
+        border.color: stack.controller.controlSurfaceBorder
         border.width: 1
         color: stack.controller.controlSurface
         height: latestToast.height

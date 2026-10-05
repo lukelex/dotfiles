@@ -287,6 +287,9 @@ Scope {
   readonly property color controlSliderFill: root.darkMode ? "#DDE1E7" : "#477AA8"
   readonly property color controlSliderTrack: root.darkMode ? "#20242C" : "#D4D9E0"
   readonly property color controlSurface: root.darkMode ? "#2B303A" : "#E8EBEF"
+  readonly property color controlBorder: root.darkMode ? "#3A424E" : "#D8DDE4"
+  readonly property color controlSurfaceBorder: root.darkMode ? "#33404D" : "#D7DCE3"
+  readonly property color controlHover: root.darkMode ? "#38404C" : "#DCE1E8"
 
   function icon(name) {
     return "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/" + name + ".svg"
@@ -1546,8 +1549,8 @@ Scope {
 
           LucideIcon {
             anchors.fill: parent
-            source: root.icon("bell")
-            color: root.doNotDisturb ? root.urgent : root.foreground
+            source: root.icon(root.doNotDisturb ? "bell-off" : "bell")
+            color: root.doNotDisturb ? root.controlActiveIcon : root.foreground
           }
 
           Rectangle {
@@ -1555,7 +1558,7 @@ Scope {
               right: parent.right
               top: parent.top
             }
-            border.color: root.darkMode ? "#3A4654" : "#D4DAE1"
+            border.color: root.controlSurfaceBorder
             border.width: 1
             color: root.urgent
             height: 6

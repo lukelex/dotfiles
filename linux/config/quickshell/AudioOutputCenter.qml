@@ -166,11 +166,11 @@ Scope {
     Rectangle {
       anchors.fill: parent
       border.color: outputRow.isPending ? popup.controller.controlActiveIcon
-        : outputRow.isDefault ? popup.controller.controlActive : popup.controller.darkMode ? "#33404D" : "#D7DCE3"
-      border.width: 1
+        : outputRow.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
+      border.width: outputRow.activeFocus ? 2 : 1
       color: outputRow.isDefault ? popup.controller.controlActive
-        : area.containsMouse ? popup.controller.controlActive : popup.controller.controlSurface
-      radius: 12
+        : area.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+      radius: 14
     }
 
     LucideIcon {
@@ -225,7 +225,8 @@ Scope {
       color: outputRow.isDefault ? popup.controller.controlActiveIcon
         : outputRow.isPending ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
       height: 17
-      source: popup.controller.icon(outputRow.isPending ? "refresh-cw" : outputRow.isDefault ? "circle-check" : "volume-2")
+      source: popup.controller.icon(outputRow.isPending ? "refresh-cw" : "circle-check")
+      visible: outputRow.isPending || outputRow.isDefault
       width: 17
     }
 
@@ -243,7 +244,7 @@ Scope {
   PopupWindow {
     id: preview
     anchor.window: popup.panel
-    anchor.rect.x: Math.max(0, Math.min(popup.panel.width - popup.width,
+    anchor.rect.x: Math.max(12, Math.min(popup.panel.width - popup.width - 12,
       popup.trigger.mapToItem(popup.panel.contentItem, popup.trigger.width / 2, 0).x - popup.width / 2))
     anchor.rect.y: popup.panel.height + 12
     implicitWidth: popup.width
@@ -278,7 +279,7 @@ Scope {
   PopupWindow {
     id: pinnedPopup
     anchor.window: popup.panel
-    anchor.rect.x: Math.max(0, Math.min(popup.panel.width - popup.width,
+    anchor.rect.x: Math.max(12, Math.min(popup.panel.width - popup.width - 12,
       popup.trigger.mapToItem(popup.panel.contentItem, popup.trigger.width / 2, 0).x - popup.width / 2))
     anchor.rect.y: popup.panel.height + 12
     implicitWidth: popup.width
@@ -356,7 +357,7 @@ Scope {
       anchors.fill: parent
       radius: 26
       border.width: 1
-      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
+      border.color: popup.controller.controlBorder
       color: popup.controller.controlBackground
     }
 
@@ -396,7 +397,9 @@ Scope {
 
           Rectangle {
             anchors.fill: parent
-            color: closeArea.containsMouse ? popup.controller.controlActive : popup.controller.controlSurface
+            color: closeArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+            border.width: closeButton.activeFocus ? 2 : 0
+            border.color: popup.controller.controlActiveIcon
             radius: 10
           }
 

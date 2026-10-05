@@ -89,8 +89,8 @@ PopupWindow {
     ScaleAnimator {
       target: content
       to: 1
-      duration: 180
-      easing.type: Easing.OutBack
+      duration: 160
+      easing.type: Easing.OutCubic
     }
   }
 
@@ -100,13 +100,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 0
-      duration: 140
+      duration: 120
       easing.type: Easing.InCubic
     }
     ScaleAnimator {
       target: content
       to: 0.94
-      duration: 140
+      duration: 120
       easing.type: Easing.InCubic
     }
     onStopped: {
@@ -125,27 +125,11 @@ PopupWindow {
     transformOrigin: Item.Center
 
     Rectangle {
-      anchors {
-        fill: parent
-        topMargin: 5
-      }
-      color: Qt.rgba(0, 0, 0, popup.controller.darkMode ? 0.32 : 0.16)
-      radius: 30
-    }
-
-    Rectangle {
       anchors.fill: parent
-      color: popup.controller.darkMode ? Qt.rgba(0.10, 0.12, 0.16, 0.94) : Qt.rgba(0.96, 0.97, 0.99, 0.94)
-      radius: 30
-    }
-
-    Rectangle {
-      anchors.fill: parent
-      anchors.margins: 1
-      border.color: popup.controller.darkMode ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.72)
+      color: popup.controller.controlBackground
+      radius: 26
+      border.color: popup.controller.controlBorder
       border.width: 1
-      color: "transparent"
-      radius: 29
     }
 
     Column {
@@ -162,13 +146,13 @@ PopupWindow {
 
         Rectangle {
           anchors.fill: parent
-          color: Qt.rgba(popup.controller.controlActive.r, popup.controller.controlActive.g, popup.controller.controlActive.b, 0.45)
+          color: popup.controller.controlSurface
           radius: 33
         }
 
         LucideIcon {
           anchors.centerIn: parent
-          color: popup.muted ? popup.controller.urgent : popup.controller.controlPrimaryText
+          color: popup.muted ? popup.controller.controlSecondaryText : popup.controller.controlPrimaryText
           height: 34
           source: popup.controller.icon(popup.iconName())
           width: 34
@@ -195,7 +179,7 @@ PopupWindow {
               left: parent.left
               verticalCenter: parent.verticalCenter
             }
-            color: popup.muted ? popup.controller.urgent : popup.controller.controlSliderFill
+            color: popup.controller.controlSliderFill
             height: parent.height
             radius: parent.radius
             width: parent.width * Math.max(0, Math.min(100, popup.value)) / 100
@@ -209,7 +193,7 @@ PopupWindow {
         font.family: popup.controller.fontFamily
         font.pixelSize: 11
         horizontalAlignment: Text.AlignHCenter
-        text: Math.round(popup.value) + "%"
+        text: popup.muted ? "Muted" : Math.round(popup.value) + "%"
         width: parent.width
       }
     }

@@ -380,6 +380,8 @@ Scope {
     property string iconName: ""
     property color iconColor: popup.controller.controlSecondaryText
     property bool highlighted: false
+    property bool surfaceButton: false
+    property color hoverColor: popup.controller.controlHover
     implicitWidth: iconName ? 32 : Math.max(56, actionLabel.implicitWidth + 16)
     implicitHeight: 32
     opacity: enabled ? 1 : 0.55
@@ -387,8 +389,9 @@ Scope {
     focusPolicy: popup.pinned ? Qt.StrongFocus : Qt.NoFocus
     Accessible.name: text
     background: Rectangle {
-      radius: action.highlighted ? width / 2 : 8
-      color: action.highlighted ? "#E4EDF7" : action.hovered || action.down ? popup.controller.controlSurface : "transparent"
+      radius: action.highlighted ? width / 2 : 10
+      color: action.highlighted ? "#E4EDF7" : action.hovered || action.down ? action.hoverColor
+        : action.surfaceButton ? popup.controller.controlSurface : "transparent"
       border.width: action.visualFocus ? 1 : 0
       border.color: popup.controller.controlActiveIcon
     }
@@ -463,7 +466,7 @@ Scope {
       radius: 26
       color: popup.controller.controlBackground
       border.width: 1
-      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
+      border.color: popup.controller.controlBorder
     }
 
     Flickable {
@@ -501,13 +504,14 @@ Scope {
             Label {
               width: parent.width
               text: Qt.formatDate(popup.today, "d MMMM yyyy")
-              font.pixelSize: 15
+              font.pixelSize: 16
               color: popup.controller.controlPrimaryText
             }
           }
           Action {
             text: "Close"
             iconName: "x"
+            surfaceButton: true
             onClicked: popup.requestClose()
           }
         }
@@ -836,11 +840,20 @@ Scope {
           radius: 18
 
           Rectangle {
+            id: mediaCard
             width: parent.width
             height: mediaSection.cardHeight
             radius: 18
             color: "#252D3A"
             clip: true
+            layer.enabled: true
+            layer.effect: OpacityMask {
+              maskSource: Rectangle {
+                width: mediaCard.width
+                height: mediaCard.height
+                radius: 18
+              }
+            }
 
             Image {
               anchors.fill: parent
@@ -953,15 +966,15 @@ Scope {
               Label {
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
-                text: popup.formatMediaTime(seekArea.pressed ? seekArea.dragFraction * popup.activeMediaPlayer.length
-                  : popup.activeMediaPlayer.position)
+                text: popup.activeMediaPlayer ? popup.formatMediaTime(seekArea.pressed ? seekArea.dragFraction * popup.activeMediaPlayer.length
+                  : popup.activeMediaPlayer.position) : ""
                 color: "#DDE7F4"
                 font.pixelSize: 10
               }
               Label {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                text: popup.formatMediaTime(popup.activeMediaPlayer.length)
+                text: popup.activeMediaPlayer ? popup.formatMediaTime(popup.activeMediaPlayer.length) : ""
                 color: "#DDE7F4"
                 font.pixelSize: 10
               }
@@ -971,7 +984,7 @@ Scope {
               anchors.right: parent.right
               anchors.bottom: parent.bottom
               anchors.rightMargin: 12
-              anchors.bottomMargin: 9
+              anchors.bottomMargin: mediaSection.narrow ? 48 : 9
               spacing: 4
 
               Action {
@@ -980,6 +993,7 @@ Scope {
                 iconName: "skip-back"
                 text: "Previous track"
                 iconColor: "white"
+                hoverColor: "#30FFFFFF"
                 enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canGoPrevious
                 onClicked: popup.activeMediaPlayer.previous()
               }
@@ -1001,6 +1015,7 @@ Scope {
                 iconName: "skip-forward"
                 text: "Next track"
                 iconColor: "white"
+                hoverColor: "#30FFFFFF"
                 enabled: popup.activeMediaPlayer && popup.activeMediaPlayer.canGoNext
                 onClicked: popup.activeMediaPlayer.next()
               }

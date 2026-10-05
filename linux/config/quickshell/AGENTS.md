@@ -29,6 +29,9 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Preserve the existing layout: workspaces left, time/date centered, compact status/actions right. Current bar height is 40px.
 - Control Center and Connectivity use panels up to 432px wide; the calendar and GitHub reviews need more space. Panels sit 12px below the bar with roughly 16px content padding and rounded surfaces. Constrain them to the screen bounds.
 - Use muted styling for inactive state, restrained blue for active state, and warning color for conditions that genuinely need attention. Do not convey important distinctions through color alone.
+- Use `controlBorder` for panel outlines, `controlSurfaceBorder` for bordered rows/cards, and `controlHover` for neutral hover feedback. Blue indicates selection or enabled state, not an ordinary hover. Panel headings are 16px; close controls use a 32px target, 16px icon, and 10px-radius neutral surface.
+- Muting and DND are intentional states, not warnings: use a muted volume icon and “Muted” OSD label, and a blue `bell-off` for DND. Notification stack counts remain secondary text.
+- Media artwork intentionally keeps a dark scrim and light text in both themes; clip the entire artwork card to its rounded outline and keep transport hover feedback legible on that scrim.
 - Battery icons use critical at 0–14%, low at 15–39%, medium at 40–64%, high at 65–89%, and full at 90–100%; charging has its own icon.
 - Keep short status text legible and detailed lists bounded. One long list must not push another section's overview out of reach.
 - Avoid decorative gradients, oversized headings, constant motion, redundant borders, and dashboard-style tiles without a functional purpose.
@@ -50,6 +53,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 ## Motion And Notifications
 
 - Animate to explain a state transition, not to decorate it. Existing panel entry/exit timings are roughly 160/120ms; notification dismissals are roughly 180-260ms. Keep transitions short and consistent with their neighbors.
+- Critical notification attention cues run once while visible rather than looping; the warning styling remains after the cue. OSDs use the same panel surface/outline and restrained 160/120ms easing, without a spring overshoot.
 - Cancel opposing animations when reversing direction. Repeated open/close requests must be safe, including requests made during an exit.
 - Keep a departing visual alive until its exit finishes, then remove it and reconcile service state. Capture the target ID before animation; arrivals must not change what gets dismissed.
 - Handle bursts together instead of building a serial animation backlog. Avoid unnecessary persistence writes, model rebuilds, and hidden-panel work.

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import QtQuick
+import QtQuick.Controls as Controls
 
 PopupWindow {
   id: popup
@@ -163,7 +164,7 @@ PopupWindow {
 
     Rectangle {
       anchors.fill: parent
-      border.color: popup.controller.darkMode ? "#33404D" : "#D7DCE3"
+      border.color: popup.controller.controlSurfaceBorder
       border.width: 1
       color: popup.controller.controlSurface
       radius: 18
@@ -241,8 +242,8 @@ PopupWindow {
         spacing: 8
 
         Rectangle {
-          color: updatesArea.containsMouse ? popup.controller.controlActive : popup.controller.controlSliderTrack
-          height: 30
+          color: updatesArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSliderTrack
+          height: 32
           radius: 8
           width: updatesLabel.implicitWidth + 20
 
@@ -251,21 +252,22 @@ PopupWindow {
             anchors.centerIn: parent
             color: popup.controller.controlPrimaryText
             font.family: popup.controller.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: 11
             text: stackCard.open ? "Hide updates" : "Updates · " + stackCard.stackData.reviews.length
           }
 
           MouseArea {
             id: updatesArea
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: popup.toggleStack(stackCard.stackData.url || stackCard.stackData.key)
           }
         }
 
         Rectangle {
-          color: browserArea.containsMouse ? popup.controller.controlActive : popup.controller.controlSliderTrack
-          height: 30
+          color: browserArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSliderTrack
+          height: 32
           radius: 8
           width: browserLabel.implicitWidth + 20
 
@@ -274,13 +276,14 @@ PopupWindow {
             anchors.centerIn: parent
             color: popup.controller.controlPrimaryText
             font.family: popup.controller.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: 11
             text: "Open in browser"
           }
 
           MouseArea {
             id: browserArea
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: popup.prs.prs.length > 0 ? popup.prs.open(stackCard.stackData.url) : popup.service.openGithubReview(stackCard.stackData.reviews[0])
           }
@@ -311,7 +314,7 @@ PopupWindow {
 
   Rectangle {
     anchors.fill: parent
-    border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
+    border.color: popup.controller.controlBorder
     border.width: 1
     color: popup.controller.controlBackground
     radius: 26
@@ -336,14 +339,19 @@ PopupWindow {
       width: parent.width
 
       Text {
+        anchors.left: parent.left
+        anchors.right: reviewCount.left
+        anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         color: popup.controller.controlPrimaryText
         font.family: popup.controller.fontFamily
-        font.pixelSize: 18
+        font.pixelSize: 16
+        elide: Text.ElideRight
         text: "GitHub pull requests"
       }
 
       Text {
+        id: reviewCount
         anchors.right: closeButton.left
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
@@ -362,6 +370,12 @@ PopupWindow {
         Accessible.role: Accessible.Button
         Accessible.name: "Close GitHub reviews"
 
+        Rectangle {
+          anchors.fill: parent
+          radius: 10
+          color: closeArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+        }
+
         LucideIcon {
           anchors.centerIn: parent
           width: 16
@@ -371,7 +385,9 @@ PopupWindow {
         }
 
         MouseArea {
+          id: closeArea
           anchors.fill: parent
+          hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
           Accessible.role: Accessible.Button
           Accessible.name: "Close GitHub reviews"
@@ -381,15 +397,22 @@ PopupWindow {
     }
 
     Flickable {
+      id: reviewScroll
       clip: true
       contentHeight: reviewList.height
+      contentWidth: width
+      boundsBehavior: Flickable.StopAtBounds
+      flickableDirection: Flickable.VerticalFlick
+      Controls.ScrollBar.vertical: Controls.ScrollBar {
+        policy: Controls.ScrollBar.AsNeeded
+      }
       height: parent.height - 44
       width: parent.width
 
       Column {
         id: reviewList
         spacing: 10
-        width: parent.width
+        width: reviewScroll.width - (reviewScroll.contentHeight > reviewScroll.height ? 12 : 0)
 
         Repeater {
           model: popup.stacks

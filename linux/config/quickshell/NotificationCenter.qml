@@ -13,12 +13,12 @@ PopupWindow {
   required property var service
 
   anchor.window: panel
-  anchor.rect.x: parentWindow.width - width - 12
+  anchor.rect.x: Math.max(0, parentWindow.width - width - 12)
   anchor.rect.y: parentWindow.height + 12
   color: "transparent"
   grabFocus: false
-  implicitHeight: 548
-  implicitWidth: 432
+  implicitHeight: Math.min(548, panel.screen.height - panel.height - 24)
+  implicitWidth: Math.min(432, panel.screen.width - 24)
   surfaceFormat.opaque: false
 
   component HeaderIconButton: Item {
@@ -26,7 +26,7 @@ PopupWindow {
 
     required property string iconName
     property color idleColor: popup.controller.controlPrimaryText
-    property color activeColor: popup.controller.urgent
+    property color activeColor: popup.controller.controlActiveIcon
     property bool active: false
     property bool destructive: false
     signal clicked
@@ -184,8 +184,8 @@ PopupWindow {
     SequentialAnimation {
       id: urgentWiggle
 
-      loops: Animation.Infinite
-      running: card.isLive && card.record.urgency === "critical" && !card.dismissing
+      loops: 1
+      running: popup.visible && card.isLive && card.record.urgency === "critical" && !card.dismissing
 
       PauseAnimation { duration: 1800 }
       ParallelAnimation {
@@ -235,7 +235,7 @@ PopupWindow {
 
       Rectangle {
         anchors.fill: parent
-        border.color: card.controller.darkMode ? "#33404D" : "#D7DCE3"
+        border.color: card.controller.controlSurfaceBorder
         border.width: 1
         color: card.controller.controlSurface
         radius: 18
@@ -251,8 +251,8 @@ PopupWindow {
         visible: card.isLive && card.record.urgency === "critical"
 
         SequentialAnimation {
-          loops: Animation.Infinite
-          running: urgentBreath.visible
+          loops: 1
+          running: popup.visible && urgentBreath.visible
 
           NumberAnimation {
             target: urgentBreath
@@ -585,7 +585,7 @@ PopupWindow {
 
       Rectangle {
         anchors.fill: parent
-        border.color: notificationGroup.controller.darkMode ? "#33404D" : "#D7DCE3"
+        border.color: notificationGroup.controller.controlSurfaceBorder
         border.width: 1
         color: notificationGroup.controller.controlSurface
         radius: 16
@@ -960,7 +960,7 @@ PopupWindow {
 
     Rectangle {
       anchors.fill: parent
-      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
+      border.color: popup.controller.controlBorder
       border.width: 1
       color: popup.controller.controlBackground
       radius: 26
@@ -981,9 +981,13 @@ PopupWindow {
           id: titleText
 
           anchors.verticalCenter: parent.verticalCenter
+          anchors.left: parent.left
+          anchors.right: clearButton.visible ? clearButton.left : dndButton.left
+          anchors.rightMargin: 8
           color: popup.controller.controlPrimaryText
           font.family: popup.controller.fontFamily
-          font.pixelSize: 18
+          font.pixelSize: 16
+          elide: Text.ElideRight
           text: "Notifications"
         }
 
@@ -991,12 +995,16 @@ PopupWindow {
           id: dndButton
 
           active: popup.controller.doNotDisturb
-          activeColor: popup.controller.urgent
+          activeColor: popup.controller.controlActiveIcon
           anchors {
             right: parent.right
             verticalCenter: parent.verticalCenter
           }
-          iconName: "bell"
+          iconName: popup.controller.doNotDisturb ? "bell-off" : "bell"
+          Accessible.role: Accessible.CheckBox
+          Accessible.name: "Do Not Disturb"
+          Accessible.checkable: true
+          Accessible.checked: popup.controller.doNotDisturb
           onClicked: popup.controller.toggleDoNotDisturb()
         }
 
@@ -1032,6 +1040,9 @@ PopupWindow {
           contentHeight: notificationList.height
           contentWidth: width
           boundsBehavior: Flickable.StopAtBounds
+          Controls.ScrollBar.vertical: Controls.ScrollBar {
+            policy: Controls.ScrollBar.AsNeeded
+          }
           onMovementStarted: popup.readingAnchor = null
           onContentHeightChanged: {
             if (popup.readingAnchor) {
@@ -1046,7 +1057,7 @@ PopupWindow {
             enabled: !clearAllAnimation.running
             transform: Translate { id: clearAllTranslate }
             spacing: 10
-            width: parent.width
+            width: historyView.width - (historyView.contentHeight > historyView.height ? 12 : 0)
             onPositioningComplete: popup.restoreReadingPosition()
 
             Repeater {

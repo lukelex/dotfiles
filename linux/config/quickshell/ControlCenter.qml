@@ -35,10 +35,10 @@ PopupWindow {
 
     Rectangle {
       anchors.fill: parent
-      border.color: tile.controller.darkMode ? "#33404D" : "#D7DCE3"
+      border.color: tile.controller.controlSurfaceBorder
       border.width: 1
-      color: tile.active ? tile.controller.controlActive : tile.controller.controlSurface
-      radius: 16
+      color: tile.active ? tile.controller.controlActive : tileArea.containsMouse ? tile.controller.controlHover : tile.controller.controlSurface
+      radius: 18
     }
 
     Row {
@@ -90,7 +90,9 @@ PopupWindow {
     }
 
     MouseArea {
+      id: tileArea
       anchors.fill: parent
+      hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
       onClicked: tile.activated()
     }
@@ -107,9 +109,9 @@ PopupWindow {
 
     Rectangle {
       anchors.fill: parent
-      border.color: action.controller.darkMode ? "#33404D" : "#D7DCE3"
+      border.color: action.controller.controlSurfaceBorder
       border.width: 1
-      color: action.active ? action.controller.controlActive : action.controller.controlSurface
+      color: action.active ? action.controller.controlActive : actionArea.containsMouse ? action.controller.controlHover : action.controller.controlSurface
       radius: 14
     }
 
@@ -138,7 +140,9 @@ PopupWindow {
     }
 
     MouseArea {
+      id: actionArea
       anchors.fill: parent
+      hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
       onClicked: action.activated()
     }
@@ -215,7 +219,7 @@ PopupWindow {
         color: slider.controller.controlSliderFill
         height: parent.height
         radius: parent.radius
-        width: Math.max(height, parent.width * slider.value / 100)
+        width: parent.width * Math.max(0, Math.min(100, slider.value)) / 100
       }
 
       MouseArea {
@@ -337,7 +341,7 @@ PopupWindow {
         color: metric.percentage >= 90 ? metric.controller.urgent : metric.controller.controlSliderFill
         height: parent.height
         radius: parent.radius
-        width: Math.max(parent.height, parent.width * metric.percentage / 100)
+        width: parent.width * Math.max(0, Math.min(100, metric.percentage)) / 100
       }
     }
   }
@@ -424,7 +428,7 @@ PopupWindow {
 
     Rectangle {
       anchors.fill: parent
-      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
+      border.color: popup.controller.controlBorder
       border.width: 1
       color: popup.controller.controlBackground
       radius: 26

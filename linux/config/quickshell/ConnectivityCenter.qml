@@ -20,7 +20,8 @@ Scope {
   property int pinRequest: 0
   readonly property bool visible: preview.visible || pinnedPopup.visible
   readonly property real width: Math.max(1, Math.min(432, (popup.panel.screen ? popup.panel.screen.width : popup.panel.width) - 24))
-  readonly property real height: sections.implicitHeight + 32
+  readonly property real availableHeight: Math.max(1, (popup.panel.screen ? popup.panel.screen.height : 768) - popup.panel.height - 24)
+  readonly property real height: Math.min(availableHeight, sections.implicitHeight + 32)
   signal shown()
   onShown: {
     popup.controller.refreshControlStatus()
@@ -226,9 +227,9 @@ Scope {
 
     height: subtitle ? 64 : 40
     radius: 14
-    color: active || area.containsMouse ? popup.controller.controlActive : popup.controller.controlSurface
+    color: active ? popup.controller.controlActive : area.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
     border.width: 1
-    border.color: popup.controller.darkMode ? "#33404D" : "#D7DCE3"
+    border.color: popup.controller.controlSurfaceBorder
     opacity: enabled || active ? 1 : 0.55
     activeFocusOnTab: enabled && popup.pinned
     Accessible.role: radioSwitch ? Accessible.CheckBox : Accessible.Button
@@ -339,15 +340,28 @@ Scope {
       anchors.fill: parent
       radius: 26
       border.width: 1
-      border.color: popup.controller.darkMode ? "#3A424E" : "#D8DDE4"
+      border.color: popup.controller.controlBorder
       color: popup.controller.controlBackground
+    }
+
+    Flickable {
+      id: panelScroll
+      x: 16
+      y: 16
+      width: parent.width - 32
+      height: Math.max(1, parent.height - 32)
+      contentWidth: width
+      contentHeight: sections.implicitHeight
+      clip: true
+      boundsBehavior: Flickable.StopAtBounds
+      flickableDirection: Flickable.VerticalFlick
+      ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
     }
 
     Column {
       id: sections
-      x: 16
-      y: 16
-      width: parent.width - 32
+      parent: panelScroll.contentItem
+      width: panelScroll.width - (panelScroll.contentHeight > panelScroll.height ? 12 : 0)
       spacing: 10
 
       Row {
@@ -362,14 +376,20 @@ Scope {
           color: popup.controller.controlPrimaryText
         }
         Item {
+          id: closeButton
           width: 32
           height: 32
+          activeFocusOnTab: popup.pinned
+          Keys.onReturnPressed: popup.requestClose()
+          Keys.onSpacePressed: popup.requestClose()
           Accessible.role: Accessible.Button
           Accessible.name: "Close connectivity"
           Accessible.onPressAction: popup.requestClose()
           Rectangle {
             anchors.fill: parent
-            color: closeArea.containsMouse ? popup.controller.controlActive : popup.controller.controlSurface
+            color: closeArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+            border.width: closeButton.activeFocus ? 2 : 0
+            border.color: popup.controller.controlActiveIcon
             radius: 10
           }
           LucideIcon {
