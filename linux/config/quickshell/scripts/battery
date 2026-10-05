@@ -175,16 +175,12 @@ warn() {
     if [[ ! -e $LOW_BATTERY_NOTIFICATION_FILE ]]; then
       mkdir -p "$(dirname "$LOW_BATTERY_NOTIFICATION_FILE")"
       if can_lower_power_profile; then
-        (
-          action=$(notify-send -a System \
-            -i "$LUCIDE_PATH/battery-low.svg" \
-            -h string:wired-tag:battery-low \
-            -h int:value:"$charge" \
-            -t 0 \
-            --action=lower-profile="Use lower power profile" \
-            "Battery low" "$charge% remaining") || exit
-          [[ $action == lower-profile ]] && "$HOME/dotfiles/linux/config/quickshell/scripts/battery" lower-profile
-        ) </dev/null >/dev/null 2>&1 &
+        notify-send -a System \
+          -i "$LUCIDE_PATH/battery-low.svg" \
+          -h string:wired-tag:battery-low \
+          -h boolean:x-power-profile-can-lower:true \
+          -h int:value:"$charge" \
+          "Battery low" "$charge% remaining"
       else
         notify-send -a System \
           -i "$LUCIDE_PATH/battery-low.svg" \

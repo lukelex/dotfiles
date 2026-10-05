@@ -301,9 +301,31 @@ test('notification action buttons focus their sender before invoking the action'
     live: { 1: { actions: [{ identifier: 'settings', invoke: () => events.push('action') }] } },
     history: [{ id: 1 }],
     focusRecord: () => events.push('focus'),
+    dismissRecord: id => events.push(`dismiss:${id}`),
   };
   invokeAction(service, 1, 0);
-  assert.deepEqual(events, ['focus', 'action']);
+  assert.deepEqual(events, ['focus', 'action', 'dismiss:1']);
+});
+
+test('lower-profile notification action switches profile and dismisses the notification', () => {
+  const events = [];
+  const service = {
+    live: {},
+    history: [{ id: 1, actions: [{ identifier: 'lower-profile', sourceIndex: -1 }] }],
+    lowerPowerProfile: {
+      command: [],
+      startDetached() { events.push(`run:${this.command.join(' ')}`); },
+    },
+    dismissRecord: id => events.push(`dismiss:${id}`),
+  };
+  const match = source.match(/  function invokeAction\([^]*?\n  \}/);
+  assert.ok(match, 'Missing QML function invokeAction');
+  const context = vm.createContext({ service, Quickshell: { env: () => '/home/test' } });
+  vm.runInContext(`(${match[0]})`, context)(1, -1);
+  assert.deepEqual(events, [
+    'run:/home/test/dotfiles/linux/config/quickshell/scripts/battery lower-profile',
+    'dismiss:1',
+  ]);
 });
 
 test('system semantics do not classify unrelated notifications', () => {

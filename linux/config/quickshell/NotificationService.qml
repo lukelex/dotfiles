@@ -34,6 +34,10 @@ QtObject {
     command: []
   }
 
+  property Process lowerPowerProfile: Process {
+    command: []
+  }
+
   property Process notificationSound: Process {
     command: ["play", "-q", service.notificationSoundPath, "vol", "0.5"]
   }
@@ -259,13 +263,8 @@ QtObject {
   }
 
   function buildRecord(notification, tag, value) {
-    const actions = []
+    const actions = service.buildActions(notification, tag)
     const browserNotification = service.isBrowserIcon(notification.appIcon)
-    for (let index = 0; index < notification.actions.length; index++) {
-      const action = notification.actions[index]
-      if (action.text)
-        actions.push({ identifier: action.identifier, text: action.text, sourceIndex: index })
-    }
 
     let urgency = "normal"
     if (notification.urgency === NotificationUrgency.Critical)
@@ -302,6 +301,20 @@ QtObject {
     // the message stays correct after its browser icon is discarded from history.
     record.body = service.displayBody(record)
     return record
+  }
+
+  function buildActions(notification, tag) {
+    const actions = []
+    for (let index = 0; index < notification.actions.length; index++) {
+      const action = notification.actions[index]
+      if (action.text)
+        actions.push({ identifier: action.identifier, text: action.text, sourceIndex: index })
+    }
+
+    if (tag === "battery-low" && (notification.hints || {})["x-power-profile-can-lower"] === true)
+      actions.push({ identifier: "lower-profile", text: "Use lower power profile", sourceIndex: -1 })
+
+    return actions
   }
 
   function computeExpiry(notification, urgency) {
@@ -586,9 +599,19 @@ QtObject {
 
   function invokeAction(recordId, index) {
     const notification = service.live[recordId]
-    if (notification && index < notification.actions.length) {
-      service.focusRecord(service.history.find(entry => entry.id === recordId))
+    const record = service.history.find(entry => entry.id === recordId)
+    const action = record && (record.actions || []).find(entry => entry.sourceIndex === index)
+    if (action && action.identifier === "lower-profile") {
+      service.lowerPowerProfile.command = [Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts/battery", "lower-profile"]
+      service.lowerPowerProfile.startDetached()
+      service.dismissRecord(recordId)
+      return
+    }
+
+    if (notification && index >= 0 && index < notification.actions.length) {
+      service.focusRecord(record)
       notification.actions[index].invoke()
+      service.dismissRecord(recordId)
     }
   }
 

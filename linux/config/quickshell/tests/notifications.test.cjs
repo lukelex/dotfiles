@@ -82,6 +82,18 @@ test('timeouts use milliseconds and zero stays persistent', () => {
   assert.equal(service.computeExpiry({ expireTimeout: 1000 }, 'critical'), 0);
 });
 
+test('low-battery notifications expose the profile action only when a lower profile is available', () => {
+  const { service } = serviceForTest();
+  service.buildActions = vm.runInContext(`(${source.match(/  function buildActions\([^]*?\n  \}/)[0]})`, vm.createContext({ service }));
+
+  const notification = { actions: [], hints: { 'x-power-profile-can-lower': true } };
+  assert.deepEqual(JSON.parse(JSON.stringify(service.buildActions(notification, 'battery-low'))), [
+    { identifier: 'lower-profile', text: 'Use lower power profile', sourceIndex: -1 },
+  ]);
+  assert.deepEqual(JSON.parse(JSON.stringify(service.buildActions(notification, 'battery-critical'))), []);
+  assert.deepEqual(JSON.parse(JSON.stringify(service.buildActions({ actions: [], hints: {} }, 'battery-low'))), []);
+});
+
 test('a tagged notification can be dismissed through IPC', () => {
   const { service } = serviceForTest();
   const dismissed = [];
