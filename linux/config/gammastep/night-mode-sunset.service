@@ -5,5 +5,4 @@ After=graphical-session.target
 [Service]
 Type=exec
 ExecStart=%h/dotfiles/linux/config/gammastep/night-mode-sunset
-EnvironmentFile=%h/dotfiles/linux/variables.env
 RuntimeMaxSec=12h

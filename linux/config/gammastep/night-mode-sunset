@@ -36,7 +36,7 @@ session_is_locked() {
 }
 
 night_is_active || exit 0
-[[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null || true)" != true ]] || exit 0
+[[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null)" == false ]] || exit 0
 
 # Keep the offer until the session is unlocked, unless daylight arrives first.
 while session_is_locked; do
@@ -45,7 +45,7 @@ while session_is_locked; do
 done
 
 night_is_active || exit 0
-[[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null || true)" != true ]] || exit 0
+[[ "$("$DOTFILES/linux/config/quickshell/scripts/nightmode" get 2>/dev/null)" == false ]] || exit 0
 
 sunset=$(jq -er '.sys.sunset | numbers | floor' "$cache_file") || exit 0
 if [[ -r $state_file ]] && [[ $(< "$state_file") == "$sunset" ]]; then
