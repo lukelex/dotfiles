@@ -673,19 +673,42 @@ PopupWindow {
                 }
               }
 
-              Text {
+              Item {
                 width: parent.width
-                color: popup.controller.controlSecondaryText
-                font.family: popup.controller.fontFamily
-                font.pixelSize: 11
-                wrapMode: Text.WordWrap
-                text: popup.controller.batteryState === "charging" || popup.controller.batteryState === "discharging"
-                  ? (popup.controller.batteryState === "charging" ? "Charging" : "Discharging")
-                    + (popup.controller.batteryRateAvailable
-                      ? " at " + popup.controller.batteryWatts.toFixed(1) + " W" : " · Rate unavailable")
-                  : popup.controller.batteryState === "pending-charge" ? "Charging paused"
-                  : popup.controller.batteryState === "pending-discharge" ? "Power connected"
-                  : popup.controller.batteryState === "fully-charged" ? "Fully charged" : "Status unavailable"
+                height: Math.max(batteryRate.implicitHeight, batteryTime.implicitHeight)
+
+                Text {
+                  id: batteryRate
+                  anchors.left: parent.left
+                  anchors.right: batteryTime.left
+                  anchors.rightMargin: batteryTime.visible ? 12 : 0
+                  color: popup.controller.controlSecondaryText
+                  font.family: popup.controller.fontFamily
+                  font.pixelSize: 11
+                  elide: Text.ElideRight
+                  text: popup.controller.batteryState === "charging" || popup.controller.batteryState === "discharging"
+                    ? (popup.controller.batteryState === "charging" ? "Charging" : "Discharging")
+                      + (popup.controller.batteryRateAvailable
+                        ? " at " + popup.controller.batteryWatts.toFixed(1) + " W" : " · Rate unavailable")
+                    : popup.controller.batteryState === "pending-charge" ? "Charging paused"
+                    : popup.controller.batteryState === "pending-discharge" ? "Power connected"
+                    : popup.controller.batteryState === "fully-charged" ? "Fully charged" : "Status unavailable"
+                }
+
+                Text {
+                  id: batteryTime
+                  anchors.right: parent.right
+                  width: Math.min(implicitWidth, parent.width / 2)
+                  visible: text.length > 0
+                  horizontalAlignment: Text.AlignRight
+                  color: popup.controller.controlSecondaryText
+                  font.family: popup.controller.fontFamily
+                  font.pixelSize: 11
+                  elide: Text.ElideRight
+                  text: popup.controller.batteryTime
+                    && (popup.controller.batteryState === "charging" || popup.controller.batteryState === "discharging")
+                    ? popup.controller.batteryTime + (popup.controller.batteryState === "charging" ? " until full" : " remaining") : ""
+                }
               }
 
               Text {
@@ -695,11 +718,7 @@ PopupWindow {
                 font.family: popup.controller.fontFamily
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap
-                text: [popup.controller.batteryTime
-                    && (popup.controller.batteryState === "charging" || popup.controller.batteryState === "discharging")
-                    ? popup.controller.batteryTime + (popup.controller.batteryState === "charging" ? " until full" : " remaining") : "",
-                  popup.controller.batteryHealthAvailable ? "Health " + Math.round(popup.controller.batteryHealth) + "%" : ""]
-                  .filter(detail => detail.length > 0).join(" · ")
+                text: popup.controller.batteryHealthAvailable ? "Health " + Math.round(popup.controller.batteryHealth) + "%" : ""
               }
             }
           }
