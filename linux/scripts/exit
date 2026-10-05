@@ -12,7 +12,7 @@ case "$1" in
     # Ensure Quickshell notifications are dismissed before launching the lock screen.
     qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications dismissTag lock-warning 2> /dev/null || true
     qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible 2> /dev/null || true
-    play "$HOME/dotfiles/sounds/desktop-login2.ogg" reverse trim 0 0.8 &> /dev/null &
+    play "$HOME/dotfiles/sounds/screen-lock-click.mp3" &> /dev/null &
     session_type="${XDG_SESSION_TYPE:-}"
     if [[ -z "$session_type" ]]; then
       if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
