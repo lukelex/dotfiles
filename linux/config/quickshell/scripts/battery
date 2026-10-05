@@ -15,7 +15,7 @@ LOW_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-low-notif
 CRITICAL_BATTERY_THRESHOLDS=(14 10 5)
 BATTERY_NOTIFICATION_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/battery-critical-notified"
 
-if [[ ${1:-} != power ]]; then
+if [[ ${1:-} != power && ${1:-} != lower-profile ]]; then
   device=$(upower -e | grep 'BAT' | head -n 1)
   stats=$(upower -i "$device" | grep -E "state|to full|percentage|time to empty")
 fi
@@ -174,11 +174,24 @@ warn() {
   if [[ $charge -le $LOW_BATTERY_THRESHOLD && $charge -gt ${CRITICAL_BATTERY_THRESHOLDS[0]} ]]; then
     if [[ ! -e $LOW_BATTERY_NOTIFICATION_FILE ]]; then
       mkdir -p "$(dirname "$LOW_BATTERY_NOTIFICATION_FILE")"
-      notify-send -a System \
-        -i "$LUCIDE_PATH/battery-low.svg" \
-        -h string:wired-tag:battery-low \
-        -h int:value:"$charge" \
-        "Battery low" "$charge% remaining"
+      if can_lower_power_profile; then
+        (
+          action=$(notify-send -a System \
+            -i "$LUCIDE_PATH/battery-low.svg" \
+            -h string:wired-tag:battery-low \
+            -h int:value:"$charge" \
+            -t 0 \
+            --action=lower-profile="Use lower power profile" \
+            "Battery low" "$charge% remaining") || exit
+          [[ $action == lower-profile ]] && "$HOME/dotfiles/linux/config/quickshell/scripts/battery" lower-profile
+        ) </dev/null >/dev/null 2>&1 &
+      else
+        notify-send -a System \
+          -i "$LUCIDE_PATH/battery-low.svg" \
+          -h string:wired-tag:battery-low \
+          -h int:value:"$charge" \
+          "Battery low" "$charge% remaining"
+      fi
       : > "$LOW_BATTERY_NOTIFICATION_FILE"
     fi
   fi
@@ -202,6 +215,41 @@ warn() {
   fi
 }
 
+can_lower_power_profile() {
+  if busctl --system --no-pager list 2>/dev/null | grep -q '^org\.freedesktop\.UPower\.PowerProfiles[[:space:]]'; then
+    command -v powerprofilesctl >/dev/null || return 1
+    case $(powerprofilesctl get 2>/dev/null) in
+      performance|balanced) return 0 ;;
+      *) return 1 ;;
+    esac
+  fi
+
+  command -v u_performance-profile >/dev/null || return 1
+  local current
+  current=$(u_performance-profile get 2>/dev/null) || return 1
+  local profile found_current=false
+  while IFS= read -r profile; do
+    if [[ $found_current == true ]]; then
+      return 0
+    fi
+    [[ $profile == "$current" ]] && found_current=true
+  done < <(u_performance-profile list 2>/dev/null)
+  return 1
+}
+
+lower_power_profile() {
+  if busctl --system --no-pager list 2>/dev/null | grep -q '^org\.freedesktop\.UPower\.PowerProfiles[[:space:]]'; then
+    case $(powerprofilesctl get 2>/dev/null) in
+      performance) powerprofilesctl set balanced ;;
+      balanced) powerprofilesctl set power-saver ;;
+      *) return 1 ;;
+    esac
+    return
+  fi
+
+  u_performance-profile prev
+}
+
 case $1 in
   if) upower -i "$(upower -e | grep 'BAT')" ;;
   icon) echo "$(icon)" ;;
@@ -210,4 +258,5 @@ case $1 in
   get) echo -e "$(get)" ;;
   warn) warn ;;
   power) power "$2" "$3" "${4:-charging}" ;;
+  lower-profile) lower_power_profile ;;
 esac
