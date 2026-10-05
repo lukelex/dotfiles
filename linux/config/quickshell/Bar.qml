@@ -243,6 +243,8 @@ Scope {
   property bool batteryAvailable: false
   property real batteryHealth: 0
   property bool batteryHealthAvailable: false
+  property real batteryWatts: 0
+  property bool batteryRateAvailable: false
   property bool batteryWarningPending: false
   property var previousOnBattery: null
   property string idleLockStatus: ""
@@ -361,11 +363,15 @@ Scope {
     if (!device.ready || !device.isPresent) {
       root.batteryAvailable = false
       root.batteryHealthAvailable = false
+      root.batteryRateAvailable = false
       return
     }
 
     root.batteryPercentage = Math.round(device.percentage * 100)
     root.batteryState = root.batteryStateName(device.state)
+    // changeRate is in watts; direction is labelled from the device state.
+    root.batteryWatts = Math.abs(device.changeRate)
+    root.batteryRateAvailable = Number.isFinite(root.batteryWatts) && root.batteryWatts > 0
     root.batteryHealthAvailable = device.healthSupported
     root.batteryHealth = device.healthPercentage
     root.batteryTime = root.formatBatteryTime(root.batteryState === "discharging"
@@ -776,6 +782,8 @@ Scope {
     function onStateChanged() { root.updateBatteryStatus(); root.checkBatteryWarnings() }
     function onTimeToEmptyChanged() { root.updateBatteryStatus() }
     function onTimeToFullChanged() { root.updateBatteryStatus() }
+    function onChangeRateChanged() { root.updateBatteryStatus() }
+    function onIsPresentChanged() { root.updateBatteryStatus() }
     function onHealthPercentageChanged() { root.updateBatteryStatus() }
     function onHealthSupportedChanged() { root.updateBatteryStatus() }
   }

@@ -606,58 +606,98 @@ PopupWindow {
           width: parent.width
           visible: popup.controller.batteryAvailable || popup.controller.powerProfileAvailable
 
-          Row {
+          Rectangle {
             width: parent.width
-            height: 24
-            spacing: 8
+            height: batteryDetails.implicitHeight + 28
             visible: popup.controller.batteryAvailable
+            color: popup.controller.controlSurface
+            radius: 18
 
-            LucideIcon {
-              id: powerIcon
-              anchors.verticalCenter: parent.verticalCenter
-              height: 18
-              width: 18
-              source: popup.controller.icon(popup.controller.batteryIcon())
-              color: popup.controller.batteryAvailable && popup.controller.batteryPercentage < 15
-                ? popup.controller.urgent : popup.controller.controlSecondaryText
+            Column {
+              id: batteryDetails
+              x: 14
+              y: 14
+              width: parent.width - 28
+              spacing: 10
+
+              Row {
+                width: parent.width
+                spacing: 8
+
+                LucideIcon {
+                  anchors.verticalCenter: parent.verticalCenter
+                  height: 16
+                  width: 16
+                  source: popup.controller.icon(popup.controller.batteryIcon())
+                  color: popup.controller.batteryAvailable && popup.controller.batteryPercentage < 15
+                    ? popup.controller.urgent : popup.controller.controlSecondaryText
+                }
+
+                Text {
+                  id: batterySummary
+                  anchors.verticalCenter: parent.verticalCenter
+                  color: popup.controller.controlPrimaryText
+                  font.family: popup.controller.fontFamily
+                  font.pixelSize: 12
+                  text: "Battery"
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width - 16 - batterySummary.width - parent.spacing * 2
+                  horizontalAlignment: Text.AlignRight
+                  color: popup.controller.batteryAvailable && popup.controller.batteryPercentage < 15
+                    ? popup.controller.urgent : popup.controller.controlSecondaryText
+                  font.family: popup.controller.fontFamily
+                  font.pixelSize: 11
+                  text: popup.controller.batteryPercentage + "%"
+                }
+              }
+
+              Rectangle {
+                width: parent.width
+                height: 6
+                radius: 3
+                color: popup.controller.controlSliderTrack
+
+                Rectangle {
+                  width: parent.width * Math.max(0, Math.min(100, popup.controller.batteryPercentage)) / 100
+                  height: parent.height
+                  radius: parent.radius
+                  color: popup.controller.batteryPercentage < 15
+                    ? popup.controller.urgent : popup.controller.controlSliderFill
+                }
+              }
+
+              Text {
+                width: parent.width
+                color: popup.controller.controlSecondaryText
+                font.family: popup.controller.fontFamily
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+                text: popup.controller.batteryState === "charging" || popup.controller.batteryState === "discharging"
+                  ? (popup.controller.batteryState === "charging" ? "Charging" : "Discharging")
+                    + (popup.controller.batteryRateAvailable
+                      ? " at " + popup.controller.batteryWatts.toFixed(1) + " W" : " · Rate unavailable")
+                  : popup.controller.batteryState === "pending-charge" ? "Charging paused"
+                  : popup.controller.batteryState === "pending-discharge" ? "Power connected"
+                  : popup.controller.batteryState === "fully-charged" ? "Fully charged" : "Status unavailable"
+              }
+
+              Text {
+                width: parent.width
+                visible: text.length > 0
+                color: popup.controller.controlSecondaryText
+                font.family: popup.controller.fontFamily
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+                text: [popup.controller.batteryTime
+                    && (popup.controller.batteryState === "charging" || popup.controller.batteryState === "discharging")
+                    ? popup.controller.batteryTime + (popup.controller.batteryState === "charging" ? " until full" : " remaining") : "",
+                  popup.controller.batteryHealthAvailable ? "Health " + Math.round(popup.controller.batteryHealth) + "%" : ""]
+                  .filter(detail => detail.length > 0).join(" · ")
+              }
             }
-
-            Text {
-              id: batterySummary
-              anchors.verticalCenter: parent.verticalCenter
-              color: popup.controller.controlPrimaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 12
-              text: popup.controller.batteryAvailable ? "Battery " + popup.controller.batteryPercentage + "%" : "Power"
-            }
-
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              width: parent.width - powerIcon.width - batterySummary.width - parent.spacing * 2
-              horizontalAlignment: Text.AlignRight
-              elide: Text.ElideRight
-              color: popup.controller.controlSecondaryText
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 11
-              text: !popup.controller.batteryAvailable ? ""
-                : popup.controller.batteryState === "discharging"
-                  ? popup.controller.batteryTime ? popup.controller.batteryTime + " remaining" : "On battery"
-                : popup.controller.batteryState === "charging"
-                  ? popup.controller.batteryTime ? popup.controller.batteryTime + " until full" : "Charging"
-                : popup.controller.batteryState === "pending-charge" ? "Charging paused"
-                : popup.controller.batteryState === "pending-discharge" ? "Power connected"
-                : popup.controller.batteryState === "fully-charged" ? "Fully charged" : ""
-            }
-          }
-
-          Text {
-            visible: popup.controller.batteryHealthAvailable
-            color: popup.controller.controlSecondaryText
-            font.family: popup.controller.fontFamily
-            font.pixelSize: 11
-            text: "Battery health " + Math.round(popup.controller.batteryHealth) + "%"
-            x: 26
-            width: parent.width - 26
           }
 
           ControlTile {
