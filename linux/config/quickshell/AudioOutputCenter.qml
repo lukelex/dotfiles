@@ -613,6 +613,72 @@ Scope {
             elide: Text.ElideNone
           }
 
+          Label {
+            width: parent.width
+            text: "Applications using microphones"
+            color: popup.controller.controlPrimaryText
+            font.pixelSize: 12
+          }
+
+          Label {
+            width: parent.width
+            visible: popup.service.recordingApplications.length === 0
+            text: Pipewire.ready ? "No applications are recording." : "Checking recording applications…"
+          }
+
+          Flickable {
+            id: recordingScroll
+            width: parent.width
+            height: Math.min(recordingRows.implicitHeight, 156)
+            visible: popup.service.recordingApplications.length > 0
+            contentWidth: width
+            contentHeight: recordingRows.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.VerticalFlick
+            Controls.ScrollBar.vertical: Controls.ScrollBar { policy: Controls.ScrollBar.AsNeeded }
+
+            Column {
+              id: recordingRows
+              width: recordingScroll.width - (recordingScroll.contentHeight > recordingScroll.height ? 12 : 0)
+              spacing: 6
+              Repeater {
+                model: popup.service.recordingApplications
+                delegate: Rectangle {
+                  id: recordingRow
+                  required property var modelData
+                  width: recordingRows.width
+                  height: 48
+                  radius: 14
+                  color: popup.controller.controlSurface
+                  border.width: 1
+                  border.color: popup.controller.controlSurfaceBorder
+                  Accessible.role: Accessible.StaticText
+                  Accessible.name: modelData.name + " using " + modelData.inputDescription
+                    + (modelData.muted ? ", input muted" : ", recording")
+                  Column {
+                    x: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 24
+                    spacing: 2
+                    Label {
+                      width: parent.width
+                      color: popup.controller.controlPrimaryText
+                      text: recordingRow.modelData.name
+                      font.pixelSize: 12
+                    }
+                    Label {
+                      width: parent.width
+                      text: recordingRow.modelData.inputDescription + (recordingRow.modelData.muted ? " · Input muted" : " · Recording")
+                        + (recordingRow.modelData.streamCount > 1 ? " · " + recordingRow.modelData.streamCount + " streams" : "")
+                      font.pixelSize: 10
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           SoundAction {
             text: "Advanced sound settings"
             onActivated: popup.openAdvancedSettings()

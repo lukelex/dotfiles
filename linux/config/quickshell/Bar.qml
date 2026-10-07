@@ -1621,6 +1621,32 @@ Scope {
 
 
         Item {
+          height: root.barFontSize
+          width: root.barFontSize
+          visible: root.audioService.microphoneInUse
+          Accessible.role: Accessible.Button
+          Accessible.name: "Microphone in use by " + root.audioService.recordingApplications.map(application => application.name).join(", ")
+            + (root.audioService.recordingMicrophonesMuted ? "; inputs muted" : "")
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic")
+            color: root.audioService.recordingMicrophonesMuted ? root.muted : root.controlActiveIcon
+          }
+          MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            Accessible.role: Accessible.Button
+            Accessible.name: parent.Accessible.name
+            Accessible.onPressAction: panel.openAudioOutput(true)
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: panel.openAudioOutput()
+            onExited: audioOutputCenter.scheduleClose()
+            onClicked: panel.openAudioOutput(true)
+          }
+        }
+
+        Item {
           id: volumeWidget
 
           height: root.barFontSize

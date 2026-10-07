@@ -35,6 +35,59 @@ QtObject {
   property bool _muteIntentReady: false
   property var _muteSource: null
   property bool _mutePending: false
+  readonly property var captureStreams: Pipewire.nodes.values.filter(node => node.type === PwNodeType.AudioInStream)
+  readonly property var captureLinks: Pipewire.linkGroups.values.filter(group =>
+    group.source.type === PwNodeType.AudioSource && group.target.type === PwNodeType.AudioInStream)
+  readonly property var recordingApplications: service.collectRecordingApplications(service.captureLinks)
+  readonly property bool microphoneInUse: service.recordingApplications.length > 0
+  readonly property bool recordingMicrophonesMuted: service.microphoneInUse
+    && service.recordingApplications.every(application => application.muted)
+
+  property PwObjectTracker recordingTracker: PwObjectTracker {
+    objects: service.captureStreams.concat(service.captureLinks)
+  }
+
+  function collectRecordingApplications(groups) {
+    const applications = new Map()
+    for (const group of groups) {
+      const input = group.source
+      const stream = group.target
+      if (group.state !== PwLinkState.Active || !input.ready || !stream.ready
+          || input.type !== PwNodeType.AudioSource || stream.type !== PwNodeType.AudioInStream)
+        continue
+      const properties = stream.properties || {}
+      // Peak/monitor streams observe levels; they are not application recordings.
+      const truthy = value => value === true || value === "true"
+      if (truthy(properties["stream.monitor"]) || truthy(properties["resample.peaks"])
+          || properties["media.category"] === "Monitor"
+          || properties["application.name"] === "Quickshell Peak Detect")
+        continue
+      const name = properties["application.name"] || properties["application.process.binary"]
+        || stream.description || stream.name || "Unknown application"
+      const key = name + "\u0000" + input.name
+      const existing = applications.get(key)
+      if (existing) {
+        existing.streams.add(stream.id)
+        continue
+      }
+      const device = service.inputs.find(candidate => candidate.name === input.name)
+      applications.set(key, {
+        name,
+        inputName: input.name,
+        inputDescription: device?.description || service.friendlyDescription(input, true) || input.description || input.name,
+        muted: !!input.audio?.muted,
+        streams: new Set([stream.id]),
+      })
+    }
+    return Array.from(applications.values()).map(application => ({
+      name: application.name,
+      inputName: application.inputName,
+      inputDescription: application.inputDescription,
+      muted: application.muted,
+      streamCount: application.streams.size,
+    })).sort((left, right) => left.name.localeCompare(right.name)
+      || left.inputName.localeCompare(right.inputName))
+  }
 
   property PersistentProperties muteIntent: PersistentProperties {
     reloadableId: "audioMicrophoneMuteIntent"
