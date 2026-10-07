@@ -33,8 +33,23 @@ QtObject {
   signal popupRecordsCleared()
   signal historyRecordDismissed(string id)
 
+  property var activationPendingId: null
+  property var activationErrorId: null
+  property string activationError: ""
+  property string activationOutput: ""
+
   property Process windowFocus: Process {
     command: []
+    stdout: StdioCollector { onStreamFinished: service.activationOutput = text }
+    onExited: (exitCode, exitStatus) => service.finishActivation(exitCode, exitStatus)
+  }
+
+  property Timer activationTimer: Timer {
+    interval: 9000
+    onTriggered: {
+      service.finishActivation(-1, 0)
+      service.windowFocus.running = false
+    }
   }
 
   property Process lowerPowerProfile: Process {
@@ -581,23 +596,76 @@ QtObject {
   }
 
   function activateRecord(id) {
+    if (service.activationPendingId !== null)
+      return false
+    service.activationErrorId = id
+    service.activationError = ""
     const notification = service.live[id]
     const record = service.history.find(entry => entry.id === id)
     if (service.openGithubReview && service.openGithubReview(record))
       return true
-    const focused = service.focusRecord(record)
 
     if (notification) {
       for (let index = 0; index < notification.actions.length; index++) {
         const action = notification.actions[index]
         if (action.identifier === "default") {
-          action.invoke()
-          return true
+          try {
+            action.invoke()
+            return true
+          } catch (error) {
+            service.activationError = "This notification's action is no longer available."
+            return false
+          }
         }
       }
     }
 
-    return focused
+    if (service.focusRecord(record))
+      return true
+    service.activationError = "No application is available to open this notification."
+    return false
+  }
+
+  function canActivate(record) {
+    service.liveRevision
+    if (!record)
+      return false
+    const notification = service.live[record.id]
+    return service.isGithubReview(record)
+      || Boolean(notification && notification.actions.some(action => action.identifier === "default"))
+      || service.focusCommand(record).length > 0
+  }
+
+  function launchActivation(record, command) {
+    if (service.activationPendingId !== null)
+      return false
+    service.activationPendingId = record.id
+    service.activationErrorId = record.id
+    service.activationError = ""
+    service.activationOutput = ""
+    service.windowFocus.command = ["timeout", "8"].concat(command)
+    service.activationTimer.restart()
+    service.windowFocus.running = true
+    return true
+  }
+
+  function finishActivation(exitCode, exitStatus) {
+    if (service.activationPendingId === null)
+      return
+    service.activationTimer.stop()
+    let succeeded = exitCode === 0 && exitStatus === 0
+    const command = service.windowFocus.command[2]
+    if (succeeded && command === "i3-msg") {
+      try {
+        const results = JSON.parse(service.activationOutput)
+        succeeded = Array.isArray(results) && results.length > 0 && results.every(result => result.success === true)
+      } catch (error) { succeeded = false }
+    } else if (succeeded && command === "hyprctl") {
+      succeeded = service.activationOutput.trim() === "ok"
+    }
+    service.activationErrorId = service.activationPendingId
+    service.activationPendingId = null
+    service.activationError = succeeded ? "" : "Could not open the application. It may no longer be running."
   }
 
   function isGithubReview(record) {
@@ -622,9 +690,7 @@ QtObject {
     if (!service.isGithubReview(record))
       return false
 
-    service.windowFocus.command = ["xdg-open", record.githubReviewUrl]
-    service.windowFocus.startDetached()
-    return true
+    return service.launchActivation(record, ["xdg-open", record.githubReviewUrl])
   }
 
   function focusRecord(record) {
@@ -632,9 +698,7 @@ QtObject {
     if (command.length === 0)
       return false
 
-    service.windowFocus.command = command
-    service.windowFocus.startDetached()
-    return true
+    return service.launchActivation(record, command)
   }
 
   function focusCommand(record) {

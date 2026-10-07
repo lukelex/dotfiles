@@ -305,15 +305,16 @@ test('expired notifications focus an existing matching window instead of relaunc
     ['hyprctl', 'dispatch', 'focuswindow', 'title:^(.*Microsoft Teams.*)$']);
 });
 
-test('live notifications focus their sender before invoking its default action', () => {
+test('live notifications invoke their default action without a competing focus fallback', () => {
   const events = [];
   const service = {
+    activationPendingId: null,
     live: { 1: { actions: [{ identifier: 'default', invoke: () => events.push('action') }] } },
     history: [{ id: 1 }],
     focusRecord: () => events.push('focus'),
   };
   assert.equal(activateRecord(service, 1), true);
-  assert.deepEqual(events, ['focus', 'action']);
+  assert.deepEqual(events, ['action']);
 });
 
 test('notification action buttons focus their sender before invoking the action', () => {

@@ -15,6 +15,7 @@ function serviceForTest() {
     liveDeadlines: {},
     liveRevision: 0,
     historyLimit: 100,
+    activationPendingId: null,
     tagMap: {},
     hovered: {},
     popupLimit: 5,
@@ -26,7 +27,7 @@ function serviceForTest() {
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
   const context = vm.createContext({ service, Date });
-  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource']) {
+  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -279,4 +280,37 @@ test('native closure updates observers and a stale closure cannot release a repl
   assert.equal(service.tagMap.tag, undefined);
   assert.equal(service.liveDeadlines[1], undefined);
   assert.equal(service.liveRevision, 1);
+});
+
+test('failed and unavailable activation retain notification history', () => {
+  const { service } = serviceForTest();
+  service.history = [record(1)];
+  service.focusRecord = () => false;
+  assert.equal(service.activateRecord(1), false);
+  assert.match(service.activationError, /No application/);
+  service.live[1] = { actions: [{ identifier: 'default', invoke() { throw Error('closed'); } }] };
+  assert.equal(service.activateRecord(1), false);
+  assert.match(service.activationError, /no longer available/);
+  assert.equal(service.history.length, 1);
+});
+
+test('opening commands reject duplicate requests and report backend failure, including i3 success=false', () => {
+  const { service } = serviceForTest();
+  service.windowFocus = {};
+  service.activationTimer = { restart() {}, stop() {} };
+  assert.equal(service.launchActivation(record(1), ['i3-msg', 'focus']), true);
+  assert.equal(service.launchActivation(record(2), ['xdg-open', 'https://github.com/test']), false);
+  assert.equal(service.activationPendingId, 1);
+  service.activationOutput = '[{"success":false}]';
+  service.finishActivation(0, 0);
+  assert.equal(service.activationPendingId, null);
+  assert.equal(service.activationErrorId, 1);
+  assert.match(service.activationError, /Could not open/);
+  service.launchActivation(record(2), ['hyprctl', 'dispatch', 'focuswindow', 'class:App']);
+  service.activationOutput = 'ok\n';
+  service.finishActivation(0, 0);
+  assert.equal(service.activationError, '');
+  service.launchActivation(record(3), ['xdg-open', 'https://github.com/test']);
+  service.finishActivation(124, 0);
+  assert.match(service.activationError, /Could not open/);
 });

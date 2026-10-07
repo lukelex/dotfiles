@@ -103,3 +103,14 @@ test('notification IPC toggle routes to the focused monitor instead of the last 
   vm.runInNewContext(`(${match[0]})`, { root })();
   assert.equal(toggled, 1);
 });
+
+test('opening a history card never implicitly dismisses its text', () => {
+  const calls = [];
+  const card = { record: { id: 1 }, dismissing: false, service: {
+    activateRecord: id => { calls.push(id); return false; },
+    dismissRecord() { assert.fail('Open must retain history'); },
+  } };
+  const match = source.match(/    function activate\([^]*?\n    \}/);
+  vm.runInNewContext(`(${match[0]})`, { card })();
+  assert.deepEqual(calls, [1]);
+});

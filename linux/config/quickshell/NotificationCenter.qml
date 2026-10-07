@@ -156,6 +156,9 @@ PopupWindow {
     readonly property real contentHeight: textColumn.height + 24
 
     property bool dismissing: false
+    property bool expanded: false
+    property bool copied: false
+    readonly property bool canExpand: expanded || summaryLabel.truncated || bodyLabel.truncated
     property real bellAngle: 0
     property bool groupDismissing: false
     property int groupDismissDelay: 0
@@ -217,13 +220,13 @@ PopupWindow {
     MouseArea {
       anchors.fill: parent
       acceptedButtons: Qt.LeftButton | Qt.RightButton
-      cursorShape: Qt.PointingHandCursor
+      cursorShape: card.canExpand ? Qt.PointingHandCursor : Qt.ArrowCursor
       hoverEnabled: true
       onClicked: mouse => {
         if (mouse.button === Qt.RightButton)
           card.startDismiss()
-        else
-          card.activate()
+        else if (card.canExpand)
+          card.expanded = !card.expanded
       }
     }
 
@@ -324,28 +327,76 @@ PopupWindow {
         }
 
         Text {
+          id: summaryLabel
           color: card.controller.controlPrimaryText
           elide: Text.ElideRight
           font.family: card.controller.fontFamily
           font.pixelSize: 12
           text: card.record.summary
+          textFormat: Text.PlainText
+          wrapMode: Text.Wrap
+          maximumLineCount: card.expanded ? 2147483647 : 1
           width: parent.width
         }
 
         Text {
+          id: bodyLabel
           color: card.controller.controlSecondaryText
           elide: Text.ElideRight
           font.family: card.controller.fontFamily
           font.pixelSize: 11
-          maximumLineCount: 2
+          maximumLineCount: card.expanded ? 2147483647 : 2
           text: card.body
+          textFormat: Text.PlainText
           visible: card.body.length > 0
           width: parent.width
           wrapMode: Text.Wrap
         }
 
-        Row {
-          height: 26
+        Flow {
+          width: parent.width
+          spacing: 6
+
+          DismissButton {
+            label: card.expanded ? "Show less" : "Show more"
+            description: card.expanded ? "Collapse notification text" : "Read full notification"
+            visible: card.canExpand
+            emphasized: true
+            onClicked: card.expanded = !card.expanded
+          }
+
+          DismissButton {
+            label: card.copied ? "Copied" : "Copy"
+            description: "Copy notification text"
+            onClicked: {
+              Quickshell.clipboardText = card.record.summary + (card.body ? "\n" + card.body : "")
+              card.copied = true
+              copyFeedback.restart()
+            }
+          }
+
+          DismissButton {
+            label: card.service.activationPendingId === card.record.id ? "Opening…" : "Open"
+            description: "Open notification in its application"
+            visible: card.service.canActivate(card.record)
+            enabled: card.service.activationPendingId === null && !card.dismissing
+            emphasized: true
+            onClicked: card.activate()
+          }
+        }
+
+        Text {
+          width: parent.width
+          visible: card.service.activationErrorId === card.record.id && text.length > 0
+          text: card.service.activationError
+          textFormat: Text.PlainText
+          wrapMode: Text.Wrap
+          color: card.controller.urgent
+          font.family: card.controller.fontFamily
+          font.pixelSize: 11
+        }
+
+        Flow {
           spacing: 8
           visible: card.isLive && card.record.actions.length > 0
           width: parent.width
@@ -359,8 +410,8 @@ PopupWindow {
               required property var modelData
               required property int index
 
-              height: 26
-              width: buttonLabel.implicitWidth + 20
+              height: Math.max(28, buttonLabel.implicitHeight + 12)
+              width: Math.min(textColumn.width, buttonLabel.implicitWidth + 20)
 
               Rectangle {
                 anchors.fill: parent
@@ -372,6 +423,9 @@ PopupWindow {
                 id: buttonLabel
 
                 anchors.centerIn: parent
+                width: parent.width - 20
+                wrapMode: Text.Wrap
+                textFormat: Text.PlainText
                 color: card.controller.controlPrimaryText
                 font.family: card.controller.fontFamily
                 font.pixelSize: 11
@@ -440,7 +494,12 @@ PopupWindow {
       if (card.dismissing)
         return
       card.service.activateRecord(card.record.id)
-      card.service.dismissRecord(card.record.id)
+    }
+
+    Timer {
+      id: copyFeedback
+      interval: 1500
+      onTriggered: card.copied = false
     }
 
     onGroupDismissingChanged: {
