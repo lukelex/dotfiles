@@ -16,6 +16,14 @@ QtObject {
   property bool pending: false
   property bool requestedConnected: false
   property string requestedLocation: ""
+  property string selectedLocation: ""
+  property bool destinationEdited: false
+  readonly property var locationOptions: {
+    const values = [""].concat(service.locations)
+    if (service.selectedLocation && values.indexOf(service.selectedLocation) < 0)
+      values.push(service.selectedLocation)
+    return values.map(value => ({ value: value, label: value ? value.replace(/_/g, " ") : "Recommended" }))
+  }
   property int generation: 0
   readonly property bool connected: state === "connected"
   readonly property bool busy: pending || action.running || state === "connecting" || state === "disconnecting"
@@ -63,6 +71,13 @@ QtObject {
       countries.running = true
   }
 
+  function selectLocation(location) {
+    if (service.busy)
+      return
+    service.selectedLocation = location
+    service.destinationEdited = true
+  }
+
   function applyStatus(text, exitCode, requestGeneration) {
     if (requestGeneration !== service.generation)
       return
@@ -87,15 +102,18 @@ QtObject {
         && (!service.requestedConnected || !service.requestedLocation
           || service.country.toLowerCase().replace(/_/g, " ") === service.requestedLocation.toLowerCase().replace(/_/g, " "))) {
       service.pending = false
+      service.destinationEdited = false
       confirmationTimeout.stop()
     }
+    if (!service.pending && !service.destinationEdited && service.connected)
+      service.selectedLocation = service.country.replace(/\s+/g, "_")
   }
 
   function toggle() {
     if (service.connected)
       service.startRequest(false, "")
     else
-      service.connectLocation("")
+      service.connectLocation(service.selectedLocation)
   }
 
   function connectLocation(location) {
@@ -190,6 +208,7 @@ QtObject {
       }
       service.locations = service.clean(countriesOutput.text).split("\n").map(location => location.trim())
         .filter(location => /^[A-Za-z][A-Za-z _-]*$/.test(location) && location !== "Available countries")
+        .map(location => location.replace(/\s+/g, "_"))
       service.locationsError = service.locations.length ? "" : "No VPN locations were returned."
     }
   }

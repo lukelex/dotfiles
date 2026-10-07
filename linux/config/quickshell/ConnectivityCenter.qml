@@ -603,26 +603,45 @@ Scope {
         width: parent.width
         height: visible ? 32 : 0
         spacing: 10
-        visible: popup.controller.vpnService.installed && popup.controller.vpnService.connected
+        visible: popup.controller.vpnService.installed
 
         Label {
           anchors.verticalCenter: parent.verticalCenter
-          text: "Location"
-          width: 64
+          text: "Destination"
+          width: 80
         }
 
         ComboBox {
           id: vpnLocations
 
           anchors.verticalCenter: parent.verticalCenter
-          enabled: !popup.controller.vpnService.busy && popup.controller.vpnService.locations.length > 0
+          enabled: !popup.controller.vpnService.busy
           font.family: popup.controller.fontFamily
           font.pixelSize: 11
-          model: ["Recommended"].concat(popup.controller.vpnService.locations)
-          width: parent.width - 74
+          model: popup.controller.vpnService.locationOptions
+          textRole: "label"
+          valueRole: "value"
+          currentIndex: popup.controller.vpnService.locationOptions.findIndex(option => option.value === popup.controller.vpnService.selectedLocation)
+          width: parent.width - 90 - (applyVpnLocation.visible ? applyVpnLocation.width + 10 : 0)
+          Accessible.name: "VPN destination"
           onActivated: function(index) {
-            popup.requestOpen()
-            popup.controller.vpnService.connectLocation(index === 0 ? "" : currentText)
+            popup.requestOpen(true)
+            popup.controller.vpnService.selectLocation(model[index].value)
+          }
+        }
+
+        Action {
+          id: applyVpnLocation
+          anchors.verticalCenter: parent.verticalCenter
+          width: 64
+          height: 32
+          title: "Apply"
+          visible: popup.controller.vpnService.connected && popup.controller.vpnService.destinationEdited
+          enabled: !popup.controller.vpnService.busy
+          Accessible.name: "Connect to selected VPN destination"
+          onActivated: {
+            popup.requestOpen(true)
+            popup.controller.vpnService.connectLocation(popup.controller.vpnService.selectedLocation)
           }
         }
       }

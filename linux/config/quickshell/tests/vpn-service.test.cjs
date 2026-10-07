@@ -7,7 +7,7 @@ const source = fs.readFileSync(path.join(__dirname, '../VpnService.qml'), 'utf8'
 
 function setup() {
   const service = { installed: true, state: 'disconnected', pending: false, generation: 0,
-    error: '', statusError: '', location: '', country: '', locations: [] };
+    error: '', statusError: '', location: '', country: '', locations: [], selectedLocation: '', destinationEdited: false };
   const action = { running: false, command: [] };
   const status = { running: false };
   const confirmationTimeout = { running: false, restart() { this.running = true; }, stop() { this.running = false; } };
@@ -81,4 +81,27 @@ test('VPN disconnect also requires backend confirmation', () => {
   assert.equal(service.pending, true);
   service.applyStatus('Status: Disconnected', 0, service.generation);
   assert.equal(service.pending, false);
+});
+
+test('destination is selectable before connecting and fresh status preserves an unapplied choice', () => {
+  const { service, action } = setup();
+  service.selectLocation('Sweden');
+  assert.equal(action.running, false);
+  service.applyStatus('Status: Disconnected', 0, 0);
+  assert.equal(service.selectedLocation, 'Sweden');
+  service.toggle();
+  assert.equal(action.command.at(-1), 'Sweden');
+  action.running = false;
+  service.finishAction(0, '');
+  service.applyStatus('Status: Connected\nCountry: Sweden', 0, service.generation);
+  assert.equal(service.destinationEdited, false);
+  service.selectLocation('United_States');
+  service.applyStatus('Status: Connected\nCountry: Sweden', 0, service.generation);
+  assert.equal(service.selectedLocation, 'United_States');
+});
+
+test('fresh VPN state reflects active country when there is no unapplied destination', () => {
+  const { service } = setup();
+  service.applyStatus('Status: Connected\nCountry: United States', 0, 0);
+  assert.equal(service.selectedLocation, 'United_States');
 });
