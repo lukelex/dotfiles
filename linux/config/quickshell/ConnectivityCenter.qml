@@ -613,6 +613,18 @@ Scope {
 
       Action {
         width: parent.width
+        title: "Add Wi-Fi network…"
+        iconName: "wifi"
+        detail: "Create a Wi-Fi profile in Network settings. Enter the network name and security credentials, then save. In-range profiles appear in Saved networks."
+        enabled: popup.service.wifiAvailable
+        onActivated: {
+          popup.requestClose(true)
+          Quickshell.execDetached(["nm-connection-editor", "--create", "--type=802-11-wireless"])
+        }
+      }
+
+      Action {
+        width: parent.width
         title: "NordVPN"
         iconName: "globe"
         radioSwitch: true
@@ -793,7 +805,7 @@ Scope {
         spacing: 10
         Action {
           width: (parent.width - parent.spacing) / 2
-          title: "Wi-Fi settings"
+          title: "Network settings"
           iconName: "settings"
           onActivated: {
             popup.requestClose(true)
