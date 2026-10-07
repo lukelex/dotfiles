@@ -477,7 +477,7 @@ PopupWindow {
             Text {
               width: parent.width
               visible: text !== ""
-              text: popup.controller.audioControlError
+              text: [popup.controller.audioControlError, popup.controller.audioService.microphoneMuteError].filter(message => message).join("\n")
               textFormat: Text.PlainText
               wrapMode: Text.Wrap
               color: popup.controller.urgent
@@ -505,7 +505,7 @@ PopupWindow {
               controller: popup.controller
               enabled: popup.controller.microphoneAvailable
               title: !popup.controller.microphoneAvailable ? "Microphone unavailable"
-                : popup.controller.microphoneMuted ? "Microphone / muted" : "Microphone"
+                : popup.controller.microphoneMuted ? "Selected mic / muted" : "Selected microphone"
               iconName: popup.controller.microphoneMuted ? "mic-off" : "mic"
               toggleTitle: popup.controller.microphoneMuted ? "Unmute" : "Mute"
               toggleIcon: "mic-off"

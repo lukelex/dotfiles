@@ -105,7 +105,7 @@ for (const microphone of [false, true]) {
 test('native default-device changes refresh the audio picker immediately when open', () => {
   assert.match(serviceSource, /import Quickshell\.Services\.Pipewire/);
   assert.match(serviceSource, /function onDefaultAudioSinkChanged\(\) \{\n\s+if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
-  assert.match(serviceSource, /function onDefaultAudioSourceChanged\(\) \{\n\s+if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
+  assert.match(serviceSource, /function onDefaultAudioSourceChanged\(\) \{[^}]*if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
 });
 
 function serviceState(overrides = {}) {
@@ -120,6 +120,7 @@ function serviceState(overrides = {}) {
     loaded: false,
     _readSucceeded: false,
     _selectionWarning: '',
+    microphoneNodes: [],
     outputSelectionTimeout: { stop() {}, restart() {} },
     inputSelectionTimeout: { stop() {}, restart() {} },
     outputIcon: loadFunction('outputIcon', {}),
@@ -283,7 +284,7 @@ test('source selection validates devices and tracks pending state', () => {
   const process = { running: false };
   const timeout = { restart() { this.restarted = true; }, stop() {} };
   service.inputSelectionTimeout = timeout;
-  const setDefaultSource = loadFunction('setDefaultSource', { service, setInputProcess: process });
+  const setDefaultSource = loadFunction('setDefaultSource', { service, setInputProcess: process, muteIntent: { initialized: false } });
 
   setDefaultSource('missing');
   setDefaultSource('mic-internal');

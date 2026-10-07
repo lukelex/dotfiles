@@ -349,7 +349,7 @@ Scope {
     root.microphoneFeedbackNode = node
     root.microphoneFeedbackMute = node.audio.muted ? 0 : 1
     microphoneFeedbackTimeout.restart()
-    node.audio.muted = root.microphoneFeedbackMute === 1
+    root.audioService.setMicrophoneMuted(root.microphoneFeedbackMute === 1)
     root.confirmAudioAdjustment(true)
   }
 

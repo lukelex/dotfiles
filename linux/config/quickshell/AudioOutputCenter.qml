@@ -538,6 +538,49 @@ Scope {
           }
 
           Item {
+            id: muteAllButton
+            width: parent.width
+            height: 36
+            enabled: popup.service.microphoneNodes.length > 0
+            activeFocusOnTab: popup.pinned && enabled
+            Accessible.role: Accessible.Button
+            Accessible.name: "Mute all microphones"
+            Accessible.onPressAction: popup.service.muteAllMicrophones()
+            Keys.onReturnPressed: popup.service.muteAllMicrophones()
+            Keys.onSpacePressed: popup.service.muteAllMicrophones()
+            Rectangle {
+              anchors.fill: parent
+              radius: 10
+              color: muteAllArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+              border.width: muteAllButton.activeFocus ? 2 : 1
+              border.color: muteAllButton.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
+            }
+            Label {
+              anchors.centerIn: parent
+              text: popup.service.allMicrophonesMuted ? "Mute all microphones · Active" : "Mute all microphones"
+              color: popup.controller.controlPrimaryText
+            }
+            MouseArea {
+              id: muteAllArea
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              hoverEnabled: true
+              onClicked: {
+                popup.requestOpen(true)
+                popup.service.muteAllMicrophones()
+              }
+            }
+          }
+
+          Label {
+            width: parent.width
+            text: popup.service.microphoneMuteError || "Unmuting the selected microphone releases all-input muting."
+            color: popup.service.microphoneMuteError ? popup.controller.urgent : popup.controller.controlSecondaryText
+            wrapMode: Text.Wrap
+            elide: Text.ElideNone
+          }
+
+          Item {
             id: advancedButton
             width: parent.width
             height: 36

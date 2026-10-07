@@ -26,6 +26,133 @@ QtObject {
   readonly property bool busy: pendingSink !== "" || pendingSource !== ""
     || setOutputProcess.running || _settingInput
   property bool _settingInput: false
+  readonly property var microphoneNodes: Pipewire.nodes.values.filter(node => node.type === PwNodeType.AudioSource)
+  readonly property bool allMicrophonesMuted: muteIntent.allInputs
+  property string microphoneMuteError: ""
+  property bool _muteIntentReady: false
+  property var _muteSource: null
+  property bool _mutePending: false
+
+  property PersistentProperties muteIntent: PersistentProperties {
+    reloadableId: "audioMicrophoneMuteIntent"
+    property bool initialized: false
+    property bool muted: false
+    property bool allInputs: false
+    onLoaded: {
+      service._muteIntentReady = true
+      service.syncMicrophoneMute()
+    }
+  }
+
+  property PwObjectTracker microphoneTracker: PwObjectTracker {
+    objects: service.microphoneNodes
+  }
+
+  property Variants microphoneWatchers: Variants {
+    model: service.microphoneNodes
+    delegate: QtObject {
+      required property var modelData
+      property Connections readiness: Connections {
+        target: modelData
+        function onReadyChanged() { service.syncMicrophoneMute() }
+      }
+      property Connections muteChanges: Connections {
+        target: modelData.ready ? modelData.audio : null
+        function onMutedChanged() { service.observeMicrophoneMute(modelData) }
+      }
+    }
+  }
+
+  function syncMicrophoneMute() {
+    if (!service._muteIntentReady)
+      return
+    const node = Pipewire.defaultAudioSource
+    if (node && node.ready && node.audio && node !== service._muteSource) {
+      if (!muteIntent.initialized) {
+        muteIntent.muted = node.audio.muted
+        muteIntent.initialized = true
+      }
+      service._muteSource = node
+      service._mutePending = node.audio.muted !== muteIntent.muted
+      if (service._mutePending) {
+        muteConfirmationTimeout.restart()
+        node.audio.muted = muteIntent.muted
+      }
+    }
+    if (muteIntent.allInputs) {
+      for (const input of service.microphoneNodes) {
+        if (input.ready && input.audio && !input.audio.muted) {
+          muteConfirmationTimeout.restart()
+          input.audio.muted = true
+        }
+      }
+    }
+  }
+
+  function observeMicrophoneMute(node) {
+    if (!service._muteIntentReady || !node.ready || !node.audio)
+      return
+    if (node === service._muteSource) {
+      if (service._mutePending && node.audio.muted !== muteIntent.muted)
+        return
+      service._mutePending = false
+      muteIntent.muted = node.audio.muted
+      muteIntent.initialized = true
+      if (!node.audio.muted)
+        muteIntent.allInputs = false
+    } else if (muteIntent.allInputs && !node.audio.muted) {
+      muteConfirmationTimeout.restart()
+      node.audio.muted = true
+    }
+    service.confirmMicrophoneMute()
+  }
+
+  function setMicrophoneMuted(muted) {
+    const node = Pipewire.defaultAudioSource
+    if (!service._muteIntentReady || !node || !node.ready || !node.audio)
+      return
+    service.microphoneMuteError = ""
+    muteIntent.initialized = true
+    muteIntent.muted = muted
+    if (!muted)
+      muteIntent.allInputs = false
+    service._muteSource = node
+    service._mutePending = node.audio.muted !== muted
+    muteConfirmationTimeout.restart()
+    node.audio.muted = muted
+    service.confirmMicrophoneMute()
+  }
+
+  function muteAllMicrophones() {
+    if (!service._muteIntentReady || service.microphoneNodes.length === 0)
+      return
+    service.microphoneMuteError = ""
+    muteIntent.initialized = true
+    muteIntent.muted = true
+    muteIntent.allInputs = true
+    service.setMicrophoneMuted(true)
+    service.syncMicrophoneMute()
+    muteConfirmationTimeout.restart()
+    service.confirmMicrophoneMute()
+  }
+
+  function confirmMicrophoneMute() {
+    if (service._mutePending)
+      return
+    if (muteIntent.allInputs && service.microphoneNodes.some(node => !node.ready || !node.audio || !node.audio.muted))
+      return
+    service.microphoneMuteError = ""
+    muteConfirmationTimeout.stop()
+  }
+
+  property Timer muteConfirmationTimeout: Timer {
+    interval: 1500
+    onTriggered: {
+      service.microphoneMuteError = muteIntent.allInputs
+        ? "Could not confirm that all microphones are muted."
+        : "Could not carry the microphone mute state to the selected input."
+    }
+  }
 
   function refresh(force = false) {
     if (service.loading) {
@@ -255,6 +382,10 @@ QtObject {
       return
 
     service.error = ""
+    // Apply the intent before migrating recording streams to an existing input.
+    const node = service.microphoneNodes.find(input => input.name === name)
+    if (muteIntent.initialized && node && node.ready && node.audio)
+      node.audio.muted = muteIntent.muted
     service._requestedSource = name
     service._selectionWarning = ""
     service.pendingSource = name
@@ -350,6 +481,7 @@ QtObject {
   property Connections nodeConnections: Connections {
     target: Pipewire.nodes
     function onValuesChanged() {
+      service.syncMicrophoneMute()
       if (service.activePanels > 0)
         queuedRefresh.restart()
     }
@@ -362,6 +494,9 @@ QtObject {
         service.refresh(true)
     }
     function onDefaultAudioSourceChanged() {
+      service._muteSource = null
+      service._mutePending = false
+      service.syncMicrophoneMute()
       if (service.activePanels > 0)
         service.refresh(true)
     }
