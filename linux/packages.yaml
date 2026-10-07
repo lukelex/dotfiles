@@ -50,6 +50,7 @@ profiles:
     packages:
       desktop:
         1password:
+        alsa-utils:
         avahi:
           services:
             system:
@@ -158,6 +159,7 @@ profiles:
               - usb-notify.service
         unrar:
         unzip:
+        usbutils:
         v4l-utils:
           groups:
             - video
