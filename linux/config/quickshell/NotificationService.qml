@@ -15,6 +15,7 @@ QtObject {
   property var popup: []
   property var popupReversed: []
   property var live: ({})
+  property var liveDeadlines: ({})
   property var osd: null
   property var tagMap: ({})
   property var hovered: ({})
@@ -195,6 +196,7 @@ QtObject {
       const previous = service.tagMap[tag]
       delete service.tagMap[tag]
       delete service.live[previous.id]
+      delete service.liveDeadlines[previous.id]
       previous.expire()
     }
 
@@ -205,8 +207,10 @@ QtObject {
 
     const id = notification.id
     notification.closed.connect(() => {
-      if (service.live[id] === notification)
+      if (service.live[id] === notification) {
         delete service.live[id]
+        delete service.liveDeadlines[id]
+      }
       if (tag && service.tagMap[tag] === notification)
         delete service.tagMap[tag]
       delete service.hovered[id]
@@ -220,6 +224,7 @@ QtObject {
       return
     }
 
+    service.liveDeadlines[record.id] = record.expiresAt
     service.addHistory(record)
     if (service.doNotDisturb)
       return
@@ -344,16 +349,17 @@ QtObject {
 
   function expireDue() {
     let changed = false
-    for (let index = service.popup.length - 1; index >= 0; index--) {
-      const record = service.popup[index]
-      if (record.expiresAt === 0 || record.expiresAt > service.now || service.hovered[record.id])
+    for (const id of Object.keys(service.liveDeadlines)) {
+      const deadline = service.liveDeadlines[id]
+      if (deadline === 0 || deadline > service.now || service.hovered[id])
         continue
       changed = true
-      const notification = service.live[record.id]
+      const notification = service.live[id]
+      delete service.liveDeadlines[id]
       if (notification)
         notification.expire()
-      delete service.live[record.id]
-      delete service.hovered[record.id]
+      delete service.live[id]
+      delete service.hovered[id]
     }
     if (changed)
       service.syncPopup()
@@ -427,6 +433,7 @@ QtObject {
     if (notification)
       notification.dismiss()
     delete service.live[id]
+    delete service.liveDeadlines[id]
     delete service.hovered[id]
     if (service.osd && service.osd.id === id) {
       service.osdTimer.stop()
@@ -453,6 +460,7 @@ QtObject {
       if (notification)
         notification.dismiss()
       delete service.live[record.id]
+      delete service.liveDeadlines[record.id]
       delete service.hovered[record.id]
     }
 
@@ -476,6 +484,7 @@ QtObject {
       delete service.hovered[id]
     }
     service.live = {}
+    service.liveDeadlines = {}
     service.tagMap = {}
     service.history = []
     service.historyGroups = []
@@ -495,6 +504,7 @@ QtObject {
       delete service.hovered[id]
     }
     service.live = {}
+    service.liveDeadlines = {}
     service.tagMap = {}
     service.osdTimer.stop()
     service.osd = null

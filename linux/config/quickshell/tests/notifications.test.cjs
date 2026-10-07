@@ -12,6 +12,7 @@ function serviceForTest() {
     history: [],
     popup: [],
     live: {},
+    liveDeadlines: {},
     tagMap: {},
     hovered: {},
     popupLimit: 5,
@@ -21,7 +22,7 @@ function serviceForTest() {
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
   const context = vm.createContext({ service, Date });
-  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag']) {
+  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -163,6 +164,27 @@ test('already animated dismissal still reconciles service state', () => {
   assert.equal(service.popup.length, 0);
   assert.equal(service.popupReversed.length, 0);
   assert.deepEqual(removed, []);
+});
+
+test('expiry covers hidden and trimmed notifications while preserving hover and persistent deadlines', () => {
+  const { service } = serviceForTest();
+  const expired = [];
+  service.now = Date.now();
+  service.doNotDisturb = true;
+  // No popup or history entries: lifetime must not depend on either list.
+  for (const id of [1, 2, 3, 4]) {
+    service.live[id] = { expire: () => expired.push(id) };
+    service.liveDeadlines[id] = service.now - 1;
+  }
+  service.liveDeadlines[3] = 0;
+  service.hovered[4] = true;
+  service.expireDue();
+  assert.deepEqual(expired, [1, 2]);
+  assert.deepEqual(Object.keys(service.live), ['3', '4']);
+  delete service.hovered[4];
+  service.expireDue();
+  assert.deepEqual(expired, [1, 2, 4]);
+  assert.deepEqual(Object.keys(service.liveDeadlines), ['3']);
 });
 
 test('DND suppression survives reconciliation and does not dismiss native actions or OSDs', () => {
