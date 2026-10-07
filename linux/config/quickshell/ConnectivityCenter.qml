@@ -25,7 +25,8 @@ Scope {
   signal shown()
   onShown: {
     popup.controller.refreshControlStatus()
-    popup.controller.refreshVpnLocations()
+    popup.controller.vpnService.refresh()
+    popup.controller.vpnService.refreshLocations()
   }
 
   function openPinned(request) {
@@ -571,22 +572,38 @@ Scope {
         title: "NordVPN"
         iconName: "globe"
         radioSwitch: true
-        active: popup.controller.vpnConnected
-        enabled: popup.controller.nordVpnInstalled && !popup.controller.vpnBusy
-        subtitle: !popup.controller.nordVpnInstalled ? "Not installed"
-          : popup.controller.vpnBusy ? "Updating connection..."
-          : popup.controller.vpnConnected ? "Connected / " + (popup.controller.vpnLocation || "Location unavailable") : "Disconnected"
+        active: popup.controller.vpnService.connected
+        enabled: popup.controller.vpnService.installed && !popup.controller.vpnService.busy
+          && popup.controller.vpnService.statusKnown
+        subtitle: popup.controller.vpnService.statusText
         onActivated: {
           popup.requestOpen()
-          popup.controller.toggleVpn()
+          popup.controller.vpnService.toggle()
         }
+      }
+
+      Label {
+        width: parent.width
+        visible: text !== ""
+        text: popup.controller.vpnService.error || popup.controller.vpnService.statusError || popup.controller.vpnService.locationsError
+        color: popup.controller.urgent
+        elide: Text.ElideNone
+        wrapMode: Text.Wrap
+      }
+
+      Action {
+        width: parent.width
+        title: "Refresh VPN status"
+        visible: popup.controller.vpnService.installed && !popup.controller.vpnService.statusKnown
+        height: visible ? 40 : 0
+        onActivated: popup.controller.vpnService.refresh()
       }
 
       Row {
         width: parent.width
         height: visible ? 32 : 0
         spacing: 10
-        visible: popup.controller.nordVpnInstalled && popup.controller.vpnConnected
+        visible: popup.controller.vpnService.installed && popup.controller.vpnService.connected
 
         Label {
           anchors.verticalCenter: parent.verticalCenter
@@ -598,14 +615,14 @@ Scope {
           id: vpnLocations
 
           anchors.verticalCenter: parent.verticalCenter
-          enabled: !popup.controller.vpnBusy && popup.controller.vpnLocations.length > 0
+          enabled: !popup.controller.vpnService.busy && popup.controller.vpnService.locations.length > 0
           font.family: popup.controller.fontFamily
           font.pixelSize: 11
-          model: ["Recommended"].concat(popup.controller.vpnLocations)
+          model: ["Recommended"].concat(popup.controller.vpnService.locations)
           width: parent.width - 74
           onActivated: function(index) {
             popup.requestOpen()
-            popup.controller.connectVpn(index === 0 ? "" : currentText)
+            popup.controller.vpnService.connectLocation(index === 0 ? "" : currentText)
           }
         }
       }

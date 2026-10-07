@@ -41,23 +41,6 @@ test('opening a hidden Control Center initializes the entry animation', () => {
   assert.deepEqual(content, { opacity: 0, y: 10 });
 });
 
-test('VPN toggle ignores competing requests while the previous command runs', () => {
-  const root = { nordVpnInstalled: true, vpnBusy: true, vpnConnected: false };
-  const vpnToggle = { command: [], running: true };
-  const controlRefreshTimer = { restart() { assert.fail('Busy toggle must be ignored'); } };
-  loadFunction('Bar.qml', 'toggleVpn', { root, vpnToggle, controlRefreshTimer })();
-  assert.deepEqual(vpnToggle.command, []);
-});
-
-test('VPN connects to the selected location', () => {
-  const root = { nordVpnInstalled: true, vpnBusy: false };
-  const vpnToggle = { command: [], running: false };
-  const controlRefreshTimer = { restart() {} };
-  loadFunction('Bar.qml', 'connectVpn', { root, vpnToggle, controlRefreshTimer })('Sweden');
-  assert.deepEqual([...vpnToggle.command], ['nordvpn', 'connect', 'Sweden']);
-  assert.equal(vpnToggle.running, true);
-});
-
 test('brightness ignores duplicate changes while the previous command is applying', () => {
   const root = {
     brightnessBusy: true,

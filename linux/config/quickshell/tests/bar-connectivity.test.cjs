@@ -122,7 +122,7 @@ test('battery icon reserves critical for 0–14% and full for 90–100%', () => 
     /color: popup\.controller\.batteryAvailable && popup\.controller\.batteryPercentage < 15/);
 });
 
-test('NordVPN status exposes its active location', () => {
-  assert.match(source, /property string vpnLocation: ""/);
-  assert.match(source, /root\.vpnLocation = output\[4\] \|\| ""/);
+test('VPN lifecycle is independent of local control status polling', () => {
+  assert.match(source, /readonly property VpnService vpnService: VpnService/);
+  assert.doesNotMatch(source, /nordvpn status|vpn_status/);
 });
