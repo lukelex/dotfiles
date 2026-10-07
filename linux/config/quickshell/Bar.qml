@@ -122,7 +122,7 @@ Scope {
   required property var notificationService
   required property var githubPrService
   required property var audioService
-  property bool notificationCenterOpen: false
+  readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
   property bool githubReviewCenterOpen: false
   property var controlCenterTarget: null
   property var notificationCenterTarget: null
@@ -558,20 +558,14 @@ Scope {
   }
 
   function openNotificationCenter() {
-    if (root.notificationCenterTarget === null)
-      return
+    const panel = root.focusedPanel()
+    if (panel)
+      panel.toggleNotifications()
+  }
 
-    root.cancelHoverClose()
-    root.closeConnectivity()
-    root.closeDateTime()
-    root.closeGitHubReviewCenter()
-    root.closeAudioOutput()
-    root.controlCenterTarget.requestClose()
-    if (root.notificationCenterOpen)
+  function closeNotifications() {
+    if (root.notificationCenterTarget)
       root.notificationCenterTarget.requestClose()
-    else
-      root.notificationCenterTarget.requestOpen()
-    root.notificationCenterOpen = !root.notificationCenterOpen
   }
 
   function openGitHubReviewCenter() {
@@ -583,8 +577,7 @@ Scope {
     root.closeDateTime()
     root.closeAudioOutput()
     root.controlCenterTarget.requestClose()
-    root.notificationCenterTarget.requestClose()
-    root.notificationCenterOpen = false
+    root.closeNotifications()
     if (root.githubReviewCenterOpen)
       root.githubReviewCenterTarget.requestClose()
     else
@@ -604,10 +597,7 @@ Scope {
   }
 
   function runHoverClose() {
-    if (root.hoverCloseCandidate === 1) {
-      root.notificationCenterOpen = false
-      root.notificationCenterTarget.requestClose()
-    } else if (root.hoverCloseCandidate === 2) {
+    if (root.hoverCloseCandidate === 2) {
       root.controlCenterTarget.requestClose()
     } else if (root.hoverCloseCandidate === 3) {
       root.closeGitHubReviewCenter()
@@ -1030,6 +1020,26 @@ Scope {
 
       required property var modelData
 
+      function toggleNotifications() {
+        if (notificationCenter.visible && !notificationCenter.closePending)
+          notificationCenter.requestClose()
+        else
+          panel.showNotifications()
+      }
+
+      function showNotifications() {
+        root.cancelHoverClose()
+        if (root.notificationCenterTarget !== notificationCenter)
+          root.closeNotifications()
+        root.notificationCenterTarget = notificationCenter
+        root.closeConnectivity()
+        root.closeAudioOutput()
+        root.closeDateTime()
+        root.closeGitHubReviewCenter()
+        controlCenter.requestClose()
+        notificationCenter.requestOpen()
+      }
+
       function openDateTime(pin = false) {
         root.cancelHoverClose()
         root.closeConnectivity()
@@ -1038,9 +1048,8 @@ Scope {
           root.closeDateTime()
         root.todayCenterTarget = todayCenter
         controlCenter.requestClose()
-        notificationCenter.requestClose()
+        root.closeNotifications()
         root.closeGitHubReviewCenter()
-        root.notificationCenterOpen = false
         todayCenter.requestOpen(pin)
       }
 
@@ -1051,10 +1060,9 @@ Scope {
           root.closeConnectivity()
         root.connectivityTarget = connectivityCenter
         controlCenter.requestClose()
-        notificationCenter.requestClose()
+        root.closeNotifications()
         root.closeGitHubReviewCenter()
         root.closeDateTime()
-        root.notificationCenterOpen = false
         connectivityCenter.requestOpen(pin)
       }
 
@@ -1062,9 +1070,8 @@ Scope {
         root.closeConnectivity()
         root.closeDateTime()
         root.closeAudioOutput()
-        notificationCenter.requestClose()
+        root.closeNotifications()
         root.closeGitHubReviewCenter()
-        root.notificationCenterOpen = false
         controlCenter.requestOpen()
         systemStatus.running = true
         root.cancelHoverClose()
@@ -1075,9 +1082,8 @@ Scope {
         root.closeConnectivity()
         root.closeDateTime()
         controlCenter.requestClose()
-        notificationCenter.requestClose()
+        root.closeNotifications()
         root.closeGitHubReviewCenter()
-        root.notificationCenterOpen = false
         if (root.audioOutputTarget !== audioOutputCenter)
           root.closeAudioOutput()
         root.audioOutputTarget = audioOutputCenter
@@ -1090,8 +1096,7 @@ Scope {
         root.closeDateTime()
         root.closeAudioOutput()
         controlCenter.requestClose()
-        notificationCenter.requestClose()
-        root.notificationCenterOpen = false
+        root.closeNotifications()
         if (root.githubReviewCenterTarget !== githubReviewCenter)
           root.closeGitHubReviewCenter()
         root.githubReviewCenterTarget = githubReviewCenter
@@ -1177,7 +1182,6 @@ Scope {
         root.panelsByScreen[modelData.name] = panel
         if (root.controlCenterTarget === null || (modelData.x === 0 && modelData.y === 0)) {
           root.controlCenterTarget = controlCenter
-          root.notificationCenterTarget = notificationCenter
           root.githubReviewCenterTarget = githubReviewCenter
         }
       }
@@ -1710,16 +1714,9 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: {
-              root.closeConnectivity()
-              root.closeAudioOutput()
-              controlCenter.requestClose()
-              root.closeDateTime()
-              root.closeGitHubReviewCenter()
-              notificationCenter.requestOpen()
-              root.notificationCenterOpen = true
-              root.cancelHoverClose()
+              panel.showNotifications()
             }
-            onExited: root.requestHoverClose(1)
+            onExited: notificationCenter.requestHoverClose()
             onClicked: root.toggleDoNotDisturb()
           }
         }

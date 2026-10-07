@@ -80,3 +80,26 @@ test('group dismissal captures membership before a later arrival', () => {
   queue([{ id: 4 }]);
   assert.deepEqual(Array.from(popup.groupDismissRecords, record => record.id), [1, 2, 4]);
 });
+
+test('hover-close cancellation and open reversal belong to the local notification panel', () => {
+  const popup = { visible: true, closePending: true };
+  const closeAnim = { running: true, stop() { this.running = false; assert.equal(popup.closePending, false); } };
+  const openAnim = { start() { this.started = true; } };
+  const hoverCloseTimer = { running: true, stop() { this.running = false; } };
+  loadFunction('requestOpen', { popup, closeAnim, openAnim, hoverCloseTimer })();
+  assert.equal(hoverCloseTimer.running, false);
+  assert.equal(openAnim.started, true);
+  assert.equal(popup.visible, true);
+});
+
+test('notification IPC toggle routes to the focused monitor instead of the last target', () => {
+  const bar = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
+  let toggled = 0;
+  const root = {
+    focusedPanel: () => ({ toggleNotifications() { toggled++; } }),
+    notificationCenterTarget: { requestOpen() { assert.fail('wrong monitor'); } },
+  };
+  const match = bar.match(/  function openNotificationCenter\([^]*?\n  \}/);
+  vm.runInNewContext(`(${match[0]})`, { root })();
+  assert.equal(toggled, 1);
+});

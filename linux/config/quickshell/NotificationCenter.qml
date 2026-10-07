@@ -890,6 +890,7 @@ PopupWindow {
   }
 
   function requestOpen() {
+    hoverCloseTimer.stop()
     if (popup.visible && !closeAnim.running)
       return
     popup.closePending = false
@@ -903,6 +904,7 @@ PopupWindow {
   }
 
   function requestClose() {
+    hoverCloseTimer.stop()
     if (!popup.visible || closeAnim.running)
       return
     popup.closePending = true
@@ -911,6 +913,16 @@ PopupWindow {
   }
 
   // Soft rise + fade: content slides up into place on open and down on close.
+  function requestHoverClose() {
+    hoverCloseTimer.restart()
+  }
+
+  Timer {
+    id: hoverCloseTimer
+    interval: 250
+    onTriggered: popup.requestClose()
+  }
+
   ParallelAnimation {
     id: openAnim
     OpacityAnimator {
@@ -974,9 +986,9 @@ PopupWindow {
     HoverHandler {
       onHoveredChanged: {
         if (hovered)
-          popup.controller.cancelHoverClose()
+          hoverCloseTimer.stop()
         else
-          popup.controller.requestHoverClose(1)
+          popup.requestHoverClose()
       }
     }
 
