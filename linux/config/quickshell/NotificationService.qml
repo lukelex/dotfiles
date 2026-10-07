@@ -25,6 +25,7 @@ QtObject {
   property var githubSeenIds: ({})
   property int githubSeenRevision: 0
   property var historyGroups: []
+  property int historyGroupSequence: 0
   readonly property var popupGroups: service.groupPopup(service.popupReversed)
   signal popupRecordAdded(var record)
   signal popupRecordRemoved(var id)
@@ -402,6 +403,18 @@ QtObject {
         groups.push({ key: String(record.id), records: [record] })
     }
 
+    const previousKeys = new Map()
+    for (const group of service.historyGroups) {
+      for (const record of group.records)
+        previousKeys.set(record.id, group.key)
+    }
+    const usedKeys = new Set()
+    for (const group of groups) {
+      const survivor = group.records.find(record => previousKeys.has(record.id)
+        && !usedKeys.has(previousKeys.get(record.id)))
+      group.key = survivor ? previousKeys.get(survivor.id) : "history-" + (++service.historyGroupSequence)
+      usedKeys.add(group.key)
+    }
     return groups
   }
 

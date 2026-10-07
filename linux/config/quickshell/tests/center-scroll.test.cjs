@@ -69,3 +69,14 @@ test('Clear all fades each notification group parent with card dismissal timing'
   assert.match(source, /function startClearAllDismissals\(\)[^]*?group\.startClearAllDismiss\(\)/);
   assert.match(source, /popup\.startClearAllDismissals\(\)\s*clearAllAnimation\.start\(\)/);
 });
+
+test('group dismissal captures membership before a later arrival', () => {
+  const popup = { groupDismissRecords: [] };
+  const groupDismissTimer = { restart() {} };
+  const queue = loadFunction('queueGroupDismiss', { popup, groupDismissTimer });
+  const records = [{ id: 1 }, { id: 2 }];
+  queue(records);
+  records.unshift({ id: 3 });
+  queue([{ id: 4 }]);
+  assert.deepEqual(Array.from(popup.groupDismissRecords, record => record.id), [1, 2, 4]);
+});

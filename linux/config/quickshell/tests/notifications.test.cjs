@@ -18,6 +18,8 @@ function serviceForTest() {
     popupLimit: 5,
     popupGroupWindow: 30,
     notificationGroupWindow: 5 * 60,
+    historyGroups: [],
+    historyGroupSequence: 0,
   };
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
@@ -57,6 +59,19 @@ test('grouping stops five minutes after the first notification', () => {
     [301, 300, 270, 240, 210, 180, 150, 120, 90, 60, 30],
     [0],
   ]);
+});
+
+test('history group identity survives arrivals and removal of its newest record', () => {
+  const { service } = serviceForTest();
+  service.historyGroups = service.groupHistory([record(2), record(1)]);
+  const key = service.historyGroups[0].key;
+  service.historyGroups = service.groupHistory([record(3), record(2), record(1)]);
+  assert.equal(service.historyGroups[0].key, key);
+  service.historyGroups = service.groupHistory([record(2), record(1)]);
+  assert.equal(service.historyGroups[0].key, key);
+  // Splitting a former group must not give two delegates the same key.
+  const split = service.groupHistory([record(2), record(9, 'B'), record(1)]);
+  assert.equal(new Set(split.map(group => group.key)).size, 3);
 });
 
 test('live stacks use the same first-record cutoff as popup groups', () => {

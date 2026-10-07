@@ -446,6 +446,10 @@ PopupWindow {
     onGroupDismissingChanged: {
       if (groupDismissing)
         groupDismissAnimation.start()
+      else {
+        groupDismissAnimation.stop()
+        card.groupDismissOffset = 0
+      }
     }
 
     SequentialAnimation {
@@ -516,6 +520,10 @@ PopupWindow {
     Component.onCompleted: syncRecords(notificationGroup.records)
 
     function syncRecords(records) {
+      if (notificationGroup.dismissing && !groupDismissTimer.running) {
+        notificationGroup.dismissing = false
+        notificationGroup.headerDismissOffset = 0
+      }
       popup.reconcileModel(recordModel, records, "notification", "id")
     }
 
@@ -529,13 +537,6 @@ PopupWindow {
             y: item.mapToItem(notificationList, 0, 0).y, height: item.height })
       }
       return entries
-    }
-
-    Timer {
-      id: groupDismissTimer
-
-      interval: 320 + Math.max(0, recordModel.count - 1) * 70
-      onTriggered: notificationGroup.service.dismissRecords(notificationGroup.recordsForDismissal())
     }
 
     NumberAnimation {
@@ -697,7 +698,7 @@ PopupWindow {
 
           controller: notificationGroup.controller
           groupDismissing: notificationGroup.dismissing
-          groupDismissDelay: 60 + Math.max(0, historyCard.index) * 70
+          groupDismissDelay: 60 + Math.min(140, Math.max(0, historyCard.index) * 35)
           groupDismissOffset: 0
           opacity: !notificationGroup.grouped || notificationGroup.expanded ? 1 : 0
           record: notification
@@ -706,7 +707,7 @@ PopupWindow {
 
           Behavior on opacity {
             SequentialAnimation {
-              PauseAnimation { duration: notificationGroup.expanded ? Math.max(0, historyCard.index) * 70 : 0 }
+              PauseAnimation { duration: notificationGroup.expanded ? Math.min(140, Math.max(0, historyCard.index) * 35) : 0 }
               NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
             }
           }
@@ -720,7 +721,7 @@ PopupWindow {
         return
       notificationGroup.dismissing = true
       headerDismissAnimation.start()
-      groupDismissTimer.start()
+      popup.queueGroupDismiss(notificationGroup.recordsForDismissal())
     }
 
     function toggleExpanded() {
@@ -741,7 +742,25 @@ PopupWindow {
   property bool closePending: false
   property string expandedGroupKey: ""
   property var clearingRecords: []
+  property var groupDismissRecords: []
   property var readingAnchor: null
+
+  function queueGroupDismiss(records) {
+    popup.groupDismissRecords = popup.groupDismissRecords.concat(records)
+    groupDismissTimer.restart()
+  }
+
+  // Owned by the panel so closing it cannot cancel an accepted dismissal.
+  Timer {
+    id: groupDismissTimer
+    interval: 480
+    onTriggered: {
+      const records = popup.groupDismissRecords
+      popup.groupDismissRecords = []
+      popup.service.dismissRecords(records)
+      popup.syncHistory()
+    }
+  }
 
   ListModel {
     id: centerModel
@@ -778,7 +797,7 @@ PopupWindow {
   }
 
   function syncHistory() {
-    if (!popup.visible || clearAllAnimation.running)
+    if (!popup.visible || clearAllAnimation.running || groupDismissTimer.running)
       return
     const groups = service.historyGroups
     const survivingIds = new Set()
@@ -864,6 +883,9 @@ PopupWindow {
       popup.expandedGroupKey = ""
       clearAllTranslate.x = 0
       notificationList.opacity = 1
+      // All rendered rows belong to the snapshot; newer arrivals were deferred.
+      centerModel.clear()
+      Qt.callLater(popup.syncHistory)
     }
   }
 
@@ -1019,7 +1041,7 @@ PopupWindow {
           label: "Clear all"
           description: "Clear notification history"
           emphasized: true
-          enabled: !clearAllAnimation.running
+          enabled: !clearAllAnimation.running && !groupDismissTimer.running
           onClicked: {
             popup.clearingRecords = popup.service.history.slice()
             popup.startClearAllDismissals()

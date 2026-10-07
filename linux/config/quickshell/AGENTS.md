@@ -60,6 +60,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Group consecutive notifications only when app and urgency match. Never jump back to an older matching stack across an intervening mismatch. Live popups also have an existing time-window constraint.
 - Hover protects cards from both timeout and capacity eviction. New cards joining a hovered stack inherit that protection.
 - Clear All acts on a snapshot taken at the click. Later arrivals and independent volume/brightness OSDs must survive.
+- Group dismissal also snapshots IDs at the click, uses a bounded stagger, and finishes even if the panel closes. Defer history reconciliation during its short exit; surviving groups retain identity across arrivals and removals.
 - Notification dismissal is routine housekeeping, not deletion of the underlying message. Use a subdued `x` with a generous hit target, neutral hover feedback, and a descriptive tooltip/accessibility label for cards and groups; use a separate "Clear all" text action for history. Keep exits slide-and-fade without red trash-reveal layers.
 - Keep system OSDs distinct from notification history. Release references when native notifications close; do not invoke methods on destroyed objects.
 - DND suppresses presentation without dismissing native notifications or system OSDs. Records suppressed during DND stay in history and do not replay when DND ends.
