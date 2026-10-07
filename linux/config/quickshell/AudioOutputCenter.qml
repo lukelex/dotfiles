@@ -268,6 +268,8 @@ Scope {
   component SoundAction: Item {
     id: action
     required property string text
+    required property string iconName
+    property bool active: false
     signal activated()
     width: parent.width
     height: 36
@@ -285,15 +287,30 @@ Scope {
     }
     Rectangle {
       anchors.fill: parent
-      radius: 10
-      color: actionArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+      radius: 14
+      color: action.active ? popup.controller.controlActive
+        : actionArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
       border.width: action.activeFocus ? 2 : 1
       border.color: action.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
     }
-    Label {
-      anchors.centerIn: parent
-      text: action.text
-      color: action.enabled ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
+    Row {
+      anchors.fill: parent
+      anchors.margins: 10
+      spacing: 8
+      LucideIcon {
+        anchors.verticalCenter: parent.verticalCenter
+        color: action.active ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
+        height: 17
+        source: popup.controller.icon(action.iconName)
+        width: 17
+      }
+      Label {
+        anchors.verticalCenter: parent.verticalCenter
+        text: action.text
+        color: action.enabled ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
+        font.pixelSize: 12
+        width: parent.width - 25
+      }
     }
     MouseArea {
       id: actionArea
@@ -593,6 +610,7 @@ Scope {
 
           SoundAction {
             text: "Unmute selected microphone"
+            iconName: "mic"
             visible: popup.service.allMicrophonesMuteRequested || popup.controller.microphoneMuted
             enabled: popup.controller.microphoneAvailable
             onActivated: popup.service.setMicrophoneMuted(false)
@@ -600,6 +618,8 @@ Scope {
 
           SoundAction {
             text: "Mute all microphones"
+            iconName: "mic-off"
+            active: popup.service.allMicrophonesMuted
             enabled: popup.service.microphoneNodes.length > 0 && !popup.service.allMicrophonesMuted
             onActivated: popup.service.muteAllMicrophones()
           }
@@ -681,6 +701,7 @@ Scope {
 
           SoundAction {
             text: "Advanced sound settings"
+            iconName: "sliders"
             onActivated: popup.openAdvancedSettings()
           }
         }
