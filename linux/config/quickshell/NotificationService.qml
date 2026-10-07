@@ -15,6 +15,7 @@ QtObject {
   property var popup: []
   property var popupReversed: []
   property var live: ({})
+  property int liveRevision: 0
   property var liveDeadlines: ({})
   property var osd: null
   property var tagMap: ({})
@@ -127,7 +128,7 @@ QtObject {
       const notification = service.live[record.id]
       if (notification)
         notification.expire()
-      delete service.live[record.id]
+      service.releaseLive(record.id, notification)
       if (record.tag && service.tagMap[record.tag] === notification)
         delete service.tagMap[record.tag]
       service.osd = null
@@ -142,8 +143,7 @@ QtObject {
   function loadInitial() {
     try {
       const parsed = JSON.parse(settings.historyJson)
-      if (Array.isArray(parsed))
-        service.history = parsed.slice(0, service.historyLimit)
+      service.history = service.restoreHistory(parsed)
     } catch (error) {
       service.history = []
     }
@@ -162,6 +162,49 @@ QtObject {
 
   function saveHistory() {
     historySaveTimer.restart()
+  }
+
+  function restoreHistory(parsed) {
+    if (!Array.isArray(parsed))
+      return []
+    const records = []
+    const ids = new Set()
+    for (const value of parsed) {
+      if (!value || typeof value !== "object" || Array.isArray(value)
+          || !((typeof value.id === "number" && Number.isSafeInteger(value.id) && value.id > 0)
+            || (typeof value.id === "string" && value.id.length > 0))
+          || typeof value.time !== "number" || !Number.isFinite(value.time) || value.time < 0
+          || ids.has(String(value.id)))
+        continue
+      const record = { id: value.id, time: value.time, actions: [], expiresAt: 0, popupSuppressed: true }
+      for (const key of ["tag", "appName", "appIcon", "desktopEntry", "image", "summary", "body",
+          "githubReviewUrl", "githubRepository", "githubNumber", "githubTitle", "githubStatus",
+          "githubAuthor", "githubReviewState"])
+        record[key] = typeof value[key] === "string" ? value[key] : ""
+      record.appName = record.appName || "Unknown"
+      record.browserNotification = value.browserNotification === true
+      record.urgency = ["low", "normal", "critical"].includes(value.urgency) ? value.urgency : "normal"
+      record.value = typeof value.value === "number" && Number.isFinite(value.value) ? value.value : -1
+      records.push(service.sanitizeRecord(record))
+      ids.add(String(value.id))
+      if (records.length >= service.historyLimit)
+        break
+    }
+    return records
+  }
+
+  function releaseLive(id, notification) {
+    // A late closed signal from a replaced native object cannot release its successor.
+    if (service.live[id] !== notification)
+      return
+    delete service.live[id]
+    delete service.liveDeadlines[id]
+    delete service.hovered[id]
+    for (const tag of Object.keys(service.tagMap)) {
+      if (service.tagMap[tag] === notification)
+        delete service.tagMap[tag]
+    }
+    service.liveRevision++
   }
 
   property Timer historySaveTimer: Timer {
@@ -196,25 +239,19 @@ QtObject {
     if (tag && service.tagMap[tag]) {
       const previous = service.tagMap[tag]
       delete service.tagMap[tag]
-      delete service.live[previous.id]
-      delete service.liveDeadlines[previous.id]
+      service.releaseLive(previous.id, previous)
       previous.expire()
     }
 
     notification.tracked = true
     service.live[notification.id] = notification
+    service.liveRevision++
     if (tag)
       service.tagMap[tag] = notification
 
     const id = notification.id
     notification.closed.connect(() => {
-      if (service.live[id] === notification) {
-        delete service.live[id]
-        delete service.liveDeadlines[id]
-      }
-      if (tag && service.tagMap[tag] === notification)
-        delete service.tagMap[tag]
-      delete service.hovered[id]
+      service.releaseLive(id, notification)
       Qt.callLater(service.syncPopup)
     })
 
@@ -359,8 +396,7 @@ QtObject {
       delete service.liveDeadlines[id]
       if (notification)
         notification.expire()
-      delete service.live[id]
-      delete service.hovered[id]
+      service.releaseLive(id, notification)
     }
     if (changed)
       service.syncPopup()
@@ -445,9 +481,7 @@ QtObject {
     const notification = service.live[id]
     if (notification)
       notification.dismiss()
-    delete service.live[id]
-    delete service.liveDeadlines[id]
-    delete service.hovered[id]
+    service.releaseLive(id, notification)
     if (service.osd && service.osd.id === id) {
       service.osdTimer.stop()
       service.osd = null
@@ -472,9 +506,7 @@ QtObject {
       const notification = service.live[record.id]
       if (notification)
         notification.dismiss()
-      delete service.live[record.id]
-      delete service.liveDeadlines[record.id]
-      delete service.hovered[record.id]
+      service.releaseLive(record.id, notification)
     }
 
     service.history = service.history.filter(record => !ids[record.id])
@@ -497,6 +529,7 @@ QtObject {
       delete service.hovered[id]
     }
     service.live = {}
+    service.liveRevision++
     service.liveDeadlines = {}
     service.tagMap = {}
     service.history = []
@@ -517,6 +550,7 @@ QtObject {
       delete service.hovered[id]
     }
     service.live = {}
+    service.liveRevision++
     service.liveDeadlines = {}
     service.tagMap = {}
     service.osdTimer.stop()
@@ -731,6 +765,7 @@ QtObject {
   }
 
   function usableAppIcon(record) {
+    service.liveRevision
     const source = String(record.appIcon || "")
     if (service.isLiveOnlySource(source) && !service.live[record.id])
       return ""
@@ -738,6 +773,7 @@ QtObject {
   }
 
   function usableImage(record) {
+    service.liveRevision
     const source = String(record.image || "")
     if (service.isLiveOnlySource(source) && !service.live[record.id])
       return ""

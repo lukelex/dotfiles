@@ -150,7 +150,7 @@ PopupWindow {
     required property var record
     required property var service
 
-    readonly property bool isLive: Boolean(service.live[record.id])
+    readonly property bool isLive: { service.liveRevision; return Boolean(service.live[record.id]) }
     readonly property var icon: service.iconFor(card.record)
     readonly property string body: service.displayBody(card.record)
     readonly property real contentHeight: textColumn.height + 24

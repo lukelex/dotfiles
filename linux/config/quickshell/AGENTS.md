@@ -68,6 +68,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Native notification deadlines are tracked independently of popup capacity and retained history. Hidden and trimmed notifications still expire; explicit persistent deadlines and hovered records remain protected.
 - System notification senders should supply a specific icon with `notify-send -i`. `NotificationService.iconFor()` prefers sender-selected imagery over semantic fallbacks, colors only this repository's Lucide SVGs, and preserves native image-provider URLs.
 - Never persist or replay transient notification images (`image://qsimage/...` pixmaps or Chromium `scoped_dir` temp files); use a durable icon for saved history. Keep fallback resolution for theme icons that Quickshell has not yet cached.
+- Normalize saved history one record at a time and discard malformed/duplicate entries. Restored actions are inactive; native lifecycle changes increment `liveRevision` so action and transient-image bindings refresh. Ignore closed signals from superseded native objects.
 - Respect explicit persistent notification timeouts; verify the installed Quickshell version's timeout units when changing this behavior.
 
 ## Architecture And Platform

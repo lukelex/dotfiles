@@ -13,6 +13,8 @@ function serviceForTest() {
     popup: [],
     live: {},
     liveDeadlines: {},
+    liveRevision: 0,
+    historyLimit: 100,
     tagMap: {},
     hovered: {},
     popupLimit: 5,
@@ -24,7 +26,7 @@ function serviceForTest() {
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
   const context = vm.createContext({ service, Date });
-  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue']) {
+  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -243,4 +245,38 @@ test('clearing a snapshot preserves later arrivals and the OSD', () => {
   assert.equal(service.history[0].id, 2);
   assert.equal(service.osd.id, 3);
   assert.ok(service.live[3]);
+});
+
+test('restored history skips malformed records and normalizes valid neighbors', () => {
+  const { service } = serviceForTest();
+  const restored = service.restoreHistory([null, [], { id: 1 }, { id: {}, time: 1 },
+    { id: 2, time: 123, summary: 'Keep me', urgency: 'invalid', actions: null, body: {}, image: 'image://qsimage/old' },
+    { id: '2', time: 123 }, { id: 3, time: 124, appName: 'App', body: 'Still here' }]);
+  assert.deepEqual(Array.from(restored, record => record.id), [2, 3]);
+  assert.equal(restored[0].body, '');
+  assert.equal(restored[0].image, '');
+  assert.equal(restored[0].appName, 'Unknown');
+  assert.equal(restored[0].urgency, 'normal');
+  assert.equal(restored[0].actions.length, 0);
+  assert.equal(restored[1].body, 'Still here');
+  assert.equal(service.restoreHistory({}).length, 0);
+});
+
+test('native closure updates observers and a stale closure cannot release a replacement', () => {
+  const { service } = serviceForTest();
+  const original = {};
+  const replacement = {};
+  service.live[1] = replacement;
+  service.liveDeadlines[1] = 123;
+  service.hovered[1] = true;
+  service.tagMap.tag = replacement;
+  service.releaseLive(1, original);
+  assert.equal(service.live[1], replacement);
+  assert.equal(service.liveRevision, 0);
+  assert.equal(service.hovered[1], true);
+  service.releaseLive(1, replacement);
+  assert.equal(service.live[1], undefined);
+  assert.equal(service.tagMap.tag, undefined);
+  assert.equal(service.liveDeadlines[1], undefined);
+  assert.equal(service.liveRevision, 1);
 });
