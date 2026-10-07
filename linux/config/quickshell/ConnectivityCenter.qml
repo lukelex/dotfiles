@@ -536,7 +536,7 @@ Scope {
           subtitle: popup.service.ethernetStatus(modelData)
           detail: title + "\n" + subtitle + (modelData ? "\nDevice: " + modelData.name : "")
           onActivated: {
-            popup.requestOpen(true)
+            popup.requestOpen()
             popup.service.setEthernetEnabled(!modelData.connected, modelData)
           }
         }
@@ -674,6 +674,14 @@ Scope {
           enabled: !popup.controller.vpnService.busy
           font.family: popup.controller.fontFamily
           font.pixelSize: 11
+          palette.base: popup.controller.controlSurface
+          palette.button: popup.controller.controlSurface
+          palette.text: popup.controller.controlPrimaryText
+          palette.buttonText: popup.controller.controlPrimaryText
+          palette.highlight: popup.controller.controlActive
+          palette.highlightedText: popup.controller.controlPrimaryText
+          palette.window: popup.controller.controlSurface
+          palette.windowText: popup.controller.controlPrimaryText
           model: popup.controller.vpnService.locationOptions
           textRole: "label"
           valueRole: "value"
