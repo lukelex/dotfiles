@@ -166,6 +166,7 @@ Scope {
   ConnectivityService {
     id: connectivity
     wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
+    trafficMonitoringEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
   }
 
   function closeConnectivity() {
@@ -244,39 +245,121 @@ Scope {
   readonly property bool microphoneMuted: root.microphoneAvailable && root.defaultMicrophone.audio.muted
   property int pendingAudioVolume: -1
   property int pendingMicrophoneVolume: -1
+  property var pendingAudioNode: null
+  property var pendingMicrophoneNode: null
+  property var audioFeedbackNode: null
+  property var microphoneFeedbackNode: null
+  property int audioFeedbackVolume: -1
+  property int microphoneFeedbackVolume: -1
+  property int audioFeedbackMute: -1
+  property int microphoneFeedbackMute: -1
   property string audioControlError: ""
 
+  onDefaultAudioSinkChanged: root.cancelAudioAdjustment()
+  onAudioAvailableChanged: { if (!root.audioAvailable) root.cancelAudioAdjustment() }
+  onDefaultMicrophoneChanged: root.cancelAudioAdjustment(true)
+  onMicrophoneAvailableChanged: { if (!root.microphoneAvailable) root.cancelAudioAdjustment(true) }
+
+  function cancelAudioAdjustment(microphone = false) {
+    if (microphone) {
+      root.pendingMicrophoneVolume = -1
+      root.pendingMicrophoneNode = null
+      root.microphoneFeedbackNode = null
+      root.microphoneFeedbackVolume = -1
+      root.microphoneFeedbackMute = -1
+      microphoneApplyTimer.stop()
+      microphoneFeedbackTimeout.stop()
+    } else {
+      root.pendingAudioVolume = -1
+      root.pendingAudioNode = null
+      root.audioFeedbackNode = null
+      root.audioFeedbackVolume = -1
+      root.audioFeedbackMute = -1
+      audioApplyTimer.stop()
+      audioFeedbackTimeout.stop()
+    }
+  }
+
   function applyAudioVolume() {
-    if (audioSet.running || root.pendingAudioVolume < 0)
+    if (root.pendingAudioVolume < 0)
       return
-    audioSet.value = root.pendingAudioVolume
+    const node = root.pendingAudioNode
+    if (!root.audioAvailable || node !== root.defaultAudioSink) {
+      root.cancelAudioAdjustment()
+      return
+    }
+    root.audioFeedbackNode = node
+    root.audioFeedbackVolume = root.pendingAudioVolume
     root.pendingAudioVolume = -1
-    audioSet.running = true
+    root.pendingAudioNode = null
+    audioFeedbackTimeout.restart()
+    node.audio.volume = root.audioFeedbackVolume / 100
+    root.confirmAudioAdjustment()
   }
 
   function applyMicrophoneVolume() {
-    if (microphoneSet.running || root.pendingMicrophoneVolume < 0)
+    if (root.pendingMicrophoneVolume < 0)
       return
-    microphoneSet.value = root.pendingMicrophoneVolume
+    const node = root.pendingMicrophoneNode
+    if (!root.microphoneAvailable || node !== root.defaultMicrophone) {
+      root.cancelAudioAdjustment(true)
+      return
+    }
+    root.microphoneFeedbackNode = node
+    root.microphoneFeedbackVolume = root.pendingMicrophoneVolume
     root.pendingMicrophoneVolume = -1
-    microphoneSet.running = true
+    root.pendingMicrophoneNode = null
+    microphoneFeedbackTimeout.restart()
+    node.audio.volume = root.microphoneFeedbackVolume / 100
+    root.confirmAudioAdjustment(true)
   }
 
-  function finishAudioControl(exitCode, microphone = false) {
-    root.audioControlError = exitCode === 0 ? "" : "Could not adjust " + (microphone ? "microphone." : "output volume.")
-    Qt.callLater(microphone ? root.applyMicrophoneVolume : root.applyAudioVolume)
+  function confirmAudioAdjustment(microphone = false) {
+    const node = microphone ? root.microphoneFeedbackNode : root.audioFeedbackNode
+    const current = microphone ? root.defaultMicrophone : root.defaultAudioSink
+    const volume = microphone ? root.microphoneFeedbackVolume : root.audioFeedbackVolume
+    const mute = microphone ? root.microphoneFeedbackMute : root.audioFeedbackMute
+    if (!node || node !== current || !node.ready || !node.audio)
+      return
+    if (volume >= 0 && Math.abs(node.audio.volume * 100 - volume) > 1)
+      return
+    if (mute >= 0 && node.audio.muted !== (mute === 1))
+      return
+    root.audioControlError = ""
+    root.notificationService.showOsd(microphone ? "Microphone" : "Volume",
+      node.audio.muted ? 0 : Math.round(node.audio.volume * 100),
+      root.icon(microphone ? (node.audio.muted ? "mic-off" : "mic") : root.audioIcon()))
+    if (microphone) {
+      root.microphoneFeedbackNode = null
+      root.microphoneFeedbackVolume = -1
+      root.microphoneFeedbackMute = -1
+      microphoneFeedbackTimeout.stop()
+    } else {
+      root.audioFeedbackNode = null
+      root.audioFeedbackVolume = -1
+      root.audioFeedbackMute = -1
+      audioFeedbackTimeout.stop()
+    }
   }
 
   function toggleMicrophone() {
-    if (root.microphoneAvailable && !microphoneToggle.running)
-      microphoneToggle.running = true
+    if (!root.microphoneAvailable)
+      return
+    const node = root.defaultMicrophone
+    root.microphoneFeedbackNode = node
+    root.microphoneFeedbackMute = node.audio.muted ? 0 : 1
+    microphoneFeedbackTimeout.restart()
+    node.audio.muted = root.microphoneFeedbackMute === 1
+    root.confirmAudioAdjustment(true)
   }
 
   function setMicrophoneVolume(value) {
     if (!root.microphoneAvailable)
       return
     root.pendingMicrophoneVolume = Math.max(0, Math.min(100, Math.round(value)))
-    root.applyMicrophoneVolume()
+    root.pendingMicrophoneNode = root.defaultMicrophone
+    if (!microphoneApplyTimer.running)
+      microphoneApplyTimer.start()
   }
   property string batteryState: ""
   property int batteryPercentage: 0
@@ -588,11 +671,15 @@ Scope {
   }
 
   function toggleAudio() {
-    if (!root.audioAvailable || audioToggle.running)
+    if (!root.audioAvailable)
       return
 
-    audioToggle.running = true
-    controlRefreshTimer.restart()
+    const node = root.defaultAudioSink
+    root.audioFeedbackNode = node
+    root.audioFeedbackMute = node.audio.muted ? 0 : 1
+    audioFeedbackTimeout.restart()
+    node.audio.muted = root.audioFeedbackMute === 1
+    root.confirmAudioAdjustment()
   }
 
   function setAudioVolume(value) {
@@ -600,7 +687,9 @@ Scope {
       return
 
     root.pendingAudioVolume = Math.max(0, Math.min(100, Math.round(value)))
-    root.applyAudioVolume()
+    root.pendingAudioNode = root.defaultAudioSink
+    if (!audioApplyTimer.running)
+      audioApplyTimer.start()
   }
 
   function setBrightness(value) {
@@ -696,30 +785,46 @@ Scope {
     onExited: fallbackProfileStatus.running = true
   }
 
-  Process {
-    id: audioToggle
-    command: ["u_audio", "vol", "toggle"]
-    onExited: exitCode => root.finishAudioControl(exitCode)
+  Timer {
+    id: audioApplyTimer
+    interval: 30
+    onTriggered: root.applyAudioVolume()
   }
 
-  Process {
-    id: microphoneToggle
-    command: ["u_audio", "mic", "toggle"]
-    onExited: exitCode => root.finishAudioControl(exitCode, true)
+  Timer {
+    id: microphoneApplyTimer
+    interval: 30
+    onTriggered: root.applyMicrophoneVolume()
   }
 
-  Process {
-    id: microphoneSet
-    property int value: 0
-    command: ["u_audio", "mic", "set", value.toString()]
-    onExited: exitCode => root.finishAudioControl(exitCode, true)
+  Timer {
+    id: audioFeedbackTimeout
+    interval: 1500
+    onTriggered: {
+      root.cancelAudioAdjustment()
+      root.audioControlError = "Could not confirm the output adjustment."
+    }
   }
 
-  Process {
-    id: audioSet
-    property int value: 0
-    command: ["u_audio", "vol", "set", value.toString()]
-    onExited: exitCode => root.finishAudioControl(exitCode)
+  Timer {
+    id: microphoneFeedbackTimeout
+    interval: 1500
+    onTriggered: {
+      root.cancelAudioAdjustment(true)
+      root.audioControlError = "Could not confirm the microphone adjustment."
+    }
+  }
+
+  Connections {
+    target: root.audioAvailable ? root.defaultAudioSink.audio : null
+    function onVolumesChanged() { root.confirmAudioAdjustment() }
+    function onMutedChanged() { root.confirmAudioAdjustment() }
+  }
+
+  Connections {
+    target: root.microphoneAvailable ? root.defaultMicrophone.audio : null
+    function onVolumesChanged() { root.confirmAudioAdjustment(true) }
+    function onMutedChanged() { root.confirmAudioAdjustment(true) }
   }
 
   Process {

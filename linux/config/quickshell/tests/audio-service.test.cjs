@@ -26,33 +26,81 @@ test('bar audio volume and mute state use the live PipeWire default sink', () =>
   assert.match(barSource, /readonly property real audioVolume: root\.audioAvailable \? root\.defaultAudioSink\.audio\.volume \* 100 : 0/);
   assert.doesNotMatch(barSource, /id: audioStatus|interval: 1000[\s\S]{0,100}audioStatus/);
 
-  const root = {
-    audioAvailable: true,
-    audioMuted: false,
-    pendingAudioVolume: -1,
-    notificationService: { showOsd: (...args) => { root.osd = args; } },
-    audioIcon: () => 'volume-2',
-  };
-  const audioSet = { value: 0, running: false };
-  const audioToggle = { running: false };
-  const controlRefreshTimer = { restart() {} };
-  root.applyAudioVolume = loadBarFunction('applyAudioVolume', { root, audioSet });
-  loadBarFunction('setAudioVolume', { root, audioSet })(65);
-  assert.deepEqual(audioSet, { value: 65, running: true });
-  assert.equal(root.osd, undefined, 'Feedback waits for the backend rather than announcing the request');
-
-  loadBarFunction('setAudioVolume', { root, audioSet })(70);
-  loadBarFunction('setAudioVolume', { root, audioSet })(85);
-  assert.equal(audioSet.value, 65, 'An in-flight command retains its arguments');
-  assert.equal(root.pendingAudioVolume, 85, 'The latest drag value survives competing updates');
-  audioSet.running = false;
-  root.applyAudioVolume();
-  assert.equal(audioSet.value, 85);
-  assert.equal(root.pendingAudioVolume, -1);
-
-  loadBarFunction('toggleAudio', { root, audioToggle, controlRefreshTimer })();
-  assert.equal(audioToggle.running, true);
 });
+
+function adjustmentState() {
+  const timer = () => ({ running: false, start() { this.running = true; }, restart() { this.running = true; }, stop() { this.running = false; } });
+  const globals = {
+    audioApplyTimer: timer(), microphoneApplyTimer: timer(),
+    audioFeedbackTimeout: timer(), microphoneFeedbackTimeout: timer(),
+  };
+  const node = () => ({ name: 'device', ready: true, audio: { volume: 0.5, muted: false } });
+  const root = globals.root = {
+    audioAvailable: true, microphoneAvailable: true,
+    defaultAudioSink: node(), defaultMicrophone: node(),
+    pendingAudioVolume: -1, pendingMicrophoneVolume: -1,
+    audioFeedbackVolume: -1, microphoneFeedbackVolume: -1,
+    audioFeedbackMute: -1, microphoneFeedbackMute: -1,
+    notificationService: { showOsd: (...args) => { root.osd = args; } },
+    icon: name => name, audioIcon: () => 'volume-2',
+  };
+  for (const name of ['setAudioVolume', 'setMicrophoneVolume', 'applyAudioVolume', 'applyMicrophoneVolume', 'cancelAudioAdjustment', 'confirmAudioAdjustment', 'toggleAudio', 'toggleMicrophone'])
+    root[name] = loadBarFunction(name, globals);
+  return root;
+}
+
+for (const microphone of [false, true]) {
+  const label = microphone ? 'microphone' : 'output';
+  const set = microphone ? 'setMicrophoneVolume' : 'setAudioVolume';
+  const apply = microphone ? 'applyMicrophoneVolume' : 'applyAudioVolume';
+  const current = microphone ? 'defaultMicrophone' : 'defaultAudioSink';
+
+  test(`${label} slider coalesces drag updates against its captured node`, () => {
+    const root = adjustmentState();
+    root[set](65);
+    root[set](70);
+    root[set](85);
+    assert.equal(root[current].audio.volume, 0.5);
+    assert.equal(root.osd, undefined);
+    root[apply]();
+    assert.equal(root[current].audio.volume, 0.85);
+    assert.deepEqual(root.osd, [microphone ? 'Microphone' : 'Volume', 85, microphone ? 'mic' : 'volume-2']);
+  });
+
+  test(`${label} queued adjustment cannot affect a replacement with the same name`, () => {
+    const root = adjustmentState();
+    const oldNode = root[current];
+    root[set](85);
+    root[current] = { name: oldNode.name, ready: true, audio: { volume: 0.2, muted: false } };
+    root[apply]();
+    assert.equal(root[current].audio.volume, 0.2);
+    assert.equal(oldNode.audio.volume, 0.5);
+    assert.equal(root.osd, undefined);
+  });
+
+  test(`${label} queued adjustment is discarded when the device disappears`, () => {
+    const root = adjustmentState();
+    const oldNode = root[current];
+    root[set](85);
+    root[current] = null;
+    root[microphone ? 'microphoneAvailable' : 'audioAvailable'] = false;
+    root[apply]();
+    assert.equal(oldNode.audio.volume, 0.5);
+    assert.equal(root[microphone ? 'pendingMicrophoneVolume' : 'pendingAudioVolume'], -1);
+  });
+
+  test(`${label} feedback waits until the backend reflects the adjustment`, () => {
+    const root = adjustmentState();
+    let volume = 0.5;
+    Object.defineProperty(root[current].audio, 'volume', { get: () => volume, set() {} });
+    root[set](85);
+    root[apply]();
+    assert.equal(root.osd, undefined);
+    volume = 0.85;
+    root.confirmAudioAdjustment(microphone);
+    assert.equal(root.osd[1], 85);
+  });
+}
 
 test('native default-device changes refresh the audio picker immediately when open', () => {
   assert.match(serviceSource, /import Quickshell\.Services\.Pipewire/);
