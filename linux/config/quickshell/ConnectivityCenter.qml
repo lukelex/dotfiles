@@ -338,7 +338,8 @@ Scope {
     Column {
       id: trafficColumn
       anchors.verticalCenter: parent.verticalCenter
-      x: action.compactTraffic ? action.width - 66 - width : (action.width - width) / 2
+      anchors.right: parent.right
+      anchors.rightMargin: 66
       width: action.compactTraffic ? Math.min(100, action.width * 0.34) : 116
       visible: action.showTraffic
       spacing: 2
