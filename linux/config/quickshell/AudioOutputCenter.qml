@@ -269,13 +269,14 @@ Scope {
     id: action
     required property string text
     required property string iconName
+    property string accessibleName: text
     property bool active: false
     signal activated()
     width: parent.width
     height: 36
     activeFocusOnTab: popup.pinned && enabled
     Accessible.role: Accessible.Button
-    Accessible.name: text
+    Accessible.name: accessibleName
     Accessible.onPressAction: action.activate()
     Keys.onReturnPressed: event => { if (!event.isAutoRepeat) action.activate() }
     Keys.onSpacePressed: event => { if (!event.isAutoRepeat) action.activate() }
@@ -506,7 +507,7 @@ Scope {
 
         width: parent.width
         height: Math.max(1, Math.min(deviceSections.implicitHeight,
-          popup.availableHeight - 32 - sections.spacing - 32))
+          popup.availableHeight - 32 - sections.spacing * 2 - 32 - settingsFooter.height))
         contentWidth: width
         contentHeight: deviceSections.implicitHeight
         clip: true
@@ -608,20 +609,29 @@ Scope {
             color: popup.controller.controlPrimaryText
           }
 
-          SoundAction {
-            text: "Unmute selected microphone"
-            iconName: "mic"
-            visible: popup.service.allMicrophonesMuteRequested || popup.controller.microphoneMuted
-            enabled: popup.controller.microphoneAvailable
-            onActivated: popup.service.setMicrophoneMuted(false)
-          }
+          Grid {
+            width: parent.width
+            columns: width < 330 ? 1 : 2
+            spacing: 8
 
-          SoundAction {
-            text: "Mute all microphones"
-            iconName: "mic-off"
-            active: popup.service.allMicrophonesMuted
-            enabled: popup.service.microphoneNodes.length > 0 && !popup.service.allMicrophonesMuted
-            onActivated: popup.service.muteAllMicrophones()
+            SoundAction {
+              width: (parent.width - parent.spacing * (parent.columns - 1)) / parent.columns
+              text: popup.controller.microphoneMuted ? "Unmute selected" : "Mute selected"
+              accessibleName: popup.controller.microphoneMuted ? "Unmute selected microphone" : "Mute selected microphone"
+              iconName: popup.controller.microphoneMuted ? "mic" : "mic-off"
+              enabled: popup.controller.microphoneAvailable
+              onActivated: popup.service.setMicrophoneMuted(!popup.controller.microphoneMuted)
+            }
+
+            SoundAction {
+              width: (parent.width - parent.spacing * (parent.columns - 1)) / parent.columns
+              text: "Mute all"
+              accessibleName: "Mute all microphones"
+              iconName: "mic-off"
+              active: popup.service.allMicrophonesMuted
+              enabled: popup.service.microphoneNodes.length > 0 && !popup.service.allMicrophonesMuted
+              onActivated: popup.service.muteAllMicrophones()
+            }
           }
 
           Label {
@@ -699,11 +709,28 @@ Scope {
             }
           }
 
-          SoundAction {
-            text: "Advanced sound settings"
-            iconName: "sliders"
-            onActivated: popup.openAdvancedSettings()
-          }
+        }
+      }
+
+      Item {
+        id: settingsFooter
+        width: parent.width
+        height: 45
+
+        Rectangle {
+          width: parent.width
+          height: 1
+          color: popup.controller.controlSurfaceBorder
+        }
+
+        SoundAction {
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          width: Math.min(190, parent.width)
+          text: "Advanced settings"
+          accessibleName: "Advanced sound settings"
+          iconName: "sliders"
+          onActivated: popup.openAdvancedSettings()
         }
       }
     }
