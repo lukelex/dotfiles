@@ -239,7 +239,7 @@ QtObject {
   }
 
   function isSystemOsd(record) {
-    return record.appName === "System" && ["Brightness", "Volume"].includes(record.summary)
+    return record.appName === "System" && ["Brightness", "Volume", "Microphone"].includes(record.summary)
   }
 
   function showOsd(summary, value, iconName) {

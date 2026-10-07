@@ -126,6 +126,7 @@ case $1 in
       show) show_mic ;;
       toggle)
         wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+        show_mic
         ;;
     esac
     ;;

@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell
+import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Controls as Controls
 
@@ -22,6 +23,12 @@ Scope {
   readonly property real width: Math.max(1, Math.min(432, (panel.screen ? panel.screen.width : panel.width) - 24))
   readonly property real availableHeight: Math.max(1, (panel.screen ? panel.screen.height : 768) - panel.height - 24)
   readonly property real height: Math.min(availableHeight, sections.implicitHeight + 32)
+
+  PwNodePeakMonitor {
+    id: microphonePeak
+    node: popup.visible && popup.controller.microphoneAvailable ? popup.controller.defaultMicrophone : null
+    enabled: popup.visible && popup.controller.microphoneAvailable && !popup.controller.microphoneMuted
+  }
 
   function openPinned(request) {
     if (request !== popup.pinRequest)
@@ -494,6 +501,29 @@ Scope {
             width: parent.width
             visible: popup.service.inputs.length === 0
             text: popup.service.loaded ? "No input devices found." : "Looking for devices…"
+          }
+
+          Label {
+            width: parent.width
+            visible: popup.controller.microphoneAvailable
+            text: "Microphone: " + (popup.service.inputs.find(input => input.name === popup.service.defaultSource)?.description || "Selected input")
+              + (popup.controller.microphoneMuted ? " — Muted" : " — Unmuted")
+          }
+
+          Rectangle {
+            width: parent.width
+            height: 6
+            radius: 3
+            visible: popup.controller.microphoneAvailable
+            color: popup.controller.controlSliderTrack
+            Accessible.role: Accessible.ProgressBar
+            Accessible.name: "Microphone input level"
+            Rectangle {
+              width: parent.width * Math.max(0, Math.min(1, microphonePeak.peak))
+              height: parent.height
+              radius: parent.radius
+              color: microphonePeak.peak >= 0.95 ? popup.controller.urgent : popup.controller.controlSliderFill
+            }
           }
         }
       }

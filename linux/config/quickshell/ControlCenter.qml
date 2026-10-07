@@ -491,6 +491,21 @@ PopupWindow {
             }
 
             SliderControl {
+              controller: popup.controller
+              enabled: popup.controller.microphoneAvailable
+              title: !popup.controller.microphoneAvailable ? "Microphone unavailable"
+                : popup.controller.microphoneMuted ? "Microphone / muted" : "Microphone"
+              iconName: popup.controller.microphoneMuted ? "mic-off" : "mic"
+              toggleTitle: popup.controller.microphoneMuted ? "Unmute" : "Mute"
+              toggleIcon: "mic-off"
+              toggleActive: popup.controller.microphoneMuted
+              onToggleRequested: popup.controller.toggleMicrophone()
+              value: popup.controller.microphoneVolume
+              width: parent.width
+              onValueChangedByUser: value => popup.controller.setMicrophoneVolume(value)
+            }
+
+            SliderControl {
               busy: popup.controller.brightnessBusy
               controller: popup.controller
               title: "Brightness"

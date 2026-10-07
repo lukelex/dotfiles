@@ -12,7 +12,8 @@ PopupWindow {
   property bool closePending: false
   property var displayedOsd: null
 
-  readonly property bool muted: displayedOsd && displayedOsd.summary === "Volume" && displayedOsd.value === 0
+  readonly property bool muted: displayedOsd && (displayedOsd.summary === "Volume" && displayedOsd.value === 0
+    || displayedOsd.summary === "Microphone" && /mic-off/.test(displayedOsd.appIcon))
   readonly property real value: displayedOsd ? displayedOsd.value : 0
 
   anchor.window: panel
@@ -27,6 +28,8 @@ PopupWindow {
   function iconName() {
     if (!popup.displayedOsd || popup.displayedOsd.summary === "Brightness")
       return "sun"
+    if (popup.displayedOsd.summary === "Microphone")
+      return popup.muted ? "mic-off" : "mic"
     if (popup.muted)
       return "volume-x"
     if (popup.value <= 25)

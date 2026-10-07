@@ -237,6 +237,23 @@ Scope {
     && root.defaultAudioSink.ready && !!root.defaultAudioSink.audio
   readonly property real audioVolume: root.audioAvailable ? root.defaultAudioSink.audio.volume * 100 : 0
   readonly property bool audioMuted: root.audioAvailable && root.defaultAudioSink.audio.muted
+  readonly property var defaultMicrophone: Pipewire.defaultAudioSource
+  readonly property bool microphoneAvailable: Pipewire.ready && !!root.defaultMicrophone
+    && root.defaultMicrophone.ready && !!root.defaultMicrophone.audio
+  readonly property real microphoneVolume: root.microphoneAvailable ? root.defaultMicrophone.audio.volume * 100 : 0
+  readonly property bool microphoneMuted: root.microphoneAvailable && root.defaultMicrophone.audio.muted
+
+  function toggleMicrophone() {
+    if (root.microphoneAvailable)
+      microphoneToggle.running = true
+  }
+
+  function setMicrophoneVolume(value) {
+    if (!root.microphoneAvailable)
+      return
+    microphoneSet.value = Math.round(value)
+    microphoneSet.running = true
+  }
   property string batteryState: ""
   property int batteryPercentage: 0
   property string batteryTime: ""
@@ -659,6 +676,17 @@ Scope {
   Process {
     id: audioToggle
     command: ["u_audio", "vol", "toggle"]
+  }
+
+  Process {
+    id: microphoneToggle
+    command: ["u_audio", "mic", "toggle"]
+  }
+
+  Process {
+    id: microphoneSet
+    property int value: 0
+    command: ["u_audio", "mic", "set", value.toString()]
   }
 
   Process {
