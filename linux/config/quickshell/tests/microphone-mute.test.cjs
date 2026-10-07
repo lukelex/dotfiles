@@ -7,6 +7,23 @@ const { test } = require('node:test');
 const source = fs.readFileSync(path.join(__dirname, '..', 'AudioService.qml'), 'utf8');
 const node = (muted = false) => ({ ready: true, audio: { muted } });
 
+test('all-input confirmation requires a nonempty ready and muted input set', () => {
+  const expression = source.match(/readonly property bool allMicrophonesMuted: ([^]*?)\n  property/)[1];
+  const service = { allMicrophonesMuteRequested: true, microphoneNodes: [] };
+  const confirmed = () => vm.runInNewContext(expression, { service });
+  assert.equal(confirmed(), false);
+  const input = node(false);
+  service.microphoneNodes.push(input);
+  assert.equal(confirmed(), false, 'A request is not a backend confirmation');
+  input.audio.muted = true;
+  assert.equal(confirmed(), true);
+  input.ready = false;
+  assert.equal(confirmed(), false);
+  input.ready = true;
+  service.allMicrophonesMuteRequested = false;
+  assert.equal(confirmed(), false, 'Per-device mute alone does not imply an active all-input policy');
+});
+
 function setup(intent = { initialized: false, muted: false, allInputs: false }) {
   const first = node();
   const Pipewire = { defaultAudioSource: first };

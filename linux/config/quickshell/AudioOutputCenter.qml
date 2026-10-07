@@ -155,6 +155,11 @@ Scope {
       ? popup.service.defaultSource === device.name : popup.service.defaultSink === device.name
     readonly property bool isPending: outputRow.isInput
       ? popup.service.pendingSource === device.name : popup.service.pendingSink === device.name
+    readonly property var inputNode: isInput
+      ? popup.service.microphoneNodes.find(node => node.name === device.name) || null : null
+    readonly property string muteStatus: !isInput ? ""
+      : inputNode && inputNode.ready && inputNode.audio ? (inputNode.audio.muted ? "Muted" : "Unmuted")
+      : "Checking mute state…"
 
     height: 48
     width: parent.width
@@ -162,9 +167,9 @@ Scope {
     activeFocusOnTab: enabled && popup.pinned
     Accessible.role: Accessible.RadioButton
     Accessible.name: device.description
-    Accessible.description: isPending ? "Switching " + (isInput ? "input" : "output") + " device"
+    Accessible.description: (isPending ? "Switching " + (isInput ? "input" : "output") + " device"
       : isDefault ? "Current " + (isInput ? "input" : "output") + " device"
-      : "Select " + (isInput ? "input" : "output") + " device"
+      : "Select " + (isInput ? "input" : "output") + " device") + (muteStatus ? ", " + muteStatus : "")
     Accessible.checkable: true
     Accessible.checked: isDefault
     Accessible.onPressAction: outputRow.activate()
@@ -225,8 +230,9 @@ Scope {
       Label {
         color: outputRow.isPending ? popup.controller.controlActiveIcon : popup.controller.controlSecondaryText
         font.pixelSize: 10
-        text: outputRow.isPending ? "Switching…"
-          : outputRow.isDefault ? "Current " + (outputRow.isInput ? "input" : "output") : ""
+        text: (outputRow.isPending ? "Switching…"
+          : outputRow.isDefault ? "Current " + (outputRow.isInput ? "input" : "output") : "")
+          + (outputRow.muteStatus ? (outputRow.isPending || outputRow.isDefault ? " · " : "") + outputRow.muteStatus : "")
         visible: text !== ""
         width: parent.width
       }
@@ -256,6 +262,45 @@ Scope {
       enabled: outputRow.enabled
       hoverEnabled: true
       onClicked: outputRow.activate()
+    }
+  }
+
+  component SoundAction: Item {
+    id: action
+    required property string text
+    signal activated()
+    width: parent.width
+    height: 36
+    activeFocusOnTab: popup.pinned && enabled
+    Accessible.role: Accessible.Button
+    Accessible.name: text
+    Accessible.onPressAction: action.activate()
+    Keys.onReturnPressed: event => { if (!event.isAutoRepeat) action.activate() }
+    Keys.onSpacePressed: event => { if (!event.isAutoRepeat) action.activate() }
+    function activate() {
+      if (!action.enabled)
+        return
+      popup.requestOpen(true)
+      action.activated()
+    }
+    Rectangle {
+      anchors.fill: parent
+      radius: 10
+      color: actionArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+      border.width: action.activeFocus ? 2 : 1
+      border.color: action.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
+    }
+    Label {
+      anchors.centerIn: parent
+      text: action.text
+      color: action.enabled ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
+    }
+    MouseArea {
+      id: actionArea
+      anchors.fill: parent
+      cursorShape: Qt.PointingHandCursor
+      hoverEnabled: true
+      onClicked: action.activate()
     }
   }
 
@@ -537,78 +582,40 @@ Scope {
             }
           }
 
-          Item {
-            id: muteAllButton
+          Label {
             width: parent.width
-            height: 36
-            enabled: popup.service.microphoneNodes.length > 0
-            activeFocusOnTab: popup.pinned && enabled
-            Accessible.role: Accessible.Button
-            Accessible.name: "Mute all microphones"
-            Accessible.onPressAction: popup.service.muteAllMicrophones()
-            Keys.onReturnPressed: popup.service.muteAllMicrophones()
-            Keys.onSpacePressed: popup.service.muteAllMicrophones()
-            Rectangle {
-              anchors.fill: parent
-              radius: 10
-              color: muteAllArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
-              border.width: muteAllButton.activeFocus ? 2 : 1
-              border.color: muteAllButton.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
-            }
-            Label {
-              anchors.centerIn: parent
-              text: popup.service.allMicrophonesMuted ? "Mute all microphones · Active" : "Mute all microphones"
-              color: popup.controller.controlPrimaryText
-            }
-            MouseArea {
-              id: muteAllArea
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              hoverEnabled: true
-              onClicked: {
-                popup.requestOpen(true)
-                popup.service.muteAllMicrophones()
-              }
-            }
+            visible: popup.service.allMicrophonesMuteRequested
+            text: popup.service.allMicrophonesMuted ? "All microphones muted"
+              : popup.service.microphoneNodes.length === 0 ? "No microphones connected"
+              : popup.service.microphoneMuteError ? "All-input mute could not be confirmed" : "Muting all microphones…"
+            color: popup.controller.controlPrimaryText
+          }
+
+          SoundAction {
+            text: "Unmute selected microphone"
+            visible: popup.service.allMicrophonesMuteRequested || popup.controller.microphoneMuted
+            enabled: popup.controller.microphoneAvailable
+            onActivated: popup.service.setMicrophoneMuted(false)
+          }
+
+          SoundAction {
+            text: "Mute all microphones"
+            enabled: popup.service.microphoneNodes.length > 0 && !popup.service.allMicrophonesMuted
+            onActivated: popup.service.muteAllMicrophones()
           }
 
           Label {
             width: parent.width
-            text: popup.service.microphoneMuteError || "Unmuting the selected microphone releases all-input muting."
+            text: popup.service.microphoneMuteError || "Unmute selected releases all-input muting. Other inputs stay muted."
+            visible: popup.service.microphoneMuteError !== "" || popup.service.allMicrophonesMuteRequested
             color: popup.service.microphoneMuteError ? popup.controller.urgent : popup.controller.controlSecondaryText
             wrapMode: Text.Wrap
             elide: Text.ElideNone
           }
 
-          Item {
-            id: advancedButton
-            width: parent.width
-            height: 36
-            activeFocusOnTab: popup.pinned
-            Accessible.role: Accessible.Button
-            Accessible.name: "Advanced sound settings"
-            Accessible.onPressAction: popup.openAdvancedSettings()
-            Keys.onReturnPressed: popup.openAdvancedSettings()
-            Keys.onSpacePressed: popup.openAdvancedSettings()
-            Rectangle {
-              anchors.fill: parent
-              radius: 10
-              color: advancedArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
-              border.width: advancedButton.activeFocus ? 2 : 1
-              border.color: advancedButton.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
-            }
-            Label {
-              anchors.centerIn: parent
-              color: popup.controller.controlPrimaryText
-              text: "Advanced sound settings"
-            }
-            MouseArea {
-              id: advancedArea
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              hoverEnabled: true
-              onClicked: popup.openAdvancedSettings()
-            }
+          SoundAction {
+            text: "Advanced sound settings"
+            onActivated: popup.openAdvancedSettings()
           }
         }
       }

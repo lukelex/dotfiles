@@ -27,7 +27,10 @@ QtObject {
     || setOutputProcess.running || _settingInput
   property bool _settingInput: false
   readonly property var microphoneNodes: Pipewire.nodes.values.filter(node => node.type === PwNodeType.AudioSource)
-  readonly property bool allMicrophonesMuted: muteIntent.allInputs
+  readonly property bool allMicrophonesMuteRequested: muteIntent.allInputs
+  readonly property bool allMicrophonesMuted: service.allMicrophonesMuteRequested
+    && service.microphoneNodes.length > 0
+    && service.microphoneNodes.every(node => node.ready && node.audio && node.audio.muted)
   property string microphoneMuteError: ""
   property bool _muteIntentReady: false
   property var _muteSource: null
