@@ -9,11 +9,11 @@ XF86AudioNext
 XF86AudioMicMute
   u_audio mic toggle
 XF86AudioMute
-  u_audio vol toggle; u_audio vol show
+  u_audio vol toggle
 XF86AudioRaiseVolume
-  u_audio vol inc; u_audio vol show
+  u_audio vol inc
 XF86AudioLowerVolume
-  u_audio vol dec; u_audio vol show
+  u_audio vol dec
 XF86AudioPlay
   u_music toggle
 

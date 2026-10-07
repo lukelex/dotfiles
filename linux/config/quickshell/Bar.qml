@@ -242,17 +242,41 @@ Scope {
     && root.defaultMicrophone.ready && !!root.defaultMicrophone.audio
   readonly property real microphoneVolume: root.microphoneAvailable ? root.defaultMicrophone.audio.volume * 100 : 0
   readonly property bool microphoneMuted: root.microphoneAvailable && root.defaultMicrophone.audio.muted
+  property int pendingAudioVolume: -1
+  property int pendingMicrophoneVolume: -1
+  property string audioControlError: ""
+
+  function applyAudioVolume() {
+    if (audioSet.running || root.pendingAudioVolume < 0)
+      return
+    audioSet.value = root.pendingAudioVolume
+    root.pendingAudioVolume = -1
+    audioSet.running = true
+  }
+
+  function applyMicrophoneVolume() {
+    if (microphoneSet.running || root.pendingMicrophoneVolume < 0)
+      return
+    microphoneSet.value = root.pendingMicrophoneVolume
+    root.pendingMicrophoneVolume = -1
+    microphoneSet.running = true
+  }
+
+  function finishAudioControl(exitCode, microphone = false) {
+    root.audioControlError = exitCode === 0 ? "" : "Could not adjust " + (microphone ? "microphone." : "output volume.")
+    Qt.callLater(microphone ? root.applyMicrophoneVolume : root.applyAudioVolume)
+  }
 
   function toggleMicrophone() {
-    if (root.microphoneAvailable)
+    if (root.microphoneAvailable && !microphoneToggle.running)
       microphoneToggle.running = true
   }
 
   function setMicrophoneVolume(value) {
     if (!root.microphoneAvailable)
       return
-    microphoneSet.value = Math.round(value)
-    microphoneSet.running = true
+    root.pendingMicrophoneVolume = Math.max(0, Math.min(100, Math.round(value)))
+    root.applyMicrophoneVolume()
   }
   property string batteryState: ""
   property int batteryPercentage: 0
@@ -564,7 +588,7 @@ Scope {
   }
 
   function toggleAudio() {
-    if (!root.audioAvailable)
+    if (!root.audioAvailable || audioToggle.running)
       return
 
     audioToggle.running = true
@@ -575,9 +599,8 @@ Scope {
     if (!root.audioAvailable)
       return
 
-    audioSet.value = Math.round(value)
-    audioSet.running = true
-    root.notificationService.showOsd("Volume", root.audioMuted ? 0 : value, root.audioIcon())
+    root.pendingAudioVolume = Math.max(0, Math.min(100, Math.round(value)))
+    root.applyAudioVolume()
   }
 
   function setBrightness(value) {
@@ -676,23 +699,27 @@ Scope {
   Process {
     id: audioToggle
     command: ["u_audio", "vol", "toggle"]
+    onExited: exitCode => root.finishAudioControl(exitCode)
   }
 
   Process {
     id: microphoneToggle
     command: ["u_audio", "mic", "toggle"]
+    onExited: exitCode => root.finishAudioControl(exitCode, true)
   }
 
   Process {
     id: microphoneSet
     property int value: 0
     command: ["u_audio", "mic", "set", value.toString()]
+    onExited: exitCode => root.finishAudioControl(exitCode, true)
   }
 
   Process {
     id: audioSet
     property int value: 0
     command: ["u_audio", "vol", "set", value.toString()]
+    onExited: exitCode => root.finishAudioControl(exitCode)
   }
 
   Process {

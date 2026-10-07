@@ -43,15 +43,19 @@ function icon_volume {
 }
 
 function get_volume {
-  bc <<< "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print $2}') * 100"
+  local volume
+  volume=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+  awk '{printf "%.0f\n", $2 * 100}' <<< "$volume"
 }
 
 function get_mic {
-  bc <<< "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | awk '{print $2}') * 100"
+  local volume
+  volume=$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)
+  awk '{printf "%.0f\n", $2 * 100}' <<< "$volume"
 }
 
 function vol_is_mute {
-  pactl get-sink-mute @DEFAULT_SINK@ | grep yes
+  wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED
 }
 
 function mic_is_mute {
@@ -114,14 +118,16 @@ case $1 in
       set)
         mic=$(echo "$3" | awk '{if ($1 > 100) print 100; else if ($1 < 0) print 0; else print $1}')
         wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$mic%"
-        # show_mic
+        show_mic
         ;;
       inc)
         mic=$(awk -v current="$(get_mic)" 'BEGIN { print (current > 98 ? 100 : current + 2) }')
         wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$mic%"
+        show_mic
         ;;
       dec)
         wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 2%-
+        show_mic
         ;;
       show) show_mic ;;
       toggle)
@@ -135,17 +141,20 @@ case $1 in
       get) get_volume ;;
       icon) icon_volume ;;
       inc)
-        wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 2%+ ;;
+        wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 2%+
+        show_volume ;;
       dec)
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%- ;;
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-
+        show_volume ;;
       set)
         vol=$(echo "$3" | awk '{if ($1 > 100) print 100; else if ($1 < 0) print 0; else print $1}')
         wpctl set-volume @DEFAULT_AUDIO_SINK@ "$vol%"
-        # show_volume
+        show_volume
         ;;
       show) show_volume ;;
       default) wpctl set-default "$3" ;;
       toggle)
-        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+        show_volume ;;
     esac
 esac

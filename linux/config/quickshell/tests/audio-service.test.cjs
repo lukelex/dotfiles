@@ -28,15 +28,26 @@ test('bar audio volume and mute state use the live PipeWire default sink', () =>
   const root = {
     audioAvailable: true,
     audioMuted: false,
+    pendingAudioVolume: -1,
     notificationService: { showOsd: (...args) => { root.osd = args; } },
     audioIcon: () => 'volume-2',
   };
   const audioSet = { value: 0, running: false };
   const audioToggle = { running: false };
   const controlRefreshTimer = { restart() {} };
+  root.applyAudioVolume = loadBarFunction('applyAudioVolume', { root, audioSet });
   loadBarFunction('setAudioVolume', { root, audioSet })(65);
   assert.deepEqual(audioSet, { value: 65, running: true });
-  assert.deepEqual(root.osd, ['Volume', 65, 'volume-2']);
+  assert.equal(root.osd, undefined, 'Feedback waits for the backend rather than announcing the request');
+
+  loadBarFunction('setAudioVolume', { root, audioSet })(70);
+  loadBarFunction('setAudioVolume', { root, audioSet })(85);
+  assert.equal(audioSet.value, 65, 'An in-flight command retains its arguments');
+  assert.equal(root.pendingAudioVolume, 85, 'The latest drag value survives competing updates');
+  audioSet.running = false;
+  root.applyAudioVolume();
+  assert.equal(audioSet.value, 85);
+  assert.equal(root.pendingAudioVolume, -1);
 
   loadBarFunction('toggleAudio', { root, audioToggle, controlRefreshTimer })();
   assert.equal(audioToggle.running, true);

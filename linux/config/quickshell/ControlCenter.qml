@@ -474,6 +474,17 @@ PopupWindow {
             width: parent.width - 28
             spacing: 12
 
+            Text {
+              width: parent.width
+              visible: text !== ""
+              text: popup.controller.audioControlError
+              textFormat: Text.PlainText
+              wrapMode: Text.Wrap
+              color: popup.controller.urgent
+              font.family: popup.controller.fontFamily
+              font.pixelSize: 11
+            }
+
             SliderControl {
               controller: popup.controller
               enabled: popup.controller.audioAvailable
