@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+
+# Set a default and migrate existing streams. Exit 2 means partial migration.
+set -euo pipefail
+
+case ${1:-} in
+  sink) default=sink; streams=sink-inputs; move=sink-input ;;
+  source) default=source; streams=source-outputs; move=source-output ;;
+  *) echo 'Usage: audio-switch sink|source DEVICE' >&2; exit 1 ;;
+esac
+device=${2:?Missing audio device}
+
+pactl "set-default-$default" "$device"
+stream_list=$(pactl list short "$streams")
+failed=0
+while IFS=$'\t' read -r id _; do
+  [[ -n $id ]] || continue
+  if ! pactl "move-$move" "$id" "$device"; then
+    # A stream that ended during the switch needs no migration.
+    remaining=$(pactl list short "$streams")
+    if awk -v id="$id" '$1 == id { found=1 } END { exit !found }' <<< "$remaining"; then
+      failed=1
+    fi
+  fi
+done <<< "$stream_list"
+if (( failed )); then
+  exit 2
+fi

@@ -6,6 +6,7 @@ const { test } = require('node:test');
 
 const serviceSource = fs.readFileSync(path.join(__dirname, '..', 'AudioService.qml'), 'utf8');
 const barSource = fs.readFileSync(path.join(__dirname, '..', 'Bar.qml'), 'utf8');
+const switchSource = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'audio-switch'), 'utf8');
 
 function loadFunction(name, globals) {
   const match = serviceSource.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
@@ -70,6 +71,7 @@ function serviceState(overrides = {}) {
     error: '',
     loaded: false,
     _readSucceeded: false,
+    _selectionWarning: '',
     outputSelectionTimeout: { stop() {}, restart() {} },
     inputSelectionTimeout: { stop() {}, restart() {} },
     outputIcon: loadFunction('outputIcon', {}),
@@ -123,6 +125,20 @@ test('output discovery leaves existing devices intact when the response is malfo
   assert.equal(service.outputs, oldOutputs);
   assert.equal(service._readSucceeded, false);
   assert.equal(service.error, 'Audio devices are unavailable.');
+});
+
+test('default confirmation preserves a partial stream migration warning', () => {
+  const service = serviceState({
+    pendingSink: 'sink-b',
+    _selectionWarning: 'Some applications could not be moved.',
+  });
+  loadFunction('_accept', {
+    service,
+    setOutputProcess: { running: false },
+    setInputProcess: { running: false },
+  })(audioPayload([{ name: 'sink-b', description: 'Speakers' }], 'sink-b'));
+  assert.equal(service.pendingSink, '');
+  assert.equal(service.error, service._selectionWarning);
 });
 
 test('input discovery excludes monitor sources and labels the active mic port', () => {
@@ -231,11 +247,11 @@ test('source selection validates devices and tracks pending state', () => {
 });
 
 test('changing the output also migrates existing playback streams', () => {
-  assert.match(serviceSource, /pactl set-default-sink \\"\$sink\\"/);
-  assert.match(serviceSource, /pactl move-sink-input \\"\$input\\" \\"\$sink\\"/);
+  assert.match(serviceSource, /shellPath\("scripts\/audio-switch"\), "sink"/);
+  assert.match(switchSource, /sink\) default=sink; streams=sink-inputs; move=sink-input/);
 });
 
 test('changing the input also migrates existing capture streams', () => {
-  assert.match(serviceSource, /pactl set-default-source \\"\$source\\"/);
-  assert.match(serviceSource, /pactl move-source-output \\"\$output\\" \\"\$source\\"/);
+  assert.match(serviceSource, /shellPath\("scripts\/audio-switch"\), "source"/);
+  assert.match(switchSource, /source\) default=source; streams=source-outputs; move=source-output/);
 });

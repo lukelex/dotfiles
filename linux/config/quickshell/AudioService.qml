@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell.Io
+import Quickshell
 import Quickshell.Services.Pipewire
 import QtQml
 
@@ -21,6 +22,7 @@ QtObject {
   property int activePanels: 0
   property string _requestedSink: ""
   property string _requestedSource: ""
+  property string _selectionWarning: ""
   readonly property bool busy: pendingSink !== "" || pendingSource !== ""
     || setOutputProcess.running || _settingInput
   property bool _settingInput: false
@@ -184,7 +186,7 @@ QtObject {
 
       if (service.pendingSink && service.pendingSink === nextDefaultSink && !setOutputProcess.running) {
         service.pendingSink = ""
-        service.error = ""
+        service.error = service._selectionWarning
         service.outputSelectionTimeout.stop()
       } else if (service.pendingSink && !setOutputProcess.running
           && !nextOutputs.some(output => output.name === service.pendingSink)) {
@@ -195,7 +197,7 @@ QtObject {
 
       if (service.pendingSource && service.pendingSource === nextDefaultSource && !setInputProcess.running) {
         service.pendingSource = ""
-        service.error = ""
+        service.error = service._selectionWarning
         service.inputSelectionTimeout.stop()
       } else if (service.pendingSource && !setInputProcess.running
           && !nextInputs.some(input => input.name === service.pendingSource)) {
@@ -215,6 +217,7 @@ QtObject {
 
     service.error = ""
     service._requestedSink = name
+    service._selectionWarning = ""
     service.pendingSink = name
     service.outputSelectionTimeout.restart()
     setOutputProcess.running = true
@@ -227,6 +230,7 @@ QtObject {
 
     service.error = ""
     service._requestedSource = name
+    service._selectionWarning = ""
     service.pendingSource = name
     service._settingInput = true
     service.inputSelectionTimeout.restart()
@@ -253,10 +257,12 @@ QtObject {
   }
 
   property Process setOutputProcess: Process {
-    command: ["sh", "-c", "sink=$1; pactl set-default-sink \"$sink\" && pactl list short sink-inputs | cut -f1 | while IFS= read -r input; do pactl move-sink-input \"$input\" \"$sink\" 2>/dev/null || true; done", "quickshell-audio", service._requestedSink]
+    command: [Quickshell.shellPath("scripts/audio-switch"), "sink", service._requestedSink]
     onExited: (exitCode) => {
       const requestedSink = service._requestedSink
-      if (service.pendingSink === requestedSink && exitCode !== 0) {
+      if (exitCode === 2)
+        service._selectionWarning = "Output changed, but some applications could not be moved. Check Advanced sound settings."
+      else if (service.pendingSink === requestedSink && exitCode !== 0) {
         service.pendingSink = ""
         service.error = "Could not switch output device."
         service.outputSelectionTimeout.stop()
@@ -266,11 +272,13 @@ QtObject {
   }
 
   property Process setInputProcess: Process {
-    command: ["sh", "-c", "source=$1; pactl set-default-source \"$source\" && pactl list short source-outputs | cut -f1 | while IFS= read -r output; do pactl move-source-output \"$output\" \"$source\" 2>/dev/null || true; done", "quickshell-audio", service._requestedSource]
+    command: [Quickshell.shellPath("scripts/audio-switch"), "source", service._requestedSource]
     onExited: (exitCode) => {
       service._settingInput = false
       const requestedSource = service._requestedSource
-      if (service.pendingSource === requestedSource && exitCode !== 0) {
+      if (exitCode === 2)
+        service._selectionWarning = "Input changed, but some applications could not be moved. Check Advanced sound settings."
+      else if (service.pendingSource === requestedSource && exitCode !== 0) {
         service.pendingSource = ""
         service.error = "Could not switch input device."
         service.inputSelectionTimeout.stop()
@@ -311,6 +319,14 @@ QtObject {
     running: service.activePanels > 0
     repeat: true
     onTriggered: service.refresh()
+  }
+
+  property Connections nodeConnections: Connections {
+    target: Pipewire.nodes
+    function onValuesChanged() {
+      if (service.activePanels > 0)
+        queuedRefresh.restart()
+    }
   }
 
   property Connections pipewireConnections: Connections {
