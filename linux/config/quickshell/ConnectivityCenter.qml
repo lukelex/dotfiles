@@ -572,52 +572,43 @@ Scope {
         wrapMode: Text.Wrap
       }
 
-      Flickable {
+      ConnectionDeviceList {
         id: wifiScroll
         width: parent.width
-        height: Math.min(180, wifiRows.implicitHeight)
-        contentWidth: width
-        contentHeight: wifiRows.implicitHeight
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.VerticalFlick
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-        Column {
-          id: wifiRows
-          width: wifiScroll.width - (wifiScroll.contentHeight > wifiScroll.height ? 12 : 0)
-          spacing: 6
-          Repeater {
-            // The service orders active first, then name/device; never sort by strength.
-            model: popup.service.savedNetworks
-            delegate: Action {
-              required property var modelData
-              readonly property bool connecting: modelData.state === ConnectionState.Connecting
-                || popup.service.connectingNetwork === modelData
-              width: wifiRows.width
-              height: 54
-              title: modelData.name || "Hidden network"
-              detail: title + "\n" + subtitle + "\nDevice: " + modelData.device.name
-              subtitle: connecting ? "Connecting..." : modelData.connected ? "Connected / " + popup.strengthText(modelData.signalStrength)
-                : "Saved / " + popup.strengthText(modelData.signalStrength)
-              iconName: modelData.connected ? "circle-check" : "wifi"
-              active: modelData.connected || connecting
-              enabled: popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
-                && !popup.service.wifiConnecting && !modelData.connected
-              onActivated: {
-                popup.requestOpen(true)
-                popup.service.connectNetwork(modelData)
-              }
-            }
-          }
-          Label {
-            width: parent.width
-            height: visible ? 30 : 0
-            visible: popup.service.savedNetworks.length === 0
-            text: popup.service.wifiEnabled ? "No saved networks in range" : "Turn on Wi-Fi to see saved networks"
-            verticalAlignment: Text.AlignVCenter
+        entries: popup.service.savedNetworks
+        keyForEntry: network => JSON.stringify([network.device.name, network.name, network.security])
+        panelVisible: popup.visible
+        keyboardEnabled: popup.pinned
+        focusFallback: closeButton
+        delegate: Action {
+          required property var entry
+          readonly property var modelData: entry
+          readonly property bool connecting: modelData && (modelData.state === ConnectionState.Connecting
+            || popup.service.connectingNetwork === modelData)
+          width: wifiScroll.rowWidth
+          height: 54
+          title: modelData ? modelData.name || "Hidden network" : "Network unavailable"
+          detail: title + "\n" + subtitle + (modelData ? "\nDevice: " + modelData.device.name : "")
+          subtitle: !modelData ? "Unavailable" : connecting ? "Connecting..."
+            : modelData.connected ? "Connected / " + popup.strengthText(modelData.signalStrength)
+            : "Saved / " + popup.strengthText(modelData.signalStrength)
+          iconName: modelData && modelData.connected ? "circle-check" : "wifi"
+          active: modelData && (modelData.connected || connecting)
+          enabled: modelData !== null && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
+            && !popup.service.wifiConnecting && !modelData.connected
+          onActivated: {
+            popup.requestOpen(true)
+            popup.service.connectNetwork(modelData)
           }
         }
+      }
+
+      Label {
+        width: parent.width
+        height: visible ? 30 : 0
+        visible: popup.service.savedNetworks.length === 0
+        text: popup.service.wifiEnabled ? "No saved networks in range" : "Turn on Wi-Fi to see saved networks"
+        verticalAlignment: Text.AlignVCenter
       }
 
       Action {
@@ -733,74 +724,68 @@ Scope {
         wrapMode: Text.Wrap
       }
 
-      Flickable {
+      ConnectionDeviceList {
         id: bluetoothScroll
         width: parent.width
-        height: Math.min(140, bluetoothRows.implicitHeight)
-        contentWidth: width
-        contentHeight: bluetoothRows.implicitHeight
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.VerticalFlick
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-        Column {
-          id: bluetoothRows
-          width: bluetoothScroll.width - (bluetoothScroll.contentHeight > bluetoothScroll.height ? 12 : 0)
-          spacing: 6
-          Repeater {
-            model: popup.service.connectedBluetoothDevices
-            delegate: Rectangle {
-              id: deviceRow
-              required property var modelData
-              width: bluetoothRows.width
-              height: 48
-              radius: 14
-              color: popup.controller.controlSurface
-              activeFocusOnTab: popup.pinned
-              Accessible.role: Accessible.StaticText
-              Accessible.name: modelData.name + ", " + batteryLabel.text
-              HoverHandler { id: deviceHover }
-              Hint {
-                visible: popup.visible && (deviceHover.hovered || deviceRow.activeFocus)
-                text: deviceRow.modelData.name + "\n" + batteryLabel.text
-              }
-              LucideIcon {
-                anchors.left: parent.left
-                anchors.leftMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                width: 18
-                height: 18
-                source: popup.controller.icon("bluetooth-connected")
-                color: popup.controller.controlActiveIcon
-              }
-              Label {
-                anchors.left: parent.left
-                anchors.leftMargin: 40
-                anchors.right: batteryLabel.left
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                text: deviceRow.modelData.name
-                font.pixelSize: 12
-                color: popup.controller.controlPrimaryText
-              }
-              Label {
-                id: batteryLabel
-                anchors.right: parent.right
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                text: deviceRow.modelData.batteryAvailable ? popup.strengthText(deviceRow.modelData.battery) : "Connected"
-              }
-            }
+        maximumHeight: 140
+        entries: popup.service.connectedBluetoothDevices
+        keyForEntry: device => device.dbusPath
+        panelVisible: popup.visible
+        keyboardEnabled: popup.pinned
+        focusFallback: closeButton
+        delegate: Rectangle {
+          id: deviceRow
+          required property var entry
+          readonly property var modelData: entry
+          readonly property string deviceName: modelData ? modelData.name : "Device unavailable"
+          width: bluetoothScroll.rowWidth
+          height: 48
+          radius: 14
+          color: popup.controller.controlSurface
+          activeFocusOnTab: popup.pinned
+          Accessible.role: Accessible.StaticText
+          Accessible.name: deviceName + ", " + batteryLabel.text
+          HoverHandler { id: deviceHover }
+          Hint {
+            visible: popup.visible && (deviceHover.hovered || deviceRow.activeFocus)
+            text: deviceRow.deviceName + "\n" + batteryLabel.text
+          }
+          LucideIcon {
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            width: 18
+            height: 18
+            source: popup.controller.icon("bluetooth-connected")
+            color: popup.controller.controlActiveIcon
           }
           Label {
-            width: parent.width
-            height: visible ? 30 : 0
-            visible: popup.service.connectedBluetoothDevices.length === 0
-            text: "No connected devices"
-            verticalAlignment: Text.AlignVCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 40
+            anchors.right: batteryLabel.left
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            text: deviceRow.deviceName
+            font.pixelSize: 12
+            color: popup.controller.controlPrimaryText
+          }
+          Label {
+            id: batteryLabel
+            anchors.right: parent.right
+            anchors.rightMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            text: !deviceRow.modelData ? "Unavailable" : deviceRow.modelData.batteryAvailable
+              ? popup.strengthText(deviceRow.modelData.battery) : "Connected"
           }
         }
+      }
+
+      Label {
+        width: parent.width
+        height: visible ? 30 : 0
+        visible: popup.service.connectedBluetoothDevices.length === 0
+        text: "No connected devices"
+        verticalAlignment: Text.AlignVCenter
       }
 
       Row {
