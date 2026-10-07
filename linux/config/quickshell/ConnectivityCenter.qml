@@ -245,6 +245,7 @@ Scope {
     property bool radioSwitch: false
     property bool showTraffic: false
     property bool wiredTraffic: false
+    property string trafficDeviceName: ""
     property string detail: title + (subtitle ? "\n" + subtitle : "")
     readonly property bool compactTraffic: showTraffic && width < 360
     readonly property bool showIcon: iconName !== "" && (!compactTraffic || width >= 300)
@@ -318,7 +319,7 @@ Scope {
         delegate: Row {
           id: trafficRate
           required property string modelData
-          readonly property string rate: popup.service.formatSpeed(popup.service.connectionSpeed(action.wiredTraffic, modelData))
+          readonly property string rate: popup.service.formatSpeed(popup.service.connectionSpeed(action.wiredTraffic, modelData, action.trafficDeviceName))
           width: trafficColumn.width
           height: 20
           spacing: 5
@@ -526,6 +527,7 @@ Scope {
           title: popup.service._wiredDevices.length > 1 ? "Ethernet / " + modelData.name : "Ethernet"
           showTraffic: modelData !== null && modelData.connected
           wiredTraffic: true
+          trafficDeviceName: modelData ? modelData.name : ""
           iconName: "ethernet-port"
           radioSwitch: true
           active: modelData !== null && modelData.connected

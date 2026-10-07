@@ -30,15 +30,13 @@ QtObject {
   readonly property bool wifiHardwareEnabled: Networking.wifiHardwareEnabled
   property bool wifiScanningEnabled: true
   property bool trafficMonitoringEnabled: false
-  property real downloadSpeed: -1
-  property real uploadSpeed: -1
   property var _deviceSpeeds: ({})
-  property var _trafficSample: null
-  readonly property string _trafficInterfaces: service._wifiDevices.concat(service._wiredDevices)
-    .filter(device => device.connected).map(device => device.name).sort().join(",")
+  property var _trafficSamples: ({})
+  readonly property var _trafficDevices: service._wifiDevices.concat(service._wiredDevices).filter(device => device.connected)
+  readonly property string _trafficInterfaces: service._trafficDevices.map(device => device.name).sort().join(",")
 
   onTrafficMonitoringEnabledChanged: service.resetTraffic()
-  on_TrafficInterfacesChanged: service.resetTraffic()
+  on_TrafficDevicesChanged: service.pruneTraffic()
 
   readonly property FileView _trafficFile: FileView {
     path: service.trafficMonitoringEnabled && service._trafficInterfaces ? "/proc/net/dev" : ""
@@ -54,10 +52,23 @@ QtObject {
   }
 
   function resetTraffic(): void {
-    service._trafficSample = null
-    service.downloadSpeed = -1
-    service.uploadSpeed = -1
+    service._trafficSamples = ({})
     service._deviceSpeeds = ({})
+  }
+
+  function pruneTraffic(): void {
+    const samples = {}
+    const speeds = {}
+    for (const device of service._trafficDevices) {
+      const previous = service._trafficSamples[device.name]
+      if (previous && previous.device === device) {
+        samples[device.name] = previous
+        if (service._deviceSpeeds[device.name])
+          speeds[device.name] = service._deviceSpeeds[device.name]
+      }
+    }
+    service._trafficSamples = samples
+    service._deviceSpeeds = speeds
   }
 
   function sampleTraffic(text: string, now: real): void {
@@ -78,34 +89,32 @@ QtObject {
       if (fields.length >= 16 && Number.isFinite(rx) && Number.isFinite(tx) && rx >= 0 && tx >= 0)
         counters[name] = { rx: rx, tx: tx }
     }
-    if (interfaces.some(name => !counters[name])) {
-      service.resetTraffic()
-      return
-    }
-    const previous = service._trafficSample
-    service._trafficSample = { time: now, counters: counters }
-    const seconds = previous ? (now - previous.time) / 1000 : 0
-    if (seconds <= 0 || interfaces.some(name => !previous.counters[name]
-        || counters[name].rx < previous.counters[name].rx || counters[name].tx < previous.counters[name].tx)) {
-      service.downloadSpeed = -1
-      service.uploadSpeed = -1
-      service._deviceSpeeds = ({})
-      return
-    }
-    service.downloadSpeed = interfaces.reduce((sum, name) => sum + counters[name].rx - previous.counters[name].rx, 0) / seconds
-    service.uploadSpeed = interfaces.reduce((sum, name) => sum + counters[name].tx - previous.counters[name].tx, 0) / seconds
+    const samples = {}
     const speeds = {}
-    for (const name of interfaces) {
+    for (const device of service._trafficDevices) {
+      const name = device.name
+      const current = counters[name]
+      if (!current)
+        continue
+      const previous = service._trafficSamples[name]
+      samples[name] = { device: device, time: now, rx: current.rx, tx: current.tx }
+      const seconds = previous ? (now - previous.time) / 1000 : 0
+      // Suspend, clock jumps and replacement devices establish fresh baselines.
+      if (!previous || previous.device !== device || seconds <= 0 || seconds > 5
+          || current.rx < previous.rx || current.tx < previous.tx)
+        continue
       speeds[name] = {
-        download: (counters[name].rx - previous.counters[name].rx) / seconds,
-        upload: (counters[name].tx - previous.counters[name].tx) / seconds
+        download: (current.rx - previous.rx) / seconds,
+        upload: (current.tx - previous.tx) / seconds
       }
     }
+    service._trafficSamples = samples
     service._deviceSpeeds = speeds
   }
 
-  function connectionSpeed(wired: bool, direction: string): real {
-    const devices = (wired ? service._wiredDevices : service._wifiDevices).filter(device => device.connected)
+  function connectionSpeed(wired: bool, direction: string, deviceName = ""): real {
+    const devices = (wired ? service._wiredDevices : service._wifiDevices)
+      .filter(device => device.connected && (!deviceName || device.name === deviceName))
     if (!devices.length || devices.some(device => !service._deviceSpeeds[device.name]))
       return -1
     return devices.reduce((sum, device) => sum + service._deviceSpeeds[device.name][direction], 0)
