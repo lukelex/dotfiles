@@ -468,20 +468,24 @@ Scope {
         }
       }
 
-      Action {
-        width: parent.width
-        title: "Ethernet"
-        showTraffic: popup.service.ethernetConnected
-        wiredTraffic: true
-        iconName: "ethernet-port"
-        radioSwitch: true
-        active: popup.service.ethernetConnected
-        enabled: popup.service.ethernetAvailable
-        subtitle: !popup.service.ethernetAvailable ? "No Ethernet adapter"
-          : popup.service.ethernetConnected ? popup.service.ethernetName || "Connected" : "Off"
-        onActivated: {
-          popup.requestOpen()
-          popup.service.setEthernetEnabled(!popup.service.ethernetConnected)
+      Repeater {
+        model: popup.service._wiredDevices.length ? popup.service._wiredDevices : [null]
+        delegate: Action {
+          required property var modelData
+          width: sections.width
+          title: popup.service._wiredDevices.length > 1 ? "Ethernet / " + modelData.name : "Ethernet"
+          showTraffic: modelData !== null && modelData.connected
+          wiredTraffic: true
+          iconName: "ethernet-port"
+          radioSwitch: true
+          active: modelData !== null && modelData.connected
+          enabled: modelData !== null && modelData.nmManaged && !popup.service.ethernetBusy
+            && modelData.state !== ConnectionState.Connecting
+          subtitle: popup.service.ethernetStatus(modelData)
+          onActivated: {
+            popup.requestOpen(true)
+            popup.service.setEthernetEnabled(!modelData.connected, modelData)
+          }
         }
       }
 

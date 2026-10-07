@@ -34,6 +34,8 @@ function serviceForTest() {
     connect() { calls.ethernetConnect++; },
   };
   const wiredDevice = {
+    name: 'eth0', nmManaged: true, hasLink: true, network: wiredNetwork,
+    networks: { values: [wiredNetwork] },
     connected: true,
     state: ConnectionState.Connected,
     set autoconnect(value) { calls.autoconnect.push(value); },
@@ -47,16 +49,19 @@ function serviceForTest() {
     savedNetworks: [network],
     activeNetwork: { connected: true, disconnect: network.disconnect },
     ethernetAvailable: true,
+    ethernetDevice: wiredDevice,
     _wiredDevices: [wiredDevice],
     _wiredNetworks: [wiredNetwork],
     _state: {
       requestedNetwork: null, pending: false, sawConnecting: false,
       wifiError: '', wifiErrorReason: -1, ethernetError: '', bluetoothError: '',
+      ethernetPending: false,
     },
     _connectionTimeout: {
       restart() { calls.restart++; },
       stop() { calls.stop++; },
     },
+    _ethernetTimeout: { restart() {}, stop() {} },
   };
   // Only extracted JavaScript runs; no QML imports, native radios or real timers.
   const context = vm.createContext({
@@ -71,7 +76,7 @@ function serviceForTest() {
     },
   });
   for (const name of ['connectNetwork', '_finishConnection', 'setWifiEnabled', 'setEthernetEnabled',
-    'setBluetoothEnabled', 'onConnectionFailed', 'onStateChanged']) {
+    'setBluetoothEnabled', 'onConnectionFailed', 'onStateChanged', 'finishEthernet', 'reconcileEthernet', 'ethernetStatus']) {
     const match = source.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
     assert.ok(match, `Missing QML function ${name}`);
     const javascript = match[0].replace(/^[^{]+/, signature =>
@@ -97,6 +102,42 @@ test('Ethernet toggle enables autoconnect and activates an available profile', (
   assert.deepEqual(calls.autoconnect, [true]);
   assert.equal(calls.ethernetConnect, 1);
   assert.equal(calls.ethernetDisconnect, 0);
+});
+
+test('Ethernet targets one adapter and rejects duplicate requests until confirmed', () => {
+  const { service, wiredDevice, calls } = serviceForTest();
+  service._wiredDevices.push({ connected: true, set autoconnect(_) { assert.fail('Unrelated adapter changed'); } });
+  assert.equal(service.setEthernetEnabled(false, wiredDevice), true);
+  assert.equal(service._state.ethernetPending, true);
+  assert.equal(service.setEthernetEnabled(false, wiredDevice), false);
+  assert.equal(calls.ethernetDisconnect, 1);
+  wiredDevice.connected = false;
+  wiredDevice.state = ConnectionState.Disconnected;
+  service.reconcileEthernet();
+  assert.equal(service._state.ethernetPending, false);
+  assert.equal(service._state.ethernetError, '');
+});
+
+test('Ethernet reports missing cable, failed activation and disappearing devices', () => {
+  const { service, wiredDevice } = serviceForTest();
+  wiredDevice.connected = false;
+  wiredDevice.state = ConnectionState.Disconnected;
+  wiredDevice.hasLink = false;
+  assert.equal(service.ethernetStatus(wiredDevice), 'Cable unplugged');
+  assert.equal(service.setEthernetEnabled(true), false);
+  wiredDevice.hasLink = true;
+  assert.equal(service.ethernetStatus(wiredDevice), 'Disconnected');
+  service.setEthernetEnabled(true);
+  assert.equal(service.ethernetStatus(wiredDevice), 'Connecting…');
+  wiredDevice.state = ConnectionState.Connecting;
+  service.reconcileEthernet();
+  wiredDevice.state = ConnectionState.Disconnected;
+  service.reconcileEthernet();
+  assert.match(service._state.ethernetError, /failed/);
+  service.setEthernetEnabled(true);
+  service._wiredDevices = [];
+  service.reconcileEthernet();
+  assert.match(service._state.ethernetError, /disappeared/);
 });
 
 test('saved network activation does not disconnect the active network or change power', () => {

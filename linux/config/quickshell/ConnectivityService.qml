@@ -112,6 +112,9 @@ QtObject {
   readonly property bool ethernetConnected: service._wiredDevices.some(device => device.connected)
   readonly property string ethernetName: service.activeEthernetNetwork ? service.activeEthernetNetwork.name : ""
   readonly property string ethernetError: service._state.ethernetError
+  readonly property bool ethernetBusy: service._state.ethernetPending
+  readonly property var ethernetDevice: service._wiredDevices.find(device => device.connected)
+    || service._wiredDevices.find(device => device.hasLink) || service._wiredDevices[0] || null
   // Native signalStrength and BluetoothDevice.battery are fractions, not percentages.
   readonly property real wifiStrength: service.activeNetwork ? service.activeNetwork.signalStrength : 0
   readonly property WifiNetwork activeNetwork: service._networks.find(network => network.connected) || null
@@ -165,6 +168,11 @@ QtObject {
     property string wifiError: ""
     property int wifiErrorReason: -1
     property string ethernetError: ""
+    property NetworkDevice ethernetDevice: null
+    property Network ethernetNetwork: null
+    property bool ethernetPending: false
+    property bool ethernetRequested: false
+    property bool ethernetSawConnecting: false
     property string bluetoothError: ""
   }
 
@@ -206,6 +214,68 @@ QtObject {
     onTriggered: service._finishConnection("Wi-Fi connection timed out; check NetworkManager permissions and saved credentials.")
   }
 
+  readonly property Timer _ethernetTimeout: Timer {
+    interval: 45000
+    onTriggered: service.finishEthernet("Ethernet request timed out. Check the cable and Network settings.")
+  }
+
+  readonly property Connections _ethernetDeviceEvents: Connections {
+    target: service._state.ethernetDevice
+    function onStateChanged() { service.reconcileEthernet() }
+    function onConnectedChanged() { service.reconcileEthernet() }
+  }
+
+  readonly property Connections _ethernetNetworkEvents: Connections {
+    target: service._state.ethernetNetwork
+    function onConnectionFailed(reason) {
+      if (service._state.ethernetPending)
+        service.finishEthernet(ConnectionFailReason.toString(reason))
+    }
+  }
+
+  on_WiredDevicesChanged: service.reconcileEthernet()
+
+  function ethernetStatus(device): string {
+    if (!device)
+      return "No Ethernet adapter"
+    if (service._state.ethernetPending && service._state.ethernetDevice === device)
+      return service._state.ethernetRequested ? "Connecting…" : "Disconnecting…"
+    if (device.connected)
+      return device.network ? device.network.name || "Connected" : "Connected"
+    if (device.state === ConnectionState.Connecting)
+      return "Connecting…"
+    if (!device.nmManaged)
+      return "Not managed by NetworkManager"
+    return device.hasLink ? "Disconnected" : "Cable unplugged"
+  }
+
+  function finishEthernet(error: string): void {
+    service._ethernetTimeout.stop()
+    service._state.ethernetPending = false
+    service._state.ethernetError = error
+    service._state.ethernetNetwork = null
+    service._state.ethernetDevice = null
+  }
+
+  function reconcileEthernet(): void {
+    if (!service._state.ethernetPending)
+      return
+    const device = service._state.ethernetDevice
+    if (!device || service._wiredDevices.indexOf(device) < 0) {
+      service.finishEthernet("The Ethernet adapter disappeared.")
+      return
+    }
+    if (device.connected === service._state.ethernetRequested
+        && device.state !== ConnectionState.Connecting) {
+      service.finishEthernet("")
+    } else if (device.state === ConnectionState.Connecting) {
+      service._state.ethernetSawConnecting = true
+    } else if (service._state.ethernetRequested && service._state.ethernetSawConnecting
+        && device.state === ConnectionState.Disconnected) {
+      service.finishEthernet("Ethernet connection failed. Check the cable and Network settings.")
+    }
+  }
+
   on_NetworksChanged: {
     if (service._state.pending && service._networks.indexOf(service._state.requestedNetwork) < 0)
       service._finishConnection("The Wi-Fi network or adapter disappeared.")
@@ -227,33 +297,38 @@ QtObject {
     return true
   }
 
-  function setEthernetEnabled(enabled: bool): bool {
+  function setEthernetEnabled(enabled: bool, device = service.ethernetDevice): bool {
+    if (service._state.ethernetPending)
+      return false
     service._state.ethernetError = ""
-    if (!service.ethernetAvailable) {
-      service._state.ethernetError = "No Ethernet adapter is available."
+    if (!device || service._wiredDevices.indexOf(device) < 0 || !device.nmManaged) {
+      service._state.ethernetError = "No managed Ethernet adapter is available."
       return false
     }
-    for (const device of service._wiredDevices)
-      device.autoconnect = enabled
-    if (!enabled) {
-      for (const device of service._wiredDevices) {
-        if (device.connected || device.state === ConnectionState.Connecting)
-          device.disconnect()
-      }
+    if (device.connected === enabled && device.state !== ConnectionState.Connecting)
       return true
-    }
-    const network = service._wiredNetworks.find(network => network.known) || service._wiredNetworks[0]
-    if (!network) {
-      service._state.ethernetError = "No Ethernet connection is available."
+    const network = device.network || device.networks.values.find(item => item.known)
+    if (enabled && (!device.hasLink || !network)) {
+      service._state.ethernetError = !device.hasLink ? "Plug in the Ethernet cable first." : "No Ethernet profile is available. Open Network settings."
       return false
     }
+    service._state.ethernetDevice = device
+    service._state.ethernetNetwork = network || null
+    service._state.ethernetRequested = enabled
+    service._state.ethernetSawConnecting = device.state === ConnectionState.Connecting
+    service._state.ethernetPending = true
+    service._ethernetTimeout.restart()
     try {
-      if (!network.connected && network.state !== ConnectionState.Connecting)
+      device.autoconnect = enabled
+      if (!enabled)
+        device.disconnect()
+      else if (device.state !== ConnectionState.Connecting)
         network.connect()
     } catch (error) {
-      service._state.ethernetError = String(error)
+      service.finishEthernet(String(error))
       return false
     }
+    service.reconcileEthernet()
     return true
   }
 
