@@ -7,6 +7,7 @@ const { test } = require('node:test');
 const source = fs.readFileSync(path.join(__dirname, '../ConnectivityService.qml'), 'utf8');
 const ConnectionState = { Disconnected: 0, Connecting: 1, Connected: 2 };
 const BluetoothAdapterState = { Blocked: 0 };
+const NetworkConnectivity = { Unknown: 0, None: 1, Portal: 2, Limited: 3, Full: 4 };
 
 function serviceForTest() {
   const calls = { connect: 0, restart: 0, stop: 0, power: [] };
@@ -67,6 +68,7 @@ function serviceForTest() {
   const context = vm.createContext({
     service,
     ConnectionState,
+    NetworkConnectivity,
     ConnectionFailReason: { toString: reason => `Connection failure ${reason}` },
     BluetoothAdapterState,
     Bluetooth: { adapters: { values: [adapter] } },
@@ -76,7 +78,7 @@ function serviceForTest() {
     },
   });
   for (const name of ['connectNetwork', '_finishConnection', 'setWifiEnabled', 'setEthernetEnabled',
-    'setBluetoothEnabled', 'onConnectionFailed', 'onStateChanged', 'finishEthernet', 'reconcileEthernet', 'ethernetStatus']) {
+    'setBluetoothEnabled', 'onConnectionFailed', 'onStateChanged', 'finishEthernet', 'reconcileEthernet', 'ethernetStatus', 'internetStatusText']) {
     const match = source.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
     assert.ok(match, `Missing QML function ${name}`);
     const javascript = match[0].replace(/^[^{]+/, signature =>
@@ -294,4 +296,15 @@ test('blocked Bluetooth adapters cannot be powered on', () => {
   assert.equal(service.setBluetoothEnabled(true), false);
   assert.equal(service._state.bluetoothError, 'A Bluetooth adapter is blocked.');
   assert.deepEqual(calls.power, []);
+});
+
+test('internet status distinguishes link-only, portal and unavailable checks', () => {
+  const { service } = serviceForTest();
+  assert.equal(service.internetStatusText(true, NetworkConnectivity.Full), 'Internet available');
+  assert.equal(service.internetStatusText(true, NetworkConnectivity.Portal), 'Sign-in required');
+  assert.equal(service.internetStatusText(true, NetworkConnectivity.Limited), 'Local network only');
+  assert.equal(service.internetStatusText(true, NetworkConnectivity.None), 'No internet connection');
+  assert.equal(service.internetStatusText(true, NetworkConnectivity.Unknown), 'Internet status unknown');
+  assert.equal(service.internetStatusText(false, NetworkConnectivity.None), 'Internet status unknown');
+  assert.equal(service.internetStatusText(false, NetworkConnectivity.Full), 'Internet status unknown');
 });

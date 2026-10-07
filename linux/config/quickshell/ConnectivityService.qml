@@ -9,6 +9,22 @@ import Quickshell.Bluetooth
 QtObject {
   id: service
 
+  // NetworkManager's connectivity is system-wide, not a per-interface link test.
+  readonly property string internetStatus: service.internetStatusText(
+    Networking.canCheckConnectivity && Networking.connectivityCheckEnabled, Networking.connectivity)
+
+  function internetStatusText(available: bool, connectivity: int): string {
+    if (!available)
+      return "Internet status unknown"
+    switch (connectivity) {
+    case NetworkConnectivity.Full: return "Internet available"
+    case NetworkConnectivity.Portal: return "Sign-in required"
+    case NetworkConnectivity.Limited: return "Local network only"
+    case NetworkConnectivity.None: return "No internet connection"
+    default: return "Internet status unknown"
+    }
+  }
+
   readonly property bool wifiAvailable: Networking.backend === NetworkBackendType.NetworkManager && service._wifiDevices.length > 0
   readonly property bool wifiEnabled: Networking.wifiEnabled
   readonly property bool wifiHardwareEnabled: Networking.wifiHardwareEnabled

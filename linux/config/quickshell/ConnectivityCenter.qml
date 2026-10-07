@@ -407,17 +407,28 @@ Scope {
 
       Row {
         width: parent.width
-        height: 32
+        height: 40
         spacing: 8
-        Label {
+        Column {
           width: parent.width - 40
           anchors.verticalCenter: parent.verticalCenter
-          text: "Connectivity"
-          font.pixelSize: 16
-          color: popup.controller.controlPrimaryText
+          spacing: 2
+          Label {
+            width: parent.width
+            text: "Connectivity"
+            font.pixelSize: 16
+            color: popup.controller.controlPrimaryText
+          }
+          Label {
+            width: parent.width
+            text: popup.service.internetStatus
+            color: popup.controller.controlPrimaryText
+            Accessible.name: "NetworkManager internet status: " + text
+          }
         }
         Item {
           id: closeButton
+          anchors.verticalCenter: parent.verticalCenter
           width: 32
           height: 32
           activeFocusOnTab: popup.pinned
