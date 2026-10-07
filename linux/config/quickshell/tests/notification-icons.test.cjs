@@ -13,11 +13,12 @@ test('silent cable notifications stay visible without playing the notification s
   assert.ok(match);
   const played = [];
   const service = {
-    doNotDisturb: false, tagMap: {}, live: {}, liveDeadlines: {}, liveRevision: 0, popupLimit: 5, pendingPopupRecords: [],
     isDndSuppressed: () => false,
     trackApplication: () => ({ enabled: true, sound: true }),
     refreshDndSchedule: () => {},
-    buildRecord: notification => ({ id: notification.id }),
+    doNotDisturb: false, tagMap: {}, live: {}, nativeIds: {}, liveDeadlines: {}, liveRevision: 0, popupLimit: 5, pendingPopupRecords: [],
+    newHistoryId: () => `history:test:${played.length}-${service.pendingPopupRecords.length}`,
+    buildRecord: (notification, tag, value, id) => ({ id }),
     isSystemOsd: () => false,
     addHistory: () => {},
     playNotificationSound: () => played.push('sound'),
@@ -38,11 +39,12 @@ test('DND suppresses popup and sound but still captures history', () => {
   const played = [];
   const history = [];
   const service = {
-    doNotDisturb: true, tagMap: {}, live: {}, liveDeadlines: {}, liveRevision: 0, popupLimit: 5, pendingPopupRecords: [],
     isDndSuppressed: () => true,
     trackApplication: () => ({ enabled: true, sound: true }),
     refreshDndSchedule: () => {},
-    buildRecord: notification => ({ id: notification.id }),
+    doNotDisturb: true, tagMap: {}, live: {}, nativeIds: {}, liveDeadlines: {}, liveRevision: 0, popupLimit: 5, pendingPopupRecords: [],
+    newHistoryId: () => 'history:test:1',
+    buildRecord: (notification, tag, value, id) => ({ id }),
     isSystemOsd: () => false,
     addHistory: record => history.push(record),
     playNotificationSound: () => played.push('sound'),
@@ -51,7 +53,7 @@ test('DND suppresses popup and sound but still captures history', () => {
   service.handleNotification = vm.runInContext(`(${match[0]})`, context);
 
   service.handleNotification({ id: 1, hints: {}, closed: { connect: () => {} } });
-  assert.deepEqual(history, [{ id: 1 }]);
+  assert.deepEqual(history, [{ id: 'history:test:1' }]);
   assert.deepEqual(played, []);
   assert.equal(service.pendingPopupRecords.length, 0);
 });

@@ -9,11 +9,16 @@ const popupSource = fs.readFileSync(path.join(__dirname, '../NotificationPopup.q
 const defaultsSource = fs.readFileSync(path.join(__dirname, '../NotificationDefaults.js'), 'utf8');
 const NotificationDefaults = vm.runInNewContext(defaultsSource.replace(/^\.pragma library\s*/, '') + '\n;({ applications })');
 
-function serviceForTest() {
+function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', doNotDisturb: false }) {
   const service = {
     history: [],
     popup: [],
     live: {},
+    nativeIds: {},
+    historyIdPrefix: 'test-run',
+    historyIdSequence: 0,
+    githubSeenIds: {},
+    pendingPopupRecords: [],
     liveDeadlines: {},
     liveRevision: 0,
     historyLimit: 100,
@@ -27,7 +32,6 @@ function serviceForTest() {
     historyGroups: [],
     historyGroupSequence: 0,
     applications: [],
-    pendingPopupRecords: [],
     saveHistory: () => {},
     pruneHistory: () => {},
     refreshDndSchedule: () => {},
@@ -35,9 +39,14 @@ function serviceForTest() {
   };
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
-  const settings = {};
-  const context = vm.createContext({ service, settings, Date, NotificationDefaults });
-  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation']) {
+  service.historyRecordDismissed = () => {};
+  service.playNotificationSound = () => {};
+  service.osdTimer = { restart() {}, stop() {} };
+  const context = vm.createContext({ service, Date, settings, NotificationDefaults,
+    historyGroupTimer: { start() {} }, popupUpdateTimer: { start() {} },
+    Qt: { callLater: callback => callback() }, NotificationUrgency: { Critical: 2, Low: 0 },
+  });
+  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissRecord', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation', 'restoredId', 'newHistoryId', 'loadInitial', 'handleNotification', 'buildRecord', 'buildActions', 'isBrowserIcon', 'displayBody', 'isSystemOsd', 'addHistory', 'isGithubReview', 'isGithubReviewSeen']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
@@ -62,7 +71,7 @@ test('sound mute preserves popups and history, independently of DND and sender h
         service.notificationSoundTimer = { running: false, start: () => soundStarts++ };
         service.pendingPopupRecords = [];
         service.doNotDisturb = dnd;
-        service.buildRecord = n => ({ ...record(n.id), popupSuppressed: service.doNotDisturb });
+        service.buildRecord = (n, tag, value, id) => ({ ...record(id), popupSuppressed: service.doNotDisturb });
         service.isSystemOsd = () => false;
         service.addHistory = item => service.history.unshift(item);
         const context = vm.createContext({ service, settings, popupUpdateTimer });
@@ -200,7 +209,7 @@ test('per-app policy blocks delivery and sound while system OSDs bypass applicat
         service.trackApplication(record(1));
         service.setApplicationPreference('a', 'enabled', enabled);
         service.setApplicationPreference('a', 'sound', sound);
-        service.buildRecord = n => record(n.id);
+        service.buildRecord = (n, tag, value, id) => record(id);
         service.isSystemOsd = () => osd;
         service.osdTimer = { restart() {} };
         service.addHistory = item => service.history.push(item);
@@ -213,12 +222,125 @@ test('per-app policy blocks delivery and sound while system OSDs bypass applicat
         assert.equal(sounds, !osd && enabled && sound ? 1 : 0);
         assert.equal(updates, !osd && enabled ? 1 : 0);
         if (!osd && !enabled) {
-          assert.equal(service.live[1], undefined);
-          assert.equal(service.liveDeadlines[1], undefined);
+          assert.equal(Object.keys(service.live).length, 0);
+          assert.equal(Object.keys(service.liveDeadlines).length, 0);
+          assert.equal(service.nativeIds[1], undefined);
         }
       }
     }
   }
+});
+
+function nativeNotification(id, overrides = {}) {
+  const callbacks = [];
+  return {
+    id, appName: 'Test app', summary: 'A message', body: '', appIcon: '', hints: {},
+    urgency: 1, expireTimeout: 20000, actions: [],
+    closed: { connect: callback => callbacks.push(callback) },
+    dismissals: 0, expirations: 0,
+    dismiss() { this.dismissals++; for (const callback of callbacks) callback(); },
+    expire() { this.expirations++; for (const callback of callbacks) callback(); },
+    ...overrides,
+  };
+}
+
+test('legacy history and GitHub seen IDs migrate idempotently, including a partially migrated save', () => {
+  const settings = {
+    historyJson: JSON.stringify([{ ...record(7), githubReviewUrl: 'https://github.com/org/repo/pull/1' }]),
+    githubSeenJson: '["7"]', doNotDisturb: false,
+  };
+  const first = serviceForTest(settings).service;
+  first.loadInitial();
+  assert.equal(first.history[0].id, 'history:legacy:7');
+  assert.equal(first.isGithubReviewSeen(first.history[0]), true);
+  assert.deepEqual(JSON.parse(settings.githubSeenJson), ['history:legacy:7']);
+  assert.equal(Object.keys(first.nativeIds).length, 0);
+  const savedHistory = settings.historyJson;
+  // Simulate interruption between the two settings writes.
+  settings.githubSeenJson = '["7"]';
+  const second = serviceForTest(settings).service;
+  second.loadInitial();
+  assert.equal(settings.historyJson, savedHistory);
+  assert.equal(second.isGithubReviewSeen(second.history[0]), true);
+  assert.equal(second.history[0].id, first.history[0].id);
+});
+
+test('a restarted server can reuse a native ID without replacing, activating or dismissing saved history', () => {
+  const first = serviceForTest().service;
+  first.handleNotification(nativeNotification(1));
+  const savedId = first.history[0].id;
+  const saved = first.sanitizeRecord(first.history[0]);
+  assert.equal(saved.nativeId, undefined);
+  const settings = { historyJson: JSON.stringify([saved]), githubSeenJson: JSON.stringify([savedId]), doNotDisturb: false };
+  const second = serviceForTest(settings).service;
+  // Deliberately reuse even the generator prefix: collision checking must work.
+  second.loadInitial();
+  let activated = 0;
+  const incoming = nativeNotification(1, { actions: [{ identifier: 'default', text: 'Open', invoke() { activated++; } }] });
+  second.handleNotification(incoming);
+  const newId = second.history[0].id;
+  assert.notEqual(newId, savedId);
+  assert.equal(second.history.length, 2);
+  assert.equal(second.history[1].id, savedId);
+  assert.equal(second.live[savedId], undefined);
+  assert.equal(second.live[newId], incoming);
+  assert.equal(second.githubSeenIds[newId], undefined);
+  second.focusRecord = () => false;
+  assert.equal(second.activateRecord(savedId), false);
+  assert.equal(activated, 0);
+  second.dismissRecord(savedId);
+  assert.equal(incoming.dismissals, 0);
+  assert.equal(second.history[0].id, newId);
+  assert.equal(second.nativeIds[1], newId);
+  assert.equal(second.activateRecord(newId), true);
+  assert.equal(activated, 1);
+});
+
+test('active replacements keep their history ID, but reuse after closure gets a new ID', () => {
+  const { service } = serviceForTest();
+  const notification = nativeNotification(5);
+  service.handleNotification(notification);
+  const originalId = service.history[0].id;
+  notification.summary = 'Updated message';
+  service.handleNotification(notification);
+  assert.equal(service.history.length, 1);
+  assert.equal(service.history[0].id, originalId);
+  assert.equal(service.history[0].summary, 'Updated message');
+  notification.expire();
+  assert.equal(service.nativeIds[5], undefined);
+  const newer = nativeNotification(5);
+  service.handleNotification(newer);
+  const newId = service.history[0].id;
+  assert.notEqual(newId, originalId);
+  // A repeated late signal from the old object cannot release the new delivery.
+  notification.expire();
+  assert.equal(service.nativeIds[5], newId);
+  assert.equal(service.live[newId], newer);
+  service.dismissRecords([{ id: originalId }]);
+  assert.equal(newer.dismissals, 0);
+});
+
+test('tag replacement and tagged OSD dismissal resolve runtime IDs without persisting them', () => {
+  const { service } = serviceForTest();
+  const first = nativeNotification(1, { hints: { 'wired-tag': 'status' } });
+  service.handleNotification(first);
+  const previousId = service.history[0].id;
+  const second = nativeNotification(2, { hints: { 'wired-tag': 'status' } });
+  service.handleNotification(second);
+  assert.equal(first.expirations, 1);
+  assert.equal(service.live[previousId], undefined);
+  assert.equal(service.nativeIds[1], undefined);
+  assert.equal(service.history.length, 1);
+  service.dismissTag('status');
+  assert.equal(second.dismissals, 1);
+  assert.equal(service.nativeIds[2], undefined);
+  const osd = nativeNotification(3, { appName: 'System', summary: 'Volume', hints: { 'wired-tag': 'volume' } });
+  service.handleNotification(osd);
+  assert.equal(service.osd.id, service.nativeIds[3]);
+  assert.equal(service.live[service.osd.id], osd);
+  service.dismissTag('volume');
+  assert.equal(service.osd, null);
+  assert.equal(osd.dismissals, 1);
 });
 
 test('only adjacent notifications with the same app and urgency group', () => {
@@ -300,11 +422,12 @@ test('a tagged notification can be dismissed through IPC', () => {
   const dismissed = [];
   service.dismissRecord = id => dismissed.push(id);
   service.tagMap['lock-warning'] = { id: 42 };
+  service.nativeIds[42] = 'history:test:42';
 
   service.dismissTag('lock-warning');
   service.dismissTag('missing');
 
-  assert.deepEqual(dismissed, [42]);
+  assert.deepEqual(dismissed, ['history:test:42']);
 });
 
 test('ordinary Teams critical notifications are treated as normal', () => {
@@ -435,7 +558,7 @@ test('restored history skips malformed records and normalizes valid neighbors', 
   const restored = service.restoreHistory([null, [], { id: 1 }, { id: {}, time: 1 },
     { id: 2, time: 123, summary: 'Keep me', urgency: 'invalid', actions: null, body: {}, image: 'image://qsimage/old' },
     { id: '2', time: 123 }, { id: 3, time: 124, appName: 'App', body: 'Still here' }]);
-  assert.deepEqual(Array.from(restored, record => record.id), [2, 3]);
+  assert.deepEqual(Array.from(restored, record => record.id), ['history:legacy:2', 'history:legacy:3']);
   assert.equal(restored[0].body, '');
   assert.equal(restored[0].image, '');
   assert.equal(restored[0].appName, 'Unknown');

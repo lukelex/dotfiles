@@ -16,6 +16,10 @@ QtObject {
   property var popup: []
   property var popupReversed: []
   property var live: ({})
+  // UI/history keys are durable; native IDs are meaningful only in this server run.
+  property var nativeIds: ({})
+  readonly property string historyIdPrefix: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+  property int historyIdSequence: 0
   property int liveRevision: 0
   property var liveDeadlines: ({})
   property var osd: null
@@ -310,17 +314,25 @@ QtObject {
   function loadInitial() {
     service.loadApplications()
     service.migrateApplicationDefaults()
+    let historyLoaded = false
+    let seenLoaded = false
     try {
       const parsed = JSON.parse(settings.historyJson)
       service.history = service.restoreHistory(parsed)
+      historyLoaded = Array.isArray(parsed)
     } catch (error) {
       service.history = []
     }
     try {
       const seen = JSON.parse(settings.githubSeenJson)
-      if (Array.isArray(seen))
-        for (const id of seen)
-          service.githubSeenIds[String(id)] = true
+      seenLoaded = Array.isArray(seen)
+      if (seenLoaded) {
+        for (const id of seen) {
+          if ((typeof id === "number" && Number.isSafeInteger(id) && id > 0)
+              || (typeof id === "string" && id.length > 0))
+            service.githubSeenIds[service.restoredId(id)] = true
+        }
+      }
     } catch (error) {
       service.githubSeenIds = {}
     }
@@ -328,6 +340,13 @@ QtObject {
     service.notificationSoundsMuted = settings.notificationSoundsMuted
     for (const record of service.history.slice().reverse())
       service.trackApplication(record)
+    // Deterministic legacy IDs make these two settings safe to migrate separately.
+    const historyJson = JSON.stringify(service.history.map(service.sanitizeRecord))
+    if (historyLoaded && settings.historyJson !== historyJson)
+      settings.historyJson = historyJson
+    const seenJson = JSON.stringify(Object.keys(service.githubSeenIds))
+    if (seenLoaded && settings.githubSeenJson !== seenJson)
+      settings.githubSeenJson = seenJson
     service.historyGroups = service.groupHistory(service.history)
     service.pruneHistory()
     service.syncPopup()
@@ -432,9 +451,9 @@ QtObject {
           || !((typeof value.id === "number" && Number.isSafeInteger(value.id) && value.id > 0)
             || (typeof value.id === "string" && value.id.length > 0))
           || typeof value.time !== "number" || !Number.isFinite(value.time) || value.time < 0
-          || ids.has(String(value.id)))
+          || ids.has(service.restoredId(value.id)))
         continue
-      const record = { id: value.id, time: value.time, actions: [], expiresAt: 0, popupSuppressed: true }
+      const record = { id: service.restoredId(value.id), time: value.time, actions: [], expiresAt: 0, popupSuppressed: true }
       for (const key of ["tag", "appName", "appIcon", "desktopEntry", "image", "summary", "body",
           "githubReviewUrl", "githubRepository", "githubNumber", "githubTitle", "githubStatus",
           "githubAuthor", "githubReviewState"])
@@ -444,20 +463,37 @@ QtObject {
       record.urgency = ["low", "normal", "critical"].includes(value.urgency) ? value.urgency : "normal"
       record.value = typeof value.value === "number" && Number.isFinite(value.value) ? value.value : -1
       records.push(service.sanitizeRecord(record))
-      ids.add(String(value.id))
+      ids.add(record.id)
       if (records.length >= service.historyLimit)
         break
     }
     return records
   }
 
+  function restoredId(id) {
+    const key = String(id)
+    return key.startsWith("history:") ? key : "history:legacy:" + key
+  }
+
+  function newHistoryId() {
+    let id
+    do {
+      id = "history:" + service.historyIdPrefix + ":" + (++service.historyIdSequence)
+    } while (service.live[id] || service.githubSeenIds[id] || service.history.some(record => record.id === id))
+    return id
+  }
+
   function releaseLive(id, notification) {
     // A late closed signal from a replaced native object cannot release its successor.
-    if (service.live[id] !== notification)
+    if (!notification || service.live[id] !== notification)
       return
     delete service.live[id]
     delete service.liveDeadlines[id]
     delete service.hovered[id]
+    for (const nativeId of Object.keys(service.nativeIds)) {
+      if (service.nativeIds[nativeId] === id)
+        delete service.nativeIds[nativeId]
+    }
     for (const tag of Object.keys(service.tagMap)) {
       if (service.tagMap[tag] === notification)
         delete service.tagMap[tag]
@@ -494,27 +530,32 @@ QtObject {
     const hints = notification.hints || {}
     const tag = String(hints["wired-tag"] || "")
     const value = typeof hints["value"] === "number" ? hints["value"] : -1
+    const existingId = service.nativeIds[notification.id]
 
-    if (tag && service.tagMap[tag]) {
+    if (tag && service.tagMap[tag] && service.tagMap[tag] !== notification) {
       const previous = service.tagMap[tag]
       delete service.tagMap[tag]
-      service.releaseLive(previous.id, previous)
+      service.releaseLive(service.nativeIds[previous.id], previous)
       previous.expire()
     }
 
     notification.tracked = true
-    service.live[notification.id] = notification
+    const id = existingId || service.newHistoryId()
+    const alreadyTracked = service.live[id] === notification
+    service.nativeIds[notification.id] = id
+    service.live[id] = notification
     service.liveRevision++
     if (tag)
       service.tagMap[tag] = notification
 
-    const id = notification.id
-    notification.closed.connect(() => {
-      service.releaseLive(id, notification)
-      Qt.callLater(service.syncPopup)
-    })
+    if (!alreadyTracked) {
+      notification.closed.connect(() => {
+        service.releaseLive(id, notification)
+        Qt.callLater(service.syncPopup)
+      })
+    }
 
-    const record = service.buildRecord(notification, tag, value)
+    const record = service.buildRecord(notification, tag, value, id)
     if (service.isSystemOsd(record)) {
       service.osd = record
       service.osdTimer.restart()
@@ -681,7 +722,7 @@ QtObject {
     service.osdTimer.restart()
   }
 
-  function buildRecord(notification, tag, value) {
+  function buildRecord(notification, tag, value, id) {
     const actions = service.buildActions(notification, tag)
     const browserNotification = service.isBrowserIcon(notification.appIcon)
 
@@ -694,7 +735,8 @@ QtObject {
     urgency = service.effectiveUrgency(notification, urgency)
 
     const record = {
-      id: notification.id,
+      id: id,
+      nativeId: notification.id,
       tag: tag,
       appName: service.isTeamsNotification(notification) ? "Microsoft Teams" : notification.appName || "",
       appIcon: notification.appIcon || "",
@@ -895,7 +937,7 @@ QtObject {
   function dismissTag(tag) {
     const notification = service.tagMap[String(tag || "")]
     if (notification)
-      service.dismissRecord(notification.id)
+      service.dismissRecord(service.nativeIds[notification.id])
   }
 
   function clearHistory() {
@@ -906,6 +948,7 @@ QtObject {
       delete service.hovered[id]
     }
     service.live = {}
+    service.nativeIds = {}
     service.liveRevision++
     service.liveDeadlines = {}
     service.tagMap = {}
@@ -927,6 +970,7 @@ QtObject {
       delete service.hovered[id]
     }
     service.live = {}
+    service.nativeIds = {}
     service.liveRevision++
     service.liveDeadlines = {}
     service.tagMap = {}
@@ -1326,6 +1370,8 @@ QtObject {
     const keys = Object.keys(record)
     for (let index = 0; index < keys.length; index++)
       clean[keys[index]] = record[keys[index]]
+    // Never reconnect saved history to a future native notification with this ID.
+    delete clean.nativeId
     clean.appIcon = service.isLiveOnlySource(clean.appIcon) || service.isEphemeralSource(clean.appIcon) ? "" : clean.appIcon
     clean.image = service.isLiveOnlySource(clean.image) || service.isEphemeralSource(clean.image) ? "" : clean.image
     return clean

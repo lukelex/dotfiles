@@ -56,6 +56,7 @@ Hyprland/Wayland; platform-specific behavior must be verified independently.
 - Monitor layouts use `monitor-profiles.json` and a draft/apply/confirm workflow. Preserve the independent rollback guard, verify actual state before Keep, and save only confirmed layouts. Never bypass recovery to simplify UI.
 - Preserve authentication and lock-before-suspend. Presentation failures must not prevent locking. Keep credentials out of shell arguments, logs and preferences; use the supported native credential APIs.
 - Keep notification presentation, sound, history and native lifecycle distinct. DND or mute must not destroy history, replay suppressed records, or affect independent system OSDs. Respect app policy, sender deadlines and hover protection; never persist transient image URLs or invoke destroyed native objects.
+- Notification history keys are durable and separate from reusable native delivery IDs. Keep their mapping runtime-only; migrate saved history and seen-state keys consistently without binding restored records to new native deliveries.
 - Keep helpers self-contained beside the config and invoke them by absolute path. Both sessions use `scripts/quickshell --session-start` and the shared user service; import only the active session's environment and do not enable the service on `default.target`.
 - Read the relevant service, helper and tests before changing behavior. Keep detailed protocol rules, field definitions and feature-specific invariants there rather than expanding this guide into a feature inventory.
 

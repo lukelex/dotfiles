@@ -231,12 +231,13 @@ test('critical DND exceptions respect app blocking, app sound, global mute and s
             const { service } = preferences(['handleNotification', 'playNotificationSound', 'isDndSuppressed', 'syncPopup', 'releaseLive'], {
               doNotDisturb: true, allowCriticalDuringDnd: true, notificationSoundsMuted: muted,
               notificationSound: { running: false }, notificationSoundTimer: { running: false, start() {} },
-              live: {}, liveDeadlines: {}, liveRevision: 0, hovered: {}, tagMap: {},
+              live: {}, nativeIds: {}, liveDeadlines: {}, liveRevision: 0, hovered: {}, tagMap: {},
+              newHistoryId: () => 'history:test:1',
               popup: [], history: [], pendingPopupRecords: [], popupLimit: 5,
               refreshDndSchedule() {}, isSystemOsd: () => false,
               trackApplication: () => ({ enabled, sound }), popupRecordRemoved() {}
             }, { popupUpdateTimer: { start() {} } });
-            service.buildRecord = notification => ({ id: notification.id, urgency,
+            service.buildRecord = (notification, tag, value, id) => ({ id, urgency,
               expiresAt: Date.now() + 20000, popupSuppressed: service.isDndSuppressed({ urgency }) });
             service.addHistory = record => service.history.push(record);
             service.handleNotification({ id: 1, hints: { 'suppress-sound': silent }, closed: { connect() {} }, dismiss() {} });
