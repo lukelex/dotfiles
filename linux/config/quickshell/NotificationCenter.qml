@@ -21,6 +21,26 @@ PopupWindow {
   implicitWidth: Math.min(432, panel.screen.width - 24)
   surfaceFormat.opaque: false
 
+  component Hint: Controls.ToolTip {
+    id: hint
+    delay: 500
+    padding: 8
+    implicitWidth: Math.min(300, popup.width - 32, contentItem.implicitWidth + 16)
+    contentItem: Text {
+      text: hint.text
+      textFormat: Text.PlainText
+      wrapMode: Text.Wrap
+      color: popup.controller.controlPrimaryText
+      font.family: popup.controller.fontFamily
+      font.pixelSize: 11
+    }
+    background: Rectangle {
+      color: popup.controller.controlSurface
+      border.color: popup.controller.controlSurfaceBorder
+      radius: 7
+    }
+  }
+
   component HeaderIconButton: Item {
     id: button
 
@@ -29,10 +49,19 @@ PopupWindow {
     property color activeColor: popup.controller.controlActiveIcon
     property bool active: false
     property bool destructive: false
+    property string description: ""
     signal clicked
 
     height: 32
     width: 32
+
+    Hint {
+      parent: button
+      x: button.width - implicitWidth
+      y: -implicitHeight - 6
+      text: button.description
+      visible: button.description.length > 0 && (area.containsMouse || button.activeFocus)
+    }
 
     Rectangle {
       anchors.fill: parent
@@ -82,25 +111,12 @@ PopupWindow {
     Keys.onSpacePressed: event => { if (!event.isAutoRepeat) clicked() }
     Keys.onReturnPressed: event => { if (!event.isAutoRepeat) clicked() }
     Keys.onEnterPressed: event => { if (!event.isAutoRepeat) clicked() }
-    Controls.ToolTip {
+    Hint {
       parent: button
       x: button.width - implicitWidth
       y: -implicitHeight - 6
       visible: button.enabled && (area.containsMouse || button.activeFocus)
-      delay: 500
-      padding: 8
-      contentItem: Text {
-        text: button.description
-        textFormat: Text.PlainText
-        color: popup.controller.controlPrimaryText
-        font.family: popup.controller.fontFamily
-        font.pixelSize: 11
-      }
-      background: Rectangle {
-        color: popup.controller.controlSurface
-        border.color: popup.controller.controlSecondaryText
-        radius: 7
-      }
+      text: button.description
     }
 
     Behavior on opacity {
@@ -313,6 +329,15 @@ PopupWindow {
             font.family: card.controller.fontFamily
             font.pixelSize: 10
             text: popup.service.timeAgo(card.record)
+            Accessible.name: popup.service.exactTime(card.record)
+            HoverHandler { id: timeHover }
+            Hint {
+              parent: timeLabel
+              x: timeLabel.width - implicitWidth
+              y: -implicitHeight - 6
+              text: popup.service.exactTime(card.record)
+              visible: timeHover.hovered || timeLabel.activeFocus
+            }
           }
 
           DismissButton {
@@ -368,6 +393,7 @@ PopupWindow {
           DismissButton {
             label: card.copied ? "Copied" : "Copy"
             description: "Copy notification text"
+            emphasized: true
             onClicked: {
               Quickshell.clipboardText = card.record.summary + (card.body ? "\n" + card.body : "")
               card.copied = true
@@ -558,6 +584,7 @@ PopupWindow {
     property var records: group.records
     readonly property bool grouped: recordModel.count > 1
     readonly property var icon: recordModel.count > 0 ? service.iconFor(recordModel.get(0).notification) : ({ kind: "lucide", source: "bell" })
+    readonly property var latest: recordModel.count > 0 ? recordModel.get(0).notification : null
     readonly property bool expanded: popup.expandedGroupKey === group.key
     property bool dismissing: false
     property real headerDismissOffset: 0
@@ -625,7 +652,7 @@ PopupWindow {
       id: groupHeader
 
       enabled: !notificationGroup.dismissing
-      height: 56
+      height: Math.max(78, groupText.implicitHeight + 24)
       transform: Translate { x: notificationGroup.headerDismissOffset }
       visible: notificationGroup.grouped
       width: parent.width
@@ -681,6 +708,7 @@ PopupWindow {
       }
 
       Column {
+        id: groupText
         anchors {
           left: parent.left
           leftMargin: 58
@@ -696,14 +724,40 @@ PopupWindow {
           font.family: notificationGroup.controller.fontFamily
           font.pixelSize: 12
           text: recordModel.count > 0 ? recordModel.get(0).notification.appName : ""
+          textFormat: Text.PlainText
           width: parent.width
         }
 
         Text {
           color: notificationGroup.controller.controlSecondaryText
+          elide: Text.ElideRight
+          font.family: notificationGroup.controller.fontFamily
+          font.pixelSize: 11
+          text: notificationGroup.latest ? (notificationGroup.latest.summary || notificationGroup.service.displayBody(notificationGroup.latest)) : ""
+          textFormat: Text.PlainText
+          width: parent.width
+        }
+
+        Text {
+          id: groupStatus
+          color: notificationGroup.controller.controlSecondaryText
           font.family: notificationGroup.controller.fontFamily
           font.pixelSize: 10
-          text: recordModel.count + " notifications"
+          width: parent.width
+          elide: Text.ElideRight
+          wrapMode: Text.Wrap
+          maximumLineCount: 2
+          textFormat: Text.PlainText
+          text: (notificationGroup.latest && notificationGroup.latest.urgency === "critical" ? "Critical · " : "")
+            + recordModel.count + " notifications · " + popup.service.timeAgo(notificationGroup.latest)
+          Accessible.name: text + "; " + popup.service.exactTime(notificationGroup.latest)
+          HoverHandler { id: groupTimeHover }
+          Hint {
+            parent: groupStatus
+            y: -implicitHeight - 6
+            text: groupStatus.text + "\n" + popup.service.exactTime(notificationGroup.latest)
+            visible: groupTimeHover.hovered || groupStatus.activeFocus
+          }
         }
       }
 
@@ -731,7 +785,8 @@ PopupWindow {
         }
         color: notificationGroup.controller.controlSecondaryText
         height: 16
-        source: notificationGroup.controller.icon("chevrons-down-up")
+        source: notificationGroup.controller.icon("chevron-right")
+        rotation: notificationGroup.expanded ? 90 : 0
         width: 16
       }
     }
@@ -1094,6 +1149,9 @@ PopupWindow {
             verticalCenter: parent.verticalCenter
           }
           iconName: popup.controller.doNotDisturb ? "bell-off" : "bell"
+          description: popup.controller.doNotDisturb
+            ? "Do Not Disturb on: popups and sounds muted; notifications still saved. Click to turn off."
+            : "Do Not Disturb off: popups and sounds enabled. Click to mute."
           Accessible.role: Accessible.CheckBox
           Accessible.name: "Do Not Disturb"
           Accessible.checkable: true

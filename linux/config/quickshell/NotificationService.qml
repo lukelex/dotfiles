@@ -759,6 +759,12 @@ QtObject {
     return Math.floor(seconds / 604800) + "w"
   }
 
+  function exactTime(record) {
+    if (!record || !Number.isFinite(record.time))
+      return ""
+    return Qt.formatDateTime(new Date(record.time * 1000), "yyyy-MM-dd HH:mm:ss") + " (local time)"
+  }
+
   function lucideIcon(record) {
     const name = String(record.appName).toLowerCase()
     const mappings = [
