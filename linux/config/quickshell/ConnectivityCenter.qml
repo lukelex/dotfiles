@@ -217,6 +217,25 @@ Scope {
     elide: Text.ElideRight
   }
 
+  component Hint: ToolTip {
+    id: hint
+    delay: 500
+    padding: 10
+    width: Math.min(340, popup.width - 24)
+    contentItem: Label {
+      text: hint.text
+      color: popup.controller.controlPrimaryText
+      wrapMode: Text.Wrap
+      elide: Text.ElideNone
+    }
+    background: Rectangle {
+      radius: 10
+      color: popup.controller.controlSurface
+      border.width: 1
+      border.color: popup.controller.controlSurfaceBorder
+    }
+  }
+
   component Action: Rectangle {
     id: action
     required property string title
@@ -226,6 +245,9 @@ Scope {
     property bool radioSwitch: false
     property bool showTraffic: false
     property bool wiredTraffic: false
+    property string detail: title + (subtitle ? "\n" + subtitle : "")
+    readonly property bool compactTraffic: showTraffic && width < 360
+    readonly property bool showIcon: iconName !== "" && (!compactTraffic || width >= 300)
     signal activated()
 
     height: subtitle ? 64 : 40
@@ -237,7 +259,7 @@ Scope {
     activeFocusOnTab: enabled && popup.pinned
     Accessible.role: radioSwitch ? Accessible.CheckBox : Accessible.Button
     Accessible.name: title
-    Accessible.description: subtitle
+    Accessible.description: detail
     Accessible.checkable: radioSwitch
     Accessible.checked: active
     Accessible.onPressAction: activated()
@@ -250,18 +272,25 @@ Scope {
       anchors.verticalCenter: parent.verticalCenter
       width: 18
       height: 18
-      visible: action.iconName !== ""
+      visible: action.showIcon
       source: action.iconName ? popup.controller.icon(action.iconName) : ""
       color: popup.controller.controlPrimaryText
     }
 
     Column {
+      id: actionLabels
       anchors.left: parent.left
-      anchors.leftMargin: action.iconName ? 40 : 12
+      anchors.leftMargin: action.showIcon ? 40 : 12
       anchors.right: action.showTraffic ? trafficColumn.left : parent.right
       anchors.rightMargin: action.showTraffic ? 8 : action.radioSwitch ? 66 : 12
       anchors.verticalCenter: parent.verticalCenter
       spacing: 3
+
+      HoverHandler { id: labelHover }
+      Hint {
+        visible: popup.visible && (labelHover.hovered || action.activeFocus)
+        text: action.detail
+      }
 
       Label {
         width: parent.width
@@ -278,8 +307,9 @@ Scope {
 
     Column {
       id: trafficColumn
-      anchors.centerIn: parent
-      width: Math.min(116, Math.max(0, action.width - 132))
+      anchors.verticalCenter: parent.verticalCenter
+      x: action.compactTraffic ? action.width - 66 - width : (action.width - width) / 2
+      width: action.compactTraffic ? Math.min(100, action.width * 0.34) : 116
       visible: action.showTraffic
       spacing: 2
 
@@ -294,6 +324,13 @@ Scope {
           spacing: 5
           Accessible.role: Accessible.StaticText
           Accessible.name: (modelData === "download" ? "Download " : "Upload ") + rate
+          activeFocusOnTab: popup.pinned && action.showTraffic
+          HoverHandler { id: rateHover }
+          Hint {
+            visible: popup.visible && (rateHover.hovered || trafficRate.activeFocus)
+            text: (trafficRate.modelData === "download" ? "Download: " : "Upload: ") + trafficRate.rate
+              + "\nBytes per second (KiB = 1,024 bytes). Includes local network traffic; this is usage, not available internet bandwidth."
+          }
 
           LucideIcon {
             width: 16
@@ -474,6 +511,7 @@ Scope {
           : !popup.service.wifiEnabled ? "Off"
           : popup.service.wifiConnected ? popup.service.wifiSsid + " / " + popup.strengthText(popup.service.wifiStrength)
           : "On / Not connected"
+        detail: title + "\n" + subtitle + (popup.service.activeNetwork ? "\nDevice: " + popup.service.activeNetwork.device.name : "")
         onActivated: {
           popup.requestOpen()
           popup.service.setWifiEnabled(!popup.service.wifiEnabled)
@@ -494,6 +532,7 @@ Scope {
           enabled: modelData !== null && modelData.nmManaged && !popup.service.ethernetBusy
             && modelData.state !== ConnectionState.Connecting
           subtitle: popup.service.ethernetStatus(modelData)
+          detail: title + "\n" + subtitle + (modelData ? "\nDevice: " + modelData.name : "")
           onActivated: {
             popup.requestOpen(true)
             popup.service.setEthernetEnabled(!modelData.connected, modelData)
@@ -556,6 +595,7 @@ Scope {
               width: wifiRows.width
               height: 54
               title: modelData.name || "Hidden network"
+              detail: title + "\n" + subtitle + "\nDevice: " + modelData.device.name
               subtitle: connecting ? "Connecting..." : modelData.connected ? "Connected / " + popup.strengthText(modelData.signalStrength)
                 : "Saved / " + popup.strengthText(modelData.signalStrength)
               iconName: modelData.connected ? "circle-check" : "wifi"
@@ -715,6 +755,14 @@ Scope {
               height: 48
               radius: 14
               color: popup.controller.controlSurface
+              activeFocusOnTab: popup.pinned
+              Accessible.role: Accessible.StaticText
+              Accessible.name: modelData.name + ", " + batteryLabel.text
+              HoverHandler { id: deviceHover }
+              Hint {
+                visible: popup.visible && (deviceHover.hovered || deviceRow.activeFocus)
+                text: deviceRow.modelData.name + "\n" + batteryLabel.text
+              }
               LucideIcon {
                 anchors.left: parent.left
                 anchors.leftMargin: 12
