@@ -530,7 +530,7 @@ Scope {
             Accessible.role: Accessible.ProgressBar
             Accessible.name: "Microphone input level"
             Rectangle {
-              width: parent.width * Math.max(0, Math.min(1, microphonePeak.peak))
+              width: popup.controller.microphoneMuted ? 0 : parent.width * Math.max(0, Math.min(1, microphonePeak.peak))
               height: parent.height
               radius: parent.radius
               color: microphonePeak.peak >= 0.95 ? popup.controller.urgent : popup.controller.controlSliderFill

@@ -31,7 +31,7 @@ function icon_mic {
 function icon_volume {
   value=$(get_volume)
 
-  if [[ $(vol_is_mute) ]]; then
+  if vol_is_mute; then
     echo "$VOL_MUTE"
   elif [[ 1 -eq $(echo "$value > 50" | bc -l) ]]; then
     echo "$VOL_HIGH"

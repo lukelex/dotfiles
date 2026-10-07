@@ -137,6 +137,7 @@ QtObject {
     if (port?.name === "analog-output-headphones" && !input)
       return "Wired headphones"
     const display = port?.properties?.["device.product.name"]
+      || (port?.type === "HDMI" ? device.properties?.["node.nick"] : "")
     if (!input && typeof display === "string" && display.trim())
       return display + " (HDMI / DisplayPort)"
     return ""
