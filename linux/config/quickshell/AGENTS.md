@@ -62,6 +62,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Clear All acts on a snapshot taken at the click. Later arrivals and independent volume/brightness OSDs must survive.
 - Notification dismissal is routine housekeeping, not deletion of the underlying message. Use a subdued `x` with a generous hit target, neutral hover feedback, and a descriptive tooltip/accessibility label for cards and groups; use a separate "Clear all" text action for history. Keep exits slide-and-fade without red trash-reveal layers.
 - Keep system OSDs distinct from notification history. Release references when native notifications close; do not invoke methods on destroyed objects.
+- DND suppresses presentation without dismissing native notifications or system OSDs. Records suppressed during DND stay in history and do not replay when DND ends.
 - System notification senders should supply a specific icon with `notify-send -i`. `NotificationService.iconFor()` prefers sender-selected imagery over semantic fallbacks, colors only this repository's Lucide SVGs, and preserves native image-provider URLs.
 - Never persist or replay transient notification images (`image://qsimage/...` pixmaps or Chromium `scoped_dir` temp files); use a durable icon for saved history. Keep fallback resolution for theme icons that Quickshell has not yet cached.
 - Respect explicit persistent notification timeouts; verify the installed Quickshell version's timeout units when changing this behavior.

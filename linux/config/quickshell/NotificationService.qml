@@ -293,6 +293,7 @@ QtObject {
       urgency: urgency,
       value: value,
       actions: actions,
+      popupSuppressed: service.doNotDisturb,
       time: Math.floor(Date.now() / 1000),
       expiresAt: service.computeExpiry(notification, urgency)
     }
@@ -361,7 +362,7 @@ QtObject {
   function syncPopup(suppressRemovalId) {
     const cutoff = Date.now()
     const previousPopup = service.popup
-    const candidates = service.history.filter(record => (record.expiresAt === 0 || record.expiresAt > cutoff || service.hovered[record.id]) && service.live[record.id])
+    const candidates = service.doNotDisturb ? [] : service.history.filter(record => !record.popupSuppressed && (record.expiresAt === 0 || record.expiresAt > cutoff || service.hovered[record.id]) && service.live[record.id])
     // Incoming traffic must not evict a card the user is reading or clicking.
     const pinned = candidates.filter(record => service.hovered[record.id])
     const selected = pinned.concat(candidates.filter(record => !service.hovered[record.id]).slice(0, Math.max(0, service.popupLimit - pinned.length)))
@@ -501,9 +502,16 @@ QtObject {
   }
 
   function setDoNotDisturb(enabled) {
+    service.doNotDisturb = enabled
     settings.doNotDisturb = enabled
-    if (enabled)
-      service.clearVisible()
+    if (enabled) {
+      // Suppression is presentation state, not dismissal. Do not replay these
+      // records when DND ends, and leave native actions and system OSDs alive.
+      service.history = service.history.map(record => Object.assign({}, record, { popupSuppressed: true }))
+      service.pendingPopupRecords = []
+      service.saveHistory()
+    }
+    service.syncPopup()
   }
 
   function setHovered(id, enabled) {

@@ -165,6 +165,30 @@ test('already animated dismissal still reconciles service state', () => {
   assert.deepEqual(removed, []);
 });
 
+test('DND suppression survives reconciliation and does not dismiss native actions or OSDs', () => {
+  const { service } = serviceForTest();
+  const settings = {};
+  service.setDoNotDisturb = vm.runInContext(`(${source.match(/  function setDoNotDisturb\([^]*?\n  \}/)[0]})`, vm.createContext({ service, settings }));
+  service.saveHistory = () => {};
+  service.history = [record(1)];
+  service.live[1] = { dismiss: () => assert.fail('DND must not dismiss') };
+  service.osd = { id: 'volume' };
+  service.syncPopup();
+  service.setDoNotDisturb(true);
+  service.history.unshift({ ...record(2), popupSuppressed: true });
+  service.live[2] = {};
+  service.syncPopup();
+  assert.equal(service.popup.length, 0);
+  assert.equal(service.osd.id, 'volume');
+  assert.ok(service.live[1]);
+  service.setDoNotDisturb(false);
+  assert.equal(service.popup.length, 0);
+  service.history.unshift(record(3));
+  service.live[3] = {};
+  service.syncPopup();
+  assert.deepEqual(Array.from(service.popup, item => item.id), [3]);
+});
+
 test('clearing a snapshot preserves later arrivals and the OSD', () => {
   const { service } = serviceForTest();
   const original = record(1);
