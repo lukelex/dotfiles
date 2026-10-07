@@ -164,6 +164,9 @@ profiles:
           groups:
             - video
         viewnior:
+        wireplumber:
+          configs:
+            - linux/config/wireplumber:$XDG_CONFIG_HOME/wireplumber
         yazi:
         zathura:
         zathura-pdf-mupdf:
