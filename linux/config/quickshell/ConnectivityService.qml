@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQml
 import QtQml.Models
+import Quickshell.Io
 import Quickshell.Networking
 import Quickshell.Bluetooth
 
@@ -12,6 +13,99 @@ QtObject {
   readonly property bool wifiEnabled: Networking.wifiEnabled
   readonly property bool wifiHardwareEnabled: Networking.wifiHardwareEnabled
   property bool wifiScanningEnabled: true
+  property bool trafficMonitoringEnabled: false
+  property real downloadSpeed: -1
+  property real uploadSpeed: -1
+  property var _deviceSpeeds: ({})
+  property var _trafficSample: null
+  readonly property string _trafficInterfaces: service._wifiDevices.concat(service._wiredDevices)
+    .filter(device => device.connected).map(device => device.name).sort().join(",")
+
+  onTrafficMonitoringEnabledChanged: service.resetTraffic()
+  on_TrafficInterfacesChanged: service.resetTraffic()
+
+  readonly property FileView _trafficFile: FileView {
+    path: service.trafficMonitoringEnabled && service._trafficInterfaces ? "/proc/net/dev" : ""
+    onLoaded: service.sampleTraffic(service._trafficFile.text(), Date.now())
+    onLoadFailed: service.resetTraffic()
+  }
+
+  readonly property Timer _trafficTimer: Timer {
+    interval: 1000
+    repeat: true
+    running: service.trafficMonitoringEnabled && service._trafficInterfaces !== ""
+    onTriggered: service._trafficFile.reload()
+  }
+
+  function resetTraffic(): void {
+    service._trafficSample = null
+    service.downloadSpeed = -1
+    service.uploadSpeed = -1
+    service._deviceSpeeds = ({})
+  }
+
+  function sampleTraffic(text: string, now: real): void {
+    if (!service.trafficMonitoringEnabled || !service._trafficInterfaces)
+      return
+    const interfaces = service._trafficInterfaces.split(",")
+    const counters = {}
+    for (const line of text.split("\n")) {
+      const colon = line.indexOf(":")
+      if (colon < 0)
+        continue
+      const name = line.slice(0, colon).trim()
+      if (interfaces.indexOf(name) < 0)
+        continue
+      const fields = line.slice(colon + 1).trim().split(/\s+/)
+      const rx = Number(fields[0])
+      const tx = Number(fields[8])
+      if (fields.length >= 16 && Number.isFinite(rx) && Number.isFinite(tx) && rx >= 0 && tx >= 0)
+        counters[name] = { rx: rx, tx: tx }
+    }
+    if (interfaces.some(name => !counters[name])) {
+      service.resetTraffic()
+      return
+    }
+    const previous = service._trafficSample
+    service._trafficSample = { time: now, counters: counters }
+    const seconds = previous ? (now - previous.time) / 1000 : 0
+    if (seconds <= 0 || interfaces.some(name => !previous.counters[name]
+        || counters[name].rx < previous.counters[name].rx || counters[name].tx < previous.counters[name].tx)) {
+      service.downloadSpeed = -1
+      service.uploadSpeed = -1
+      service._deviceSpeeds = ({})
+      return
+    }
+    service.downloadSpeed = interfaces.reduce((sum, name) => sum + counters[name].rx - previous.counters[name].rx, 0) / seconds
+    service.uploadSpeed = interfaces.reduce((sum, name) => sum + counters[name].tx - previous.counters[name].tx, 0) / seconds
+    const speeds = {}
+    for (const name of interfaces) {
+      speeds[name] = {
+        download: (counters[name].rx - previous.counters[name].rx) / seconds,
+        upload: (counters[name].tx - previous.counters[name].tx) / seconds
+      }
+    }
+    service._deviceSpeeds = speeds
+  }
+
+  function connectionSpeed(wired: bool, direction: string): real {
+    const devices = (wired ? service._wiredDevices : service._wifiDevices).filter(device => device.connected)
+    if (!devices.length || devices.some(device => !service._deviceSpeeds[device.name]))
+      return -1
+    return devices.reduce((sum, device) => sum + service._deviceSpeeds[device.name][direction], 0)
+  }
+
+  function formatSpeed(bytesPerSecond: real): string {
+    if (!Number.isFinite(bytesPerSecond) || bytesPerSecond < 0)
+      return "—"
+    const units = ["B/s", "KiB/s", "MiB/s", "GiB/s"]
+    let unit = 0
+    while (bytesPerSecond >= 1024 && unit < units.length - 1) {
+      bytesPerSecond /= 1024
+      unit++
+    }
+    return bytesPerSecond.toFixed(unit === 0 ? 0 : 1) + " " + units[unit]
+  }
   readonly property bool wifiConnected: service.activeNetwork !== null
   readonly property string wifiSsid: service.activeNetwork ? service.activeNetwork.name : ""
   readonly property bool ethernetAvailable: service._wiredDevices.length > 0

@@ -223,6 +223,8 @@ Scope {
     property string iconName: ""
     property bool active: false
     property bool radioSwitch: false
+    property bool showTraffic: false
+    property bool wiredTraffic: false
     signal activated()
 
     height: subtitle ? 64 : 40
@@ -255,8 +257,8 @@ Scope {
     Column {
       anchors.left: parent.left
       anchors.leftMargin: action.iconName ? 40 : 12
-      anchors.right: parent.right
-      anchors.rightMargin: action.radioSwitch ? 66 : 12
+      anchors.right: action.showTraffic ? trafficColumn.left : parent.right
+      anchors.rightMargin: action.showTraffic ? 8 : action.radioSwitch ? 66 : 12
       anchors.verticalCenter: parent.verticalCenter
       spacing: 3
 
@@ -270,6 +272,44 @@ Scope {
         width: parent.width
         visible: text !== ""
         text: action.subtitle
+      }
+    }
+
+    Column {
+      id: trafficColumn
+      anchors.centerIn: parent
+      width: Math.min(116, Math.max(0, action.width - 132))
+      visible: action.showTraffic
+      spacing: 2
+
+      Repeater {
+        model: ["upload", "download"]
+        delegate: Row {
+          id: trafficRate
+          required property string modelData
+          readonly property string rate: popup.service.formatSpeed(popup.service.connectionSpeed(action.wiredTraffic, modelData))
+          width: trafficColumn.width
+          height: 20
+          spacing: 5
+          Accessible.role: Accessible.StaticText
+          Accessible.name: (modelData === "download" ? "Download " : "Upload ") + rate
+
+          LucideIcon {
+            width: 16
+            height: 16
+            anchors.verticalCenter: parent.verticalCenter
+            source: popup.controller.icon(trafficRate.modelData === "download" ? "arrow-down" : "arrow-up")
+            color: trafficRate.modelData === "download" ? popup.controller.controlDownloadIcon : popup.controller.controlUploadIcon
+          }
+          Label {
+            width: parent.width - 21
+            anchors.verticalCenter: parent.verticalCenter
+            text: trafficRate.rate
+            color: popup.controller.controlPrimaryText
+            font.pixelSize: 12
+            font.bold: true
+          }
+        }
       }
     }
 
@@ -412,6 +452,7 @@ Scope {
       Action {
         width: parent.width
         title: "Wi-Fi"
+        showTraffic: popup.service.wifiConnected
         iconName: "wifi"
         radioSwitch: true
         active: popup.service.wifiEnabled
@@ -430,6 +471,8 @@ Scope {
       Action {
         width: parent.width
         title: "Ethernet"
+        showTraffic: popup.service.ethernetConnected
+        wiredTraffic: true
         iconName: "ethernet-port"
         radioSwitch: true
         active: popup.service.ethernetConnected
