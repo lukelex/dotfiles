@@ -61,7 +61,7 @@ test('native default-device changes refresh the audio picker immediately when op
 });
 
 function serviceState(overrides = {}) {
-  return {
+  const service = {
     outputs: [],
     inputs: [],
     defaultSink: '',
@@ -76,10 +76,12 @@ function serviceState(overrides = {}) {
     inputSelectionTimeout: { stop() {}, restart() {} },
     outputIcon: loadFunction('outputIcon', {}),
     inputIcon: loadFunction('inputIcon', {}),
-    inputDescription: loadFunction('inputDescription', {}),
     get busy() { return this.pendingSink !== '' || this.pendingSource !== ''; },
     ...overrides,
   };
+  service.friendlyDescription = loadFunction('friendlyDescription', {});
+  service.inputDescription = loadFunction('inputDescription', { service });
+  return service;
 }
 
 function audioPayload(sinks, defaultSink, sources = [], defaultSource = '') {

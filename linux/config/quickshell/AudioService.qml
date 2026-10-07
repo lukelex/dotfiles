@@ -104,6 +104,9 @@ QtObject {
   }
 
   function inputDescription(source) {
+    const friendly = service.friendlyDescription(source, true)
+    if (friendly)
+      return friendly
     const properties = source.properties && typeof source.properties === "object" ? source.properties : {}
     const description = typeof source.description === "string" && source.description.trim()
       ? source.description : properties["node.nick"] || source.name
@@ -115,6 +118,28 @@ QtObject {
         && !description.toLowerCase().includes(portDescription.toLowerCase()))
       return portDescription + " — " + description
     return description
+  }
+
+  function friendlyDescription(device, input = false) {
+    const name = String(device.name || "")
+    if (/usb-ACTIONS_Pebble_V3/.test(name) && !input)
+      return "Pebble speakers"
+    if (/TONOR_TC30/.test(name) && input)
+      return "TONOR microphone"
+    if (/Audeze_Maxwell/.test(name))
+      return input ? "Maxwell microphone" : "Maxwell headphones"
+    const port = Array.isArray(device.ports)
+      ? device.ports.find(candidate => candidate.name === device.active_port) : null
+    if (port?.name === "analog-input-internal-mic" && input)
+      return "Internal Microphone"
+    if (port?.name === "analog-output-speaker" && !input)
+      return "Internal speakers"
+    if (port?.name === "analog-output-headphones" && !input)
+      return "Wired headphones"
+    const display = port?.properties?.["device.product.name"]
+    if (!input && typeof display === "string" && display.trim())
+      return display + " (HDMI / DisplayPort)"
+    return ""
   }
 
   function _accept(text) {
@@ -139,8 +164,8 @@ QtObject {
         .filter(sink => sink && typeof sink.name === "string" && sink.name.trim())
         .map(sink => ({
           name: sink.name,
-          description: typeof sink.description === "string" && sink.description.trim()
-            ? sink.description : sink.properties?.["node.nick"] || sink.name,
+          description: service.friendlyDescription(sink) || (typeof sink.description === "string" && sink.description.trim()
+            ? sink.description : sink.properties?.["node.nick"] || sink.name),
           iconName: service.outputIcon(sink),
         }))
         .sort((left, right) => left.description.localeCompare(right.description)

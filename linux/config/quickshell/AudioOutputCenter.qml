@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import Quickshell.Services.Pipewire
+import Quickshell.Io
 import QtQuick
 import QtQuick.Controls as Controls
 
@@ -28,6 +29,16 @@ Scope {
     id: microphonePeak
     node: popup.visible && popup.controller.microphoneAvailable ? popup.controller.defaultMicrophone : null
     enabled: popup.visible && popup.controller.microphoneAvailable && !popup.controller.microphoneMuted
+  }
+
+  Process {
+    id: advancedSettings
+    command: ["pavucontrol"]
+  }
+
+  function openAdvancedSettings() {
+    popup.requestClose(true)
+    Qt.callLater(() => { advancedSettings.running = true })
   }
 
   function openPinned(request) {
@@ -523,6 +534,37 @@ Scope {
               height: parent.height
               radius: parent.radius
               color: microphonePeak.peak >= 0.95 ? popup.controller.urgent : popup.controller.controlSliderFill
+            }
+          }
+
+          Item {
+            id: advancedButton
+            width: parent.width
+            height: 36
+            activeFocusOnTab: popup.pinned
+            Accessible.role: Accessible.Button
+            Accessible.name: "Advanced sound settings"
+            Accessible.onPressAction: popup.openAdvancedSettings()
+            Keys.onReturnPressed: popup.openAdvancedSettings()
+            Keys.onSpacePressed: popup.openAdvancedSettings()
+            Rectangle {
+              anchors.fill: parent
+              radius: 10
+              color: advancedArea.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
+              border.width: advancedButton.activeFocus ? 2 : 1
+              border.color: advancedButton.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
+            }
+            Label {
+              anchors.centerIn: parent
+              color: popup.controller.controlPrimaryText
+              text: "Advanced sound settings"
+            }
+            MouseArea {
+              id: advancedArea
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              hoverEnabled: true
+              onClicked: popup.openAdvancedSettings()
             }
           }
         }
