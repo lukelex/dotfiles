@@ -68,6 +68,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - Collapsed history groups show the latest message, count, age, and a textual Critical marker when applicable. Chevrons reflect expansion; timestamp hints show exact local time and the DND hint explains both its state and history retention.
 - Keep system OSDs distinct from notification history. Release references when native notifications close; do not invoke methods on destroyed objects.
 - DND suppresses presentation without dismissing native notifications or system OSDs. Records suppressed during DND stay in history and do not replay when DND ends.
+- Notification history exposes an independent, persisted sound-mute toggle. Muting stops notification audio without suppressing popups or history; changing DND preserves this preference.
 - Native notification deadlines are tracked independently of popup capacity and retained history. Hidden and trimmed notifications still expire; explicit persistent deadlines and hovered records remain protected.
 - System notification senders should supply a specific icon with `notify-send -i`. `NotificationService.iconFor()` prefers sender-selected imagery over semantic fallbacks, colors only this repository's Lucide SVGs, and preserves native image-provider URLs.
 - Never persist or replay transient notification images (`image://qsimage/...` pixmaps or Chromium `scoped_dir` temp files); use a durable icon for saved history. Keep fallback resolution for theme icons that Quickshell has not yet cached.

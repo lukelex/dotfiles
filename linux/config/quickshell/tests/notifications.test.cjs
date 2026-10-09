@@ -39,6 +39,59 @@ function record(id, appName = 'A', urgency = 'normal') {
   return { id, appName, urgency, time: id, expiresAt: Date.now() + 5000 };
 }
 
+test('sound mute preserves popups and history, independently of DND and sender hints', () => {
+  for (const muted of [false, true]) {
+    for (const dnd of [false, true]) {
+      for (const suppressSound of [false, true]) {
+        const { service } = serviceForTest();
+        const settings = {};
+        let popupUpdates = 0;
+        let soundStarts = 0;
+        const popupUpdateTimer = { start: () => popupUpdates++ };
+        service.notificationSound = { running: false };
+        service.notificationSoundTimer = { running: false, start: () => soundStarts++ };
+        service.pendingPopupRecords = [];
+        service.doNotDisturb = dnd;
+        service.buildRecord = n => ({ ...record(n.id), popupSuppressed: service.doNotDisturb });
+        service.isSystemOsd = () => false;
+        service.addHistory = item => service.history.unshift(item);
+        const context = vm.createContext({ service, settings, popupUpdateTimer });
+        for (const name of ['setNotificationSoundsMuted', 'playNotificationSound', 'handleNotification']) {
+          service[name] = vm.runInContext(`(${source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`))[0]})`, context);
+        }
+
+        service.setNotificationSoundsMuted(muted);
+        service.handleNotification({ id: 1, hints: { 'suppress-sound': suppressSound }, closed: { connect: () => {} } });
+
+        assert.equal(settings.notificationSoundsMuted, muted);
+        assert.equal(service.doNotDisturb, dnd);
+        assert.equal(service.history.length, 1);
+        assert.equal(popupUpdates, dnd ? 0 : 1);
+        assert.equal(soundStarts, muted || dnd || suppressSound ? 0 : 1);
+        service.syncPopup();
+        assert.equal(service.popup.length, dnd ? 0 : 1);
+      }
+    }
+  }
+});
+
+test('sound mute is restored from settings and survives DND changes', () => {
+  const { service } = serviceForTest();
+  const settings = { historyJson: '[]', githubSeenJson: '[]', doNotDisturb: false, notificationSoundsMuted: true };
+  service.githubSeenIds = {};
+  service.saveHistory = () => {};
+  const context = vm.createContext({ service, settings });
+  for (const name of ['loadInitial', 'setDoNotDisturb']) {
+    service[name] = vm.runInContext(`(${source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`))[0]})`, context);
+  }
+  service.loadInitial();
+  assert.equal(service.notificationSoundsMuted, true);
+  service.setDoNotDisturb(true);
+  service.setDoNotDisturb(false);
+  assert.equal(service.notificationSoundsMuted, true);
+  assert.equal(settings.notificationSoundsMuted, true);
+});
+
 test('only adjacent notifications with the same app and urgency group', () => {
   const { service } = serviceForTest();
   const records = [record(1), record(2), record(3, 'B'), record(4), record(5, 'A', 'critical'), record(6)];

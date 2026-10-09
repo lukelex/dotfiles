@@ -22,6 +22,11 @@ QtObject {
   property var hovered: ({})
   property double now: 0
   property bool doNotDisturb: false
+  property bool notificationSoundsMuted: false
+  onNotificationSoundsMutedChanged: {
+    if (notificationSoundsMuted)
+      service.notificationSound.running = false
+  }
   property int osdSequence: 0
   property var githubSeenIds: ({})
   property int githubSeenRevision: 0
@@ -105,8 +110,10 @@ QtObject {
     property string historyJson: "[]"
     property string githubSeenJson: "[]"
     property bool doNotDisturb: false
+    property bool notificationSoundsMuted: false
 
     onDoNotDisturbChanged: service.doNotDisturb = doNotDisturb
+    onNotificationSoundsMutedChanged: service.notificationSoundsMuted = notificationSoundsMuted
   }
 
   property NotificationServer server: NotificationServer {
@@ -171,6 +178,7 @@ QtObject {
       service.githubSeenIds = {}
     }
     service.doNotDisturb = settings.doNotDisturb
+    service.notificationSoundsMuted = settings.notificationSoundsMuted
     service.historyGroups = service.groupHistory(service.history)
     service.syncPopup()
   }
@@ -289,7 +297,8 @@ QtObject {
   }
 
   function playNotificationSound() {
-    if (service.notificationSoundTimer.running || service.notificationSound.running)
+    if (service.notificationSoundsMuted || service.doNotDisturb
+        || service.notificationSoundTimer.running || service.notificationSound.running)
       return
 
     service.notificationSound.running = true
@@ -571,6 +580,11 @@ QtObject {
     service.osdTimer.stop()
     service.osd = null
     service.syncPopup()
+  }
+
+  function setNotificationSoundsMuted(enabled) {
+    service.notificationSoundsMuted = enabled
+    settings.notificationSoundsMuted = enabled
   }
 
   function setDoNotDisturb(enabled) {

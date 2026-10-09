@@ -1130,7 +1130,7 @@ PopupWindow {
 
           anchors.verticalCenter: parent.verticalCenter
           anchors.left: parent.left
-          anchors.right: clearButton.visible ? clearButton.left : dndButton.left
+          anchors.right: clearButton.visible ? clearButton.left : soundButton.left
           anchors.rightMargin: 8
           color: popup.controller.controlPrimaryText
           font.family: popup.controller.fontFamily
@@ -1151,7 +1151,8 @@ PopupWindow {
           iconName: popup.controller.doNotDisturb ? "bell-off" : "bell"
           description: popup.controller.doNotDisturb
             ? "Do Not Disturb on: popups and sounds muted; notifications still saved. Click to turn off."
-            : "Do Not Disturb off: popups and sounds enabled. Click to mute."
+            : "Do Not Disturb off: popups enabled; sounds "
+              + (popup.service.notificationSoundsMuted ? "muted" : "enabled") + ". Click to turn on."
           Accessible.role: Accessible.CheckBox
           Accessible.name: "Do Not Disturb"
           Accessible.checkable: true
@@ -1159,11 +1160,32 @@ PopupWindow {
           onClicked: popup.controller.toggleDoNotDisturb()
         }
 
+        HeaderIconButton {
+          id: soundButton
+
+          active: popup.service.notificationSoundsMuted
+          activeColor: popup.controller.controlActiveIcon
+          anchors {
+            right: dndButton.left
+            rightMargin: 8
+            verticalCenter: parent.verticalCenter
+          }
+          iconName: popup.service.notificationSoundsMuted ? "volume-x" : "volume-2"
+          description: popup.service.notificationSoundsMuted
+            ? "Notification sounds muted; popups still follow Do Not Disturb. Click to unmute."
+            : "Notification sounds enabled unless Do Not Disturb is on. Click to mute sounds only."
+          Accessible.role: Accessible.CheckBox
+          Accessible.name: "Mute notification sounds"
+          Accessible.checkable: true
+          Accessible.checked: popup.service.notificationSoundsMuted
+          onClicked: popup.service.setNotificationSoundsMuted(!popup.service.notificationSoundsMuted)
+        }
+
         DismissButton {
           id: clearButton
 
           anchors {
-            right: dndButton.left
+            right: soundButton.left
             rightMargin: 8
             verticalCenter: parent.verticalCenter
           }
