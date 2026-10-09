@@ -18,6 +18,15 @@ Scope {
     function onConnected() {
       if (!root.hyprlandSession)
         I3.refreshWorkspaces()
+      root.refreshI3Layout()
+    }
+    function onRawEvent(event) {
+      if (root.hyprlandSession || !event)
+        return
+      // i3 emits workspace events on focus changes; layout toggles do not, so
+      // the binding pokes the bar through refreshLayout.
+      if (event.type === "workspace")
+        root.refreshI3Layout()
     }
   }
 
@@ -91,6 +100,7 @@ Scope {
       root.hyprlandModeInitialized = true
     } else if (event.name === "configreloaded") {
       root.refreshHyprlandSubmap()
+      root.refreshHyprlandLayout()
     }
   }
 
@@ -119,6 +129,100 @@ Scope {
     }
   }
 
+  function refreshHyprlandLayout() {
+    // Like the submap query, wait for the first focused monitor, which arrives
+    // after native IPC initialization; config reloads and the IPC handler retry.
+    if (!root.hyprlandSession || !Hyprland.focusedMonitor || hyprlandLayout.running)
+      return
+    root.layoutRevision++
+    hyprlandLayout.revision = root.layoutRevision
+    hyprlandLayout.running = true
+  }
+
+  function applyHyprlandLayout(data, revision) {
+    if (!root.hyprlandSession || revision !== root.layoutRevision)
+      return
+    try {
+      const option = JSON.parse(data)
+      if (typeof option.str === "string") {
+        root.hyprlandLayout = option.str
+        root.hyprlandLayoutInitialized = true
+      }
+    } catch (error) {
+      console.warn("Invalid Hyprland layout state:", error)
+    }
+  }
+
+  Process {
+    id: hyprlandLayout
+
+    property int revision: 0
+    command: ["hyprctl", "-j", "getoption", "general:layout"]
+    stdout: StdioCollector {
+      onStreamFinished: root.applyHyprlandLayout(text, hyprlandLayout.revision)
+    }
+  }
+
+  function refreshI3Layout() {
+    if (root.hyprlandSession || i3LayoutQuery.running)
+      return
+    root.i3LayoutRevision++
+    i3LayoutQuery.revision = root.i3LayoutRevision
+    i3LayoutQuery.running = true
+  }
+
+  function applyI3Layout(data, revision) {
+    if (root.hyprlandSession || revision !== root.i3LayoutRevision)
+      return
+    try {
+      root.i3Layout = root.i3LayoutFromTree(data)
+    } catch (error) {
+      console.warn("Invalid i3 layout tree:", error)
+    }
+  }
+
+  function i3FocusedNode(node, parent) {
+    if (node.focused)
+      return { node, parent }
+    for (const child of node.nodes || []) {
+      const found = root.i3FocusedNode(child, node)
+      if (found)
+        return found
+    }
+    return null
+  }
+
+  function i3LayoutFromTree(data) {
+    const focused = root.i3FocusedNode(JSON.parse(data), null)
+    if (!focused)
+      return ""
+    // i3 applies layout to the container holding the focused one; an empty
+    // focused workspace is itself the container.
+    const container = focused.node.type === "workspace" ? focused.node : focused.parent
+    return container && container.layout ? container.layout : ""
+  }
+
+  Process {
+    id: i3LayoutQuery
+
+    property int revision: 0
+    command: ["i3-msg", "-t", "get_tree"]
+    stdout: StdioCollector {
+      onStreamFinished: root.applyI3Layout(text, i3LayoutQuery.revision)
+    }
+  }
+
+  // i3 emits no event when a layout command runs, so the icon is kept in sync
+  // with the user's own layout binds by a quiet poll; the poke and workspace
+  // events only speed up Hyprland and focus changes.
+  Timer {
+    id: i3LayoutPoll
+    interval: 1000
+    repeat: true
+    running: !root.hyprlandSession
+    onTriggered: root.refreshI3Layout()
+  }
+
   required property var notificationService
   required property var githubPrService
   required property var audioService
@@ -134,6 +238,11 @@ Scope {
   property bool resizeMode: false
   property int resizeModeRevision: 0
   property bool hyprlandModeInitialized: false
+  property string hyprlandLayout: ""
+  property int layoutRevision: 0
+  property bool hyprlandLayoutInitialized: false
+  property string i3Layout: ""
+  property int i3LayoutRevision: 0
 
   WeatherService { id: weatherService }
   QuoteService { id: quoteService }
@@ -149,6 +258,8 @@ Scope {
     function onFocusedMonitorChanged() {
       if (!root.hyprlandModeInitialized)
         root.refreshHyprlandSubmap()
+      if (!root.hyprlandLayoutInitialized)
+        root.refreshHyprlandLayout()
     }
   }
 
@@ -226,11 +337,17 @@ Scope {
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-  readonly property int focusedWorkspaceNumber: {
+  readonly property var focusedWorkspace: {
     const workspaces = root.hyprlandSession ? Hyprland.workspaces.values : I3.workspaces.values
-    const focused = workspaces.find(workspace => workspace.focused)
-    return focused ? (root.hyprlandSession ? focused.id : focused.number) : 1
+    return workspaces.find(workspace => workspace.focused) || null
   }
+  readonly property int focusedWorkspaceNumber: root.focusedWorkspace
+    ? (root.hyprlandSession ? root.focusedWorkspace.id : root.focusedWorkspace.number)
+    : 1
+  readonly property string currentLayoutName: root.hyprlandSession
+    ? root.hyprlandLayout
+    : root.i3Layout
+  readonly property string layoutIconName: root.layoutIconFor(root.currentLayoutName)
   property int workspaceTransition: 0
 
   readonly property var defaultAudioSink: Pipewire.defaultAudioSink
@@ -417,6 +534,20 @@ Scope {
 
   function icon(name) {
     return "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/" + name + ".svg"
+  }
+
+  function layoutIconFor(layoutName) {
+    switch (layoutName) {
+    case "dwindle": return "columns-2"
+    case "master": return "layout-panel-left"
+    case "monocle": return "maximize"
+    case "scrolling": return "gallery-horizontal-end"
+    case "splith": return "columns-2"
+    case "splitv": return "rows-2"
+    case "tabbed": return "layout-panel-top"
+    case "stacked": return "layout-list"
+    default: return ""
+    }
   }
 
   function workspaceFor(number) {
@@ -864,6 +995,8 @@ Scope {
 
   Component.onCompleted: {
     root.refreshHyprlandSubmap()
+    root.refreshHyprlandLayout()
+    root.refreshI3Layout()
     root.updatePowerSource()
     root.checkBatteryWarnings()
   }
@@ -1005,6 +1138,10 @@ Scope {
     function openConnectivity() { root.openConnectivityFromKeyboard() }
     function openAudioOutput() { root.openAudioOutputFromKeyboard() }
     function toggleDoNotDisturb() { root.toggleDoNotDisturbFromKeyboard() }
+    function refreshLayout() {
+      root.refreshHyprlandLayout()
+      root.refreshI3Layout()
+    }
   }
 
   SystemClock {
@@ -1200,11 +1337,16 @@ Scope {
           height: 26
           width: 26
 
-          Image {
+          LucideIcon {
             anchors.centerIn: parent
+            color: root.foreground
             height: root.barFontSize
-            source: "file:///usr/share/icons/Papirus/24x24/apps/tux.svg"
+            source: root.layoutIconName.length > 0 ? root.icon(root.layoutIconName) : ""
+            visible: root.layoutIconName.length > 0
             width: root.barFontSize
+
+            Accessible.role: Accessible.Indicator
+            Accessible.name: root.layoutIconName.length > 0 ? "Layout " + root.currentLayoutName : "Layout unknown"
           }
         }
 

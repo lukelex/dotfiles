@@ -7,18 +7,30 @@ const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
 
 function setup() {
-  const root = { hyprlandSession: false, resizeMode: false, resizeModeRevision: 0, hyprlandModeInitialized: false };
+  const root = {
+    hyprlandSession: false,
+    resizeMode: false,
+    resizeModeRevision: 0,
+    hyprlandModeInitialized: false,
+    hyprlandLayout: '',
+    layoutRevision: 0,
+    hyprlandLayoutInitialized: false,
+  };
   const i3BindingState = { revision: 0, running: false };
   const hyprlandSubmap = { revision: 0, running: false };
+  const hyprlandLayout = { revision: 0, running: false };
   const Hyprland = { focusedMonitor: null, refreshMonitors() { this.refreshCount = (this.refreshCount || 0) + 1; } };
   const warnings = [];
-  const context = vm.createContext({ root, i3BindingState, hyprlandSubmap, Hyprland, console: { warn: (...args) => warnings.push(args) } });
-  for (const name of ['handleI3ModeEvent', 'applyI3BindingState', 'refreshHyprlandSubmap', 'handleHyprlandEvent', 'applyHyprlandSubmap']) {
+  const context = vm.createContext({ root, i3BindingState, hyprlandSubmap, hyprlandLayout, Hyprland, console: { warn: (...args) => warnings.push(args) } });
+  for (const name of [
+    'handleI3ModeEvent', 'applyI3BindingState', 'refreshHyprlandSubmap',
+    'handleHyprlandEvent', 'applyHyprlandSubmap', 'refreshHyprlandLayout', 'applyHyprlandLayout',
+  ]) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing ${name}`);
     root[name] = vm.runInContext(`(${match[0]})`, context);
   }
-  return { root, i3BindingState, hyprlandSubmap, Hyprland, warnings };
+  return { root, i3BindingState, hyprlandSubmap, hyprlandLayout, Hyprland, warnings };
 }
 
 test('i3 mode events show Resize only in resize mode', () => {
