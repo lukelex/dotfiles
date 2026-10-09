@@ -25,6 +25,8 @@ run sudo install -m 0644 "$DOT_CONFIG/nwg-hello/nwg-hello.json" "/etc/nwg-hello/
 run sudo install -m 0644 "$DOT_CONFIG/nwg-hello/nwg-hello.css" "/etc/nwg-hello/nwg-hello.css"
 
 run sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
+run sudo mkdir -p "/etc/systemd/system-sleep"
+run sudo ln -fvs "$DOTFILES/linux/system/system-sleep/90-bluetooth-resume" "/etc/systemd/system-sleep/90-bluetooth-resume"
 
 run sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"

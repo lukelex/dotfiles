@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+action="${1:-}"
+sleep_type="${2:-}"
+
+if [ "$action" = post ]; then
+  case "$sleep_type" in
+    suspend|hibernate|hybrid-sleep|suspend-then-hibernate)
+      systemctl restart bluetooth.service
+      ;;
+  esac
+fi
