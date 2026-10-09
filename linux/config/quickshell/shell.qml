@@ -15,9 +15,14 @@ Scope {
     id: audioService
   }
 
+  WebcamService {
+    id: webcamService
+  }
+
   Bar {
     notificationService: notifications
     githubPrService: githubPrs
     audioService: audioService
+    webcamService: webcamService
   }
 }

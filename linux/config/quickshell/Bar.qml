@@ -226,6 +226,7 @@ Scope {
   required property var notificationService
   required property var githubPrService
   required property var audioService
+  required property var webcamService
   readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
   property bool githubReviewCenterOpen: false
   property var controlCenterTarget: null
@@ -1678,6 +1679,42 @@ Scope {
         Item {
           height: root.barFontSize
           width: root.barFontSize
+          visible: root.audioService.microphoneInUse
+          Accessible.role: Accessible.Button
+          Accessible.name: "Microphone in use by " + root.audioService.recordingApplications.map(application => application.name).join(", ")
+            + (root.audioService.recordingMicrophonesMuted ? "; inputs muted" : "")
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic")
+            color: root.audioService.recordingMicrophonesMuted ? root.muted : root.controlActiveIcon
+          }
+          MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            Accessible.role: Accessible.Button
+            Accessible.name: parent.Accessible.name
+            Accessible.onPressAction: panel.openAudioOutput(true)
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onEntered: panel.openAudioOutput()
+            onExited: audioOutputCenter.scheduleClose()
+            onClicked: panel.openAudioOutput(true)
+          }
+        }
+
+        LucideIcon {
+          height: root.barFontSize
+          width: root.barFontSize
+          visible: root.webcamService.inUse
+          source: root.icon("webcam")
+          color: root.controlActiveIcon
+          Accessible.role: Accessible.StatusBar
+          Accessible.name: "Webcam in use"
+        }
+
+        Item {
+          height: root.barFontSize
+          width: root.barFontSize
           visible: panel.width >= 720
 
           LucideIcon {
@@ -1765,34 +1802,6 @@ Scope {
             + (root.batteryTime ? ", " + root.batteryTime
               + (root.batteryState === "charging" ? " until full" : root.batteryState === "discharging" ? " remaining" : "") : "")
         }
-
-
-        Item {
-          height: root.barFontSize
-          width: root.barFontSize
-          visible: root.audioService.microphoneInUse
-          Accessible.role: Accessible.Button
-          Accessible.name: "Microphone in use by " + root.audioService.recordingApplications.map(application => application.name).join(", ")
-            + (root.audioService.recordingMicrophonesMuted ? "; inputs muted" : "")
-          LucideIcon {
-            anchors.fill: parent
-            source: root.icon(root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic")
-            color: root.audioService.recordingMicrophonesMuted ? root.muted : root.controlActiveIcon
-          }
-          MouseArea {
-            anchors.fill: parent
-            anchors.margins: -4
-            Accessible.role: Accessible.Button
-            Accessible.name: parent.Accessible.name
-            Accessible.onPressAction: panel.openAudioOutput(true)
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            onEntered: panel.openAudioOutput()
-            onExited: audioOutputCenter.scheduleClose()
-            onClicked: panel.openAudioOutput(true)
-          }
-        }
-
         Item {
           id: volumeWidget
 
