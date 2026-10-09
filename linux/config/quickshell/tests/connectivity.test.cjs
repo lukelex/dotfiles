@@ -50,6 +50,28 @@ test('Wi-Fi strength colors follow the label thresholds and theme tokens', () =>
   assert.match(panel, /modelData && !connecting\s*\? popup\.strengthColor\(modelData\.signalStrength\)/);
 });
 
+test('Bluetooth battery percentages use qualitative colors only when available', () => {
+  const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+  const controller = {
+    controlDownloadIcon: 'green', controlActiveIcon: 'blue',
+    controlWarningText: 'amber', urgent: 'red', controlSecondaryText: 'neutral',
+  };
+  const match = panel.match(/^( +)function strengthColor\([^]*?\n\1\}/m);
+  const popup = { controller };
+  popup.strengthColor = vm.runInNewContext(`(${match[0]})`, { popup });
+  const binding = panel.match(/color: (deviceRow\.modelData && deviceRow\.modelData\.batteryAvailable\s*\? popup\.strengthColor\(deviceRow\.modelData\.battery\) : popup\.controller\.controlSecondaryText)/);
+  assert.ok(binding);
+  const colorFor = modelData => vm.runInNewContext(binding[1], { popup, deviceRow: { modelData } });
+  for (const [battery, color] of [
+    [0, 'red'], [0.24, 'red'], [0.25, 'amber'], [0.49, 'amber'],
+    [0.5, 'blue'], [0.74, 'blue'], [0.75, 'green'], [1, 'green'],
+  ]) {
+    assert.equal(colorFor({ batteryAvailable: true, battery }), color);
+  }
+  assert.equal(colorFor({ batteryAvailable: false, battery: 0 }), 'neutral');
+  assert.equal(colorFor(null), 'neutral');
+});
+
 function serviceForTest() {
   const calls = { connect: 0, restart: 0, stop: 0, power: [] };
   Object.defineProperties(calls, {

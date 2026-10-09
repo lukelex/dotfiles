@@ -829,6 +829,8 @@ Scope {
             anchors.verticalCenter: parent.verticalCenter
             text: !deviceRow.modelData ? "Unavailable" : deviceRow.modelData.batteryAvailable
               ? popup.percentageText(deviceRow.modelData.battery) : "Connected"
+            color: deviceRow.modelData && deviceRow.modelData.batteryAvailable
+              ? popup.strengthColor(deviceRow.modelData.battery) : popup.controller.controlSecondaryText
           }
         }
       }
