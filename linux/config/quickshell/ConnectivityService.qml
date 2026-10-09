@@ -29,7 +29,7 @@ QtObject {
   readonly property bool wifiAvailable: Networking.backend === NetworkBackendType.NetworkManager && service._wifiDevices.length > 0
   readonly property bool wifiEnabled: Networking.wifiEnabled
   readonly property bool wifiHardwareEnabled: Networking.wifiHardwareEnabled
-  property bool wifiScanningEnabled: true
+  property bool wifiScanningEnabled: false
   property bool trafficMonitoringEnabled: false
   property var _deviceSpeeds: ({})
   property var _trafficSamples: ({})
@@ -155,6 +155,95 @@ QtObject {
   readonly property var savedNetworks: service._networks.filter(network => network.known
     && (network.signalStrength > 0 || network.connected || network.stateChanging))
 
+  // Zero can mean unavailable signal data. Scan in the background only while weak.
+  readonly property bool wifiWeak: service.wifiAvailable && service.wifiEnabled
+    && service.wifiHardwareEnabled && service.activeNetwork !== null
+    && service.wifiStrength > 0 && service.wifiStrength < 0.25
+  property bool _wifiSuggestionShown: false
+  property WifiNetwork _wifiSuggestionSource: null
+  property WifiNetwork _wifiSuggestionTarget: null
+  property string _wifiSuggestionAction: ""
+  property bool _wifiSuggestionConnecting: false
+
+  onActiveNetworkChanged: service._wifiSuggestionShown = false
+  onWifiStrengthChanged: {
+    // Hysteresis prevents repeated alerts as the signal flutters around 25%.
+    if (service.wifiStrength >= 0.35)
+      service._wifiSuggestionShown = false
+  }
+
+  readonly property Timer _wifiSuggestionTimer: Timer {
+    interval: 15000
+    repeat: true
+    running: service.wifiWeak && !service._wifiSuggestionShown
+    onTriggered: service.suggestBetterWifi()
+  }
+
+  readonly property Process _wifiSuggestion: Process {
+    stdout: StdioCollector {
+      onStreamFinished: service._wifiSuggestionAction = text.trim()
+    }
+    onExited: (exitCode, exitStatus) => service.finishWifiSuggestion(exitCode, exitStatus)
+  }
+
+  function betterWifi(network): bool {
+    const current = service.activeNetwork
+    return service.wifiWeak && !service.wifiConnecting && current !== null
+      && network !== null && service.savedNetworks.indexOf(network) >= 0
+      && network.known && !network.connected && !network.stateChanging
+      && network.device === current.device && network.name !== current.name
+      && Number.isFinite(network.signalStrength) && network.signalStrength <= 1
+      && network.signalStrength >= service.wifiStrength + 0.15
+  }
+
+  function wifiNotificationText(name: string): string {
+    return name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  }
+
+  function suggestBetterWifi(): void {
+    if (service._wifiSuggestionShown || service._wifiSuggestion.running || !service.wifiWeak)
+      return
+    const candidates = service.savedNetworks.filter(network => service.betterWifi(network))
+      .sort((a, b) => b.signalStrength - a.signalStrength || a.name.localeCompare(b.name))
+    if (!candidates.length)
+      return
+    const target = candidates[0]
+    service._wifiSuggestionSource = service.activeNetwork
+    service._wifiSuggestionTarget = target
+    service._wifiSuggestionAction = ""
+    service._wifiSuggestionShown = true
+    service._wifiSuggestion.command = ["notify-send", "-a", "Wi-Fi", "-u", "normal",
+      "-i", Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/wifi-low.svg",
+      "-t", "0", "-A", "switch=Switch to " + target.name,
+      "-A", "stay=Keep current Wi-Fi",
+      "--", "Stronger Wi-Fi available",
+      service.wifiNotificationText(service.wifiSsid) + " has a weak signal. Saved network "
+        + service.wifiNotificationText(target.name) + " has a stronger signal."]
+    service._wifiSuggestion.running = true
+  }
+
+  function finishWifiSuggestion(exitCode: int, exitStatus: int): void {
+    const target = service._wifiSuggestionTarget
+    const current = service._wifiSuggestionSource
+    service._wifiSuggestionTarget = null
+    service._wifiSuggestionSource = null
+    // A history action may be clicked after moving, disabling Wi-Fi or switching manually.
+    if (exitCode !== 0 || exitStatus !== 0 || service._wifiSuggestionAction !== "switch"
+        || current === null || current !== service.activeNetwork || !service.betterWifi(target))
+      return
+    service._wifiSuggestionConnecting = true
+    if (!service.connectNetwork(target) && service._wifiSuggestionConnecting) {
+      service._wifiSuggestionConnecting = false
+      service.notifyWifiSwitchFailure(service.wifiError)
+    }
+  }
+
+  function notifyWifiSwitchFailure(error: string): void {
+    Quickshell.execDetached(["notify-send", "-a", "Wi-Fi", "-u", "normal",
+      "-i", Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/wifi-low.svg",
+      "--", "Wi-Fi switch failed", service.wifiNotificationText(error)])
+  }
+
   readonly property bool bluetoothAvailable: Bluetooth.adapters.values.length > 0
   readonly property bool bluetoothEnabled: Bluetooth.adapters.values.some(adapter => adapter.enabled)
   readonly property bool bluetoothBlocked: Bluetooth.adapters.values.some(adapter => adapter.state === BluetoothAdapterState.Blocked)
@@ -251,7 +340,7 @@ QtObject {
       required property var modelData
       target: modelData
       property: "scannerEnabled"
-      value: service.wifiEnabled && service.wifiScanningEnabled
+      value: service.wifiEnabled && (service.wifiScanningEnabled || service.wifiWeak)
       restoreMode: Binding.RestoreBindingOrValue
     }
   }
@@ -460,5 +549,10 @@ QtObject {
     service._connectionTimeout.stop()
     service._state.pending = false
     service._state.wifiError = error
+    if (service._wifiSuggestionConnecting) {
+      service._wifiSuggestionConnecting = false
+      if (error)
+        service.notifyWifiSwitchFailure(error)
+    }
   }
 }
