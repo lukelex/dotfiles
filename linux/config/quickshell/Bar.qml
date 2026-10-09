@@ -30,10 +30,14 @@ Scope {
     }
   }
 
-  // I3.rawEvent only receives workspace/output events; mode needs its own subscription.
+  // I3.rawEvent only receives workspace/output events; the mode and binding
+  // subscriptions need their own listener.
   I3IpcListener {
-    subscriptions: root.hyprlandSession ? [] : ["mode"]
-    onIpcEvent: event => root.handleI3ModeEvent(event)
+    subscriptions: root.hyprlandSession ? [] : ["mode", "binding"]
+    onIpcEvent: event => {
+      root.handleI3ModeEvent(event)
+      root.handleI3BindingEvent(event)
+    }
   }
 
   function handleI3ModeEvent(event) {
@@ -56,6 +60,43 @@ Scope {
         console.warn("Invalid i3 mode event:", error)
       }
     }
+  }
+
+  // i3 fires the binding event the moment a configured keybinding starts
+  // running — long before the get_tree poll notices the new layout — so the
+  // OSD can flash immediately instead of waiting up to a second.
+  function handleI3BindingEvent(event) {
+    if (root.hyprlandSession || !event || event.type !== "binding")
+      return
+    try {
+      const payload = JSON.parse(event.data)
+      if (payload.change !== "run")
+        return
+      const command = payload.binding && payload.binding.command
+      if (typeof command !== "string")
+        return
+      const predicted = root.layoutFromBindingCommand(command)
+      if (predicted) {
+        root.maybeShowLayoutOsd(predicted)
+        root.refreshI3Layout()
+      }
+    } catch (error) {
+      console.warn("Invalid i3 binding event:", error)
+    }
+  }
+
+  function layoutFromBindingCommand(command) {
+    const cmd = String(command || "").trim()
+    if (cmd === "layout stacking" || cmd.startsWith("layout stacking,"))
+      return "stacked"
+    if (cmd === "layout tabbed" || cmd.startsWith("layout tabbed,"))
+      return "tabbed"
+    // Toggle-split only has a certain outcome when the current layout is a split.
+    if ((cmd === "layout toggle split" || cmd === "split toggle"
+         || cmd.startsWith("layout toggle split,") || cmd.startsWith("split toggle,"))
+        && (root.i3Layout === "splith" || root.i3Layout === "splitv"))
+      return root.i3Layout === "splitv" ? "splith" : "splitv"
+    return ""
   }
 
   function applyI3BindingState(data, revision) {
@@ -144,9 +185,12 @@ Scope {
       return
     try {
       const option = JSON.parse(data)
-      if (typeof option.str === "string") {
+      if (typeof option.str === "string" && option.str !== root.hyprlandLayout) {
         root.hyprlandLayout = option.str
         root.hyprlandLayoutInitialized = true
+        // general:layout only changes when a layout command runs, never on
+        // focus or workspace navigation, so every change is an active switch.
+        root.maybeShowLayoutOsd(option.str)
       }
     } catch (error) {
       console.warn("Invalid Hyprland layout state:", error)
@@ -175,7 +219,21 @@ Scope {
     if (root.hyprlandSession || revision !== root.i3LayoutRevision)
       return
     try {
-      root.i3Layout = root.i3LayoutFromTree(data)
+      const tree = JSON.parse(data)
+      const focused = root.i3FocusedNode(tree, null)
+      const layout = root.i3LayoutFromTree(tree)
+      const focusId = focused && focused.node.id !== undefined ? String(focused.node.id) : ""
+      const focusChanged = focusId !== root.i3LayoutFocusId
+      const layoutChanged = layout !== root.i3Layout
+      root.i3Layout = layout
+      root.i3LayoutFocusId = focusId
+      // The poll also picks up incidental layout differences when focus moves
+      // between windows, containers, or workspaces; only emit the OSD when the
+      // focused node is unchanged, i.e. an active layout command ran.
+      if (layoutChanged && !focusChanged)
+        root.maybeShowLayoutOsd(layout)
+      else
+        root.armLayoutOsd(layout)
     } catch (error) {
       console.warn("Invalid i3 layout tree:", error)
     }
@@ -193,7 +251,8 @@ Scope {
   }
 
   function i3LayoutFromTree(data) {
-    const focused = root.i3FocusedNode(JSON.parse(data), null)
+    const tree = typeof data === "string" ? JSON.parse(data) : data
+    const focused = root.i3FocusedNode(tree, null)
     if (!focused)
       return ""
     // i3 applies layout to the container holding the focused one; an empty
@@ -212,9 +271,10 @@ Scope {
     }
   }
 
-  // i3 emits no event when a layout command runs, so the icon is kept in sync
-  // with the user's own layout binds by a quiet poll; the poke and workspace
-  // events only speed up Hyprland and focus changes.
+  // i3 emits no layout event, so the icon is kept in sync with the user's own
+  // binds by a quiet poll; the binding event above only flashes the OSD early
+  // and re-queries. The poke and workspace events only speed up Hyprland and
+  // focus changes.
   Timer {
     id: i3LayoutPoll
     interval: 1000
@@ -349,6 +409,9 @@ Scope {
     ? root.hyprlandLayout
     : root.i3Layout
   readonly property string layoutIconName: root.layoutIconFor(root.currentLayoutName)
+  property bool layoutOsdArmed: false
+  property string lastLayoutOsdLayout: ""
+  property string i3LayoutFocusId: ""
   property int workspaceTransition: 0
 
   readonly property var defaultAudioSink: Pipewire.defaultAudioSink
@@ -550,6 +613,42 @@ Scope {
     case "stacked": return "layout-list"
     default: return ""
     }
+  }
+
+  function layoutDisplayName(layoutName) {
+    switch (layoutName) {
+    case "dwindle": return "Dwindle"
+    case "master": return "Master"
+    case "monocle": return "Monocle"
+    case "scrolling": return "Scrolling"
+    case "splith": return "Split horizontal"
+    case "splitv": return "Split vertical"
+    case "tabbed": return "Tabbed"
+    case "stacked": return "Stacked"
+    default: return ""
+    }
+  }
+
+  function armLayoutOsd(layout) {
+    if (!root.layoutOsdArmed && root.layoutIconFor(layout))
+      root.layoutOsdArmed = true
+  }
+
+  function maybeShowLayoutOsd(layout) {
+    const iconName = root.layoutIconFor(layout)
+    if (!iconName)
+      return
+    // The first resolved layout only arms the OSD; shell reloads and startup
+    // must not flash it. Repeats of the last shown layout are suppressed even
+    // across a transient unknown value.
+    if (!root.layoutOsdArmed) {
+      root.layoutOsdArmed = true
+      return
+    }
+    if (layout === root.lastLayoutOsdLayout)
+      return
+    root.lastLayoutOsdLayout = layout
+    root.notificationService.showOsd("Layout", 0, iconName, root.layoutDisplayName(layout))
   }
 
   function workspaceFor(number) {

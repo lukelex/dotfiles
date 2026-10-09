@@ -25,7 +25,7 @@ test('notification indicator reflects active notifications, not retained history
 });
 
 test('resize mode follows i3 mode and Hyprland submap events with a themed bar indicator', () => {
-  assert.match(source, /I3IpcListener \{\s+subscriptions: root\.hyprlandSession \? \[\] : \["mode"\]\s+onIpcEvent: event => root\.handleI3ModeEvent\(event\)/);
+  assert.match(source, /I3IpcListener \{\s+subscriptions: root\.hyprlandSession \? \[\] : \["mode", "binding"\]\s+onIpcEvent: event => \{\s+root\.handleI3ModeEvent\(event\)\s+root\.handleI3BindingEvent\(event\)\s+\}/);
   assert.match(source, /event\.name === "submap"[\s\S]*?String\(event\.data \|\| ""\) === "resize"/);
   assert.match(source, /color: root\.controlActive[\s\S]*?visible: root\.resizeMode/);
   assert.match(source, /text: "Resize"/);

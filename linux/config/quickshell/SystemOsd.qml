@@ -26,7 +26,11 @@ PopupWindow {
   visible: false
 
   function iconName() {
-    if (!popup.displayedOsd || popup.displayedOsd.summary === "Brightness")
+    if (!popup.displayedOsd)
+      return "sun"
+    if (popup.displayedOsd.summary === "Layout")
+      return popup.displayedOsd.osdIconName || "maximize"
+    if (popup.displayedOsd.summary === "Brightness")
       return "sun"
     if (popup.displayedOsd.summary === "Microphone")
       return popup.muted ? "mic-off" : "mic"
@@ -165,6 +169,7 @@ PopupWindow {
       Item {
         height: 12
         width: parent.width
+        visible: !popup.displayedOsd || popup.displayedOsd.summary !== "Layout"
 
         Rectangle {
           id: meterTrack
@@ -196,7 +201,10 @@ PopupWindow {
         font.family: popup.controller.fontFamily
         font.pixelSize: 11
         horizontalAlignment: Text.AlignHCenter
-        text: popup.muted ? "Muted" : Math.round(popup.value) + "%"
+        text: popup.muted ? "Muted"
+          : popup.displayedOsd && popup.displayedOsd.summary === "Layout"
+            ? (popup.displayedOsd.osdLabel || "")
+            : Math.round(popup.value) + "%"
         width: parent.width
       }
     }
