@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQml
 import QtQml.Models
+import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
 import Quickshell.Bluetooth
@@ -164,6 +165,49 @@ QtObject {
   // Keep native objects so name, state, batteryAvailable and battery remain live bindings.
   readonly property var connectedBluetoothDevices: Bluetooth.devices.values.filter(device => device.connected)
     .sort((a, b) => a.name.localeCompare(b.name) || a.dbusPath.localeCompare(b.dbusPath))
+
+  // Observe every native device, including connections made while the panel is closed.
+  // Keep deduplication outside delegates: model updates can recreate watchers.
+  property var _bluetoothBatteryWarnings: ({})
+  readonly property Instantiator _bluetoothBatteryWatchers: Instantiator {
+    model: Bluetooth.devices.values
+    delegate: QtObject {
+      id: watcher
+      required property var modelData
+      readonly property Connections events: Connections {
+        target: watcher.modelData
+        function onConnectedChanged() { service.checkBluetoothBattery(watcher.modelData) }
+        function onBatteryAvailableChanged() { service.checkBluetoothBattery(watcher.modelData) }
+        function onBatteryChanged() { service.checkBluetoothBattery(watcher.modelData) }
+      }
+      Component.onCompleted: service.checkBluetoothBattery(modelData)
+    }
+  }
+
+  function checkBluetoothBattery(device): void {
+    if (!device)
+      return
+    const key = device.dbusPath
+    if (!device.connected) {
+      delete service._bluetoothBatteryWarnings[key]
+      return
+    }
+    if (!device.batteryAvailable || !Number.isFinite(device.battery)
+        || device.battery < 0 || device.battery > 1)
+      return
+    if (device.battery > 0.15) {
+      delete service._bluetoothBatteryWarnings[key]
+      return
+    }
+    if (service._bluetoothBatteryWarnings[key] === device)
+      return
+    service._bluetoothBatteryWarnings[key] = device
+    const name = (device.name || "Bluetooth device").replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    Quickshell.execDetached(["notify-send", "-a", "Bluetooth", "-u", "normal",
+      "-i", Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/battery-low.svg",
+      "--", "Bluetooth battery low", name + " has " + Math.round(device.battery * 100) + "% battery remaining."])
+  }
 
   readonly property var _wifiDevices: Networking.devices.values.filter(device => device.type === DeviceType.Wifi)
   readonly property var _wiredDevices: Networking.devices.values.filter(device => device.type === DeviceType.Wired)
