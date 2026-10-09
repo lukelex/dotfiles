@@ -9,6 +9,7 @@ devpath=""
 devtype=""
 model=""
 vendor=""
+interfaces=""
 
 reset_event() {
   action=""
@@ -16,35 +17,53 @@ reset_event() {
   devtype=""
   model=""
   vendor=""
+  interfaces=""
 }
 
 notify_event() {
-  [ "$devtype" = usb_device ] || return
-  [ "$action" = add ] || [ "$action" = remove ] || return
+  [ "$devtype" = usb_device ] || return 0
+  [ "$action" = add ] || [ "$action" = remove ] || return 0
 
   # Root hubs are USB devices too, but they are not user-connected peripherals.
-  [[ "$devpath" =~ /usb[0-9]+$ ]] && return
+  if [[ "$devpath" =~ /usb[0-9]+$ ]]; then
+    return 0
+  fi
 
-  local name icon summary tag
+  local name icon summary tag type
   model="${model//_/ }"
+  vendor="${vendor//_/ }"
   name="${vendor:+$vendor }${model:-USB device}"
   tag="usb-${devpath//[^[:alnum:]]/-}"
 
   if [ "$action" = add ]; then
-    icon="$LUCIDE_PNG_PATH/usb.png"
+    icon="usb"
     summary="USB device connected"
   else
-    icon="$LUCIDE_PNG_PATH/unplug.png"
+    icon="unplug"
     summary="USB device disconnected"
   fi
 
+  # Use USB interface classes, not model-name guesses. Combined keyboard/mouse
+  # receivers stay generic because they do not identify a single peripheral.
+  type=""
+  case "$interfaces" in
+    *:030101:*030102:*|*:030102:*030101:*) ;;
+    *:030102:*) type="Mouse"; icon="mouse" ;;
+    *:030101:*) type="Keyboard"; icon="keyboard" ;;
+    *:08????:*) type="Storage device"; icon="hard-drive" ;;
+    *:0e????:*) type="Camera"; icon="camera" ;;
+    *:07????:*) type="Printer"; icon="printer" ;;
+    *:01????:*) type="Audio device"; icon="speaker" ;;
+    *:09????:*) type="USB hub"; icon="usb" ;;
+  esac
+
   printf 'usb-notify: %s %s\n' "$action" "$name" >&2
   notify-send -a System \
-    -h "string:image-path:$icon" \
+    -i "$LUCIDE_PATH/$icon.svg" \
     -h "string:wired-tag:$tag" \
     -u low \
     -t 5000 \
-    "$summary" "$name" || true
+    "$summary" "${type:+$type: }$name" || true
 }
 
 # udevadm writes to a pipe here, so force line buffering for prompt notifications.
@@ -61,6 +80,8 @@ stdbuf --output=L udevadm monitor --udev --property --subsystem-match=usb |
       ID_MODEL_FROM_DATABASE=*) model="${line#ID_MODEL_FROM_DATABASE=}" ;;
       ID_MODEL=*) [ -n "$model" ] || model="${line#ID_MODEL=}" ;;
       ID_VENDOR_FROM_DATABASE=*) vendor="${line#ID_VENDOR_FROM_DATABASE=}" ;;
+      ID_VENDOR=*) [ -n "$vendor" ] || vendor="${line#ID_VENDOR=}" ;;
+      ID_USB_INTERFACES=*) interfaces="${line#ID_USB_INTERFACES=}" ;;
       "")
         notify_event
         reset_event

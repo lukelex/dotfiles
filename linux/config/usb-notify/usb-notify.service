@@ -7,7 +7,6 @@ Type=simple
 ExecStart=/usr/bin/bash %h/dotfiles/linux/scripts/usb-notify
 Restart=on-failure
 RestartSec=5
-EnvironmentFile=%h/dotfiles/linux/variables.env
 
 [Install]
 WantedBy=default.target
