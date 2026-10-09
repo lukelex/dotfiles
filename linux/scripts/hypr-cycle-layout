@@ -1,0 +1,26 @@
+#!/usr/bin/bash
+
+set -eu
+
+# Cycle the default workspace layout across Hyprland's built-in layout engines.
+# Like the master/dwindle binds, this updates the general:layout default; a
+# workspace keeps its assigned layout until it is newly created.
+
+layouts=(dwindle master monocle scrolling)
+
+current=$(hyprctl -j getoption general:layout | jq -r '.str')
+
+next=${layouts[0]}
+for i in "${!layouts[@]}"; do
+  if [[ ${layouts[$i]} == "$current" ]]; then
+    next=${layouts[$(((i + 1) % ${#layouts[@]}))]}
+    break
+  fi
+done
+
+hyprctl keyword general:layout "$next" >/dev/null
+
+# Let the bar show the new layout immediately; harmless when the shell is not running.
+# The explicit --path is required: the shell runs from the dotfiles checkout, not the
+# default config location, so a bare `qs ipc call bar` cannot reach it.
+qs ipc --path "$HOME/dotfiles/linux/config/quickshell/shell.qml" call bar refreshLayout 2>/dev/null || true

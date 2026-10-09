@@ -48,6 +48,7 @@ hl.bind(SUPER .. " + m", hl.dsp.layout("swapwithmaster master"))
 hl.bind(SUPER .. " + e", hl.dsp.layout("orientationcycle"))
 hl.bind(SUPER .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl keyword general:layout master"))
 hl.bind(SUPER .. " + SHIFT + D", hl.dsp.exec_cmd("hyprctl keyword general:layout dwindle"))
+hl.bind(SUPER .. " + SHIFT + E", hl.dsp.exec_cmd("u_hypr-cycle-layout"))
 
 hl.bind(SUPER .. " + SHIFT + minus", hl.dsp.window.move({ workspace = "special" }))
 hl.bind(SUPER .. " + minus", hl.dsp.workspace.toggle_special(""))
