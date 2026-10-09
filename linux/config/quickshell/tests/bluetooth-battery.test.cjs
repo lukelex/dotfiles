@@ -23,7 +23,7 @@ test('already connected and newly connected low batteries notify once per connec
   check(device);
   assert.equal(commands.length, 1);
   assert.equal(commands[0].at(-1), 'Headphones has 15% battery remaining.');
-  assert.ok(commands[0].includes('normal'));
+  assert.equal(commands[0][commands[0].indexOf('-u') + 1], 'critical');
   assert.ok(commands[0].some(arg => arg.endsWith('/battery-low.svg')));
   device.battery = 0.1;
   check(device);

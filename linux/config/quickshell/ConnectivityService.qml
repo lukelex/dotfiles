@@ -204,7 +204,7 @@ QtObject {
     service._bluetoothBatteryWarnings[key] = device
     const name = (device.name || "Bluetooth device").replace(/&/g, "&amp;")
       .replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    Quickshell.execDetached(["notify-send", "-a", "Bluetooth", "-u", "normal",
+    Quickshell.execDetached(["notify-send", "-a", "Bluetooth", "-u", "critical",
       "-i", Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/battery-low.svg",
       "--", "Bluetooth battery low", name + " has " + Math.round(device.battery * 100) + "% battery remaining."])
   }
