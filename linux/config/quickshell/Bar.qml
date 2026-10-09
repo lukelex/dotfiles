@@ -1689,6 +1689,7 @@ Scope {
             color: root.audioService.recordingMicrophonesMuted ? root.muted : root.controlActiveIcon
           }
           MouseArea {
+            id: microphoneHover
             anchors.fill: parent
             anchors.margins: -4
             Accessible.role: Accessible.Button
@@ -1696,9 +1697,16 @@ Scope {
             Accessible.onPressAction: panel.openAudioOutput(true)
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: panel.openAudioOutput()
-            onExited: audioOutputCenter.scheduleClose()
             onClicked: panel.openAudioOutput(true)
+          }
+          PrivacyHint {
+            controller: root
+            panel: panel
+            trigger: microphoneHover
+            title: "Microphone"
+            iconName: root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic"
+            applications: Array.from(new Set(root.audioService.recordingApplications.map(application => application.name)))
+            muted: root.audioService.recordingMicrophonesMuted
           }
         }
 
@@ -1709,7 +1717,23 @@ Scope {
           source: root.icon("webcam")
           color: root.controlActiveIcon
           Accessible.role: Accessible.StatusBar
-          Accessible.name: "Webcam in use"
+          Accessible.name: "Webcam in use by " + root.webcamService.recordingApplications.join(", ")
+          MouseArea {
+            id: webcamHover
+            anchors.fill: parent
+            anchors.margins: -4
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+          }
+          PrivacyHint {
+            controller: root
+            panel: panel
+            trigger: webcamHover
+            title: "Webcam"
+            iconName: "webcam"
+            applications: root.webcamService.recordingApplications
+            applicationDetails: root.webcamService.applicationDevices
+          }
         }
 
         Item {
