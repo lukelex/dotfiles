@@ -474,48 +474,6 @@ PopupWindow {
             width: parent.width - 28
             spacing: 12
 
-            Text {
-              width: parent.width
-              visible: text !== ""
-              text: [popup.controller.audioControlError, popup.controller.audioService.microphoneMuteError].filter(message => message).join("\n")
-              textFormat: Text.PlainText
-              wrapMode: Text.Wrap
-              color: popup.controller.urgent
-              font.family: popup.controller.fontFamily
-              font.pixelSize: 11
-            }
-
-            SliderControl {
-              controller: popup.controller
-              enabled: popup.controller.audioAvailable
-              title: !popup.controller.audioAvailable ? "Audio unavailable" : popup.controller.audioMuted ? "Volume / muted" : "Volume"
-              iconName: popup.controller.audioIcon()
-              toggleTitle: popup.controller.audioMuted ? "Unmute" : "Mute"
-              toggleIcon: "volume-x"
-              toggleActive: popup.controller.audioMuted
-              onToggleRequested: popup.controller.toggleAudio()
-              value: popup.controller.audioVolume
-              width: parent.width
-              onValueChangedByUser: function(value) {
-                popup.controller.setAudioVolume(value)
-              }
-            }
-
-            SliderControl {
-              controller: popup.controller
-              enabled: popup.controller.microphoneAvailable
-              title: !popup.controller.microphoneAvailable ? "Microphone unavailable"
-                : popup.controller.microphoneMuted ? "Selected mic / muted" : "Selected microphone"
-              iconName: popup.controller.microphoneMuted ? "mic-off" : "mic"
-              toggleTitle: popup.controller.microphoneMuted ? "Unmute" : "Mute"
-              toggleIcon: "mic-off"
-              toggleActive: popup.controller.microphoneMuted
-              onToggleRequested: popup.controller.toggleMicrophone()
-              value: popup.controller.microphoneVolume
-              width: parent.width
-              onValueChangedByUser: value => popup.controller.setMicrophoneVolume(value)
-            }
-
             SliderControl {
               busy: popup.controller.brightnessBusy
               controller: popup.controller

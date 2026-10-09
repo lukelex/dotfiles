@@ -265,6 +265,107 @@ Scope {
     }
   }
 
+  component VolumeControl: Column {
+    id: volumeControl
+    required property string title
+    required property string iconName
+    required property bool muted
+    required property real volume
+    signal volumeEdited(real value)
+    signal muteRequested()
+    width: parent.width
+    spacing: 2
+    opacity: enabled ? 1 : 0.55
+
+    Item {
+      width: parent.width
+      height: 36
+
+      Label {
+        anchors.verticalCenter: parent.verticalCenter
+        width: parent.width - muteButton.width - 12
+        color: popup.controller.controlPrimaryText
+        font.pixelSize: 12
+        text: volumeControl.title + (!volumeControl.enabled ? " unavailable" : volumeControl.muted ? " / muted" : "")
+      }
+
+      SoundAction {
+        id: muteButton
+        anchors.right: parent.right
+        width: 100
+        text: volumeControl.muted ? "Unmute" : "Mute"
+        accessibleName: text + " " + volumeControl.title.toLowerCase()
+        iconName: volumeControl.iconName
+        active: volumeControl.muted
+        onActivated: volumeControl.muteRequested()
+      }
+    }
+
+    Item {
+      width: parent.width
+      height: 32
+
+      LucideIcon {
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: 18
+        height: 18
+        source: popup.controller.icon(volumeControl.iconName)
+        color: popup.controller.controlSecondaryText
+      }
+
+      Controls.Slider {
+        id: volumeSlider
+        anchors.left: parent.left
+        anchors.leftMargin: 28
+        anchors.right: percentage.left
+        anchors.rightMargin: 10
+        height: parent.height
+        from: 0
+        to: 100
+        value: volumeControl.volume
+        stepSize: 1
+        focusPolicy: popup.pinned ? Qt.StrongFocus : Qt.NoFocus
+        Accessible.name: volumeControl.title + " volume"
+        onMoved: volumeControl.volumeEdited(value)
+
+        background: Rectangle {
+          x: volumeSlider.leftPadding
+          y: (volumeSlider.height - height) / 2
+          width: volumeSlider.availableWidth
+          height: 8
+          radius: 4
+          color: popup.controller.controlSliderTrack
+          Rectangle {
+            width: volumeSlider.visualPosition * parent.width
+            height: parent.height
+            radius: parent.radius
+            color: popup.controller.controlSliderFill
+          }
+        }
+        handle: Rectangle {
+          x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+          y: (volumeSlider.height - height) / 2
+          width: 14
+          height: 14
+          radius: 7
+          color: popup.controller.controlSliderFill
+          border.width: volumeSlider.activeFocus ? 2 : 0
+          border.color: popup.controller.controlActiveIcon
+        }
+      }
+
+      Label {
+        id: percentage
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: 44
+        horizontalAlignment: Text.AlignRight
+        text: volumeControl.enabled ? Math.round(volumeControl.volume) + "%" : "—"
+      }
+    }
+  }
+
   component SoundAction: Item {
     id: action
     required property string text
@@ -460,7 +561,7 @@ Scope {
           anchors.verticalCenter: parent.verticalCenter
           color: popup.controller.controlPrimaryText
           font.pixelSize: 16
-          text: "Sound devices"
+           text: "Audio Devices"
           width: parent.width - closeButton.width - parent.spacing
         }
 
@@ -471,7 +572,7 @@ Scope {
           height: 32
           activeFocusOnTab: popup.pinned
           Accessible.role: Accessible.Button
-          Accessible.name: "Close sound device selector"
+           Accessible.name: "Close Audio Devices"
           Accessible.onPressAction: popup.requestClose()
           Keys.onReturnPressed: popup.requestClose()
           Keys.onSpacePressed: popup.requestClose()
@@ -529,6 +630,50 @@ Scope {
             color: popup.controller.urgent
             elide: Text.ElideNone
             wrapMode: Text.Wrap
+          }
+
+          Rectangle {
+            width: parent.width
+            height: volumeControls.implicitHeight + 28
+            radius: 18
+            color: popup.controller.controlSurface
+
+            Column {
+              id: volumeControls
+              x: 14
+              y: 14
+              width: parent.width - 28
+              spacing: 12
+
+              VolumeControl {
+                title: "Speaker"
+                enabled: popup.controller.audioAvailable
+                iconName: popup.controller.audioIcon()
+                muted: popup.controller.audioMuted
+                volume: popup.controller.audioVolume
+                onVolumeEdited: value => popup.controller.setAudioVolume(value)
+                onMuteRequested: popup.controller.toggleAudio()
+              }
+
+              VolumeControl {
+                title: "Microphone"
+                enabled: popup.controller.microphoneAvailable
+                iconName: popup.controller.microphoneMuted ? "mic-off" : "mic"
+                muted: popup.controller.microphoneMuted
+                volume: popup.controller.microphoneVolume
+                onVolumeEdited: value => popup.controller.setMicrophoneVolume(value)
+                onMuteRequested: popup.controller.toggleMicrophone()
+              }
+
+              Label {
+                width: parent.width
+                visible: text !== ""
+                text: popup.controller.audioControlError
+                color: popup.controller.urgent
+                elide: Text.ElideNone
+                wrapMode: Text.Wrap
+              }
+            }
           }
 
           Label {
@@ -609,34 +754,17 @@ Scope {
             color: popup.controller.controlPrimaryText
           }
 
-          Grid {
-            width: parent.width
-            columns: width < 330 ? 1 : 2
-            spacing: 8
-
-            SoundAction {
-              width: (parent.width - parent.spacing * (parent.columns - 1)) / parent.columns
-              text: popup.controller.microphoneMuted ? "Unmute selected" : "Mute selected"
-              accessibleName: popup.controller.microphoneMuted ? "Unmute selected microphone" : "Mute selected microphone"
-              iconName: popup.controller.microphoneMuted ? "mic" : "mic-off"
-              enabled: popup.controller.microphoneAvailable
-              onActivated: popup.service.setMicrophoneMuted(!popup.controller.microphoneMuted)
-            }
-
-            SoundAction {
-              width: (parent.width - parent.spacing * (parent.columns - 1)) / parent.columns
-              text: "Mute all"
-              accessibleName: "Mute all microphones"
-              iconName: "mic-off"
-              active: popup.service.allMicrophonesMuted
-              enabled: popup.service.microphoneNodes.length > 0 && !popup.service.allMicrophonesMuted
-              onActivated: popup.service.muteAllMicrophones()
-            }
+          SoundAction {
+            text: "Mute all microphones"
+            iconName: "mic-off"
+            active: popup.service.allMicrophonesMuted
+            enabled: popup.service.microphoneNodes.length > 0 && !popup.service.allMicrophonesMuted
+            onActivated: popup.service.muteAllMicrophones()
           }
 
           Label {
             width: parent.width
-            text: popup.service.microphoneMuteError || "Unmute selected releases all-input muting. Other inputs stay muted."
+            text: popup.service.microphoneMuteError || "Unmute the selected microphone above to release all-input muting. Other inputs stay muted."
             visible: popup.service.microphoneMuteError !== "" || popup.service.allMicrophonesMuteRequested
             color: popup.service.microphoneMuteError ? popup.controller.urgent : popup.controller.controlSecondaryText
             wrapMode: Text.Wrap
