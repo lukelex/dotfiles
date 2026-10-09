@@ -1,5 +1,5 @@
 [Unit]
-Description=Bluetooth device connection notifications
+Description=Bluetooth device connection and disconnection notifications
 Documentation=man:dbus-monitor(1)
 
 [Service]
@@ -7,7 +7,6 @@ Type=simple
 ExecStart=/usr/bin/bash %h/dotfiles/linux/scripts/bluetooth-notify
 Restart=on-failure
 RestartSec=5
-EnvironmentFile=%h/dotfiles/linux/variables.env
 
 [Install]
 WantedBy=default.target

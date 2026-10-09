@@ -7,21 +7,39 @@ source "$HOME/dotfiles/linux/variables.env"
 device_path=""
 connected_property=0
 
-notify_connected() {
-  local address name tag
+notify_event() {
+  local state="$1" address name icon type tag info
   address="${device_path##*/dev_}"
   address="${address//_/:}"
-  name="$(bluetoothctl info "$address" | awk -F': ' '/Alias:/ { print $2; exit }')"
+  info="$(bluetoothctl info "$address")"
+  name="$(awk -F': ' '/Alias:/ { print $2; exit }' <<< "$info")"
+  icon="$(awk -F': ' '/Icon:/ { print $2; exit }' <<< "$info")"
   name="${name:-Bluetooth device}"
+  case "$icon" in
+    input-mouse) type="Mouse"; icon="mouse" ;;
+    input-keyboard) type="Keyboard"; icon="keyboard" ;;
+    input-tablet) type="Tablet"; icon="tablet" ;;
+    audio-card|audio-headset|audio-headphones) type="Audio device"; icon="headphones" ;;
+    phone) type="Phone"; icon="smartphone" ;;
+    computer) type="Computer"; icon="monitor" ;;
+    *)
+      type="Bluetooth device"
+      if [ "$state" = connected ]; then
+        icon="bluetooth-connected"
+      else
+        icon="bluetooth-off"
+      fi
+      ;;
+  esac
   tag="bluetooth-${address//:/-}"
 
-  printf 'bluetooth-notify: connected %s\n' "$name" >&2
+  printf 'bluetooth-notify: %s %s %s\n' "$state" "$type" "$name" >&2
   notify-send -a System \
-    -h "string:image-path:$LUCIDE_PNG_PATH/bluetooth-connected.png" \
+    -i "$LUCIDE_PATH/$icon.svg" \
     -h "string:wired-tag:$tag" \
     -u low \
     -t 5000 \
-    "Bluetooth device connected" "$name" || true
+    "Bluetooth device $state" "$type: $name" || true
 }
 
 stdbuf --output=L dbus-monitor --system \
@@ -36,10 +54,15 @@ stdbuf --output=L dbus-monitor --system \
       *'string "Connected"'*) connected_property=1 ;;
       *'boolean true'*)
         if [ "$connected_property" -eq 1 ] && [ -n "$device_path" ]; then
-          notify_connected
+          notify_event connected
         fi
         connected_property=0
         ;;
-      *'boolean false'*) connected_property=0 ;;
+      *'boolean false'*)
+        if [ "$connected_property" -eq 1 ] && [ -n "$device_path" ]; then
+          notify_event disconnected
+        fi
+        connected_property=0
+        ;;
     esac
   done
