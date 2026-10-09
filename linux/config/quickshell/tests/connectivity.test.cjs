@@ -9,6 +9,47 @@ const ConnectionState = { Disconnected: 0, Connecting: 1, Connected: 2 };
 const BluetoothAdapterState = { Blocked: 0 };
 const NetworkConnectivity = { Unknown: 0, None: 1, Portal: 2, Limited: 3, Full: 4 };
 
+test('Wi-Fi strength uses qualitative labels while Bluetooth batteries keep percentages', () => {
+  const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+  const functions = {};
+  for (const name of ['strengthText', 'percentageText']) {
+    const match = panel.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
+    assert.ok(match, `Missing QML function ${name}`);
+    functions[name] = vm.runInNewContext(`(${match[0]})`);
+  }
+  for (const [strength, label] of [
+    [0, 'Weak'], [0.24, 'Weak'], [0.25, 'Fair'], [0.49, 'Fair'],
+    [0.5, 'Good'], [0.74, 'Good'], [0.75, 'Excellent'], [1, 'Excellent'],
+  ]) {
+    assert.equal(functions.strengthText(strength), label);
+  }
+  assert.equal(functions.percentageText(0.75), '75%');
+  assert.match(panel, /popup\.strengthText\(popup\.service\.wifiStrength\)/);
+  assert.match(panel, /popup\.strengthText\(modelData\.signalStrength\)/);
+  assert.match(panel, /popup\.percentageText\(deviceRow\.modelData\.battery\)/);
+});
+
+test('Wi-Fi strength colors follow the label thresholds and theme tokens', () => {
+  const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+  const controller = {
+    controlDownloadIcon: 'green', controlActiveIcon: 'blue',
+    controlWarningText: 'amber', urgent: 'red',
+  };
+  const match = panel.match(/^( +)function strengthColor\([^]*?\n\1\}/m);
+  assert.ok(match);
+  const strengthColor = vm.runInNewContext(`(${match[0]})`, { popup: { controller } });
+  for (const [strength, color] of [
+    [0, 'red'], [0.24, 'red'], [0.25, 'amber'], [0.49, 'amber'],
+    [0.5, 'blue'], [0.74, 'blue'], [0.75, 'green'], [1, 'green'],
+  ]) {
+    assert.equal(strengthColor(strength), color);
+  }
+  assert.match(panel, /text: action\.qualityText\s+color: action\.qualityColor/);
+  assert.match(panel, /text: action\.qualityText \? action\.subtitle\.slice\(0, -action\.qualityText\.length\) : action\.subtitle/);
+  assert.match(panel, /popup\.strengthColor\(popup\.service\.wifiStrength\)/);
+  assert.match(panel, /modelData && !connecting\s*\? popup\.strengthColor\(modelData\.signalStrength\)/);
+});
+
 function serviceForTest() {
   const calls = { connect: 0, restart: 0, stop: 0, power: [] };
   Object.defineProperties(calls, {

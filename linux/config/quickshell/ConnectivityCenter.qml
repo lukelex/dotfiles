@@ -101,8 +101,22 @@ Scope {
     closeTimer.stop()
   }
 
-  function strengthText(strength) {
+  function percentageText(strength) {
     return Math.round(Math.max(0, Math.min(1, strength)) * 100) + "%"
+  }
+
+  function strengthText(strength) {
+    if (strength >= 0.75) return "Excellent"
+    if (strength >= 0.5) return "Good"
+    if (strength >= 0.25) return "Fair"
+    return "Weak"
+  }
+
+  function strengthColor(strength) {
+    if (strength >= 0.75) return popup.controller.controlDownloadIcon
+    if (strength >= 0.5) return popup.controller.controlActiveIcon
+    if (strength >= 0.25) return popup.controller.controlWarningText
+    return popup.controller.urgent
   }
 
   onVisibleChanged: {
@@ -240,6 +254,8 @@ Scope {
     id: action
     required property string title
     property string subtitle: ""
+    property string qualityText: ""
+    property color qualityColor: popup.controller.controlSecondaryText
     property string iconName: ""
     property bool active: false
     property bool radioSwitch: false
@@ -299,10 +315,20 @@ Scope {
         font.pixelSize: 12
         color: popup.controller.controlPrimaryText
       }
-      Label {
+      Row {
         width: parent.width
-        visible: text !== ""
-        text: action.subtitle
+        visible: action.subtitle !== ""
+
+        Label {
+          width: Math.min(implicitWidth, Math.max(0, parent.width - qualityLabel.width))
+          text: action.qualityText ? action.subtitle.slice(0, -action.qualityText.length) : action.subtitle
+        }
+        Label {
+          id: qualityLabel
+          width: Math.min(implicitWidth, parent.width)
+          text: action.qualityText
+          color: action.qualityColor
+        }
       }
     }
 
@@ -512,6 +538,10 @@ Scope {
           : !popup.service.wifiEnabled ? "Off"
           : popup.service.wifiConnected ? popup.service.wifiSsid + " / " + popup.strengthText(popup.service.wifiStrength)
           : "On / Not connected"
+        qualityColor: popup.service.wifiConnected && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
+          ? popup.strengthColor(popup.service.wifiStrength) : popup.controller.controlSecondaryText
+        qualityText: popup.service.wifiConnected && popup.service.wifiAvailable && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
+          ? popup.strengthText(popup.service.wifiStrength) : ""
         detail: title + "\n" + subtitle + (popup.service.activeNetwork ? "\nDevice: " + popup.service.activeNetwork.device.name : "")
         onActivated: {
           popup.requestOpen()
@@ -592,6 +622,9 @@ Scope {
           subtitle: !modelData ? "Unavailable" : connecting ? "Connecting..."
             : modelData.connected ? "Connected / " + popup.strengthText(modelData.signalStrength)
             : "Saved / " + popup.strengthText(modelData.signalStrength)
+          qualityColor: modelData && !connecting
+            ? popup.strengthColor(modelData.signalStrength) : popup.controller.controlSecondaryText
+          qualityText: modelData && !connecting ? popup.strengthText(modelData.signalStrength) : ""
           iconName: modelData && modelData.connected ? "circle-check" : "wifi"
           active: modelData && (modelData.connected || connecting)
           enabled: modelData !== null && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
@@ -795,7 +828,7 @@ Scope {
             anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             text: !deviceRow.modelData ? "Unavailable" : deviceRow.modelData.batteryAvailable
-              ? popup.strengthText(deviceRow.modelData.battery) : "Connected"
+              ? popup.percentageText(deviceRow.modelData.battery) : "Connected"
           }
         }
       }

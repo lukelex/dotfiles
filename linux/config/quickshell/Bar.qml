@@ -522,6 +522,7 @@ Scope {
   readonly property color controlActiveIcon: root.darkMode ? "#8CAED8" : "#5C94C8"
   readonly property color controlDownloadIcon: root.darkMode ? "#83E6B2" : "#167044"
   readonly property color controlUploadIcon: root.darkMode ? "#D6B4FF" : "#7442AD"
+  readonly property color controlWarningText: root.darkMode ? "#F0C674" : "#805500"
   readonly property color controlBackground: root.darkMode ? "#D9171A20" : "#D9F8F9FB"
   readonly property color controlPrimaryText: root.darkMode ? "#F8F9FB" : "#20242A"
   readonly property color controlSecondaryText: root.darkMode ? "#B7BEC9" : "#59616D"
