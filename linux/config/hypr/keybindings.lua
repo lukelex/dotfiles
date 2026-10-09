@@ -46,8 +46,10 @@ hl.bind(SUPER .. " + SHIFT + Q", hl.dsp.window.kill())
 -- Layout setting
 hl.bind(SUPER .. " + m", hl.dsp.layout("swapwithmaster master"))
 hl.bind(SUPER .. " + e", hl.dsp.layout("orientationcycle"))
-hl.bind(SUPER .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl keyword general:layout master"))
-hl.bind(SUPER .. " + SHIFT + D", hl.dsp.exec_cmd("hyprctl keyword general:layout dwindle"))
+-- Direct general:layout keyword changes emit no socket event, so after setting
+-- the layout these poke the bar for instant OSD feedback (like u_hypr-cycle-layout).
+hl.bind(SUPER .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl keyword general:layout master; qs ipc --path \"$HOME/dotfiles/linux/config/quickshell/shell.qml\" call bar refreshLayout 2>/dev/null || true"))
+hl.bind(SUPER .. " + SHIFT + D", hl.dsp.exec_cmd("hyprctl keyword general:layout dwindle; qs ipc --path \"$HOME/dotfiles/linux/config/quickshell/shell.qml\" call bar refreshLayout 2>/dev/null || true"))
 hl.bind(SUPER .. " + SHIFT + E", hl.dsp.exec_cmd("u_hypr-cycle-layout"))
 
 hl.bind(SUPER .. " + SHIFT + minus", hl.dsp.window.move({ workspace = "special" }))
