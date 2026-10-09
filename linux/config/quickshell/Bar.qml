@@ -1706,6 +1706,16 @@ Scope {
             title: "Microphone"
             iconName: root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic"
             applications: Array.from(new Set(root.audioService.recordingApplications.map(application => application.name)))
+            applicationDetails: {
+              const details = Object.create(null)
+              for (const application of root.audioService.recordingApplications) {
+                const device = application.inputDescription || application.inputName || "Unknown microphone"
+                const label = device + (application.muted ? " · Muted" : "")
+                details[application.name] = details[application.name]
+                  ? details[application.name] + "\n" + label : label
+              }
+              return details
+            }
             muted: root.audioService.recordingMicrophonesMuted
           }
         }
