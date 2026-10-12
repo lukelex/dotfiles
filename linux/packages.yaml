@@ -92,7 +92,10 @@ profiles:
               - gammastep.service
               - night-mode-sunset.timer
         google-chrome:
+          configs:
+            - linux/config/google-chrome/chrome-flags.conf:$XDG_CONFIG_HOME/chrome-flags.conf
         github-cli:
+        gst-plugin-gtk4:
         ibus:
         imagemagick:
         inetutils:
@@ -288,6 +291,14 @@ profiles:
 resources:
   configs:
     - linux/config/opencode:$XDG_CONFIG_HOME/opencode
+    - source: linux/config/openeffects/state.toml
+      target: $XDG_CONFIG_HOME/openeffects/state.toml
+      profiles:
+        - desktop
+    - source: linux/config/openeffects/openeffectsd.service.d/autostart.conf
+      target: $XDG_CONFIG_HOME/systemd/user/openeffectsd.service.d/autostart.conf
+      profiles:
+        - desktop
     - source: linux/config/github-review-notify/github-review-notify.service
       target: $XDG_CONFIG_HOME/systemd/user/github-review-notify.service
       profiles:
@@ -334,6 +345,10 @@ resources:
       profiles:
         - desktop
   services:
+    - name: openeffectsd.service
+      scope: user
+      profiles:
+        - desktop
     - name: github-review-notify.timer
       scope: user
       profiles:
