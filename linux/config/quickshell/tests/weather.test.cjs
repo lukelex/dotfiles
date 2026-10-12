@@ -20,6 +20,10 @@ function fixture(t, offset = 19800, credentials = {}) {
   for (const dir of ['dotfiles/linux', 'bin', 'fixtures', 'cache/weather'])
     fs.mkdirSync(path.join(root, dir), { recursive: true });
   fs.writeFileSync(path.join(root, 'dotfiles/linux/variables.env'), '# No credentials in tests\n');
+  const preferencesPath = path.join(root, 'preferences.json');
+  const preferences = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../system-settings/preferences.json'), 'utf8'));
+  preferences.weather = { locationMode: 'automatic', city: 'Copenhagen,DK', units: 'metric' };
+  fs.writeFileSync(preferencesPath, JSON.stringify(preferences));
   if (credentials.localKey) {
     fs.mkdirSync(path.join(root, 'Dropbox'));
     fs.writeFileSync(path.join(root, 'Dropbox/secrets.env'), `export OPEN_WEATHER_API_KEY=${credentials.localKey}\n`);
@@ -55,7 +59,7 @@ esac
     fs.writeFileSync(path.join(root, `fixtures/${name}.json`), JSON.stringify(data));
   const run = (...args) => {
     const result = spawnSync('bash', [script, ...args], {
-      env: { ...process.env, HOME: root, XDG_CACHE_HOME: path.join(root, 'cache'),
+       env: { ...process.env, HOME: root, XDG_CACHE_HOME: path.join(root, 'cache'), DOTFILES_PREFERENCES: preferencesPath,
         OPEN_WEATHER_API_KEY: credentials.inheritedKey ?? 'weather-test-key',
         WEATHER_TEST_EXPECTED_KEY: credentials.expectedKey ?? 'weather-test-key',
         PATH: `${root}/bin:/usr/bin:/bin`, TZ: 'Pacific/Honolulu' }, encoding: 'utf8', timeout: 5000,
@@ -88,6 +92,26 @@ test('missing credentials are explicit and do not send unauthenticated provider 
   assert.equal(result.stale, true);
   assert.match(result.error, /API key is not configured/);
   assert.equal(f.requests(), 1, 'only location is requested');
+});
+
+test('fixed location avoids IP geolocation and changing units invalidates cached weather', t => {
+  const f = fixture(t);
+  const preferencesPath = path.join(f.root, 'preferences.json');
+  const preferences = JSON.parse(fs.readFileSync(preferencesPath, 'utf8'));
+  preferences.weather = { locationMode: 'fixed', city: 'London,GB', units: 'metric' };
+  fs.writeFileSync(preferencesPath, JSON.stringify(preferences));
+  assert.equal(f.run('snapshot').units, 'metric');
+  assert.equal(f.requests(), 2, 'fixed location makes only current and forecast requests');
+  assert.equal(f.run('snapshot').units, 'metric');
+  assert.equal(f.requests(), 2, 'unchanged settings reuse cached responses');
+  preferences.weather.units = 'imperial';
+  fs.writeFileSync(preferencesPath, JSON.stringify(preferences));
+  assert.equal(f.run('snapshot').units, 'imperial');
+  assert.equal(f.requests(), 4, 'unit change fetches both responses instead of relabelling old values');
+  preferences.weather.locationMode = 'automatic';
+  fs.writeFileSync(preferencesPath, JSON.stringify(preferences));
+  f.run('snapshot');
+  assert.equal(f.requests(), 7, 'automatic mode resumes location lookup');
 });
 
 for (const offset of [19800, -25200]) {
@@ -240,13 +264,33 @@ function serviceForTest() {
   const service = { _snapshot: {}, _lastAttempt: 0, _process: { running: false }, loading: false, stale: true };
   service.clock = now * 1000;
   const context = vm.createContext({ service, Date: class extends Date { static now() { return service.clock; } } });
-  for (const name of ['refresh', '_accept', '_tick']) {
+  for (const name of ['refresh', '_accept', '_tick', '_refreshDelay']) {
     const match = source.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
     assert.ok(match);
     service[name] = vm.runInContext(`(${match[0]})`, context);
   }
   return service;
 }
+
+test('background weather checks sleep until expiry or cooldown; seconds tick only while visible', () => {
+  const s = serviceForTest();
+  s._now = now;
+  s._lastAttempt = now - 100;
+  s.updatedAt = now - 300;
+  s._snapshot = { forecastUpdatedAt: now - 600, locationUpdatedAt: now - 200 };
+  assert.equal(s._refreshDelay(), 600000, 'oldest cached component controls expiry');
+  s._now += 600;
+  assert.equal(s._refreshDelay(), 1, 'expired data wakes immediately');
+  s._lastAttempt = s._now - 10;
+  assert.equal(s._refreshDelay(), 50000, 'expired data waits for cooldown');
+  s.updatedAt = s._now;
+  s._snapshot = { forecastUpdatedAt: s._now, locationUpdatedAt: s._now };
+  s._lastAttempt = s._now;
+  assert.equal(s._refreshDelay(), 1200000, 'fresh snapshots sleep twenty minutes');
+  assert.match(source, /interval: service\._refreshDelay\(\)/);
+  assert.match(source, /running: service\._lastAttempt > 0 && !service\.loading/);
+  assert.match(source, /interval: 1000\s+running: service\.panelVisible/);
+});
 
 test('service starts lazily, deduplicates refreshes and enforces retry cooldown even for force', () => {
   const s = serviceForTest();

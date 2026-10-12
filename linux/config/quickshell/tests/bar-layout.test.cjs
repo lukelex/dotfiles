@@ -44,6 +44,7 @@ function setup() {
     root[name] = vm.runInContext(`(${match[0]})`, context);
   }
   root.refreshHyprlandSubmap = () => {};
+  root.preferences = { applySection() {} };
   root.notificationService = {
     showOsd: (...args) => osdCalls.push(args),
   };

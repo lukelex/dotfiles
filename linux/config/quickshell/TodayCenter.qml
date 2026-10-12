@@ -145,7 +145,8 @@ Scope {
   function calendarDate(index) {
     const year = popup.displayedMonth.getFullYear()
     const month = popup.displayedMonth.getMonth()
-    const offset = (new Date(year, month, 1, 12).getDay() + 6) % 7
+    const firstDay = popup.controller?.preferences?.value("clock.firstDay", 1) ?? 1
+    const offset = (new Date(year, month, 1, 12).getDay() - firstDay + 7) % 7
     return new Date(year, month, index - offset + 1, 12)
   }
 
@@ -323,7 +324,7 @@ Scope {
 
   Timer {
     id: closeTimer
-    interval: 600
+    interval: popup.controller.preferences.value("desktop.hoverCloseDelayMs", 600)
     onTriggered: {
       if (!popup.pinned)
         popup.requestClose()
@@ -561,7 +562,8 @@ Scope {
               Row {
                 width: parent.width
                 Repeater {
-                  model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                  model: popup.controller.preferences.value("clock.firstDay", 1) === 0
+                    ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                   delegate: Label {
                     required property string modelData
                     width: calendar.width / 7
@@ -642,7 +644,7 @@ Scope {
                   }
                   Label {
                     width: parent.width - 40
-                    text: Math.round(popup.weather.temperature) + "\u00b0C"
+                    text: Math.round(popup.weather.temperature) + (popup.weather.units === "imperial" ? "\u00b0F" : "\u00b0C")
                     font.pixelSize: 24
                     color: popup.controller.controlPrimaryText
                   }
@@ -662,7 +664,7 @@ Scope {
                 }
                 Label {
                   width: parent.width
-                  text: "Feels like " + Math.round(popup.weather.feelsLike) + "\u00b0C"
+                  text: "Feels like " + Math.round(popup.weather.feelsLike) + (popup.weather.units === "imperial" ? "\u00b0F" : "\u00b0C")
                 }
               }
 
@@ -756,7 +758,7 @@ Scope {
                 Label {
                   width: parent.width
                   visible: popup.weather.wind !== null
-                  text: "Wind " + popup.weather.wind + " m/s"
+                  text: "Wind " + popup.weather.wind + (popup.weather.units === "imperial" ? " mph" : " m/s")
                 }
               }
             }

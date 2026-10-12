@@ -119,25 +119,24 @@ security() {
 
 weather() {
   local current_file="${XDG_CACHE_HOME:-$HOME/.cache}/weather/current.json"
-  local description temperature
+  local description temperature unit
 
   [ -r "$current_file" ] || return 0
   description=$(jq -r '.weather[0].description // empty' "$current_file" 2> /dev/null || true)
   temperature=$(jq -r '.main.temp // empty' "$current_file" 2> /dev/null || true)
   [ -n "$description" ] && [ -n "$temperature" ] || return 0
   temperature=$(awk -v value="$temperature" 'BEGIN { printf "%.0f", value }')
-  printf '󰖐 %s°C · %s\n' "$temperature" "$description"
+  unit=C
+  if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/weather/preferences" ]] && jq -e '.[2] == "imperial"' "${XDG_CACHE_HOME:-$HOME/.cache}/weather/preferences" > /dev/null 2>&1; then
+    unit=F
+  fi
+  printf '󰖐 %s°%s · %s\n' "$temperature" "$unit" "$description"
 }
 
 idle() {
-  local timeout config inhibitors minutes
+  local timeout inhibitors minutes
 
-  timeout=300
-  config="$HOME/dotfiles/linux/config/hypr/hypridle.conf"
-  if [ -r "$config" ]; then
-    timeout=$(awk -F= '/idle-lock-timeout/{gsub(/[^0-9]/, "", $2); print $2; exit}' "$config")
-    timeout=${timeout:-300}
-  fi
+  timeout=$(python3 "$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py" get idle.lockSeconds)
   minutes=$((timeout / 60))
   inhibitors=$(systemd-inhibit --list --no-legend 2> /dev/null \
     | awk '$1 ~ /(^|:)idle(:|$)/ { found=1; exit } END { print found + 0 }')

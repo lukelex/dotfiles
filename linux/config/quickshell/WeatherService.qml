@@ -9,6 +9,26 @@ QtObject {
 
   readonly property bool available: _snapshot.available === true
   property bool loading: false
+  property bool panelVisible: false
+  property var preferences: null
+  property string preferencesKey: preferences && preferences.ready ? JSON.stringify(preferences.data.weather) : ""
+  property bool preferencesRefreshPending: false
+  property string appliedWeatherKey: ""
+  onPreferencesKeyChanged: {
+    if (preferencesKey) {
+      const initial = !appliedWeatherKey
+      appliedWeatherKey = preferencesKey
+      if (initial)
+        return
+      preferencesRefreshPending = true
+      if (!service.loading) {
+        service._lastAttempt = 0
+        service.preferencesRefreshPending = false
+        service.refresh(true)
+      }
+    }
+  }
+  onPanelVisibleChanged: service._now = Date.now() / 1000
   readonly property int retryAfter: Math.max(0, Math.ceil(60 - (_now - _lastAttempt)))
   readonly property bool stale: _failed || _snapshot.stale !== false
     || _now - Math.min(updatedAt, _snapshot.forecastUpdatedAt || 0, _snapshot.locationUpdatedAt || 0) >= 1200
@@ -16,6 +36,7 @@ QtObject {
   readonly property real updatedAt: _snapshot.updatedAt || 0
   readonly property string city: _snapshot.city || ""
   readonly property string country: _snapshot.country || ""
+  readonly property string units: _snapshot.units || "metric"
   readonly property var temperature: _snapshot.temperature ?? null
   readonly property var feelsLike: _snapshot.feelsLike ?? null
   readonly property string description: _snapshot.description || ""
@@ -79,11 +100,17 @@ QtObject {
       onStreamFinished: service._accept(this.text)
     }
     onExited: (exitCode, exitStatus) => {
+      service._now = Date.now() / 1000
       if (exitCode !== 0 || exitStatus !== 0) {
         service._failed = true
         service._failure = "Weather process failed."
       }
       service.loading = false
+      if (service.preferencesRefreshPending) {
+        service.preferencesRefreshPending = false
+        service._lastAttempt = 0
+        service.refresh(true)
+      }
     }
   }
 
@@ -96,12 +123,27 @@ QtObject {
       service.refresh()
   }
 
-  // Check expiry, not only time since opening: a cache hit may already be nearly 20 minutes old.
+  function _refreshDelay() {
+    const oldest = Math.min(service.updatedAt, service._snapshot.forecastUpdatedAt || 0,
+      service._snapshot.locationUpdatedAt || 0)
+    const expiry = Math.min(oldest + 1200, service._lastAttempt + 1200)
+    const deadline = Math.max(expiry, service._lastAttempt + 60)
+    return Math.max(1, Math.ceil((deadline - service._now) * 1000))
+  }
+
+  // Wake at cache expiry, or the cooldown deadline when expired data needs a retry.
   readonly property Timer _refreshTimer: Timer {
-    interval: 1000
-    running: service._lastAttempt > 0
+    interval: service._refreshDelay()
+    running: service._lastAttempt > 0 && !service.loading
     repeat: true
     onTriggered: service._tick()
+  }
+
+  readonly property Timer _visibleClock: Timer {
+    interval: 1000
+    running: service.panelVisible
+    repeat: true
+    onTriggered: service._now = Date.now() / 1000
   }
 
   // Also bounds lock contention and a process that fails to start or finish.
@@ -110,6 +152,7 @@ QtObject {
     running: service.loading
     onTriggered: {
       service._process.running = false
+      service._now = Date.now() / 1000
       service._failed = true
       service._failure = "Weather request timed out."
       service.loading = false

@@ -8,7 +8,7 @@ WantedBy=default.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/gammastep
+ExecStart=/usr/bin/python3 %h/dotfiles/linux/config/system-settings/settings.py run-night-light
 Restart=on-failure
 RestartSec=5
 EnvironmentFile=%h/dotfiles/linux/variables.env

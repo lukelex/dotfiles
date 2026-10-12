@@ -8,7 +8,7 @@ declare -ar BRIGHTNESS_IMAGES=(sun-dim sun-medium sun)
 
 LINK_FILE="$HOME/.cache/link-devices"
 LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/u_backlight.lock"
-STEP=5
+STEP=$(python3 "$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py" get display.brightnessStep)
 
 get_value() {
   light -G 2>&- | cut -f1 -d .

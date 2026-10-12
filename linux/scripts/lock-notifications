@@ -34,6 +34,12 @@ if [[ -r "$state_file" ]]; then
   esac
 fi
 
+preferences_file="${DOTFILES_PREFERENCES:-$HOME/dotfiles/linux/config/system-settings/preferences.json}"
+if [[ -r "$preferences_file" ]]; then
+  privacy=$(jq -er '.notifications.lockScreenPrivacy' "$preferences_file") || privacy=hide
+  case "$privacy" in show|redact|hide) ;; *) privacy=hide ;; esac
+fi
+
 temporary_source=$(mktemp "${source_file}.XXXXXX")
 temporary_png=$(mktemp "${cache_file}.XXXXXX")
 trap 'rm -f "$temporary_source" "$temporary_png"' EXIT

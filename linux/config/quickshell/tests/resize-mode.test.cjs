@@ -21,6 +21,7 @@ function setup() {
   const hyprlandLayout = { revision: 0, running: false };
   const Hyprland = { focusedMonitor: null, refreshMonitors() { this.refreshCount = (this.refreshCount || 0) + 1; } };
   const warnings = [];
+  root.preferences = { applySection() {} };
   const context = vm.createContext({ root, i3BindingState, hyprlandSubmap, hyprlandLayout, Hyprland, console: { warn: (...args) => warnings.push(args) } });
   for (const name of [
     'handleI3ModeEvent', 'applyI3BindingState', 'refreshHyprlandSubmap',

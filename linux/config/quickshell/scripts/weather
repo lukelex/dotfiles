@@ -104,10 +104,21 @@ declare -A ICON_LIST=(
   ["null"]="󰖐"
 )
 
-SYSTEM="metric" # Unit system {imperial or metric}
-UNIT="°C" # Units of measurement.
-
-LOCATION_DATA=$(fetch_cached "$CACHE_DIR/location.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://ipwho.is)
+preferences=$(python3 "$(dirname "$(readlink -f "$0")")/../../system-settings/settings.py" get weather)
+SYSTEM=$(jq -r '.units' <<< "$preferences")
+UNIT="°C"
+[[ $SYSTEM == imperial ]] && UNIT="°F"
+cache_key=$(jq -c '[.locationMode, .city, .units]' <<< "$preferences")
+if [[ -f "$CACHE_DIR/preferences" && $(< "$CACHE_DIR/preferences") != "$cache_key" ]]; then
+  rm -f "$CACHE_DIR/"{current,forecast,location}.json "$CACHE_DIR/"{current,forecast,location}.json.failed
+fi
+printf '%s\n' "$cache_key" > "$CACHE_DIR/preferences"
+if [[ $(jq -r '.locationMode' <<< "$preferences") == fixed ]]; then
+  LOCATION_DATA=$(jq '{success: true, city: .city}' <<< "$preferences")
+  printf '%s\n' "$LOCATION_DATA" > "$CACHE_DIR/location.json"
+else
+  LOCATION_DATA=$(fetch_cached "$CACHE_DIR/location.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://ipwho.is)
+fi
 CITY=$(jq -r '.city // empty' <<< "$LOCATION_DATA")
 
 FORECAST=$(fetch_cached "$CACHE_DIR/current.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
@@ -144,7 +155,7 @@ snapshot() {
   [[ -n $FORECAST ]] && current_at=$(stat -c %Y "$CACHE_DIR/current.json")
   [[ -n $daily ]] && forecast_at=$(stat -c %Y "$CACHE_DIR/forecast.json")
   jq -n --argjson current "${FORECAST:-null}" --argjson daily "${daily:-null}" \
-    --argjson location "${LOCATION_DATA:-null}" --argjson now "$now" \
+    --arg units "$SYSTEM" --argjson location "${LOCATION_DATA:-null}" --argjson now "$now" \
     --argjson updatedAt "$current_at" --argjson forecastUpdatedAt "$forecast_at" \
     --argjson locationUpdatedAt "$location_at" --argjson stale "$stale" --arg error "$error" '
     def icon:
@@ -162,7 +173,7 @@ snapshot() {
     {available: ($current != null), loading: false, stale: ($stale or $current == null or $daily == null),
       error: $error, updatedAt: $updatedAt, forecastUpdatedAt: $forecastUpdatedAt,
       locationUpdatedAt: $locationUpdatedAt, fetchedAt: $now, cacheTtl: 1200, retryCooldown: 60,
-      location: $location, city: ($current.name // $location.city // ""), country: ($current.sys.country // ""),
+      units: $units, location: $location, city: ($current.name // $location.city // ""), country: ($current.sys.country // ""),
       timezoneOffset: ($current.timezone // $offset), temperature: $current.main.temp,
       feelsLike: $current.main.feels_like, description: ($current.weather[0].description // ""),
       humidity: $current.main.humidity, wind: $current.wind.speed,

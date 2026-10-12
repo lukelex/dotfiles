@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "display": {
+    "dayTemperature": 6500,
+    "nightTemperature": 4000,
+    "latitude": 55.6761,
+    "longitude": 12.5683,
+    "brightnessStep": 5,
+    "osdDurationMs": 1500
+  },
+  "idle": {
+    "dimSeconds": 120,
+    "lockSeconds": 300,
+    "screenOffSeconds": 360,
+    "x11LockSeconds": 600,
+    "x11ScreenOffSeconds": 1200,
+    "deferFullscreen": true,
+    "deferMicrophone": true,
+    "deferCamera": true
+  },
+  "input": {
+    "repeatDelay": 300,
+    "repeatRate": 35,
+    "sensitivity": 0.6,
+    "acceleration": "flat",
+    "naturalScroll": true,
+    "touchpadNaturalScroll": true,
+    "tapToClick": true,
+    "disableWhileTyping": true
+  },
+  "weather": {
+    "locationMode": "automatic",
+    "city": "Copenhagen,DK",
+    "units": "metric"
+  },
+  "clock": {
+    "hourFormat": "24",
+    "dateFormat": "dd MMM - dddd",
+    "firstDay": 1
+  },
+  "desktop": {
+    "density": "comfortable",
+    "hoverPreviews": true,
+    "hoverCloseDelayMs": 600
+  },
+  "notifications": {
+    "soundFilePath": "",
+    "popupCorner": "top-right",
+    "popupDurationSeconds": 20,
+    "popupMonitor": "all",
+    "popupPreviews": true,
+    "lockScreenPrivacy": "show",
+    "historyRetentionDays": 7,
+    "doNotDisturb": false,
+    "dndScheduleEnabled": false,
+    "dndStartMinutes": 1320,
+    "dndEndMinutes": 480,
+    "dndScheduleDays": 127,
+    "notificationSoundsMuted": true,
+    "allowCriticalDuringDnd": false,
+    "applications": [
+      {
+        "key": "system",
+        "appName": "System",
+        "enabled": true,
+        "sound": false
+      },
+      {
+        "key": "bluetooth connections",
+        "appName": "Bluetooth connections",
+        "enabled": true,
+        "sound": false
+      },
+      {
+        "key": "usb connections",
+        "appName": "USB connections",
+        "enabled": true,
+        "sound": false
+      },
+      {
+        "key": "power connection",
+        "appName": "Power connection",
+        "enabled": true,
+        "sound": false
+      },
+      {
+        "key": "microsoft teams",
+        "appName": "Microsoft Teams",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "flameshot",
+        "appName": "flameshot",
+        "enabled": true,
+        "sound": true
+      }
+    ]
+  }
+}

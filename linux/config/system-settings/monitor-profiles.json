@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "automatic": true,
+  "profiles": [
+    {
+      "name": "odyssey",
+      "session": "wayland",
+      "preferred": true,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "",
+          "enabled": false,
+          "mode": "1920x1080",
+          "rate": 60,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": false
+        },
+        {
+          "connector": "DP-2",
+          "identity": "",
+          "enabled": true,
+          "mode": "5120x1440",
+          "rate": 60,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "1080p",
+      "session": "wayland",
+      "preferred": true,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "",
+          "enabled": true,
+          "mode": "1920x1080",
+          "rate": 60,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "3k",
+      "session": "wayland",
+      "preferred": false,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "",
+          "enabled": true,
+          "mode": "3456x2160",
+          "rate": 60,
+          "scale": 1.25,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "home",
+      "session": "x11",
+      "preferred": true,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "edid:00ffffffffffff0009e53f0c0000000014210104a51e137803f6c5995d57912724505400000001010101010101010101010101010101333f80dc70b03c40302036002ebc1000001a000000fd00283c4c4c10010a2020202020208f3280dc70b03c40302036002ebc10000000000000fe004e5631343057554d2d4e34390a0077",
+          "enabled": false,
+          "mode": "1920x1080",
+          "rate": 60,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": false
+        },
+        {
+          "connector": "DP-1",
+          "identity": "edid:00ffffffffffff004c2d527053385843241e0103807722782ac725b14b46a8260e5054bfef80714f810081c08180a9c0b3009500d1c01a6800a0f0381f4030203a00a9504100001a000000fd00324b1eb73c000a202020202020000000fc004c433439473935540a20202020000000ff0048345a4e3930303536380a202003f002033df1499061601f041312035a2309070783010000e2004fe305c00067030c001000b83c67d85dc401788003e60605018b7312e20f06e50100000000565e00a0a0a0295030203500a9504100001a584d00b8a1381440f82c4500a9504100001e00000000000000000000000000000000000000000000000000000000000011f00270000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009e701279000003012833b70088ff139f00",
+          "enabled": true,
+          "mode": "5120x1440",
+          "rate": 59.98,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "meeting-room",
+      "session": "x11",
+      "preferred": true,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "edid:00ffffffffffff0009e53f0c0000000014210104a51e137803f6c5995d57912724505400000001010101010101010101010101010101333f80dc70b03c40302036002ebc1000001a000000fd00283c4c4c10010a2020202020208f3280dc70b03c40302036002ebc10000000000000fe004e5631343057554d2d4e34390a0077",
+          "enabled": true,
+          "mode": "1920x1200",
+          "rate": 60.0,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": true
+        },
+        {
+          "connector": "DP-1",
+          "identity": "edid:00ffffffffffff00410cea0101010101111e0103809051780a630da6555396250d474a210800b3009500a94090408100818081400101023a801871382d40582c4500a02a5300001e023a80d072382d40102c4580a02a5300001e000000fc005068696c697073204654560a20000000fd00303e0f463c000a202020202020018b020360f1555f5e5d101f20222114041312110216071505030601350907071507503d07c05707017806585f7e01670403830100006f030c001000383ca029290060010203e20049e305c000e3060d01e5018b849001e61146d0007000e30e6061000000000000000000000000000000000000000000000000000000000000007e",
+          "enabled": true,
+          "mode": "3840x2160",
+          "rate": 60.0,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 1920,
+          "y": 0,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "office",
+      "session": "x11",
+      "preferred": true,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "edid:00ffffffffffff0009e53f0c0000000014210104a51e137803f6c5995d57912724505400000001010101010101010101010101010101333f80dc70b03c40302036002ebc1000001a000000fd00283c4c4c10010a2020202020208f3280dc70b03c40302036002ebc10000000000000fe004e5631343057554d2d4e34390a0077",
+          "enabled": false,
+          "mode": "1920x1080",
+          "rate": 60,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": false
+        },
+        {
+          "connector": "DP-1",
+          "identity": "edid:00ffffffffffff001e6d06777c3b0800021f0103803c2278ea3e31ae5047ac270c50542108007140818081c0a9c0d1c0810001010101b8ce0050f0705a8018108a0058542100001e04740030f2705a80b0588a0058542100001a000000fd00383d1e873c000a202020202020000000fc004c472048445220344b0a202020014a020338714d9022201f1203040161605d5e5f230907076d030c001000b83c20006001020367d85dc401788003e30f0003e305c000e3060501023a801871382d40582c450058542100001e565e00a0a0a029503020350058542100001a000000ff003130324e54455046563531360a0000000000000000000000000000000000d5",
+          "enabled": true,
+          "mode": "3840x2160",
+          "rate": 60.0,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "solo",
+      "session": "x11",
+      "preferred": true,
+      "outputs": [
+        {
+          "connector": "eDP-1",
+          "identity": "edid:00ffffffffffff0009e53f0c0000000014210104a51e137803f6c5995d57912724505400000001010101010101010101010101010101333f80dc70b03c40302036002ebc1000001a000000fd00283c4c4c10010a2020202020208f3280dc70b03c40302036002ebc10000000000000fe004e5631343057554d2d4e34390a0077",
+          "enabled": true,
+          "mode": "1920x1200",
+          "rate": 60.0,
+          "scale": 1,
+          "rotation": "normal",
+          "x": 0,
+          "y": 0,
+          "primary": true
+        }
+      ]
+    }
+  ]
+}

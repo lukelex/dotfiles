@@ -142,6 +142,7 @@ Scope {
     } else if (event.name === "configreloaded") {
       root.refreshHyprlandSubmap()
       root.refreshHyprlandLayout()
+      root.preferences.applySection("input")
     }
   }
 
@@ -305,7 +306,11 @@ Scope {
   property string i3Layout: ""
   property int i3LayoutRevision: 0
 
-  WeatherService { id: weatherService }
+  WeatherService {
+    id: weatherService
+    preferences: root.preferences
+    panelVisible: root.todayCenterTarget !== null && root.todayCenterTarget.visible
+  }
   QuoteService { id: quoteService }
 
   PwObjectTracker {
@@ -393,8 +398,9 @@ Scope {
   readonly property color foreground: "#F3F4F5"
   readonly property color urgent: "#DA4939"
   readonly property color muted: "#A9ADB4"
+  required property var preferences
   readonly property string fontFamily: "Hack Nerd Font Mono"
-  readonly property int barFontSize: 18
+  readonly property int barFontSize: preferences.value("desktop.density", "comfortable") === "compact" ? 16 : 18
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -843,7 +849,7 @@ Scope {
 
   function requestHoverClose(kind, delay) {
     root.hoverCloseCandidate = kind
-    root.hoverCloseTimer.interval = delay || 250
+    root.hoverCloseTimer.interval = root.preferences.value("desktop.hoverCloseDelayMs", delay || 600)
     root.hoverCloseTimer.start()
   }
 
@@ -1079,7 +1085,7 @@ Scope {
     id: keepAwakeProcess
     command: ["sh", "-c", root.keepAwake
       ? "xautolock -disable; xset s off -dpms"
-      : "xautolock -enable; xset s on +dpms; xset dpms 1200 0 0"]
+      : "xautolock -enable; xset s on +dpms; xset dpms " + root.preferences.value("idle.x11ScreenOffSeconds", 1200) + " 0 0"]
   }
 
   property Settings keepAwakeSettings: Settings {
@@ -1388,7 +1394,7 @@ Scope {
 
       screen: modelData
       color: "transparent"
-      implicitHeight: 40
+      implicitHeight: root.preferences.value("desktop.density", "comfortable") === "compact" ? 34 : 40
       focusable: false
       aboveWindows: true
 
@@ -1721,7 +1727,7 @@ Scope {
                 color: root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: root.barFontSize
-                text: Qt.formatTime(clock.date, "HH:mm")
+                text: Qt.formatTime(clock.date, root.preferences.value("clock.hourFormat", "24") === "12" ? "h:mm AP" : "HH:mm")
                 width: Math.max(0, timeItem.width - root.barFontSize - timeContent.spacing)
                 elide: Text.ElideRight
               }
@@ -1735,7 +1741,7 @@ Scope {
               Accessible.onPressAction: panel.openDateTime(true)
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
-              onEntered: panel.openDateTime()
+              onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openDateTime() }
               onExited: todayCenter.scheduleClose()
               onClicked: panel.openDateTime(true)
             }
@@ -1768,7 +1774,7 @@ Scope {
                 color: root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: root.barFontSize
-                text: Qt.formatDate(clock.date, "dd MMM - dddd")
+                text: Qt.formatDate(clock.date, root.preferences.value("clock.dateFormat", "dd MMM - dddd"))
                 width: Math.max(0, dateItem.width - root.barFontSize - dateContent.spacing)
                 elide: Text.ElideRight
               }
@@ -1781,7 +1787,7 @@ Scope {
               Accessible.onPressAction: panel.openDateTime(true)
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
-              onEntered: panel.openDateTime()
+              onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openDateTime() }
               onExited: todayCenter.scheduleClose()
               onClicked: panel.openDateTime(true)
             }
@@ -1901,7 +1907,7 @@ Scope {
             Accessible.onPressAction: panel.showGitHubReviewCenter()
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: panel.showGitHubReviewCenter()
+            onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.showGitHubReviewCenter() }
             onExited: root.requestHoverClose(3, 500)
             onClicked: panel.showGitHubReviewCenter()
           }
@@ -1941,7 +1947,7 @@ Scope {
             Accessible.onPressAction: panel.openConnectivity(true)
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onEntered: panel.openConnectivity()
+            onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openConnectivity() }
             onExited: connectivityCenter.scheduleClose()
             onClicked: panel.openConnectivity(true)
           }
@@ -1981,7 +1987,7 @@ Scope {
             Accessible.onPressAction: panel.openAudioOutput(true)
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: panel.openAudioOutput()
+            onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openAudioOutput() }
             onExited: audioOutputCenter.scheduleClose()
             onClicked: panel.openAudioOutput(true)
           }
@@ -2044,7 +2050,7 @@ Scope {
             Accessible.onPressAction: panel.openControlCenter()
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onEntered: panel.openControlCenter()
+            onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openControlCenter() }
             onExited: root.requestHoverClose(2)
             onClicked: panel.openControlCenter()
           }

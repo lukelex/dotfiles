@@ -165,8 +165,88 @@ QtObject {
     property bool notificationSoundsMuted: false
     property bool allowCriticalDuringDnd: false
 
-    onDoNotDisturbChanged: service.refreshDndSchedule()
+    onDoNotDisturbChanged: { if (!service.importingPreferences) service.refreshDndSchedule() }
     onNotificationSoundsMutedChanged: service.notificationSoundsMuted = notificationSoundsMuted
+  }
+
+  property var preferences: null
+  property bool importingPreferences: false
+  property string importedNotifications: ""
+  readonly property var portableKeys: ["soundFilePath", "popupCorner", "popupDurationSeconds", "popupMonitor", "popupPreviews", "lockScreenPrivacy", "historyRetentionDays", "doNotDisturb", "dndScheduleEnabled", "dndStartMinutes", "dndEndMinutes", "dndScheduleDays", "notificationSoundsMuted", "allowCriticalDuringDnd"]
+  property Connections portableReader: Connections {
+    target: service.preferences
+    function onDataChanged() { service.importPreferences() }
+    function onReadyChanged() { service.importPreferences() }
+  }
+  function importPreferences() {
+    if (!preferences || !preferences.ready)
+      return
+    const values = preferences.data.notifications || {}
+    const serialized = JSON.stringify(values)
+    if (serialized === importedNotifications)
+      return
+    importedNotifications = serialized
+    importingPreferences = true
+    const scheduleChanged = ["dndScheduleEnabled", "dndStartMinutes", "dndEndMinutes", "dndScheduleDays"]
+      .some(key => values[key] !== undefined && values[key] !== settings[key])
+    for (const key of portableKeys)
+      if (values[key] !== undefined)
+        settings[key] = values[key]
+    if (values.applications !== undefined) {
+      settings.applicationsJson = JSON.stringify(values.applications)
+      service.loadApplications()
+      service.history = service.history.map(record => {
+        const app = service.applications.find(entry => entry.key === service.appKey(record))
+        return app && !app.enabled ? Object.assign({}, record, { popupSuppressed: true }) : record
+      })
+      service.pendingPopupRecords = service.pendingPopupRecords.filter(record =>
+        !service.applications.some(entry => entry.key === service.appKey(record) && !entry.enabled))
+    }
+    if (scheduleChanged)
+      settings.dndOverrideUntil = 0
+    settings.sync()
+    service.refreshDndSchedule()
+    if (service.doNotDisturb)
+      service.suppressDndRecords()
+    service.pruneHistory()
+    service.syncPopup()
+    importingPreferences = false
+  }
+  function savePortablePreferences() {
+    if (preferences && preferences.ready && !importingPreferences)
+      portableSave.restart()
+  }
+  property Timer portableSave: Timer {
+    interval: 250
+    onTriggered: {
+      const changes = {}
+      const saved = service.preferences.data.notifications || {}
+      for (const key of service.portableKeys)
+        if (saved[key] !== settings[key])
+          changes["notifications." + key] = settings[key]
+      const apps = JSON.parse(settings.applicationsJson)
+      if (JSON.stringify(saved.applications) !== JSON.stringify(apps))
+        changes["notifications.applications"] = apps
+      service.preferences.setMany(changes)
+    }
+  }
+  property Connections portableWriter: Connections {
+    target: settings
+    function onApplicationsJsonChanged() { service.savePortablePreferences() }
+    function onSoundFilePathChanged() { service.savePortablePreferences() }
+    function onPopupCornerChanged() { service.savePortablePreferences() }
+    function onPopupDurationSecondsChanged() { service.savePortablePreferences() }
+    function onPopupMonitorChanged() { service.savePortablePreferences() }
+    function onPopupPreviewsChanged() { service.savePortablePreferences() }
+    function onLockScreenPrivacyChanged() { service.savePortablePreferences() }
+    function onHistoryRetentionDaysChanged() { service.savePortablePreferences() }
+    function onDoNotDisturbChanged() { service.savePortablePreferences() }
+    function onDndScheduleEnabledChanged() { service.savePortablePreferences() }
+    function onDndStartMinutesChanged() { service.savePortablePreferences() }
+    function onDndEndMinutesChanged() { service.savePortablePreferences() }
+    function onDndScheduleDaysChanged() { service.savePortablePreferences() }
+    function onNotificationSoundsMutedChanged() { service.savePortablePreferences() }
+    function onAllowCriticalDuringDndChanged() { service.savePortablePreferences() }
   }
 
   property NotificationServer server: NotificationServer {
@@ -206,7 +286,7 @@ QtObject {
   property Timer osdTimer: Timer {
     id: osdTimer
 
-    interval: 1500
+    interval: service.preferences ? service.preferences.value("display.osdDurationMs", 1500) : 1500
     onTriggered: {
       if (!service.osd)
         return

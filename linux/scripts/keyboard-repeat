@@ -11,6 +11,9 @@ flock -n 9 || exit 0
 
 # X11 input resets can undo the rate after login, unlock, resume, or hotplug.
 # This replaces the five-second correction previously supplied by Polybar.
-while xset r rate 300 35; do
+while true; do
+  if settings=$(python3 "$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py" get input); then
+    xset r rate "$(jq -r '.repeatDelay' <<< "$settings")" "$(jq -r '.repeatRate' <<< "$settings")" || break
+  fi
   sleep 5
 done

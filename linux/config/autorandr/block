@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+
+# The portable monitor manager owns automatic profile selection and trials.
+# autorandr block hooks return zero to exclude a profile from --change.
+# Explicit --load (used by the manager) bypasses this hook.
+if [[ -r "${DOTFILES_MONITOR_PROFILES:-$HOME/dotfiles/linux/config/system-settings/monitor-profiles.json}" ]]; then
+  exit 0
+fi
+exit 1

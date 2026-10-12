@@ -11,6 +11,16 @@ FloatingWindow {
 
   required property var controller
   required property var service
+  property string section: "notifications"
+  readonly property var sections: [
+    { key: "notifications", label: "Notifications", icon: "bell" },
+    { key: "display", label: "Display", icon: "sun" },
+    { key: "monitors", label: "Monitors", icon: "monitor" },
+    { key: "idle", label: "Lock & idle", icon: "lock" },
+    { key: "input", label: "Input", icon: "keyboard" },
+    { key: "weather", label: "Date & weather", icon: "calendar" },
+    { key: "desktop", label: "Desktop & bar", icon: "settings" }
+  ]
 
   title: "Quickshell System Settings"
   visible: false
@@ -121,7 +131,8 @@ FloatingWindow {
       LucideIcon {
         Layout.preferredWidth: 16
         Layout.preferredHeight: 16
-        source: window.controller.icon(button.iconName)
+        visible: button.iconName !== ""
+        source: button.iconName ? window.controller.icon(button.iconName) : ""
         color: window.controller.controlPrimaryText
       }
       Label {
@@ -269,6 +280,15 @@ FloatingWindow {
 
   ColumnLayout {
     id: content
+    MonitorService {
+      id: monitors
+      visible: window.visible && window.section === "monitors"
+    }
+    MonitorIdentify {
+      id: monitorIdentify
+      controller: window.controller
+      outputs: monitors.draft
+    }
     FileDialog {
       id: soundFileDialog
       title: "Choose notification sound"
@@ -313,6 +333,24 @@ FloatingWindow {
     }
 
     RowLayout {
+      visible: monitors.pending
+      Layout.fillWidth: true
+      Label {
+        Layout.fillWidth: true
+        text: "Keep this display layout? Reverting in " + monitors.secondsLeft + " seconds."
+      }
+      SoundButton {
+        text: "Revert"
+        enabled: !monitors.busy
+        onClicked: monitors.run("revert", monitors.snapshot.pending.token)
+      }
+      SoundButton {
+        text: "Keep changes"
+        enabled: !monitors.busy
+        onClicked: monitors.run("keep", monitors.snapshot.pending.token)
+      }
+    }
+    RowLayout {
       Layout.fillWidth: true
       Layout.fillHeight: true
       spacing: 16
@@ -325,51 +363,515 @@ FloatingWindow {
         radius: 12
         color: window.controller.controlSurface
 
-        Controls.Button {
-          id: notificationsSection
+        Column {
           anchors.top: parent.top
           anchors.left: parent.left
           anchors.right: parent.right
           anchors.margins: 6
-          height: 40
-          padding: 10
-          text: "Notifications"
-          Accessible.role: Accessible.PageTab
-          Accessible.name: "Notifications"
-          Accessible.description: "Current settings section"
-          Accessible.selected: true
-          Controls.ToolTip.visible: sidebar.compact && (hovered || activeFocus)
-          Controls.ToolTip.text: text
-          Controls.ToolTip.delay: 500
-
-          background: Rectangle {
-            radius: 8
-            color: window.controller.controlActive
-            border.width: notificationsSection.activeFocus ? 1 : 0
-            border.color: window.controller.controlActiveIcon
-          }
-          contentItem: RowLayout {
-            spacing: 8
-            LucideIcon {
-              Layout.preferredWidth: 16
-              Layout.preferredHeight: 16
-              source: window.controller.icon("bell")
-              color: window.controller.controlActiveIcon
-            }
-            Label {
-              visible: !sidebar.compact
-              Layout.fillWidth: true
-              text: notificationsSection.text
-              font.bold: true
-              color: window.controller.controlPrimaryText
+          spacing: 4
+          Repeater {
+            model: window.sections
+            delegate: Controls.Button {
+              id: sectionButton
+              required property var modelData
+              width: sidebar.width - 12
+              height: 40
+              padding: 10
+              text: modelData.label
+              Accessible.role: Accessible.PageTab
+              Accessible.name: text
+              Accessible.selected: window.section === modelData.key
+              onClicked: window.section = modelData.key
+              Controls.ToolTip.visible: sidebar.compact && (hovered || activeFocus)
+              Controls.ToolTip.text: text
+              Controls.ToolTip.delay: 500
+              background: Rectangle {
+                radius: 8
+                color: window.section === sectionButton.modelData.key ? window.controller.controlActive
+                  : sectionButton.hovered ? window.controller.controlHover : "transparent"
+                border.width: sectionButton.activeFocus ? 1 : 0
+                border.color: window.controller.controlActiveIcon
+              }
+              contentItem: RowLayout {
+                spacing: 8
+                LucideIcon {
+                  Layout.preferredWidth: 16
+                  Layout.preferredHeight: 16
+                  source: window.controller.icon(sectionButton.modelData.icon)
+                  color: window.section === sectionButton.modelData.key ? window.controller.controlActiveIcon : window.controller.controlSecondaryText
+                }
+                Label {
+                  visible: !sidebar.compact
+                  Layout.fillWidth: true
+                  text: sectionButton.text
+                  font.bold: window.section === sectionButton.modelData.key
+                }
+              }
             }
           }
         }
       }
 
       NotificationsPage {
+        visible: window.section === "notifications"
         Layout.fillWidth: true
         Layout.fillHeight: true
+      }
+      PreferencesPage {
+        visible: !["notifications", "monitors"].includes(window.section)
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+      MonitorsPage {
+        visible: window.section === "monitors"
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+    }
+    Label {
+      Layout.fillWidth: true
+      text: window.controller.preferences.error
+      visible: text.length > 0
+      color: window.controller.controlWarningText
+    }
+  }
+
+  component MonitorsPage: ColumnLayout {
+    spacing: 10
+    Label { text: "Monitors"; font.pixelSize: 16; font.bold: true }
+    Controls.ScrollView {
+      id: monitorScroll
+      Layout.fillWidth: true
+      Layout.fillHeight: true
+      contentWidth: availableWidth
+      clip: true
+      ColumnLayout {
+        width: monitorScroll.availableWidth
+        spacing: 12
+        enabled: !monitors.busy && !monitors.pending
+        Choice {
+          Layout.fillWidth: true
+          Accessible.name: "Monitor setup"
+          model: [{ label: "Current layout", value: "" }].concat(monitors.snapshot.profiles
+            .filter(p => p.session === monitors.snapshot.session)
+            .map(p => ({ label: p.name + (p.current ? " (active)" : p.available ? "" : " (unavailable)") + (p.preferred ? " ★" : ""), value: p.name })))
+          selectedValue: monitors.selectedProfile
+          onChosen: value => {
+            if (value) {
+              monitors.chooseProfile(value)
+              profileName.text = value
+            } else {
+              monitors.resetDraft()
+              profileName.text = ""
+            }
+          }
+        }
+        Toggle {
+          Layout.fillWidth: true
+          text: "Automatically switch setups"
+          checked: monitors.snapshot.automatic
+          description: "Use matching saved profiles when displays connect or disconnect. A kept manual layout remains until the connected hardware changes."
+          onClicked: monitors.run("automatic", JSON.stringify(!monitors.snapshot.automatic))
+        }
+        Rectangle {
+          id: diagram
+          Layout.fillWidth: true
+          Layout.preferredHeight: 200
+          radius: 12
+          color: window.controller.controlSurface
+          border.color: window.controller.controlSurfaceBorder
+          clip: true
+          readonly property real extentWidth: Math.max(1, ...monitors.draft.filter(o => o.enabled).map(o => o.x + monitors.size(o).width))
+          readonly property real extentHeight: Math.max(1, ...monitors.draft.filter(o => o.enabled).map(o => o.y + monitors.size(o).height))
+          readonly property real factor: Math.min((width - 32) / extentWidth, (height - 32) / extentHeight)
+          Repeater {
+            model: monitors.draft
+            delegate: Rectangle {
+              id: displayCard
+              required property var modelData
+              required property int index
+              visible: modelData.enabled
+              x: 16 + modelData.x * diagram.factor
+              y: 16 + modelData.y * diagram.factor
+              width: Math.max(36, monitors.size(modelData).width * diagram.factor)
+              height: Math.max(28, monitors.size(modelData).height * diagram.factor)
+              radius: 6
+              color: monitors.selectedOutput === index ? window.controller.controlActive : window.controller.controlBackground
+              border.width: monitors.selectedOutput === index ? 2 : 1
+              border.color: window.controller.controlActiveIcon
+              Label {
+                anchors.centerIn: parent
+                width: parent.width - 8
+                horizontalAlignment: Text.AlignHCenter
+                text: (displayCard.index + 1) + " · " + displayCard.modelData.connector
+                font.pixelSize: 11
+              }
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeAllCursor
+                property real startScale: 1
+                drag.target: displayCard
+                drag.minimumX: 16
+                drag.minimumY: 16
+                onPressed: {
+                  monitors.selectedOutput = displayCard.index
+                  startScale = diagram.factor
+                }
+                onReleased: {
+                  if (drag.active)
+                    monitors.move(displayCard.index, (displayCard.x - 16) / startScale, (displayCard.y - 16) / startScale)
+                  displayCard.x = Qt.binding(() => 16 + displayCard.modelData.x * diagram.factor)
+                  displayCard.y = Qt.binding(() => 16 + displayCard.modelData.y * diagram.factor)
+                }
+              }
+            }
+          }
+        }
+        RowLayout {
+          Layout.fillWidth: true
+          Label { Layout.fillWidth: true; text: "Drag displays to arrange; edges snap."; color: window.controller.controlSecondaryText }
+          SoundButton { text: "Identify"; iconName: "monitor"; onClicked: monitorIdentify.identify() }
+        }
+        Choice {
+          Layout.fillWidth: true
+          Accessible.name: "Selected display"
+          model: monitors.draft.map((o, index) => ({ label: (index + 1) + " · " + o.connector + (o.enabled ? "" : " (off)"), value: index }))
+          selectedValue: monitors.selectedOutput
+          onChosen: value => monitors.selectedOutput = value
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: monitors.output !== null
+          text: monitors.connectedOutput ? monitors.connectedOutput.description : "Display disconnected"
+          color: window.controller.controlSecondaryText
+        }
+        Toggle {
+          Layout.fillWidth: true
+          text: "Enable display"
+          checked: monitors.output?.enabled ?? false
+          enabled: monitors.output !== null
+          onClicked: monitors.edit("enabled", !monitors.output.enabled)
+        }
+        GridLayout {
+          Layout.fillWidth: true
+          columns: 2
+          columnSpacing: 12
+          rowSpacing: 10
+          enabled: monitors.output?.enabled ?? false
+          Label { text: "Resolution" }
+          Choice {
+            Layout.fillWidth: true
+            Accessible.name: "Resolution"
+            model: [...new Set([monitors.output?.mode, ...(monitors.connectedOutput?.modes || []).map(m => m.mode)].filter(Boolean))].map(mode => ({ label: mode, value: mode }))
+            selectedValue: monitors.output?.mode ?? ""
+            onChosen: value => {
+              monitors.edit("mode", value)
+              const available = monitors.connectedOutput.modes.filter(m => m.mode === value)
+              if (available.length && !available.some(m => m.rate === monitors.output.rate)) monitors.edit("rate", available[0].rate)
+            }
+          }
+          Label { text: "Refresh rate" }
+          Choice {
+            Layout.fillWidth: true
+            Accessible.name: "Refresh rate"
+            model: {
+              const choices = (monitors.connectedOutput?.modes || []).filter(m => m.mode === monitors.output?.mode)
+                .map(m => ({ label: m.rate + " Hz", value: m.rate }))
+              if (monitors.output && !choices.some(c => c.value === monitors.output.rate))
+                choices.unshift({ label: monitors.output.rate + " Hz (saved)", value: monitors.output.rate })
+              return choices
+            }
+            selectedValue: monitors.output?.rate ?? 60
+            onChosen: value => monitors.edit("rate", value)
+          }
+          Label {
+            text: "Scale"
+            HoverHandler { id: scaleHover }
+            Hint {
+              visible: scaleHover.hovered
+              text: monitors.snapshot.session === "x11" ? "X11 scales the output using resampling; application DPI remains session-wide. Hyprland uses native per-display scaling." : "Native per-display scale. Some modes only support particular scale factors."
+            }
+          }
+          Choice {
+            Layout.fillWidth: true
+            Accessible.name: "Display scale"
+            model: [...new Set([1, 1.25, 1.5, 1.75, 2, monitors.output?.scale || 1])].sort((a, b) => a - b)
+              .map(scale => ({ label: Math.round(scale * 10000) / 100 + "%", value: scale }))
+            selectedValue: monitors.output?.scale ?? 1
+            onChosen: value => monitors.edit("scale", value)
+          }
+          Label { text: "Orientation" }
+          Choice {
+            Layout.fillWidth: true
+            Accessible.name: "Display orientation"
+            model: [ { label: "Landscape", value: "normal" }, { label: "Portrait left", value: "left" },
+              { label: "Upside down", value: "inverted" }, { label: "Portrait right", value: "right" } ]
+            selectedValue: monitors.output?.rotation ?? "normal"
+            onChosen: value => monitors.edit("rotation", value)
+          }
+          Repeater {
+            model: ["x", "y"]
+            delegate: RowLayout {
+              id: positionRow
+              required property string modelData
+              Layout.columnSpan: 2
+              Layout.fillWidth: true
+              Label { text: positionRow.modelData.toUpperCase() + " position"; Layout.fillWidth: true }
+              Controls.TextField {
+                Layout.preferredWidth: 120
+                text: String(monitors.output?.[positionRow.modelData] ?? 0)
+                color: window.controller.controlPrimaryText
+                validator: IntValidator { bottom: 0; top: 65535 }
+                Accessible.name: positionRow.modelData.toUpperCase() + " position"
+                onEditingFinished: {
+                  if (acceptableInput) monitors.edit(positionRow.modelData, Number(text))
+                  text = Qt.binding(() => String(monitors.output?.[positionRow.modelData] ?? 0))
+                }
+                background: Rectangle { color: window.controller.controlSurface; radius: 8; border.color: window.controller.controlSurfaceBorder }
+              }
+            }
+          }
+        }
+        Toggle {
+          Layout.fillWidth: true
+          visible: monitors.snapshot.session === "x11"
+          text: "Primary display"
+          checked: monitors.output?.primary ?? false
+          enabled: monitors.output?.enabled ?? false
+          onClicked: monitors.edit("primary", !monitors.output.primary)
+        }
+        SoundButton {
+          text: monitors.linkDetails ? "Hide link details" : "Link details"
+          enabled: monitors.connectedOutput !== null && monitors.connectedOutput !== undefined
+          onClicked: {
+            if (monitors.linkDetails) monitors.linkDetails = null
+            else monitors.run("details", monitors.connectedOutput.connector)
+          }
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: monitors.linkDetails !== null
+          text: {
+            const d = monitors.linkDetails
+            if (!d) return ""
+            return (d.monitorName ? d.monitorName + "\n" : "")
+              + "Connection: " + (d.subconnector || d.connector) + (d.linkStatus ? " · " + d.linkStatus : "")
+              + "\nAdvertised HDMI TMDS limit: " + (d.maxTmdsMHz ? d.maxTmdsMHz + " MHz (" + (d.maxTmdsMHz * 30 / 1000).toFixed(2) + " Gbit/s raw)" : "Not reported")
+              + "\nCurrent pixel clock: " + (d.pixelClockMHz ? d.pixelClockMHz + " MHz" : "Not exposed")
+              + "\n8-bit RGB estimate, including blanking: " + (d.estimated8BitRgbGbps ? d.estimated8BitRgbGbps.toFixed(2) + " Gbit/s before encoding" : "Unavailable")
+              + "\nNegotiated link capacity: Not exposed"
+              + "\nActive color depth / DSC: Not exposed"
+          }
+          HoverHandler { id: linkHintHover }
+          Hint {
+            visible: linkHintHover.hovered
+            text: "These describe the current applied layout, not the draft. The estimate assumes uncompressed 8-bit RGB. EDID limits describe the monitor's HDMI capability, not the negotiated GPU/cable/dock link. max bpc is a limit, not active color depth."
+          }
+        }
+        RowLayout {
+          Layout.fillWidth: true
+          SoundButton { text: "Reload current"; iconName: "refresh-cw"; onClicked: { monitors.resetAfterRead = true; monitors.refresh() } }
+          Item { Layout.fillWidth: true }
+          SoundButton { text: "Apply"; enabled: monitors.dirty; onClicked: monitors.run("apply", JSON.stringify(monitors.draft)) }
+        }
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+        Label { text: "Saved setups"; font.bold: true }
+        Controls.TextField {
+          id: profileName
+          Layout.fillWidth: true
+          placeholderText: "Profile name"
+          color: window.controller.controlPrimaryText
+          placeholderTextColor: window.controller.controlSecondaryText
+          Accessible.name: "Profile name"
+          padding: 10
+          background: Rectangle { color: window.controller.controlSurface; radius: 8; border.color: window.controller.controlSurfaceBorder }
+        }
+        Toggle {
+          id: preferredProfile
+          Layout.fillWidth: true
+          text: "Preferred for this hardware"
+          checked: true
+          description: "When multiple profiles match these displays, use this one for automatic switching."
+        }
+        Flow {
+          Layout.fillWidth: true
+          spacing: 8
+          SoundButton {
+            text: "Save as"
+            enabled: !monitors.dirty && profileName.text.trim() !== ""
+            description: "Save the current confirmed layout. Apply and keep any draft changes first."
+            onClicked: monitors.save(profileName.text, "", preferredProfile.checked)
+          }
+          SoundButton {
+            text: "Update"
+            enabled: !monitors.dirty && monitors.selectedProfile !== ""
+            onClicked: monitors.save(monitors.selectedProfile, monitors.selectedProfile, preferredProfile.checked)
+          }
+          SoundButton {
+            text: "Rename"
+            enabled: monitors.selectedProfile !== "" && profileName.text.trim() !== ""
+            onClicked: monitors.run("rename", monitors.selectedProfile, profileName.text.trim())
+          }
+          SoundButton {
+            text: "Delete"
+            enabled: monitors.selectedProfile !== ""
+            onClicked: monitors.run("delete", monitors.selectedProfile)
+          }
+          SoundButton {
+            text: "Import autorandr"
+            visible: monitors.snapshot.session === "x11"
+            description: "Import existing user profiles without overwriting profiles already in the portable store."
+            onClicked: monitors.run("import")
+          }
+        }
+        Label {
+          Layout.fillWidth: true
+          text: monitors.error || monitors.snapshot.automationError || (monitors.dirty ? "Draft changes · apply and keep before saving." : "Saved in system-settings/monitor-profiles.json")
+          color: monitors.error || monitors.snapshot.automationError ? window.controller.controlWarningText : window.controller.controlSecondaryText
+        }
+      }
+    }
+  }
+
+  component PreferencesPage: ColumnLayout {
+    spacing: 12
+    Label {
+      text: window.sections.find(entry => entry.key === window.section)?.label || ""
+      font.pixelSize: 16
+      font.bold: true
+    }
+    Label {
+      Layout.fillWidth: true
+      text: "Saved to linux/config/system-settings/preferences.json"
+      color: window.controller.controlSecondaryText
+      HoverHandler { id: storageHover }
+      Hint {
+        visible: storageHover.hovered
+        text: "Changes are saved in your dotfiles checkout. Commit this JSON file to carry preferences to another machine. Runtime history and temporary state stay local."
+      }
+    }
+    Controls.ScrollView {
+      id: preferenceScroll
+      Layout.fillWidth: true
+      Layout.fillHeight: true
+      contentWidth: availableWidth
+      clip: true
+      ColumnLayout {
+        width: preferenceScroll.availableWidth
+        spacing: 16
+        Repeater {
+          model: window.controller.preferences.fields.filter(field => {
+            const category = field.key.split(".")[0]
+            return (category === window.section || window.section === "weather" && category === "clock")
+              && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE"))
+          })
+          delegate: ColumnLayout {
+            id: preferenceRow
+            required property var modelData
+            readonly property var currentValue: window.controller.preferences.value(modelData.key, "")
+            Layout.fillWidth: true
+            spacing: 6
+            enabled: window.controller.preferences.ready && !window.controller.preferences.busy
+            Toggle {
+              Layout.fillWidth: true
+              visible: preferenceRow.modelData.kind === "boolean"
+              text: preferenceRow.modelData.label
+              checked: preferenceRow.currentValue === true
+              description: preferenceRow.modelData.key === "desktop.hoverPreviews"
+                ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover." : ""
+              onClicked: window.controller.preferences.setValue(preferenceRow.modelData.key, !preferenceRow.currentValue)
+            }
+            Label {
+              Layout.fillWidth: true
+              visible: preferenceRow.modelData.kind !== "boolean"
+              text: preferenceRow.modelData.label
+            }
+            Choice {
+              Layout.fillWidth: true
+              visible: preferenceRow.modelData.kind === "choice"
+              model: preferenceRow.modelData.values.map(value => {
+                const labels = {
+                  automatic: "Automatic (IP location)", fixed: "Fixed city",
+                  metric: "Celsius · metres/second", imperial: "Fahrenheit · miles/hour",
+                  flat: "Off (flat)", adaptive: "Adaptive", comfortable: "Comfortable", compact: "Compact",
+                  "24": "24-hour", "12": "12-hour", "0": "Sunday", "1": "Monday"
+                }
+                const label = preferenceRow.modelData.key === "clock.dateFormat"
+                  ? Qt.formatDate(new Date(), String(value)) : labels[String(value)] || String(value)
+                return { label: label, value: value }
+              })
+              selectedValue: preferenceRow.currentValue
+              Accessible.name: preferenceRow.modelData.label
+              onChosen: value => window.controller.preferences.setValue(preferenceRow.modelData.key, value)
+            }
+            Controls.TextField {
+              id: preferenceInput
+              Layout.fillWidth: true
+              visible: ["text", "number"].includes(preferenceRow.modelData.kind)
+              text: String(preferenceRow.currentValue)
+              color: window.controller.controlPrimaryText
+              selectionColor: window.controller.controlActive
+              selectedTextColor: window.controller.controlPrimaryText
+              font.family: window.controller.fontFamily
+              font.pixelSize: 12
+              padding: 10
+              Accessible.name: preferenceRow.modelData.label
+              onEditingFinished: {
+                const value = preferenceRow.modelData.kind === "number" ? Number(text) : text.trim()
+                if (value !== preferenceRow.currentValue)
+                  window.controller.preferences.setValue(preferenceRow.modelData.key, value)
+                text = Qt.binding(() => String(preferenceRow.currentValue))
+              }
+              background: Rectangle {
+                radius: 8
+                color: window.controller.controlSurface
+                border.color: preferenceInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+              }
+            }
+            Controls.Slider {
+              id: temperatureSlider
+              Layout.fillWidth: true
+              visible: preferenceRow.modelData.key.endsWith("Temperature")
+              from: 2500
+              to: 10000
+              stepSize: 100
+              value: Number(preferenceRow.currentValue) || 2500
+              Accessible.name: preferenceRow.modelData.label
+              onPressedChanged: {
+                if (!pressed && visible && value !== preferenceRow.currentValue)
+                  window.controller.preferences.setValue(preferenceRow.modelData.key, Math.round(value))
+              }
+              onMoved: {
+                if (!pressed && visible)
+                  window.controller.preferences.setValue(preferenceRow.modelData.key, Math.round(value))
+              }
+              background: Rectangle {
+                x: temperatureSlider.leftPadding
+                y: temperatureSlider.topPadding + temperatureSlider.availableHeight / 2 - height / 2
+                width: temperatureSlider.availableWidth
+                height: 6
+                radius: 3
+                color: window.controller.controlSliderTrack
+                Rectangle {
+                  width: temperatureSlider.visualPosition * parent.width
+                  height: parent.height
+                  radius: 3
+                  color: window.controller.controlActiveIcon
+                }
+              }
+              handle: Rectangle {
+                x: temperatureSlider.leftPadding + temperatureSlider.visualPosition * (temperatureSlider.availableWidth - width)
+                y: temperatureSlider.topPadding + temperatureSlider.availableHeight / 2 - height / 2
+                implicitWidth: 18
+                implicitHeight: 18
+                radius: 9
+                color: window.controller.controlPrimaryText
+                border.width: temperatureSlider.activeFocus ? 2 : 0
+                border.color: window.controller.controlActiveIcon
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -614,21 +1116,6 @@ FloatingWindow {
         visible: headingHover.hovered
       }
     }
-    Controls.ScrollView {
-      id: optionsScroll
-      Layout.fillWidth: true
-      Layout.minimumHeight: 0
-      Layout.preferredHeight: Math.min(generalOptions.implicitHeight, Math.max(160, window.height - 280))
-      contentWidth: availableWidth
-      contentHeight: generalOptions.implicitHeight
-      clip: true
-      GeneralOptions {
-        id: generalOptions
-        width: optionsScroll.availableWidth
-      }
-    }
-
-    Label { text: "Applications"; font.bold: true }
     ListView {
       id: applicationList
       Layout.fillWidth: true
@@ -639,6 +1126,20 @@ FloatingWindow {
       // Append-only discovery and a count model preserve delegates, focus and scroll position.
       model: window.service.applications.length
       Controls.ScrollBar.vertical: Controls.ScrollBar {}
+
+      header: ColumnLayout {
+        width: applicationList.width
+        spacing: 20
+        GeneralOptions {
+          Layout.fillWidth: true
+        }
+        Label {
+          Layout.fillWidth: true
+          Layout.bottomMargin: 12
+          text: "Applications"
+          font.bold: true
+        }
+      }
 
       delegate: Rectangle {
         id: applicationRow
@@ -707,9 +1208,10 @@ FloatingWindow {
         }
       }
 
-      Label {
-        anchors.centerIn: parent
-        width: parent.width
+      footer: Label {
+        width: applicationList.width
+        height: applicationList.count === 0 ? implicitHeight + 24 : 0
+        topPadding: 12
         horizontalAlignment: Text.AlignHCenter
         visible: applicationList.count === 0
         color: window.controller.controlSecondaryText

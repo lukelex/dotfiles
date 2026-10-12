@@ -492,7 +492,7 @@ Scope {
 
   Timer {
     id: closeTimer
-    interval: 500
+    interval: popup.controller.preferences.value("desktop.hoverCloseDelayMs", 600)
     onTriggered: {
       if (!popup.pinned)
         popup.requestClose()

@@ -2,8 +2,10 @@
 import Quickshell
 
 Scope {
+  SystemPreferences { id: preferences }
   NotificationService {
     id: notifications
+    preferences: preferences
     historyBeingRead: bar.notificationCenterOpen || bar.githubReviewCenterOpen
   }
 
@@ -22,6 +24,7 @@ Scope {
 
   Bar {
     id: bar
+    preferences: preferences
     notificationService: notifications
     githubPrService: githubPrs
     audioService: audioService

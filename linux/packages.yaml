@@ -84,6 +84,7 @@ profiles:
         gammastep:
           configs:
             - linux/config/gammastep/config.ini:$XDG_CONFIG_HOME/gammastep/config.ini
+            - linux/config/gammastep/gammastep.service:$XDG_CONFIG_HOME/systemd/user/gammastep.service
             - linux/config/gammastep/night-mode-sunset.service:$XDG_CONFIG_HOME/systemd/user/night-mode-sunset.service
             - linux/config/gammastep/night-mode-sunset.timer:$XDG_CONFIG_HOME/systemd/user/night-mode-sunset.timer
           services:
@@ -207,6 +208,7 @@ profiles:
         autorandr:
           configs:
             - linux/config/autorandr/postswitch:$XDG_CONFIG_HOME/autorandr/postswitch
+            - linux/config/autorandr/block:$XDG_CONFIG_HOME/autorandr/block
         flameshot:
           configs:
             - linux/config/flameshot.ini:$XDG_CONFIG_HOME/flameshot/flameshot.ini

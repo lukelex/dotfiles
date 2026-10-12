@@ -17,13 +17,13 @@ fi
 case "$XDG_SESSION_TYPE" in
   wayland)
     "$HOME/dotfiles/linux/config/quickshell/scripts/quickshell" --session-start &
-    kanshi -c "$HOME/dotfiles/linux/config/kanshi" &
+    python3 "$HOME/dotfiles/linux/config/system-settings/monitors.py" watch &
     awww-daemon &
 
-    hypridle &
+    python3 "$HOME/dotfiles/linux/config/system-settings/settings.py" run-idle &
     ;;
   *)
-    autorandr --change
+    python3 "$HOME/dotfiles/linux/config/system-settings/monitors.py" watch &
 
     xss-lock --transfer-sleep-lock -- u_exit lock &
 

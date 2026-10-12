@@ -183,6 +183,16 @@ test('month navigation pins first and rolls over years without end-of-month over
   assert.equal(Array.from({ length: 42 }, (_, i) => f.popup.calendarDate(i)).filter(d => d.getMonth() === 1).length, 28);
 });
 
+test('Sunday-first preference shifts the calendar grid without losing leap day', () => {
+  const { popup } = fixture();
+  popup.controller = { preferences: { value: () => 0 } };
+  popup.resetMonth();
+  const cells = Array.from({ length: 42 }, (_, i) => popup.calendarDate(i));
+  assert.equal(cells[0].getDay(), 0);
+  assert.deepEqual(dateParts(cells[0]), [2024, 1, 28]);
+  assert.equal(cells.filter(date => date.getMonth() === 1).length, 29);
+});
+
 test('fresh open resets month and refreshes once; hover-to-pin and repeated opens preserve browsing', () => {
   const f = fixture();
   f.popup.requestOpen();

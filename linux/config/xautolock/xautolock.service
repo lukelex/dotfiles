@@ -8,6 +8,6 @@ WantedBy=default.target
 
 [Service]
 Type=simple
-ExecStart=xautolock -time 10 -locker 'u_autolocking lock' -detectsleep -corners ---- -notify 10 -notifier 'u_autolocking warn 10'
+ExecStart=/usr/bin/python3 %h/dotfiles/linux/config/system-settings/settings.py run-idle
 Restart=always
 RestartSec=5

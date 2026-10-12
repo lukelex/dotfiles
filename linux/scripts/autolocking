@@ -4,6 +4,12 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
+preferences=$(python3 "$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py" get idle) \
+  || preferences='{"deferFullscreen":true,"deferMicrophone":true,"deferCamera":true}'
+defer_fullscreen=$(jq -r '.deferFullscreen' <<< "$preferences")
+defer_microphone=$(jq -r '.deferMicrophone' <<< "$preferences")
+defer_camera=$(jq -r '.deferCamera' <<< "$preferences")
+
 function show_warning {
   case "$XDG_SESSION_TYPE" in
     x11) notify-send -a System \
@@ -50,14 +56,14 @@ function should_defer {
 
   local fullscreen
   fullscreen=$(hyprctl activewindow -j 2> /dev/null | jq -r '.fullscreen // 0' 2> /dev/null || echo 0)
-  [[ $fullscreen != 0 ]] && return 0
+  [[ $defer_fullscreen == true && $fullscreen != 0 ]] && return 0
 
-  if command -v wpctl > /dev/null 2>&1 \
+  if [[ $defer_microphone == true ]] && command -v wpctl > /dev/null 2>&1 \
       && wpctl inspect @DEFAULT_AUDIO_SOURCE@ 2> /dev/null | grep -q 'node.state = "running"'; then
     return 0
   fi
 
-  if command -v fuser > /dev/null 2>&1 && compgen -G '/dev/video*' > /dev/null \
+  if [[ $defer_camera == true ]] && command -v fuser > /dev/null 2>&1 && compgen -G '/dev/video*' > /dev/null \
       && fuser /dev/video* > /dev/null 2>&1; then
     return 0
   fi
@@ -92,7 +98,7 @@ function should_lock {
       local window_id fullscreen_window
       window_id=$(xprop -root | grep "_NET_ACTIVE_WINDOW" | head -n 1 | awk '{print $5}')
       fullscreen_window=$(xprop -id "$window_id" 2> /dev/null | grep -E "_NET_WM_STATE\(ATOM\).+?_NET_WM_STATE_FULLSCREEN" || true)
-      [[ -z $fullscreen_window ]] && echo "yes"
+      [[ $defer_fullscreen != true || -z $fullscreen_window ]] && echo "yes"
       ;;
     wayland)
       ! should_defer && echo "yes"
