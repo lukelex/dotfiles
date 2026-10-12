@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import QtQuick.Controls.Basic as Controls
 
 FloatingWindow {
@@ -17,6 +18,12 @@ FloatingWindow {
   implicitHeight: 640
   minimumSize: Qt.size(420, 480)
   color: Qt.rgba(controller.controlBackground.r, controller.controlBackground.g, controller.controlBackground.b, 1)
+  onVisibleChanged: {
+    if (!visible) {
+      soundFileDialog.close()
+      service.stopSoundPreview()
+    }
+  }
 
   function open(targetScreen) {
     visible = false
@@ -100,6 +107,39 @@ FloatingWindow {
     }
   }
 
+  component SoundButton: Controls.Button {
+    id: button
+    property string iconName: ""
+    property string description: text
+    implicitHeight: 32
+    implicitWidth: contentItem.implicitWidth + 16
+    padding: 8
+    opacity: enabled ? 1 : 0.45
+    Accessible.name: description
+    contentItem: RowLayout {
+      spacing: 6
+      LucideIcon {
+        Layout.preferredWidth: 16
+        Layout.preferredHeight: 16
+        source: window.controller.icon(button.iconName)
+        color: window.controller.controlPrimaryText
+      }
+      Label {
+        visible: button.text !== ""
+        text: button.text
+      }
+    }
+    background: Rectangle {
+      radius: 8
+      color: button.hovered ? window.controller.controlHover : window.controller.controlSurface
+      border.color: button.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+    }
+    Hint {
+      text: button.description
+      visible: button.hovered || button.activeFocus
+    }
+  }
+
   function applicationIcon(application) {
     const systemIcons = {
       "bluetooth connections": "bluetooth",
@@ -114,6 +154,14 @@ FloatingWindow {
 
   ColumnLayout {
     id: content
+    FileDialog {
+      id: soundFileDialog
+      title: "Choose notification sound"
+      fileMode: FileDialog.OpenFile
+      currentFolder: "file://" + Quickshell.env("HOME")
+      nameFilters: ["Audio files (*.wav *.mp3 *.ogg *.flac *.aiff *.aif *.opus)", "All files (*)"]
+      onAccepted: window.service.setNotificationSoundFile(selectedFile)
+    }
     anchors.centerIn: parent
     width: Math.min(1000, parent.width - 32)
     height: parent.height - 32
@@ -238,6 +286,48 @@ FloatingWindow {
       description: "Controls sound for all apps without changing popups or history. Per-app sound preferences are preserved while muted."
       checked: !window.service.notificationSoundsMuted
       onClicked: window.service.setNotificationSoundsMuted(!window.service.notificationSoundsMuted)
+    }
+
+    RowLayout {
+      Layout.fillWidth: true
+      spacing: 8
+      Label {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        text: window.service.notificationSoundName
+        maximumLineCount: 1
+        elide: Text.ElideMiddle
+        Accessible.name: "Notification sound: " + text
+        HoverHandler { id: soundNameHover }
+        Hint {
+          text: window.service.notificationSoundPath
+          visible: soundNameHover.hovered
+        }
+      }
+      SoundButton {
+        iconName: "search"
+        text: "Choose file…"
+        description: "Choose a notification sound from this computer"
+        onClicked: soundFileDialog.open()
+      }
+      SoundButton {
+        iconName: window.service.soundPreviewPlaying ? "x" : "play"
+        description: window.service.soundPreviewPlaying ? "Stop preview" : "Preview sound (up to 10 seconds, even when muted)"
+        onClicked: window.service.soundPreviewPlaying
+          ? window.service.stopSoundPreview() : window.service.previewNotificationSound()
+      }
+      SoundButton {
+        iconName: "refresh-cw"
+        description: "Reset to the default ICQ sound"
+        enabled: window.service.customNotificationSoundPath !== ""
+        onClicked: window.service.setNotificationSoundFile("")
+      }
+    }
+    Label {
+      Layout.fillWidth: true
+      visible: text !== ""
+      text: window.service.soundSelectionError
+      color: window.controller.controlPrimaryText
     }
 
     ListView {

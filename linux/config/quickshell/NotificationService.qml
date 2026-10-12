@@ -67,6 +67,17 @@ QtObject {
     command: ["play", "-q", service.notificationSoundPath, "vol", "0.5"]
   }
 
+  property string soundSelectionError: ""
+  property bool soundPreviewCancelled: false
+  readonly property bool soundPreviewPlaying: soundPreview.running
+  property Process soundPreview: Process {
+    command: []
+    onExited: (exitCode) => {
+      if (!service.soundPreviewCancelled && exitCode !== 0)
+        service.soundSelectionError = "Could not play this file. Check that it exists and is a supported audio format."
+    }
+  }
+
   // Resolves theme icon names to concrete files when the QIcon theme lookup fails.
   // Qt caches the icon theme per process, so icons installed after the shell started
   // (e.g. a freshly shipped desktop entry icon) are invisible to Quickshell.iconPath()
@@ -103,8 +114,12 @@ QtObject {
     interval: 3000
   }
 
-  readonly property string notificationSoundPath: Quickshell.env("HOME")
+  readonly property string defaultNotificationSoundPath: Quickshell.env("HOME")
     + "/dotfiles/sounds/icq-uh-oh.mp3"
+  readonly property string customNotificationSoundPath: settings.soundFilePath
+  readonly property string notificationSoundPath: customNotificationSoundPath || defaultNotificationSoundPath
+  readonly property string notificationSoundName: customNotificationSoundPath
+    ? customNotificationSoundPath.split("/").pop() : "ICQ (default)"
 
   property Settings settings: Settings {
     id: settings
@@ -112,6 +127,7 @@ QtObject {
     property string historyJson: "[]"
     property string githubSeenJson: "[]"
     property string applicationsJson: "[]"
+    property string soundFilePath: ""
     property bool doNotDisturb: false
     property bool notificationSoundsMuted: false
 
@@ -380,6 +396,42 @@ QtObject {
 
     service.notificationSound.running = true
     service.notificationSoundTimer.start()
+  }
+
+  function setNotificationSoundFile(fileUrl) {
+    const url = String(fileUrl || "")
+    let path = ""
+    if (url) {
+      try {
+        if (!/^file:\/\/(?:localhost)?\//.test(url))
+          throw new Error("Not a local file")
+        path = decodeURIComponent(url.replace(/^file:\/\/(?:localhost)?/, ""))
+        if (path.includes("\u0000") || path.endsWith("/"))
+          throw new Error("Not a file path")
+      } catch (error) {
+        service.soundSelectionError = "Choose an audio file stored on this computer."
+        return false
+      }
+    }
+    service.stopSoundPreview()
+    service.soundSelectionError = ""
+    settings.soundFilePath = path
+    return true
+  }
+
+  function previewNotificationSound() {
+    if (service.soundPreview.running)
+      return
+    service.soundSelectionError = ""
+    service.soundPreviewCancelled = false
+    // Explicit preview is available even while sounds or notifications are muted.
+    service.soundPreview.command = ["play", "-q", service.notificationSoundPath, "trim", "0", "10", "vol", "0.5"]
+    service.soundPreview.running = true
+  }
+
+  function stopSoundPreview() {
+    service.soundPreviewCancelled = true
+    service.soundPreview.running = false
   }
 
   function isSystemOsd(record) {

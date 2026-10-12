@@ -795,6 +795,25 @@ Scope {
       panel.toggleNotifications()
   }
 
+  function openSystemSettings(targetScreen) {
+    root.cancelHoverClose()
+    root.closeNotifications()
+    root.closeConnectivity()
+    root.closeAudioOutput()
+    root.closeDateTime()
+    root.closeGitHubReviewCenter()
+    for (const name of Object.keys(root.panelsByScreen))
+      root.panelsByScreen[name].closeControlCenter()
+    const panel = root.focusedPanel()
+    systemSettings.open(targetScreen || (panel ? panel.screen : null))
+  }
+
+  SystemSettings {
+    id: systemSettings
+    controller: root
+    service: root.notificationService
+  }
+
   function closeNotifications() {
     if (root.notificationCenterTarget)
       root.notificationCenterTarget.requestClose()
@@ -1236,6 +1255,7 @@ Scope {
     target: "bar"
 
     function openCalendar() { root.openCalendarFromKeyboard() }
+    function openSettings() { root.openSystemSettings(null) }
     function openConnectivity() { root.openConnectivityFromKeyboard() }
     function openAudioOutput() { root.openAudioOutputFromKeyboard() }
     function toggleDoNotDisturb() { root.toggleDoNotDisturbFromKeyboard() }
@@ -1257,6 +1277,10 @@ Scope {
         id: panel
 
       required property var modelData
+
+      function closeControlCenter() {
+        controlCenter.requestClose()
+      }
 
       function toggleNotifications() {
         if (notificationCenter.visible && !notificationCenter.closePending)

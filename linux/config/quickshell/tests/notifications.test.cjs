@@ -139,6 +139,36 @@ test('connection sound defaults migrate once and preserve saved choices across r
   assert.equal(service.trackApplication({ appName: 'Bluetooth connections' }).enabled, false);
 });
 
+test('sound selection decodes local file URLs, preserves literal filenames and resets to ICQ', () => {
+  const settings = { soundFilePath: '' };
+  const service = { soundPreview: { running: false } };
+  const context = vm.createContext({ service, settings });
+  for (const name of ['setNotificationSoundFile', 'stopSoundPreview', 'previewNotificationSound']) {
+    service[name] = vm.runInContext(`(${source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`))[0]})`, context);
+  }
+  const file = '/home/test/My sounds/chime #1 $(hello).mp3';
+  assert.equal(service.setNotificationSoundFile('file:///home/test/My%20sounds/chime%20%231%20%24(hello).mp3'), true);
+  assert.equal(settings.soundFilePath, file);
+  service.notificationSoundPath = settings.soundFilePath;
+  service.notificationSoundsMuted = true;
+  service.doNotDisturb = true;
+  service.previewNotificationSound();
+  assert.equal(service.soundPreview.running, true);
+  assert.deepEqual(Array.from(service.soundPreview.command), ['play', '-q', file, 'trim', '0', '10', 'vol', '0.5']);
+  for (const invalid of ['https://example.com/chime.mp3', 'file://remote/chime.mp3', 'file:///bad%ZZ', 'file:///bad%00.mp3', 'file:///directory/']) {
+    assert.equal(service.setNotificationSoundFile(invalid), false);
+    assert.equal(settings.soundFilePath, file);
+    assert.ok(service.soundSelectionError);
+  }
+  assert.equal(service.setNotificationSoundFile('file://localhost/home/test/chime.wav'), true);
+  assert.equal(settings.soundFilePath, '/home/test/chime.wav');
+  assert.equal(service.soundPreview.running, false);
+  assert.equal(service.soundPreviewCancelled, true);
+  assert.equal(service.setNotificationSoundFile(''), true);
+  assert.equal(settings.soundFilePath, '');
+  assert.equal(service.soundSelectionError, '');
+});
+
 test('disabling an app removes its active popups without deleting history or replaying on enable', () => {
   const { service } = serviceForTest();
   service.history = [record(1, 'Chat'), record(2, 'Other')];
