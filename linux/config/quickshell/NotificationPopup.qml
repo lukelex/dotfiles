@@ -115,8 +115,9 @@ PopupWindow {
     property real unfoldOffset: 0
     property bool enterFromRight: false
 
-    readonly property var icon: service.iconFor(toast.record)
-    readonly property string body: service.displayBody(toast.record)
+    readonly property var displayRecord: service.popupDisplayRecord(toast.record)
+    readonly property var icon: service.iconFor(toast.displayRecord)
+    readonly property string body: service.displayBody(toast.displayRecord)
 
     transform: [
       Translate {
@@ -348,7 +349,7 @@ PopupWindow {
         elide: Text.ElideRight
         font.family: toast.controller.fontFamily
         font.pixelSize: 12
-        text: toast.record.summary
+        text: toast.displayRecord.summary
         width: parent.width
       }
 
@@ -368,18 +369,18 @@ PopupWindow {
         color: toast.controller.controlSliderFill
         height: 4
         radius: 2
-        visible: toast.record.value >= 0
-        width: parent.width * Math.min(1, Math.max(0, toast.record.value / 100))
+        visible: toast.displayRecord.value >= 0
+        width: parent.width * Math.min(1, Math.max(0, toast.displayRecord.value / 100))
       }
 
       Row {
         height: 26
         spacing: 8
-        visible: toast.record.actions.length > 0
+        visible: toast.displayRecord.actions.length > 0
         width: parent.width
 
         Repeater {
-          model: toast.record.actions
+          model: toast.displayRecord.actions
 
           delegate: Item {
             id: actionDelegate

@@ -108,4 +108,9 @@ render_config() {
 
 render_config > "$config"
 
+# Refresh privacy before the first lock-screen frame, rather than displaying an old cached preview.
+if ! "$HOME/dotfiles/linux/scripts/lock-notifications" > /dev/null; then
+  rm -f "$HOME/.cache/dotfiles/lock-notifications.png" "$HOME/.cache/dotfiles/lock-notifications.svg"
+fi
+
 exec hyprlock --config "$config" "$@"

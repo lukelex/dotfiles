@@ -39,6 +39,34 @@ test('popup placement selects named/focused monitors and falls back after hot un
   assert.equal(service.popupScreenMatches('eDP-1', screens, ''), true);
 });
 
+test('popup privacy removes text, images and action labels without modifying retained history', () => {
+  const { service, settings } = preferences(['popupDisplayRecord', 'setPopupPreviews', 'setLockScreenPrivacy']);
+  const record = { id: 1, appName: 'Chat', desktopEntry: 'chat', summary: 'Secret title', body: 'Secret body',
+    appIcon: 'private-photo.png', image: 'image://qsimage/private', actions: [{ text: 'Reply to someone' }], value: 50 };
+  service.popupPreviews = true;
+  assert.equal(service.popupDisplayRecord(record), record);
+  service.setPopupPreviews(false);
+  service.popupPreviews = settings.popupPreviews;
+  const redacted = service.popupDisplayRecord(record);
+  assert.equal(redacted.summary, 'New notification');
+  assert.equal(redacted.appName, 'Chat');
+  assert.equal(redacted.desktopEntry, 'chat');
+  assert.equal(redacted.id, 1);
+  assert.equal(redacted.body, '');
+  assert.equal(redacted.image, '');
+  assert.equal(redacted.appIcon, '');
+  assert.equal(redacted.actions.length, 0);
+  assert.equal(redacted.value, -1);
+  assert.equal(record.summary, 'Secret title');
+  assert.equal(record.actions.length, 1);
+  let synced = 0;
+  settings.sync = () => synced++;
+  service.setLockScreenPrivacy('redact');
+  service.setLockScreenPrivacy('bad-mode');
+  assert.equal(settings.lockScreenPrivacy, 'redact');
+  assert.equal(synced, 1);
+});
+
 test('retention removes only old inactive history without touching native lifecycle or app preferences', () => {
   const now = Date.now() / 1000;
   let saves = 0;

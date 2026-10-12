@@ -130,6 +130,8 @@ QtObject {
     ? customNotificationSoundPath.split("/").pop() : "ICQ (default)"
   readonly property string popupCorner: settings.popupCorner
   readonly property string popupMonitor: settings.popupMonitor
+  readonly property bool popupPreviews: settings.popupPreviews
+  readonly property string lockScreenPrivacy: settings.lockScreenPrivacy
   readonly property int historyRetentionDays: settings.historyRetentionDays
   property bool historyBeingRead: false
   onHistoryBeingReadChanged: {
@@ -146,6 +148,8 @@ QtObject {
     property string soundFilePath: ""
     property string popupCorner: "top-right"
     property string popupMonitor: "all"
+    property bool popupPreviews: true
+    property string lockScreenPrivacy: "show"
     property int historyRetentionDays: 0
     property bool doNotDisturb: false
     property bool dndScheduleEnabled: false
@@ -462,6 +466,29 @@ QtObject {
   function setPopupCorner(corner) {
     if (["top-right", "top-left", "bottom-right", "bottom-left"].includes(corner))
       settings.popupCorner = corner
+  }
+
+  function setPopupPreviews(enabled) {
+    if (typeof enabled === "boolean")
+      settings.popupPreviews = enabled
+  }
+
+  function setLockScreenPrivacy(mode) {
+    if (["show", "redact", "hide"].includes(mode)) {
+      settings.lockScreenPrivacy = mode
+      settings.sync()
+    }
+  }
+
+  function popupDisplayRecord(record) {
+    if (service.popupPreviews)
+      return record
+    // Use only application identity for imagery: sender images and action labels can contain private content.
+    return {
+      id: record.id, appName: record.appName, desktopEntry: record.desktopEntry || "",
+      summary: "New notification", body: "", appIcon: "", image: "", actions: [], value: -1,
+      urgency: record.urgency, time: record.time
+    }
   }
 
   function setPopupMonitor(monitor) {

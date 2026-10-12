@@ -7,7 +7,7 @@ const { test } = require('node:test');
 
 const script = path.join(__dirname, '../../../scripts/lock-notifications');
 
-function render(history, theme = 'dark') {
+function render(history, theme = 'dark', privacy = '') {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'lock-notifications-'));
   const home = path.join(temporary, 'home');
   const state = path.join(temporary, 'state');
@@ -16,7 +16,7 @@ function render(history, theme = 'dark') {
 
   fs.writeFileSync(
     path.join(stateDirectory, 'notifications.conf'),
-    `[General]\nhistoryJson=${JSON.stringify(JSON.stringify(history))}\n`,
+    `[General]\nhistoryJson=${JSON.stringify(JSON.stringify(history))}\nlockScreenPrivacy=${privacy}\n`,
   );
   fs.writeFileSync(path.join(stateDirectory, 'color-scheme'), `${theme}\n`);
 
@@ -63,5 +63,24 @@ test('lock notification renderer keeps an informative empty notification state',
     assert.match(result.source, />0 messages<\/text>/);
   } finally {
     fs.rmSync(result.temporary, { recursive: true, force: true });
+  }
+});
+
+test('lock privacy redacts titles and hides all notification details when requested', () => {
+  const history = [{ appName: 'Private App', summary: 'Sensitive title', body: 'Secret message', time: Date.now() / 1000 }];
+  for (const mode of ['redact', 'hide', 'invalid']) {
+    const result = render(history, 'dark', mode);
+    try {
+      assert.deepEqual([...fs.readFileSync(result.output).subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+      assert.doesNotMatch(result.source, /Sensitive title|Secret message/);
+      if (mode === 'redact') {
+        assert.match(result.source, /Private App/);
+        assert.match(result.source, /Content hidden/);
+      } else {
+        assert.doesNotMatch(result.source, /Private App|message|<text/);
+      }
+    } finally {
+      fs.rmSync(result.temporary, { recursive: true, force: true });
+    }
   }
 });

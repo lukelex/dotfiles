@@ -503,6 +503,26 @@ FloatingWindow {
         Accessible.name: "Popup monitor"
         onChosen: value => window.service.setPopupMonitor(value)
       }
+      Label {
+        text: "Lock screen"
+        HoverHandler { id: lockPrivacyHover }
+        Hint {
+          text: "Controls the lock-screen notification panel. Message bodies are always hidden; choose whether titles or app names are shown."
+          visible: lockPrivacyHover.hovered
+        }
+      }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: [
+          { label: "Show titles", value: "show" },
+          { label: "App names only", value: "redact" },
+          { label: "Hide notifications", value: "hide" }
+        ]
+        selectedValue: window.service.lockScreenPrivacy
+        Accessible.name: "Lock-screen notification privacy"
+        onChosen: value => window.service.setLockScreenPrivacy(value)
+      }
       Label { text: "Popup corner" }
       Choice {
         Layout.fillWidth: true
@@ -539,6 +559,14 @@ FloatingWindow {
         Accessible.description: "Removes older inactive history. Up to 100 entries are kept, regardless of age limit."
         onChosen: value => window.service.setHistoryRetentionDays(value)
       }
+    }
+    Toggle {
+      Layout.fillWidth: true
+      text: "Popup message previews"
+      iconName: "lock"
+      checked: window.service.popupPreviews
+      description: "When off, popups show the app name and New notification, hiding message text, images and action labels. Full content remains in history."
+      onClicked: window.service.setPopupPreviews(!window.service.popupPreviews)
     }
   }
 

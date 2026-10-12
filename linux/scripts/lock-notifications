@@ -24,11 +24,21 @@ if [[ -n "$encoded" ]]; then
   history=$(printf '"%s"' "$encoded" | jq -er 'fromjson | if type == "array" then . else error("history is not an array") end' 2> /dev/null) || history='[]'
 fi
 
+privacy="show"
+if [[ -r "$state_file" ]]; then
+  privacy=$(sed -n 's/^lockScreenPrivacy=//p' "$state_file" | tr -d '"\r')
+  case "$privacy" in
+    "") privacy="show" ;;
+    show|redact|hide) ;;
+    *) privacy="hide" ;;
+  esac
+fi
+
 temporary_source=$(mktemp "${source_file}.XXXXXX")
 temporary_png=$(mktemp "${cache_file}.XXXXXX")
 trap 'rm -f "$temporary_source" "$temporary_png"' EXIT
 
-printf '%s\n' "$history" | jq -r --arg theme "$theme" '
+printf '%s\n' "$history" | jq -r --arg theme "$theme" --arg privacy "$privacy" '
   def clean:
     tostring
     | gsub("[[:space:]]+"; " ")
@@ -97,7 +107,7 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
   | map(
        {
            app: ((.appName // "Notification") | tostring | clean | clip(32)),
-           summary: ((.summary // "") | clean | clip(58)),
+            summary: (if $privacy == "redact" then "Content hidden" else ((.summary // "") | clean | clip(58)) end),
            critical: ((.urgency // "") == "critical"),
           time: age(.time)
         }
@@ -121,6 +131,9 @@ printf '%s\n' "$history" | jq -r --arg theme "$theme" '
           "<text x=\"24\" y=\"" + (($startY + $listHeight + 24) | tostring) + "\" fill=\"" + $colors.secondary + "\" font-size=\"11\">+" + (($total - $count) | tostring) + " more in history</text>"
         else "" end)
     + "</svg>"
+    | if $privacy == "hide" then
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"600\"></svg>"
+      else . end
  ' > "$temporary_source"
 
 if [[ -s "$source_file" && -s "$cache_file" ]] && cmp -s "$temporary_source" "$source_file"; then
