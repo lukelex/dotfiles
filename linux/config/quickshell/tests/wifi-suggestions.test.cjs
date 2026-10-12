@@ -13,6 +13,7 @@ function setup() {
   const target = { name: 'Saved', device, known: true, connected: false,
     stateChanging: false, signalStrength: 0.6, connect() { calls.push('connect'); } };
   const service = {
+    wifiSuggestionsEnabled: true, wifiWeakThreshold: 0.25, wifiRecoveryThreshold: 0.35, wifiMinimumImprovement: 0.15,
     activeNetwork: current, wifiSsid: current.name, wifiStrength: 0.2,
     wifiAvailable: true, wifiEnabled: true, wifiHardwareEnabled: true, wifiConnecting: false,
     savedNetworks: [current, target], _wifiSuggestionShown: false,
@@ -131,8 +132,9 @@ test('switch errors notify once and network names cannot inject body markup or s
 });
 
 test('background scans and delayed checks run only for weakness, with recovery hysteresis', () => {
-  assert.match(source, /value: service\.wifiEnabled && \(service\.wifiScanningEnabled \|\| service\.wifiWeak\)/);
-  assert.match(source, /interval: 15000\s+repeat: true\s+running: service\.wifiWeak && !service\._wifiSuggestionShown/);
+  assert.match(source, /value: service\.wifiEnabled && \(service\.wifiScanningEnabled \|\| service\.wifiSuggestionsEnabled && service\.wifiWeak\)/);
+  assert.match(source, /suggestionDelaySeconds", 15\) \* 1000 : 15000/);
+  assert.match(source, /running: service\.wifiSuggestionsEnabled && service\.wifiWeak && !service\._wifiSuggestionShown/);
   const { service, context } = setup();
   const handler = source.match(/onWifiStrengthChanged: (\{[^]*?\n  \})/)[1];
   service._wifiSuggestionShown = true;
@@ -143,6 +145,23 @@ test('background scans and delayed checks run only for weakness, with recovery h
   vm.runInContext(handler, context);
   assert.equal(service._wifiSuggestionShown, false);
   assert.match(source, /onActiveNetworkChanged: service\._wifiSuggestionShown = false/);
+});
+
+test('saved Wi-Fi policy controls eligibility and rejects old Switch actions after disabling suggestions', () => {
+  const { service, target, calls, click } = setup();
+  service.wifiWeakThreshold = 0.15;
+  service.suggestBetterWifi();
+  assert.equal(service._wifiSuggestion.running, false);
+  service.wifiWeakThreshold = 0.3;
+  service.wifiMinimumImprovement = 0.5;
+  service.suggestBetterWifi();
+  assert.equal(service._wifiSuggestion.running, false);
+  service.wifiMinimumImprovement = 0.1;
+  service.suggestBetterWifi();
+  assert.equal(service._wifiSuggestionTarget, target);
+  service.wifiSuggestionsEnabled = false;
+  click();
+  assert.deepEqual(calls, []);
 });
 
 test('synchronous connection failures produce only one error notification', () => {

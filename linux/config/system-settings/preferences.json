@@ -1,5 +1,43 @@
 {
   "version": 1,
+  "wallpaper": {
+    "startupMode": "random",
+    "folder": "~/Dropbox/wallpapers/32x9"
+  },
+  "power": {
+    "lowWarningEnabled": true,
+    "lowThreshold": 20,
+    "criticalWarningEnabled": true,
+    "criticalThreshold": 14,
+    "urgentWarningEnabled": true,
+    "urgentThreshold": 10,
+    "finalWarningEnabled": true,
+    "finalThreshold": 5
+  },
+  "connectivity": {
+    "wifiSuggestions": true,
+    "weakThreshold": 25,
+    "recoveryThreshold": 35,
+    "suggestionDelaySeconds": 15,
+    "minimumImprovement": 15
+  },
+  "lockScreen": {
+    "showGreeting": true,
+    "showQuote": true,
+    "showBattery": true,
+    "showNetwork": true,
+    "showVpn": true,
+    "showAudio": true,
+    "showDnd": true,
+    "showPrivacy": true,
+    "showSecurity": true,
+    "showWeather": true,
+    "showMedia": true,
+    "showMediaArtwork": true,
+    "wallpaperBlur": 7,
+    "wallpaperBlurPasses": 3,
+    "wallpaperBrightness": 78
+  },
   "display": {
     "dayTemperature": 6500,
     "nightTemperature": 4000,
@@ -52,12 +90,12 @@
     "lockScreenPrivacy": "show",
     "historyRetentionDays": 7,
     "doNotDisturb": false,
-    "dndScheduleEnabled": false,
+    "dndScheduleEnabled": true,
     "dndStartMinutes": 1320,
     "dndEndMinutes": 480,
     "dndScheduleDays": 127,
     "notificationSoundsMuted": true,
-    "allowCriticalDuringDnd": false,
+    "allowCriticalDuringDnd": true,
     "applications": [
       {
         "key": "system",
@@ -93,7 +131,7 @@
         "key": "flameshot",
         "appName": "flameshot",
         "enabled": true,
-        "sound": true
+        "sound": false
       }
     ]
   }

@@ -342,6 +342,7 @@ Scope {
 
   ConnectivityService {
     id: connectivity
+    preferences: root.preferences
     wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
     trafficMonitoringEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
   }

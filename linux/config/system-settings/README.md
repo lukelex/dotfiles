@@ -53,6 +53,41 @@ the managed launchers now use preferences.json instead.
 
 ## Scope
 
+- **Session & lock screen:** configure Hyprlock's greeting/username, daily quote,
+  battery widgets, network/VPN/audio/DND status, capture activity, failed-unlock
+  status, weather and media text/artwork. Each hidden widget is removed from the
+  generated config so its helper is not invoked. Disabling media also hides its
+  artwork; artwork can independently be hidden. Blur size/passes and brightness
+  tune the existing wallpaper backdrop, preserving bright-wallpaper protection
+  and the shared lock/greeter palette. All defaults reproduce the current look.
+  Changes apply on the next lock, never restart an active locker, and only expose
+  supported controls on Wayland. The X11 locker remains unchanged. Authentication,
+  fingerprint enrollment detection, date/time and lock-before-suspend are not
+  configurable here. Idle timers remain in Lock & idle, and notification privacy
+  remains in Notifications. Invalid preferences fall back to safe presentation
+  defaults instead of stopping lock acquisition.
+
+- **Wallpaper:** choose an image with the native file picker, choose a random-image
+  folder, apply a random image now, restore the saved image, and select random or
+  restore behavior at login. `wallpaper.py` and `u_wallpaper` share `~/wallpaper.png`
+  and the existing xwallpaper/awww backends. Random selection ignores non-image
+  extensions; failures appear inline. Editing login preferences does not replace
+  the live wallpaper. Folder paths under your home are stored with `~` so they
+  remain portable. Images themselves are not copied into the repository.
+- **Power & battery:** individually enable the low, critical, urgent and final
+  warnings and set their descending thresholds (defaults 15/14/10/5%). The latter
+  three use critical urgency. Warning markers stay local, retain once-per-level
+  discharge-episode behavior, and rearm on charging or recovery above the low
+  threshold. Disabling a level does not clear prior notification history. Power
+  profiles remain in Control Center; no automatic power-profile switching is added.
+- **Connectivity behavior:** enable/disable stronger-saved-Wi-Fi suggestions,
+  configure the weak and recovery thresholds, delay and minimum improvement.
+  Defaults remain 25/35%, 15 seconds and 15 percentage points. Disabling suggestions
+  stops weak-signal background scanning (panel-open scanning remains) and invalidates
+  outstanding Switch actions. Delay changes restart pending checks; other choices
+  immediately update eligibility without replaying an already-shown offer. No network switches occur without an explicit
+  action; VPN and network controls remain in Connectivity.
+
 - **Display:** day/night temperature, sunrise/sunset coordinates, brightness-key
   step, and volume/brightness/layout OSD duration. The night-light on/off action
   remains in Control Center; editing warmth doesn't enable an inactive service.

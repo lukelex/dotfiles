@@ -2,17 +2,16 @@
 
 set -eu
 
-WALLPAPER_PATH="$HOME/wallpaper.png"
+helper="$(dirname "$(readlink -f "$0")")/../config/system-settings/wallpaper.py"
 
 case $1 in
   load)
-    case "$XDG_SESSION_TYPE" in
-      x11) xwallpaper --zoom "$WALLPAPER_PATH" ;;
-      wayland) awww img "$WALLPAPER_PATH" --resize crop --transition-type wipe ;;
-    esac ;;
+    exec python3 "$helper" restore ;;
   update|change)
-    cp "$2" "$WALLPAPER_PATH"
-    $0 load ;;
+    exec python3 "$helper" choose "$2" ;;
   random)
-    $0 change "$(find "$2" -maxdepth 1 -type f | shuf -n 1)" ;;
+    exec python3 "$helper" random "${2:-}" ;;
+  startup)
+    exec python3 "$helper" startup ;;
+  *) exit 2 ;;
 esac

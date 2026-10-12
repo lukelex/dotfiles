@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Dialogs
@@ -16,7 +17,11 @@ FloatingWindow {
     { key: "notifications", label: "Notifications", icon: "bell" },
     { key: "display", label: "Display", icon: "sun" },
     { key: "monitors", label: "Monitors", icon: "monitor" },
+    { key: "wallpaper", label: "Wallpaper", icon: "monitor" },
+    { key: "power", label: "Power & battery", icon: "battery" },
+    { key: "connectivity", label: "Connectivity behavior", icon: "wifi" },
     { key: "idle", label: "Lock & idle", icon: "lock" },
+    { key: "lockScreen", label: "Session & lock screen", icon: "lock" },
     { key: "input", label: "Input", icon: "keyboard" },
     { key: "weather", label: "Date & weather", icon: "calendar" },
     { key: "desktop", label: "Desktop & bar", icon: "settings" }
@@ -31,6 +36,8 @@ FloatingWindow {
   onVisibleChanged: {
     if (!visible) {
       soundFileDialog.close()
+      wallpaperFileDialog.close()
+      wallpaperFolderDialog.close()
       service.stopSoundPreview()
     }
   }
@@ -280,6 +287,37 @@ FloatingWindow {
 
   ColumnLayout {
     id: content
+    FileDialog {
+      id: wallpaperFileDialog
+      title: "Choose wallpaper"
+      fileMode: FileDialog.OpenFile
+      nameFilters: ["Images (*.png *.jpg *.jpeg *.webp *.bmp *.gif)"]
+      currentFolder: "file://" + Quickshell.env("HOME")
+      onAccepted: wallpaperAction.run("choose", selectedFile.toString())
+    }
+    FolderDialog {
+      id: wallpaperFolderDialog
+      title: "Choose random wallpaper folder"
+      onAccepted: {
+        const path = decodeURIComponent(selectedFolder.toString().replace(/^file:\/\//, ""))
+        window.controller.preferences.setValue("wallpaper.folder", path.startsWith(Quickshell.env("HOME") + "/")
+          ? "~" + path.slice(Quickshell.env("HOME").length) : path)
+      }
+    }
+    QtObject {
+      id: wallpaperAction
+      property string error: ""
+      property Process process: Process {
+        stderr: StdioCollector { onStreamFinished: { if (text.trim()) wallpaperAction.error = text.trim() } }
+      }
+      function run(action, path = "") {
+        if (process.running) return
+        error = ""
+        process.command = ["python3", Quickshell.env("HOME") + "/dotfiles/linux/config/system-settings/wallpaper.py", action]
+          .concat(path ? [path] : [])
+        process.running = true
+      }
+    }
     MonitorService {
       id: monitors
       visible: window.visible && window.section === "monitors"
@@ -363,11 +401,13 @@ FloatingWindow {
         radius: 12
         color: window.controller.controlSurface
 
-        Column {
-          anchors.top: parent.top
-          anchors.left: parent.left
-          anchors.right: parent.right
+        Controls.ScrollView {
+          anchors.fill: parent
           anchors.margins: 6
+          contentWidth: availableWidth
+          clip: true
+        Column {
+          width: sidebar.width - 12
           spacing: 4
           Repeater {
             model: window.sections
@@ -375,7 +415,7 @@ FloatingWindow {
               id: sectionButton
               required property var modelData
               width: sidebar.width - 12
-              height: 40
+              height: Math.max(40, contentItem.implicitHeight + 20)
               padding: 10
               text: modelData.label
               Accessible.role: Accessible.PageTab
@@ -409,6 +449,7 @@ FloatingWindow {
               }
             }
           }
+        }
         }
       }
 
@@ -759,6 +800,22 @@ FloatingWindow {
       ColumnLayout {
         width: preferenceScroll.availableWidth
         spacing: 16
+        Label {
+          Layout.fillWidth: true
+          visible: window.section === "lockScreen"
+          text: Quickshell.env("XDG_SESSION_TYPE") === "wayland"
+            ? "Hyprlock presentation · changes apply the next time you lock. Idle locking is configured in Lock & idle; notification privacy is in Notifications."
+            : "These presentation controls apply to Hyprlock on Wayland. Your X11 locker remains unchanged. Idle locking is configured in Lock & idle."
+          color: window.controller.controlSecondaryText
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: window.section === "power" || window.section === "connectivity"
+          text: window.section === "power"
+            ? "Configure battery warnings. Power-profile selection stays in Control Center."
+            : "Suggestions never switch networks automatically. Connections and VPN controls stay in Connectivity."
+          color: window.controller.controlSecondaryText
+        }
         Repeater {
           model: window.controller.preferences.fields.filter(field => {
             const category = field.key.split(".")[0]
@@ -778,7 +835,10 @@ FloatingWindow {
               text: preferenceRow.modelData.label
               checked: preferenceRow.currentValue === true
               description: preferenceRow.modelData.key === "desktop.hoverPreviews"
-                ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover." : ""
+                ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover."
+                : window.section === "power" ? "Warnings fire once per level in a discharge episode. Critical, urgent and final levels use critical urgency; notification policies still apply."
+                : window.section === "lockScreen" ? "Changes apply on the next lock. Hiding a widget removes its label or image and stops its helper from running. Authentication, date/time and explicit locking are unchanged."
+                : window.section === "connectivity" ? "Only offers a stronger saved network on the same adapter. Clicking Switch rechecks your current preferences and network availability." : ""
               onClicked: window.controller.preferences.setValue(preferenceRow.modelData.key, !preferenceRow.currentValue)
             }
             Label {
@@ -794,6 +854,7 @@ FloatingWindow {
                   automatic: "Automatic (IP location)", fixed: "Fixed city",
                   metric: "Celsius · metres/second", imperial: "Fahrenheit · miles/hour",
                   flat: "Off (flat)", adaptive: "Adaptive", comfortable: "Comfortable", compact: "Compact",
+                  random: "Random from folder", restore: "Restore saved image",
                   "24": "24-hour", "12": "12-hour", "0": "Sunday", "1": "Monday"
                 }
                 const label = preferenceRow.modelData.key === "clock.dateFormat"
@@ -871,6 +932,22 @@ FloatingWindow {
               }
             }
           }
+        }
+        Flow {
+          Layout.fillWidth: true
+          visible: window.section === "wallpaper"
+          spacing: 8
+          enabled: !wallpaperAction.process.running
+          SoundButton { text: "Choose image…"; onClicked: wallpaperFileDialog.open() }
+          SoundButton { text: "Choose folder…"; onClicked: wallpaperFolderDialog.open() }
+          SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
+          SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: window.section === "wallpaper" && text !== ""
+          text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
+          color: window.controller.controlWarningText
         }
       }
     }

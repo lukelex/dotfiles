@@ -10,9 +10,15 @@ LOW=$(printf "\ue056")
 HALF=$(printf "\ue057")
 THREE_QUARTERS=$(printf "\ue057")
 FULL=$(printf "\ue055")
-LOW_BATTERY_THRESHOLD=15
+preferences=$(python3 "$(dirname "$(readlink -f "$0")")/../../system-settings/settings.py" get power)
+LOW_BATTERY_THRESHOLD=$(jq -r '.lowThreshold' <<< "$preferences")
 LOW_BATTERY_NOTIFICATION_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/battery-low-notified"
-CRITICAL_BATTERY_THRESHOLDS=(14 10 5)
+mapfile -t CRITICAL_BATTERY_THRESHOLDS < <(jq -r '[
+  (if .criticalWarningEnabled then .criticalThreshold else empty end),
+  (if .urgentWarningEnabled then .urgentThreshold else empty end),
+  (if .finalWarningEnabled then .finalThreshold else empty end)
+] | .[]' <<< "$preferences")
+FIRST_CRITICAL_THRESHOLD=$(jq -r '.criticalThreshold' <<< "$preferences")
 BATTERY_NOTIFICATION_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/battery-critical-notified"
 
 if [[ ${1:-} != power && ${1:-} != lower-profile ]]; then
@@ -169,7 +175,7 @@ warn() {
     return
   fi
 
-  if [[ $charge -le $LOW_BATTERY_THRESHOLD && $charge -gt ${CRITICAL_BATTERY_THRESHOLDS[0]} ]]; then
+  if [[ $(jq -r '.lowWarningEnabled' <<< "$preferences") == true && $charge -le $LOW_BATTERY_THRESHOLD && $charge -gt $FIRST_CRITICAL_THRESHOLD ]]; then
     if [[ ! -e $LOW_BATTERY_NOTIFICATION_FILE ]]; then
       mkdir -p "$(dirname "$LOW_BATTERY_NOTIFICATION_FILE")"
       if can_lower_power_profile; then
@@ -190,7 +196,7 @@ warn() {
     fi
   fi
 
-  if [[ $charge -le ${CRITICAL_BATTERY_THRESHOLDS[0]} ]]; then
+  if [[ $charge -le $FIRST_CRITICAL_THRESHOLD ]]; then
     mkdir -p "$BATTERY_NOTIFICATION_DIR"
     for threshold in "${CRITICAL_BATTERY_THRESHOLDS[@]}"; do
       marker="$BATTERY_NOTIFICATION_DIR/$threshold"
@@ -203,7 +209,7 @@ warn() {
         : > "$marker"
       fi
     done
-  else
+  elif [[ $charge -gt $LOW_BATTERY_THRESHOLD ]]; then
     rm -f "$LOW_BATTERY_NOTIFICATION_FILE"
     rm -rf "$BATTERY_NOTIFICATION_DIR"
   fi

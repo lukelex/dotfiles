@@ -106,7 +106,7 @@ render_config() {
     '
 }
 
-render_config > "$config"
+render_config | python3 "$dotfiles/linux/config/system-settings/lock-screen.py" > "$config"
 
 # Refresh privacy before the first lock-screen frame, rather than displaying an old cached preview.
 if ! "$HOME/dotfiles/linux/scripts/lock-notifications" > /dev/null; then

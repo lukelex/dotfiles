@@ -16,6 +16,36 @@ CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "dotfil
 
 # key, label, kind, allowed values/range, session (empty means both)
 FIELDS = [
+  ("lockScreen.showGreeting", "Greeting and username", "boolean", [], "wayland"),
+  ("lockScreen.showQuote", "Daily quote", "boolean", [], "wayland"),
+  ("lockScreen.showBattery", "Battery status", "boolean", [], "wayland"),
+  ("lockScreen.showNetwork", "Network status", "boolean", [], "wayland"),
+  ("lockScreen.showVpn", "VPN status", "boolean", [], "wayland"),
+  ("lockScreen.showAudio", "Audio status", "boolean", [], "wayland"),
+  ("lockScreen.showDnd", "Do Not Disturb status", "boolean", [], "wayland"),
+  ("lockScreen.showPrivacy", "Microphone and camera activity", "boolean", [], "wayland"),
+  ("lockScreen.showSecurity", "Failed unlock attempts", "boolean", [], "wayland"),
+  ("lockScreen.showWeather", "Weather", "boolean", [], "wayland"),
+  ("lockScreen.showMedia", "Media title and artist", "boolean", [], "wayland"),
+  ("lockScreen.showMediaArtwork", "Media artwork", "boolean", [], "wayland"),
+  ("lockScreen.wallpaperBlur", "Wallpaper blur size", "number", [0, 20], "wayland"),
+  ("lockScreen.wallpaperBlurPasses", "Wallpaper blur passes", "number", [0, 6], "wayland"),
+  ("lockScreen.wallpaperBrightness", "Wallpaper brightness (%)", "number", [30, 100], "wayland"),
+  ("wallpaper.startupMode", "Wallpaper at login", "choice", ["random", "restore"], ""),
+  ("wallpaper.folder", "Random wallpaper folder", "text", [], ""),
+  ("power.lowWarningEnabled", "Low-battery warning", "boolean", [], ""),
+  ("power.lowThreshold", "Low-battery threshold (%)", "number", [1, 50], ""),
+  ("power.criticalWarningEnabled", "Critical-battery warning", "boolean", [], ""),
+  ("power.criticalThreshold", "Critical threshold (%)", "number", [1, 50], ""),
+  ("power.urgentWarningEnabled", "Urgent-battery warning", "boolean", [], ""),
+  ("power.urgentThreshold", "Urgent threshold (%)", "number", [1, 50], ""),
+  ("power.finalWarningEnabled", "Final-battery warning", "boolean", [], ""),
+  ("power.finalThreshold", "Final threshold (%)", "number", [1, 50], ""),
+  ("connectivity.wifiSuggestions", "Suggest stronger saved Wi-Fi", "boolean", [], ""),
+  ("connectivity.weakThreshold", "Weak-signal threshold (%)", "number", [1, 90], ""),
+  ("connectivity.recoveryThreshold", "Rearm suggestions above (%)", "number", [2, 100], ""),
+  ("connectivity.suggestionDelaySeconds", "Weak signal before suggesting (seconds)", "number", [5, 300], ""),
+  ("connectivity.minimumImprovement", "Minimum signal improvement (percentage points)", "number", [1, 50], ""),
   ("display.dayTemperature", "Day temperature (K)", "number", [2500, 10000], ""),
   ("display.nightTemperature", "Night temperature (K)", "number", [2500, 10000], ""),
   ("display.latitude", "Sunrise/sunset latitude", "number", [-90, 90], ""),
@@ -83,6 +113,11 @@ def validate(data):
       raise ValueError(f"Unknown key in {section}")
   if data["idle"]["x11LockSeconds"] % 60:
     raise ValueError("X11 lock delay must be a whole number of minutes")
+  p = data['power']
+  if not p['lowThreshold'] > p['criticalThreshold'] > p['urgentThreshold'] > p['finalThreshold']:
+    raise ValueError('Battery thresholds must descend: low > critical > urgent > final')
+  if data['connectivity']['recoveryThreshold'] <= data['connectivity']['weakThreshold']:
+    raise ValueError('Wi-Fi recovery threshold must be greater than the weak threshold')
   if not isinstance(data['notifications'], dict):
     raise ValueError('notifications must be an object')
   for key, value in data["notifications"].items():

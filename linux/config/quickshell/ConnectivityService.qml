@@ -156,9 +156,14 @@ QtObject {
     && (network.signalStrength > 0 || network.connected || network.stateChanging))
 
   // Zero can mean unavailable signal data. Scan in the background only while weak.
+  property var preferences: null
+  readonly property bool wifiSuggestionsEnabled: preferences ? preferences.value("connectivity.wifiSuggestions", true) : true
+  readonly property real wifiWeakThreshold: preferences ? preferences.value("connectivity.weakThreshold", 25) / 100 : 0.25
+  readonly property real wifiRecoveryThreshold: preferences ? preferences.value("connectivity.recoveryThreshold", 35) / 100 : 0.35
+  readonly property real wifiMinimumImprovement: preferences ? preferences.value("connectivity.minimumImprovement", 15) / 100 : 0.15
   readonly property bool wifiWeak: service.wifiAvailable && service.wifiEnabled
     && service.wifiHardwareEnabled && service.activeNetwork !== null
-    && service.wifiStrength > 0 && service.wifiStrength < 0.25
+    && service.wifiStrength > 0 && service.wifiStrength < service.wifiWeakThreshold
   property bool _wifiSuggestionShown: false
   property WifiNetwork _wifiSuggestionSource: null
   property WifiNetwork _wifiSuggestionTarget: null
@@ -168,14 +173,14 @@ QtObject {
   onActiveNetworkChanged: service._wifiSuggestionShown = false
   onWifiStrengthChanged: {
     // Hysteresis prevents repeated alerts as the signal flutters around 25%.
-    if (service.wifiStrength >= 0.35)
+    if (service.wifiStrength >= service.wifiRecoveryThreshold)
       service._wifiSuggestionShown = false
   }
 
   readonly property Timer _wifiSuggestionTimer: Timer {
-    interval: 15000
+    interval: service.preferences ? service.preferences.value("connectivity.suggestionDelaySeconds", 15) * 1000 : 15000
     repeat: true
-    running: service.wifiWeak && !service._wifiSuggestionShown
+    running: service.wifiSuggestionsEnabled && service.wifiWeak && !service._wifiSuggestionShown
     onTriggered: service.suggestBetterWifi()
   }
 
@@ -188,12 +193,12 @@ QtObject {
 
   function betterWifi(network): bool {
     const current = service.activeNetwork
-    return service.wifiWeak && !service.wifiConnecting && current !== null
+    return service.wifiSuggestionsEnabled && service.wifiWeak && !service.wifiConnecting && current !== null
       && network !== null && service.savedNetworks.indexOf(network) >= 0
       && network.known && !network.connected && !network.stateChanging
       && network.device === current.device && network.name !== current.name
       && Number.isFinite(network.signalStrength) && network.signalStrength <= 1
-      && network.signalStrength >= service.wifiStrength + 0.15
+      && network.signalStrength >= service.wifiStrength + service.wifiMinimumImprovement
   }
 
   function wifiNotificationText(name: string): string {
@@ -201,7 +206,7 @@ QtObject {
   }
 
   function suggestBetterWifi(): void {
-    if (service._wifiSuggestionShown || service._wifiSuggestion.running || !service.wifiWeak)
+    if (!service.wifiSuggestionsEnabled || service._wifiSuggestionShown || service._wifiSuggestion.running || !service.wifiWeak)
       return
     const candidates = service.savedNetworks.filter(network => service.betterWifi(network))
       .sort((a, b) => b.signalStrength - a.signalStrength || a.name.localeCompare(b.name))
@@ -340,7 +345,7 @@ QtObject {
       required property var modelData
       target: modelData
       property: "scannerEnabled"
-      value: service.wifiEnabled && (service.wifiScanningEnabled || service.wifiWeak)
+      value: service.wifiEnabled && (service.wifiScanningEnabled || service.wifiSuggestionsEnabled && service.wifiWeak)
       restoreMode: Binding.RestoreBindingOrValue
     }
   }
