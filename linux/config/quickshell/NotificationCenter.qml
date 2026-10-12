@@ -1150,7 +1150,9 @@ PopupWindow {
           }
           iconName: popup.controller.doNotDisturb ? "bell-off" : "bell"
           description: popup.controller.doNotDisturb
-            ? "Do Not Disturb on: popups and sounds muted; notifications still saved. Click to turn off."
+            ? "Do Not Disturb on: " + (popup.service.allowCriticalDuringDnd
+              ? "critical alerts may interrupt; " : "popups and sounds muted; ")
+              + "notifications still saved. Click to turn off."
             : "Do Not Disturb off: popups enabled; sounds "
               + (popup.service.notificationSoundsMuted ? "muted" : "enabled") + ". Click to turn on."
           Accessible.role: Accessible.CheckBox
@@ -1173,7 +1175,7 @@ PopupWindow {
           iconName: popup.service.notificationSoundsMuted ? "volume-x" : "volume-2"
           description: popup.service.notificationSoundsMuted
             ? "Notification sounds muted; popups still follow Do Not Disturb. Click to unmute."
-            : "Notification sounds enabled unless Do Not Disturb is on. Click to mute sounds only."
+            : "Notification sounds enabled, subject to app preferences and Do Not Disturb exceptions. Click to mute sounds only."
           Accessible.role: Accessible.CheckBox
           Accessible.name: "Mute notification sounds"
           Accessible.checkable: true

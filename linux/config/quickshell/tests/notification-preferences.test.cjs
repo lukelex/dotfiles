@@ -136,7 +136,7 @@ function schedule(initialDate) {
     static now() { return now; }
   }
   const fixture = preferences(['dndIntervals', 'nextDndBoundary', 'refreshDndSchedule',
-    'setDndSchedule', 'setDoNotDisturb', 'applyDoNotDisturb', 'formatScheduleTime'], {
+    'setDndSchedule', 'setDoNotDisturb', 'applyDoNotDisturb', 'formatScheduleTime', 'isDndSuppressed', 'suppressDndRecords'], {
     preferencesLoaded: true, doNotDisturb: false, history: [{ id: 1 }], pendingPopupRecords: [{ id: 1 }],
     notificationSound: { running: true }, syncPopup() {}, saveHistory() {}
   }, { Date: Clock, Qt: { formatDateTime: date => date.toISOString() } });
@@ -220,4 +220,56 @@ test('local calendar boundaries handle spring-forward and fall-back overnight sc
     if (previous === undefined) delete process.env.TZ;
     else process.env.TZ = previous;
   }
+});
+
+test('critical DND exceptions respect app blocking, app sound, global mute and sender silence', () => {
+  for (const urgency of ['normal', 'critical']) {
+    for (const enabled of [false, true]) {
+      for (const sound of [false, true]) {
+        for (const muted of [false, true]) {
+          for (const silent of [false, true]) {
+            const { service } = preferences(['handleNotification', 'playNotificationSound', 'isDndSuppressed', 'syncPopup', 'releaseLive'], {
+              doNotDisturb: true, allowCriticalDuringDnd: true, notificationSoundsMuted: muted,
+              notificationSound: { running: false }, notificationSoundTimer: { running: false, start() {} },
+              live: {}, liveDeadlines: {}, liveRevision: 0, hovered: {}, tagMap: {},
+              popup: [], history: [], pendingPopupRecords: [], popupLimit: 5,
+              refreshDndSchedule() {}, isSystemOsd: () => false,
+              trackApplication: () => ({ enabled, sound }), popupRecordRemoved() {}
+            }, { popupUpdateTimer: { start() {} } });
+            service.buildRecord = notification => ({ id: notification.id, urgency,
+              expiresAt: Date.now() + 20000, popupSuppressed: service.isDndSuppressed({ urgency }) });
+            service.addHistory = record => service.history.push(record);
+            service.handleNotification({ id: 1, hints: { 'suppress-sound': silent }, closed: { connect() {} }, dismiss() {} });
+            service.syncPopup();
+            const allowed = enabled && urgency === 'critical';
+            assert.equal(service.popup.length, allowed ? 1 : 0);
+            assert.equal(service.history.length, enabled ? 1 : 0);
+            assert.equal(service.notificationSound.running, allowed && sound && !muted && !silent);
+          }
+        }
+      }
+    }
+  }
+});
+
+test('critical exception changes reconcile active popups without replaying suppressed records', () => {
+  const { service, settings } = preferences(['setAllowCriticalDuringDnd', 'applyDoNotDisturb', 'isDndSuppressed', 'suppressDndRecords', 'syncPopup'], {
+    doNotDisturb: false, notificationSoundIsCritical: true, notificationSound: { running: true },
+    history: [{ id: 1, urgency: 'normal', expiresAt: 0 }, { id: 2, urgency: 'critical', expiresAt: 0 }],
+    pendingPopupRecords: [], live: { 1: {}, 2: {} }, popup: [], popupLimit: 5, hovered: {},
+    saveHistory() {}, popupRecordRemoved() {}
+  });
+  settings.allowCriticalDuringDnd = true;
+  Object.defineProperty(service, 'allowCriticalDuringDnd', { get: () => settings.allowCriticalDuringDnd });
+  service.applyDoNotDisturb(true);
+  assert.deepEqual(Array.from(service.popup, record => record.id), [2]);
+  assert.equal(service.notificationSound.running, true);
+  service.setAllowCriticalDuringDnd(false);
+  assert.equal(service.popup.length, 0);
+  assert.equal(service.notificationSound.running, false);
+  service.setAllowCriticalDuringDnd(true);
+  service.applyDoNotDisturb(false);
+  assert.equal(service.popup.length, 0);
+  assert.equal(service.history.length, 2);
+  assert.equal(Object.keys(service.live).length, 2);
 });

@@ -32,6 +32,8 @@ QtObject {
   readonly property int dndEndMinutes: settings.dndEndMinutes
   readonly property int dndScheduleDays: settings.dndScheduleDays
   property bool notificationSoundsMuted: false
+  property bool notificationSoundIsCritical: false
+  readonly property bool allowCriticalDuringDnd: settings.allowCriticalDuringDnd
   property var applications: []
   onNotificationSoundsMutedChanged: {
     if (notificationSoundsMuted)
@@ -161,6 +163,7 @@ QtObject {
     property double dndOverrideUntil: 0
     property bool dndOverrideEnabled: false
     property bool notificationSoundsMuted: false
+    property bool allowCriticalDuringDnd: false
 
     onDoNotDisturbChanged: service.refreshDndSchedule()
     onNotificationSoundsMutedChanged: service.notificationSoundsMuted = notificationSoundsMuted
@@ -447,22 +450,46 @@ QtObject {
     }
     service.liveDeadlines[record.id] = record.expiresAt
     service.addHistory(record)
-    if (service.doNotDisturb)
+    if (service.isDndSuppressed(record))
       return
     if (application.sound && hints["suppress-sound"] !== true)
-      service.playNotificationSound()
+      service.playNotificationSound(record)
     service.pendingPopupRecords = service.pendingPopupRecords
       .filter(entry => entry.id !== record.id).concat([record]).slice(-service.popupLimit)
     popupUpdateTimer.start()
   }
 
-  function playNotificationSound() {
-    if (service.notificationSoundsMuted || service.doNotDisturb
+  function playNotificationSound(record) {
+    if (service.notificationSoundsMuted || service.isDndSuppressed(record)
         || service.notificationSoundTimer.running || service.notificationSound.running)
       return
 
+    service.notificationSoundIsCritical = !!record && record.urgency === "critical"
     service.notificationSound.running = true
     service.notificationSoundTimer.start()
+  }
+
+  function isDndSuppressed(record) {
+    return service.doNotDisturb && !(service.allowCriticalDuringDnd && record && record.urgency === "critical")
+  }
+
+  function setAllowCriticalDuringDnd(enabled) {
+    if (typeof enabled !== "boolean" || enabled === service.allowCriticalDuringDnd)
+      return
+    settings.allowCriticalDuringDnd = enabled
+    if (service.doNotDisturb && !enabled)
+      service.suppressDndRecords()
+    service.syncPopup()
+  }
+
+  function suppressDndRecords() {
+    if (!service.allowCriticalDuringDnd || !service.notificationSoundIsCritical)
+      service.notificationSound.running = false
+    // Suppression persists per record so later preference changes never replay old alerts.
+    service.history = service.history.map(record => service.isDndSuppressed(record)
+      ? Object.assign({}, record, { popupSuppressed: true }) : record)
+    service.pendingPopupRecords = service.pendingPopupRecords.filter(record => !service.isDndSuppressed(record))
+    service.saveHistory()
   }
 
   function setPopupCorner(corner) {
@@ -605,7 +632,7 @@ QtObject {
       urgency: urgency,
       value: value,
       actions: actions,
-      popupSuppressed: service.doNotDisturb,
+      popupSuppressed: service.isDndSuppressed({ urgency: urgency }),
       time: Math.floor(Date.now() / 1000),
       expiresAt: service.computeExpiry(notification, urgency)
     }
@@ -674,7 +701,7 @@ QtObject {
   function syncPopup(suppressRemovalId) {
     const cutoff = Date.now()
     const previousPopup = service.popup
-    const candidates = service.doNotDisturb ? [] : service.history.filter(record => !record.popupSuppressed && (record.expiresAt === 0 || record.expiresAt > cutoff || service.hovered[record.id]) && service.live[record.id])
+    const candidates = service.history.filter(record => !service.isDndSuppressed(record) && !record.popupSuppressed && (record.expiresAt === 0 || record.expiresAt > cutoff || service.hovered[record.id]) && service.live[record.id])
     // Incoming traffic must not evict a card the user is reading or clicking.
     const pinned = candidates.filter(record => service.hovered[record.id])
     const selected = pinned.concat(candidates.filter(record => !service.hovered[record.id]).slice(0, Math.max(0, service.popupLimit - pinned.length)))
@@ -847,14 +874,8 @@ QtObject {
     if (service.doNotDisturb === enabled)
       return
     service.doNotDisturb = enabled
-    if (enabled) {
-      service.notificationSound.running = false
-      // Suppression is presentation state, not dismissal. Do not replay these
-      // records when DND ends, and leave native actions and system OSDs alive.
-      service.history = service.history.map(record => Object.assign({}, record, { popupSuppressed: true }))
-      service.pendingPopupRecords = []
-      service.saveHistory()
-    }
+    if (enabled)
+      service.suppressDndRecords()
     service.syncPopup()
   }
 

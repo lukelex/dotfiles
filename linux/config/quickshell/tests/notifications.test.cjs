@@ -37,7 +37,7 @@ function serviceForTest() {
   service.popupRecordRemoved = id => removed.push(id);
   const settings = {};
   const context = vm.createContext({ service, settings, Date, NotificationDefaults });
-  for (const name of ['applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation']) {
+  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);

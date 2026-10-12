@@ -380,7 +380,7 @@ FloatingWindow {
       Layout.fillWidth: true
       text: "Do Not Disturb"
       iconName: "bell-off"
-      description: "Pauses popups and sounds. Notifications from enabled apps are still saved in history."
+      description: "Pauses popups and sounds, except allowed critical alerts. Notifications from enabled apps are still saved in history."
       checked: window.service.doNotDisturb
       onClicked: window.service.setDoNotDisturb(!window.service.doNotDisturb)
     }
@@ -437,6 +437,14 @@ FloatingWindow {
       visible: text !== ""
       text: window.service.dndScheduleError || window.service.dndScheduleStatus
       color: window.controller.controlSecondaryText
+    }
+    Toggle {
+      Layout.fillWidth: true
+      text: "Allow critical alerts during DND"
+      iconName: "bell"
+      description: "Allows critical popups and sounds through manual or scheduled DND. App blocking, sound mute, sender silence and popup privacy still apply. Earlier suppressed alerts do not replay."
+      checked: window.service.allowCriticalDuringDnd
+      onClicked: window.service.setAllowCriticalDuringDnd(!window.service.allowCriticalDuringDnd)
     }
     Toggle {
       Layout.fillWidth: true
