@@ -28,6 +28,6 @@ test('reload OSDs show an icon and label without a percentage meter', () => {
   assert.equal(Boolean(vm.runInNewContext(expression, { displayedOsd: null })), false);
   assert.match(osd, /if \(popup\.labeledOsd\)\s+return popup\.displayedOsd\.osdIconName/);
   assert.match(osd, /visible: !popup\.labeledOsd/);
-  assert.match(osd, /: popup\.labeledOsd\s+\? \(popup\.displayedOsd\.osdLabel/);
+  assert.match(osd, /: popup\.labeledOsd\s+\? \(popup\.displayedOsd\.osdScreenLabels[^\n]*\|\| popup\.displayedOsd\.osdLabel/);
   assert.ok(fs.existsSync(path.join(__dirname, '../../lucide/svg/refresh-cw.svg')));
 });

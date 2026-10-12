@@ -438,7 +438,7 @@ test('i3 OSD fires when the layout changes while the focused node is unchanged',
 
 test('SystemOsd renders Layout OSDs with the supplied icon and label instead of a meter', () => {
   const systemOsd = fs.readFileSync(path.join(__dirname, '../SystemOsd.qml'), 'utf8');
-  assert.match(systemOsd, /labeledOsd: displayedOsd && \["Layout", "Reload"\]/);
+  assert.match(systemOsd, /labeledOsd: displayedOsd && \["Layout", "Reload", "Monitor"\]/);
   assert.match(systemOsd, /if \(popup\.labeledOsd\)[\s\S]*?osdIconName/);
   assert.match(systemOsd, /visible: !popup\.labeledOsd/);
   assert.match(systemOsd, /osdLabel \|\| ""/);
@@ -446,7 +446,7 @@ test('SystemOsd renders Layout OSDs with the supplied icon and label instead of 
 
 test('NotificationService records the OSD icon name and label', () => {
   const service = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
-  assert.match(service, /function showOsd\(summary, value, iconName, label\)/);
+  assert.match(service, /function showOsd\(summary, value, iconName, label, screenLabels = null\)/);
   assert.match(service, /osdIconName: iconName,/);
   assert.match(service, /osdLabel: label \|\| "",/);
 });

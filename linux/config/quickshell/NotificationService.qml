@@ -659,7 +659,7 @@ QtObject {
     return record.appName === "System" && ["Brightness", "Volume", "Microphone"].includes(record.summary)
   }
 
-  function showOsd(summary, value, iconName, label) {
+  function showOsd(summary, value, iconName, label, screenLabels = null) {
     service.osdSequence++
     service.osd = {
       id: "osd-" + service.osdSequence,
@@ -668,6 +668,7 @@ QtObject {
       appIcon: Quickshell.iconPath(iconName),
       osdIconName: iconName,
       osdLabel: label || "",
+      osdScreenLabels: screenLabels,
       image: "",
       summary: summary,
       body: "",

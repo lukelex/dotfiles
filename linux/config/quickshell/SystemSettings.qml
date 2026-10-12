@@ -497,8 +497,14 @@ FloatingWindow {
   }
 
   component MonitorsPage: ColumnLayout {
+    id: monitorPage
+    property bool editing: false
     spacing: 10
-    Label { text: "Monitors"; font.pixelSize: 16; font.bold: true }
+    RowLayout {
+      Layout.fillWidth: true
+      Label { Layout.fillWidth: true; text: "Monitors"; font.pixelSize: 16; font.bold: true }
+      SoundButton { text: "Identify"; iconName: "monitor"; onClicked: monitorIdentify.identify() }
+    }
     Controls.ScrollView {
       id: monitorScroll
       Layout.fillWidth: true
@@ -509,22 +515,81 @@ FloatingWindow {
         width: monitorScroll.availableWidth
         spacing: 12
         enabled: !monitors.busy && !monitors.pending
-        Choice {
+        Label { text: "Saved profiles"; font.bold: true }
+        Label {
           Layout.fillWidth: true
-          Accessible.name: "Monitor setup"
-          model: [{ label: "Current layout", value: "" }].concat(monitors.snapshot.profiles
-            .filter(p => p.session === monitors.snapshot.session)
-            .map(p => ({ label: p.name + (p.current ? " (active)" : p.available ? "" : " (unavailable)") + (p.preferred ? " ★" : ""), value: p.name })))
-          selectedValue: monitors.selectedProfile
-          onChosen: value => {
-            if (value) {
-              monitors.chooseProfile(value)
-              profileName.text = value
-            } else {
-              monitors.resetDraft()
-              profileName.text = ""
+          text: monitors.snapshot.profiles.length ? "Choose a detected setup. Keep the new layout within 20 seconds to confirm."
+            : "No saved profiles yet. Customize your layout below to save one."
+          color: window.controller.controlSecondaryText
+        }
+        GridLayout {
+          Layout.fillWidth: true
+          columns: monitorScroll.availableWidth >= 480 ? 2 : 1
+          columnSpacing: 10
+          rowSpacing: 10
+        Repeater {
+          model: monitors.snapshot.profiles.slice().sort((a, b) => Number(b.available) - Number(a.available)
+            || Number(b.current) - Number(a.current) || a.name.localeCompare(b.name))
+          delegate: Controls.Button {
+            id: profileCard
+            required property var modelData
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 0
+            Layout.preferredWidth: 1
+            implicitHeight: profileCardContent.implicitHeight + 24
+            enabled: modelData.available && modelData.session === monitors.snapshot.session && !monitors.dirty
+            Accessible.name: modelData.name
+            Accessible.description: modelData.current ? "Active profile" : modelData.available ? "Apply detected profile" : modelData.reason
+            onClicked: {
+              monitors.activateProfile(modelData.name)
+              profileName.text = modelData.name
+            }
+            background: Rectangle {
+              radius: 12
+              color: profileCard.modelData.current ? window.controller.controlActive
+                : profileCard.hovered ? window.controller.controlHover : window.controller.controlSurface
+              border.width: profileCard.activeFocus ? 2 : 1
+              border.color: profileCard.modelData.current || profileCard.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+            }
+            contentItem: RowLayout {
+              id: profileCardContent
+              spacing: 12
+              opacity: profileCard.enabled || profileCard.modelData.current ? 1 : 0.7
+              LucideIcon {
+                Layout.preferredWidth: 22
+                Layout.preferredHeight: 22
+                source: window.controller.icon(profileCard.modelData.current ? "circle-check" : "monitor")
+                color: window.controller.controlSecondaryText
+              }
+              ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                Label { Layout.fillWidth: true; text: profileCard.modelData.name; font.bold: true }
+                Label {
+                  Layout.fillWidth: true
+                  text: (profileCard.modelData.current ? "Active" : profileCard.modelData.available ? "Detected" : "Unavailable")
+                    + (profileCard.modelData.preferred ? " · Preferred" : "")
+                    + " · " + profileCard.modelData.outputs.filter(output => output.enabled).length
+                    + (profileCard.modelData.outputs.filter(output => output.enabled).length === 1 ? " display" : " displays")
+                  color: window.controller.controlSecondaryText
+                }
+                Label {
+                  Layout.fillWidth: true
+                  visible: !profileCard.modelData.available
+                  text: profileCard.modelData.reason || "Required displays are not connected."
+                  color: window.controller.controlSecondaryText
+                }
+              }
             }
           }
+        }
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: monitors.dirty
+          text: "Finish or reload your draft layout below before switching profiles."
+          color: window.controller.controlWarningText
         }
         Toggle {
           Layout.fillWidth: true
@@ -533,6 +598,30 @@ FloatingWindow {
           description: "Use matching saved profiles when displays connect or disconnect. A kept manual layout remains until the connected hardware changes."
           onClicked: monitors.run("automatic", JSON.stringify(!monitors.snapshot.automatic))
         }
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+        SoundButton {
+          Layout.fillWidth: true
+          text: monitorPage.editing ? "⌄  Customize layout & manage profiles" : "›  Customize layout & manage profiles"
+          iconName: "settings"
+          onClicked: monitorPage.editing = !monitorPage.editing
+        }
+        ColumnLayout {
+          Layout.fillWidth: true
+          visible: monitorPage.editing
+          spacing: 12
+          Choice {
+            Layout.fillWidth: true
+            Accessible.name: "Profile to edit"
+            model: [{ label: "Current layout", value: "" }].concat(monitors.snapshot.profiles
+              .filter(p => p.session === monitors.snapshot.session)
+              .map(p => ({ label: p.name + (p.available ? "" : " (disconnected · edit only)"), value: p.name })))
+            selectedValue: monitors.selectedProfile
+            onChosen: value => {
+              if (value) monitors.chooseProfile(value)
+              else monitors.resetDraft()
+              profileName.text = value
+            }
+          }
         Rectangle {
           id: diagram
           Layout.fillWidth: true
@@ -590,7 +679,6 @@ FloatingWindow {
         RowLayout {
           Layout.fillWidth: true
           Label { Layout.fillWidth: true; text: "Drag displays to arrange; edges snap."; color: window.controller.controlSecondaryText }
-          SoundButton { text: "Identify"; iconName: "monitor"; onClicked: monitorIdentify.identify() }
         }
         Choice {
           Layout.fillWidth: true
@@ -735,7 +823,7 @@ FloatingWindow {
           SoundButton { text: "Apply"; enabled: monitors.dirty; onClicked: monitors.run("apply", JSON.stringify(monitors.draft)) }
         }
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-        Label { text: "Saved setups"; font.bold: true }
+        Label { text: "Save & manage profiles"; font.bold: true }
         Controls.TextField {
           id: profileName
           Layout.fillWidth: true
@@ -783,6 +871,7 @@ FloatingWindow {
             description: "Import existing user profiles without overwriting profiles already in the portable store."
             onClicked: monitors.run("import")
           }
+        }
         }
         Label {
           Layout.fillWidth: true

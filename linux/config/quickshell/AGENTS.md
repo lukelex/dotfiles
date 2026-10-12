@@ -41,6 +41,8 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 
 ## Visual Language
 
+- Monitors leads with quick saved-profile cards, detected/current setups first and incompatible setups visible but disabled with a reason. Activation revalidates availability and uses the existing guarded Apply/Keep flow; dirty drafts block quick switching. Layout editing and profile management are disclosed below. Identify uses the shared SystemOsd with screen-specific numbers/connectors and the existing OSD timeout, not separate identification windows.
+
 - Connectivity is one settings sidebar entry: Wi-Fi networks is the default tab, Preferences contains suggestion/alert switches with thresholds and timing under collapsed Advanced tuning. Discovery is active only on the visible networks tab, with one binding owned by Bar; Bluetooth's settings shortcut opens Preferences directly.
 
 - Audio settings leads with application streams and compact volume/mute rows. Expand routing, connectors, channels and amplification per target; device/hardware modes are a separate disclosure. Keyboard step preferences and the advanced audio tool follow the mixer. Preserve keyed stream/channel delegates while expanding details.

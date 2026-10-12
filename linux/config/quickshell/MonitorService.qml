@@ -53,6 +53,20 @@ QtObject {
     dirty = profile.current !== true
   }
 
+  function activateProfile(name) {
+    if (busy || pending || dirty)
+      return
+    const profile = snapshot.profiles.find(p => p.name === name)
+    if (!profile || !profile.available || profile.session !== snapshot.session) {
+      error = profile?.reason || "This profile's displays are not detected."
+      return
+    }
+    if (profile.current)
+      return
+    chooseProfile(name)
+    run("apply", JSON.stringify(draft))
+  }
+
   function edit(key, value) {
     if (!output || busy || pending || output[key] === value)
       return
@@ -118,7 +132,8 @@ QtObject {
           const ended = service.snapshot.pending && !next.pending
           if (JSON.stringify(service.snapshot.outputs) !== JSON.stringify(next.outputs))
             service.linkDetails = null
-          service.snapshot = next
+          if (JSON.stringify(service.snapshot) !== JSON.stringify(next))
+            service.snapshot = next
           service.previousTopology = topology
           if (!service.dirty || service.resetAfterRead || ended)
             service.resetDraft(service.preserveProfileAfterRead || (!service.resetAfterRead && !ended))

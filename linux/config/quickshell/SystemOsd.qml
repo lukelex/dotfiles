@@ -11,7 +11,7 @@ PopupWindow {
 
   property bool closePending: false
   property var displayedOsd: null
-  readonly property bool labeledOsd: displayedOsd && ["Layout", "Reload"].includes(displayedOsd.summary)
+  readonly property bool labeledOsd: displayedOsd && ["Layout", "Reload", "Monitor"].includes(displayedOsd.summary)
 
   readonly property bool muted: displayedOsd && (displayedOsd.summary === "Volume" && displayedOsd.value === 0
     || displayedOsd.summary === "Microphone" && /mic-off/.test(displayedOsd.appIcon))
@@ -204,9 +204,11 @@ PopupWindow {
         horizontalAlignment: Text.AlignHCenter
         text: popup.muted ? "Muted"
           : popup.labeledOsd
-            ? (popup.displayedOsd.osdLabel || "")
+            ? (popup.displayedOsd.osdScreenLabels?.[popup.panel.screen.name] || popup.displayedOsd.osdLabel || "")
             : Math.round(popup.value) + "%"
         width: parent.width
+        wrapMode: Text.Wrap
+        textFormat: Text.PlainText
       }
     }
   }
