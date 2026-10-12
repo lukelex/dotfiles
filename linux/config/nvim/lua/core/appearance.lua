@@ -1,5 +1,19 @@
 vim.opt.guifont = "Hack:h17"
 
+-- Identify the editor and its file/project in window pickers and screen sharing.
+vim.opt.title = true
+vim.opt.titlelen = 0
+vim.opt.titlestring = "Neovim — %t%m — %{fnamemodify(getcwd(), ':~')}"
+
+vim.api.nvim_create_autocmd("VimResume", {
+  callback = function()
+    -- The shell changed the terminal title while Nvim was suspended. Force a
+    -- fresh title even when the buffer and working directory haven't changed.
+    vim.opt.title = false
+    vim.opt.title = true
+  end,
+})
+
 vim.diagnostic.config({ float = { border = "rounded" } })
 
 vim.opt.background = "dark" -- colorschemes that can be light or dark will be made dark
