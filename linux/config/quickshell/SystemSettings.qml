@@ -997,6 +997,64 @@ FloatingWindow {
           text: "Configure battery warnings. Power-profile selection stays in Control Center."
           color: window.controller.controlSecondaryText
         }
+        Repeater {
+          model: window.section === "power" ? [
+            { key: "low", title: "Low battery", icon: "battery-low" },
+            { key: "critical", title: "Critical battery", icon: "battery-warning" },
+            { key: "urgent", title: "Urgent battery", icon: "battery-warning" },
+            { key: "final", title: "Final warning", icon: "battery" }
+          ] : []
+          delegate: SettingsSubsection {
+            id: batteryWarning
+            required property var modelData
+            readonly property string enabledKey: "power." + modelData.key + "WarningEnabled"
+            readonly property string thresholdKey: "power." + modelData.key + "Threshold"
+            readonly property var threshold: window.controller.preferences.value(thresholdKey, "")
+            Layout.fillWidth: true
+            title: modelData.title
+            iconName: modelData.icon
+            enabled: window.controller.preferences.ready && !window.controller.preferences.busy
+            Toggle {
+              Layout.fillWidth: true
+              text: "Enable warning"
+              Accessible.name: batteryWarning.modelData.title + " warning enabled"
+              checked: window.controller.preferences.value(batteryWarning.enabledKey, true)
+              description: "Warns once per level in a discharge episode. Critical, urgent and final levels use critical urgency; notification policies still apply."
+              onClicked: window.controller.preferences.setValue(batteryWarning.enabledKey,
+                !window.controller.preferences.value(batteryWarning.enabledKey, true))
+            }
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+            RowLayout {
+              Layout.fillWidth: true
+              spacing: 12
+              Label { Layout.fillWidth: true; text: "Battery threshold (%)" }
+              Controls.TextField {
+                id: batteryThreshold
+                Layout.preferredWidth: 80
+                text: String(batteryWarning.threshold)
+                Accessible.name: batteryWarning.modelData.title + " threshold (%)"
+                horizontalAlignment: Text.AlignHCenter
+                color: window.controller.controlPrimaryText
+                selectionColor: window.controller.controlActive
+                selectedTextColor: window.controller.controlPrimaryText
+                font.family: window.controller.fontFamily
+                font.pixelSize: 12
+                padding: 10
+                onEditingFinished: {
+                  const value = Number(text)
+                  if (value !== batteryWarning.threshold)
+                    window.controller.preferences.setValue(batteryWarning.thresholdKey, value)
+                  text = Qt.binding(() => String(batteryWarning.threshold))
+                }
+                background: Rectangle {
+                  radius: 8
+                  color: window.controller.controlSurface
+                  border.color: batteryThreshold.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+                }
+              }
+            }
+          }
+        }
         SoundMixerControls {
           Layout.fillWidth: true
           visible: window.section === "audio"
@@ -1051,6 +1109,7 @@ FloatingWindow {
         Repeater {
           model: window.controller.preferences.fields.filter(field => {
             const category = field.key.split(".")[0]
+            if (category === "power") return false
             if (category === "connectivity")
               return window.section === "connectivity" && window.connectivityTab === "preferences"
                 && window.connectivityAdvanced && field.kind !== "boolean"
@@ -1073,7 +1132,6 @@ FloatingWindow {
                 ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover."
                 : preferenceRow.modelData.key === "display.linkBrightness" ? "When setting laptop brightness, also set keyboard and DDC-capable external displays to the same percentage. Enabling this does not immediately change any device."
                 : preferenceRow.modelData.key === "connectivity.bluetoothBatteryAlerts" ? "Warn once per device below the selected threshold. Disconnecting or recovering above the threshold rearms alerts; existing notification policies still apply."
-                : window.section === "power" ? "Warnings fire once per level in a discharge episode. Critical, urgent and final levels use critical urgency; notification policies still apply."
                 : window.section === "lockScreen" ? "Changes apply on the next lock. Hiding a widget removes its label or image and stops its helper from running. Authentication, date/time and explicit locking are unchanged."
                 : window.section === "connectivity" ? "Only offers a stronger saved network on the same adapter. Clicking Switch rechecks your current preferences and network availability." : ""
               onClicked: window.controller.preferences.setValue(preferenceRow.modelData.key, !preferenceRow.currentValue)
@@ -1203,6 +1261,83 @@ FloatingWindow {
     }
   }
 
+  component SettingsSubsection: Rectangle {
+    id: subsection
+    required property string title
+    required property string iconName
+    property string description: title
+    property bool collapsible: false
+    property bool expanded: true
+    property bool framed: true
+    default property alias contents: subsectionBody.data
+    signal toggled()
+    implicitHeight: subsectionContent.implicitHeight + 28
+    radius: 18
+    color: framed ? window.controller.controlSurface : "transparent"
+    border.width: framed ? 1 : 0
+    border.color: window.controller.controlSurfaceBorder
+    ColumnLayout {
+      id: subsectionContent
+      anchors.fill: parent
+      anchors.margins: 14
+      spacing: 14
+      Controls.Button {
+        id: subsectionHeader
+        Layout.fillWidth: true
+        padding: 0
+        implicitHeight: Math.max(32, contentItem.implicitHeight)
+        enabled: subsection.collapsible
+        Accessible.name: subsection.title
+        Accessible.description: subsection.description
+        Accessible.role: subsection.collapsible ? Accessible.Button : Accessible.Heading
+        Accessible.checkable: subsection.collapsible
+        Accessible.checked: subsection.expanded
+        onClicked: subsection.toggled()
+        contentItem: RowLayout {
+          spacing: 10
+          LucideIcon {
+            Layout.preferredWidth: 20
+            Layout.preferredHeight: 20
+            source: window.controller.icon(subsection.iconName)
+            color: window.controller.controlActiveIcon
+          }
+          Label {
+            Layout.fillWidth: true
+            text: subsection.title
+            font.pixelSize: 14
+            font.bold: true
+          }
+          LucideIcon {
+            Layout.preferredWidth: 16
+            Layout.preferredHeight: 16
+            visible: subsection.collapsible
+            source: window.controller.icon("chevron-right")
+            rotation: subsection.expanded ? 90 : 0
+            color: window.controller.controlSecondaryText
+          }
+        }
+        background: Rectangle {
+          radius: 8
+          color: subsectionHeader.hovered ? window.controller.controlHover : "transparent"
+          border.width: subsectionHeader.activeFocus ? 1 : 0
+          border.color: window.controller.controlActiveIcon
+        }
+      }
+      Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: 1
+        visible: subsection.expanded
+        color: window.controller.controlSurfaceBorder
+      }
+      ColumnLayout {
+        id: subsectionBody
+        Layout.fillWidth: true
+        visible: subsection.expanded
+        spacing: 12
+      }
+    }
+  }
+
   component GeneralOptions: ColumnLayout {
     id: notificationOptions
     required property var scrollView
@@ -1214,7 +1349,11 @@ FloatingWindow {
       notificationOptions[key] = !notificationOptions[key]
       scrollView.restoreHeaderOffset(offset)
     }
-    spacing: 12
+    spacing: 16
+    SettingsSubsection {
+      Layout.fillWidth: true
+      title: "General"
+      iconName: "bell"
     Toggle {
       Layout.fillWidth: true
       text: "Do Not Disturb"
@@ -1224,6 +1363,7 @@ FloatingWindow {
       checked: window.service.doNotDisturb
       onClicked: window.service.setDoNotDisturb(!window.service.doNotDisturb)
     }
+    Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
     Toggle {
       Layout.fillWidth: true
       text: "Notification sounds"
@@ -1233,23 +1373,16 @@ FloatingWindow {
       checked: !window.service.notificationSoundsMuted
       onClicked: window.service.setNotificationSoundsMuted(!window.service.notificationSoundsMuted)
     }
-    Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-    SoundButton {
+    }
+    SettingsSubsection {
       Layout.fillWidth: true
       iconName: "clock"
-      text: (notificationOptions.quietHoursExpanded ? "⌄  Quiet hours" : "›  Quiet hours")
+      title: "Quiet hours"
         + (window.service.dndScheduleEnabled ? " · Scheduled" : " · Off")
       description: "Schedule Do Not Disturb and choose whether critical alerts can interrupt it."
-      showHint: false
-      onClicked: notificationOptions.toggleDetails("quietHoursExpanded")
-    }
-    ColumnLayout {
-      Layout.fillWidth: true
-      Layout.leftMargin: 12
-      Layout.rightMargin: 12
-      visible: notificationOptions.quietHoursExpanded
-      Layout.bottomMargin: 4
-      spacing: 12
+      collapsible: true
+      expanded: notificationOptions.quietHoursExpanded
+      onToggled: notificationOptions.toggleDetails("quietHoursExpanded")
     Toggle {
       Layout.fillWidth: true
       text: "Scheduled DND"
@@ -1313,24 +1446,17 @@ FloatingWindow {
       onClicked: window.service.setAllowCriticalDuringDnd(!window.service.allowCriticalDuringDnd)
     }
     }
-    SoundButton {
+    SettingsSubsection {
       Layout.fillWidth: true
       iconName: "volume-2"
-      text: notificationOptions.soundExpanded ? "⌄  Sound selection" : "›  Sound selection"
+      title: "Sound selection"
       description: "Choose, preview or reset the notification sound. Current sound: " + window.service.notificationSoundName
-      showHint: false
-      onClicked: {
+      collapsible: true
+      expanded: notificationOptions.soundExpanded
+      onToggled: {
         notificationOptions.toggleDetails("soundExpanded")
         if (!notificationOptions.soundExpanded) window.service.stopSoundPreview()
       }
-    }
-    ColumnLayout {
-      Layout.fillWidth: true
-      Layout.leftMargin: 12
-      Layout.rightMargin: 12
-      visible: notificationOptions.soundExpanded
-      Layout.bottomMargin: 4
-      spacing: 12
     RowLayout {
       Layout.fillWidth: true
       spacing: 8
@@ -1374,21 +1500,14 @@ FloatingWindow {
       color: window.controller.controlPrimaryText
     }
     }
-    SoundButton {
+    SettingsSubsection {
       Layout.fillWidth: true
       iconName: "settings"
-      text: notificationOptions.presentationExpanded ? "⌄  Popups, privacy & history" : "›  Popups, privacy & history"
+      title: "Popups, privacy & history"
       description: "Choose popup position and duration, message previews, lock-screen privacy and history retention."
-      showHint: false
-      onClicked: notificationOptions.toggleDetails("presentationExpanded")
-    }
-    ColumnLayout {
-      Layout.fillWidth: true
-      Layout.leftMargin: 12
-      Layout.rightMargin: 12
-      visible: notificationOptions.presentationExpanded
-      Layout.bottomMargin: 4
-      spacing: 12
+      collapsible: true
+      expanded: notificationOptions.presentationExpanded
+      onToggled: notificationOptions.toggleDetails("presentationExpanded")
     GridLayout {
       Layout.fillWidth: true
       columns: 2
@@ -1527,46 +1646,67 @@ FloatingWindow {
       Layout.fillWidth: true
       Layout.fillHeight: true
       clip: true
-      spacing: 8
+      spacing: 0
       boundsBehavior: Flickable.StopAtBounds
       // Append-only discovery and a count model preserve delegates, focus and scroll position.
       model: window.service.applications.length
       Controls.ScrollBar.vertical: Controls.ScrollBar {}
 
-      header: ColumnLayout {
+      // One subsection surface spans the header, virtualized app rows and footer.
+      Rectangle {
+        parent: applicationList.contentItem
+        z: -1
+        y: applicationList.headerItem ? applicationList.headerItem.y + applicationList.headerItem.applicationsY : 0
         width: applicationList.width
-        spacing: 20
+        height: applicationList.headerItem ? Math.max(0, applicationList.contentHeight - applicationList.headerItem.applicationsY) : 0
+        radius: 18
+        color: window.controller.controlSurface
+        border.color: window.controller.controlSurfaceBorder
+      }
+
+      header: ColumnLayout {
+        readonly property real applicationsY: applicationsHeading.y
+        width: applicationList.width
+        spacing: 16
         GeneralOptions {
           Layout.fillWidth: true
           scrollView: applicationList
         }
-        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-        RowLayout {
+        SettingsSubsection {
+          id: applicationsHeading
           Layout.fillWidth: true
-          Layout.bottomMargin: 12
-          Label { Layout.fillWidth: true; text: "Applications"; font.bold: true }
+          framed: false
+          title: "Applications"
+          iconName: "box"
           Label {
-            text: "Notifications / sound"
+            Layout.fillWidth: true
+            text: "Control notifications and sound for each app."
             color: window.controller.controlSecondaryText
           }
         }
       }
 
-      delegate: Rectangle {
+      delegate: Item {
         id: applicationRow
         required property int index
         readonly property var application: window.service.applications[index]
         readonly property var appIcon: window.applicationIcon(application)
         width: applicationList.width
-        height: rowContent.implicitHeight + 24
-        radius: 12
-        color: window.controller.controlSurface
-        border.color: window.controller.controlSurfaceBorder
+        height: rowContent.implicitHeight + 28
+        Rectangle {
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.leftMargin: 14
+          anchors.rightMargin: 14
+          height: 1
+          color: window.controller.controlSurfaceBorder
+        }
 
         RowLayout {
           id: rowContent
           anchors.fill: parent
-          anchors.margins: 12
+          anchors.margins: 14
           spacing: 12
 
           Item {
@@ -1621,12 +1761,13 @@ FloatingWindow {
 
       footer: Label {
         width: applicationList.width
-        height: applicationList.count === 0 ? implicitHeight + 24 : 0
+        height: applicationList.count === 0 ? implicitHeight + 28 : 14
         topPadding: 12
+        leftPadding: 14
+        rightPadding: 14
         horizontalAlignment: Text.AlignHCenter
-        visible: applicationList.count === 0
         color: window.controller.controlSecondaryText
-        text: "Apps appear here after sending their first notification."
+        text: applicationList.count === 0 ? "Apps appear here after sending their first notification." : ""
       }
     }
   }
