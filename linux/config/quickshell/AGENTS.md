@@ -41,6 +41,8 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 
 ## Visual Language
 
+- Notifications keeps Do Not Disturb and global sound first, followed by collapsed Quiet hours, Sound selection, and Popups/privacy/history groups, then per-app controls in the same continuous scroll. Disclosure changes preserve the header reading offset; sound previews stop when their group closes. Existing preferences and notification delivery semantics remain unchanged.
+
 - Monitors leads with quick saved-profile cards, detected/current setups first and incompatible setups visible but disabled with a reason. Activation revalidates availability and uses the existing guarded Apply/Keep flow; dirty drafts block quick switching. Layout editing and profile management are disclosed below. Identify uses the shared SystemOsd with screen-specific numbers/connectors and the existing OSD timeout, not separate identification windows.
 
 - Connectivity is one settings sidebar entry: Wi-Fi networks is the default tab, Preferences contains suggestion/alert switches with thresholds and timing under collapsed Advanced tuning. Discovery is active only on the visible networks tab, with one binding owned by Bar; Bluetooth's settings shortcut opens Preferences directly.

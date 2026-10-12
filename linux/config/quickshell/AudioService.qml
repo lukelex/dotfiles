@@ -21,6 +21,7 @@ QtObject {
   property bool _refreshQueued: false
   property int activePanels: 0
   property bool mixerSettingsActive: false
+  onMixerSettingsActiveChanged: { if (mixerSettingsActive) service.refresh(true) }
   readonly property AudioMixer mixer: AudioMixer {
     active: service.mixerSettingsActive
     deviceLabel: (device, input) => input ? service.inputDescription(device) : service.outputDescription(device)
@@ -538,7 +539,7 @@ QtObject {
 
   property Timer refreshTimer: Timer {
     interval: 5000
-    running: service.activePanels > 0
+    running: service.activePanels > 0 || service.mixerSettingsActive
     repeat: true
     onTriggered: service.refresh()
   }
@@ -549,7 +550,7 @@ QtObject {
       service.syncMicrophoneMute()
       if (service.mixerSettingsActive)
         service.mixer.refresh()
-      if (service.activePanels > 0)
+      if (service.activePanels > 0 || service.mixerSettingsActive)
         queuedRefresh.restart()
     }
   }
@@ -557,14 +558,14 @@ QtObject {
   property Connections pipewireConnections: Connections {
     target: Pipewire
     function onDefaultAudioSinkChanged() {
-      if (service.activePanels > 0)
+      if (service.activePanels > 0 || service.mixerSettingsActive)
         service.refresh(true)
     }
     function onDefaultAudioSourceChanged() {
       service._muteSource = null
       service._mutePending = false
       service.syncMicrophoneMute()
-      if (service.activePanels > 0)
+      if (service.activePanels > 0 || service.mixerSettingsActive)
         service.refresh(true)
     }
   }

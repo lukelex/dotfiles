@@ -97,12 +97,13 @@ FloatingWindow {
   component Toggle: Controls.Switch {
     id: toggle
     property string description: ""
+    property bool showHint: true
     property string iconName: ""
     Accessible.description: description
     hoverEnabled: true
     Hint {
       text: toggle.description
-      visible: text.length > 0 && (toggle.hovered || toggle.activeFocus)
+      visible: toggle.showHint && text.length > 0 && toggle.hovered
     }
     implicitHeight: 36
     spacing: 8
@@ -147,6 +148,7 @@ FloatingWindow {
     id: button
     property string iconName: ""
     property string description: text
+    property bool showHint: text === "" || description !== text
     implicitHeight: 32
     implicitWidth: contentItem.implicitWidth + 16
     padding: 8
@@ -162,8 +164,12 @@ FloatingWindow {
         color: window.controller.controlPrimaryText
       }
       Label {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
         visible: button.text !== ""
         text: button.text
+        wrapMode: Text.NoWrap
+        elide: Text.ElideRight
       }
     }
     background: Rectangle {
@@ -173,7 +179,7 @@ FloatingWindow {
     }
     Hint {
       text: button.description
-      visible: button.hovered || button.activeFocus
+      visible: button.showHint && button.hovered
     }
   }
 
@@ -441,7 +447,7 @@ FloatingWindow {
               Accessible.name: text
               Accessible.selected: window.section === modelData.key
               onClicked: window.section = modelData.key
-              Controls.ToolTip.visible: sidebar.compact && (hovered || activeFocus)
+              Controls.ToolTip.visible: sidebar.compact && hovered
               Controls.ToolTip.text: text
               Controls.ToolTip.delay: 500
               background: Rectangle {
@@ -889,19 +895,6 @@ FloatingWindow {
       font.pixelSize: 16
       font.bold: true
     }
-    Label {
-      Layout.fillWidth: true
-      visible: window.section !== "connectivity" && window.section !== "audio"
-      text: window.section === "audio"
-        ? "Key steps are saved in preferences.json. Mixer levels, routes and modes are live audio-server state."
-        : "Saved to linux/config/system-settings/preferences.json"
-      color: window.controller.controlSecondaryText
-      HoverHandler { id: storageHover }
-      Hint {
-        visible: storageHover.hovered
-        text: "Changes are saved in your dotfiles checkout. Commit this JSON file to carry preferences to another machine. Runtime history and temporary state stay local."
-      }
-    }
     RowLayout {
       Layout.fillWidth: true
       visible: window.section === "connectivity"
@@ -1187,15 +1180,52 @@ FloatingWindow {
   }
 
   component GeneralOptions: ColumnLayout {
+    id: notificationOptions
+    required property var scrollView
+    property bool quietHoursExpanded: false
+    property bool soundExpanded: false
+    property bool presentationExpanded: false
+    function toggleDetails(key) {
+      const offset = scrollView.contentY - scrollView.originY
+      notificationOptions[key] = !notificationOptions[key]
+      scrollView.restoreHeaderOffset(offset)
+    }
     spacing: 12
     Toggle {
       Layout.fillWidth: true
       text: "Do Not Disturb"
+      showHint: false
       iconName: "bell-off"
       description: "Pauses popups and sounds, except allowed critical alerts. Notifications from enabled apps are still saved in history."
       checked: window.service.doNotDisturb
       onClicked: window.service.setDoNotDisturb(!window.service.doNotDisturb)
     }
+    Toggle {
+      Layout.fillWidth: true
+      text: "Notification sounds"
+      showHint: false
+      iconName: checked ? "volume-2" : "volume-x"
+      description: "Controls sound for all apps without changing popups or history. Per-app sound preferences are preserved while muted."
+      checked: !window.service.notificationSoundsMuted
+      onClicked: window.service.setNotificationSoundsMuted(!window.service.notificationSoundsMuted)
+    }
+    Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+    SoundButton {
+      Layout.fillWidth: true
+      iconName: "clock"
+      text: (notificationOptions.quietHoursExpanded ? "⌄  Quiet hours" : "›  Quiet hours")
+        + (window.service.dndScheduleEnabled ? " · Scheduled" : " · Off")
+      description: "Schedule Do Not Disturb and choose whether critical alerts can interrupt it."
+      showHint: false
+      onClicked: notificationOptions.toggleDetails("quietHoursExpanded")
+    }
+    ColumnLayout {
+      Layout.fillWidth: true
+      Layout.leftMargin: 12
+      Layout.rightMargin: 12
+      visible: notificationOptions.quietHoursExpanded
+      Layout.bottomMargin: 4
+      spacing: 12
     Toggle {
       Layout.fillWidth: true
       text: "Scheduled DND"
@@ -1210,7 +1240,7 @@ FloatingWindow {
       Layout.fillWidth: true
       columns: 2
       columnSpacing: 12
-      rowSpacing: 8
+      rowSpacing: 12
       Label { text: "Quiet hours" }
       RowLayout {
         Layout.alignment: Qt.AlignRight
@@ -1258,15 +1288,25 @@ FloatingWindow {
       checked: window.service.allowCriticalDuringDnd
       onClicked: window.service.setAllowCriticalDuringDnd(!window.service.allowCriticalDuringDnd)
     }
-    Toggle {
-      Layout.fillWidth: true
-      text: "Notification sounds"
-      iconName: checked ? "volume-2" : "volume-x"
-      description: "Controls sound for all apps without changing popups or history. Per-app sound preferences are preserved while muted."
-      checked: !window.service.notificationSoundsMuted
-      onClicked: window.service.setNotificationSoundsMuted(!window.service.notificationSoundsMuted)
     }
-
+    SoundButton {
+      Layout.fillWidth: true
+      iconName: "volume-2"
+      text: notificationOptions.soundExpanded ? "⌄  Sound selection" : "›  Sound selection"
+      description: "Choose, preview or reset the notification sound. Current sound: " + window.service.notificationSoundName
+      showHint: false
+      onClicked: {
+        notificationOptions.toggleDetails("soundExpanded")
+        if (!notificationOptions.soundExpanded) window.service.stopSoundPreview()
+      }
+    }
+    ColumnLayout {
+      Layout.fillWidth: true
+      Layout.leftMargin: 12
+      Layout.rightMargin: 12
+      visible: notificationOptions.soundExpanded
+      Layout.bottomMargin: 4
+      spacing: 12
     RowLayout {
       Layout.fillWidth: true
       spacing: 8
@@ -1287,6 +1327,7 @@ FloatingWindow {
         iconName: "search"
         text: "Choose file…"
         description: "Choose a notification sound from this computer"
+        showHint: false
         onClicked: soundFileDialog.open()
       }
       SoundButton {
@@ -1308,12 +1349,27 @@ FloatingWindow {
       text: window.service.soundSelectionError
       color: window.controller.controlPrimaryText
     }
-
+    }
+    SoundButton {
+      Layout.fillWidth: true
+      iconName: "settings"
+      text: notificationOptions.presentationExpanded ? "⌄  Popups, privacy & history" : "›  Popups, privacy & history"
+      description: "Choose popup position and duration, message previews, lock-screen privacy and history retention."
+      showHint: false
+      onClicked: notificationOptions.toggleDetails("presentationExpanded")
+    }
+    ColumnLayout {
+      Layout.fillWidth: true
+      Layout.leftMargin: 12
+      Layout.rightMargin: 12
+      visible: notificationOptions.presentationExpanded
+      Layout.bottomMargin: 4
+      spacing: 12
     GridLayout {
       Layout.fillWidth: true
       columns: 2
       columnSpacing: 12
-      rowSpacing: 8
+      rowSpacing: 12
       Label { text: "Popup monitor" }
       Choice {
         Layout.fillWidth: true
@@ -1412,6 +1468,7 @@ FloatingWindow {
       description: "When off, popups show the app name and New notification, hiding message text, images and action labels. Full content remains in history."
       onClicked: window.service.setPopupPreviews(!window.service.popupPreviews)
     }
+    }
   }
 
   component NotificationsPage: ColumnLayout {
@@ -1419,15 +1476,30 @@ FloatingWindow {
     Label {
       text: "Notifications"
       font.pixelSize: 16
+      font.bold: true
       Accessible.description: "Apps appear here after sending a notification and stay listed after their history is cleared."
-      HoverHandler { id: headingHover }
-      Hint {
-        text: "Apps appear here after sending a notification and stay listed after their history is cleared."
-        visible: headingHover.hovered
-      }
     }
     ListView {
       id: applicationList
+      function restoreHeaderOffset(offset) {
+        restoreHeader.offset = offset
+        restoreHeader.restart()
+      }
+      Timer {
+        id: restoreHeader
+        property real offset: 0
+        interval: 16
+        onTriggered: {
+          if (applicationList.moving) return
+          applicationList.forceLayout()
+          applicationList.contentY = applicationList.originY + offset
+          applicationList.returnToBounds()
+        }
+      }
+      Component.onCompleted: restoreHeaderOffset(0)
+      onVisibleChanged: {
+        if (visible) restoreHeaderOffset(0)
+      }
       Layout.fillWidth: true
       Layout.fillHeight: true
       clip: true
@@ -1442,12 +1514,17 @@ FloatingWindow {
         spacing: 20
         GeneralOptions {
           Layout.fillWidth: true
+          scrollView: applicationList
         }
-        Label {
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+        RowLayout {
           Layout.fillWidth: true
           Layout.bottomMargin: 12
-          text: "Applications"
-          font.bold: true
+          Label { Layout.fillWidth: true; text: "Applications"; font.bold: true }
+          Label {
+            text: "Notifications / sound"
+            color: window.controller.controlSecondaryText
+          }
         }
       }
 
@@ -1525,7 +1602,7 @@ FloatingWindow {
         horizontalAlignment: Text.AlignHCenter
         visible: applicationList.count === 0
         color: window.controller.controlSecondaryText
-        text: "No apps yet."
+        text: "Apps appear here after sending their first notification."
       }
     }
   }

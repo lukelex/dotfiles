@@ -12,6 +12,7 @@ Column {
   signal interacted()
   spacing: 16
   property bool deviceDetails: false
+  readonly property var audio: controller.audioService
 
   component Label: Text {
     width: parent.width
@@ -138,7 +139,9 @@ Column {
       text: (targetRow.stream ? (targetRow.target.kind === "playback" ? "Playback" : "Recording") + " · " : "")
         + targetRow.target.description + (targetRow.target.paused ? " · Paused" : "")
         + (targetRow.target.kind === "recording" && targetRow.currentDevice?.muted ? " · Input muted" : "")
-        + (targetRow.pending ? " · Applying…" : "")
+         + (targetRow.pending ? " · Applying…" : "")
+        + (!targetRow.stream && targetRow.target.name === (targetRow.target.kind === "output" ? view.audio.defaultSink : view.audio.defaultSource)
+          ? " · Current " + (targetRow.target.kind === "output" ? "output" : "microphone") : "")
       color: view.controller.controlPrimaryText
     }
     RowLayout {
@@ -226,6 +229,32 @@ Column {
     }
   }
 
+  Label { text: "Current devices"; font.bold: true; color: view.controller.controlPrimaryText }
+  Choice {
+    label: "Output"
+    choices: view.audio.outputs
+    selected: view.audio.defaultSink
+    enabled: !view.audio.busy && view.audio.loaded
+    onChosen: option => view.audio.setDefaultSink(option.name)
+  }
+  Choice {
+    label: "Microphone"
+    choices: view.audio.inputs
+    selected: view.audio.defaultSource
+    enabled: !view.audio.busy && view.audio.loaded
+    onChosen: option => view.audio.setDefaultSource(option.name)
+  }
+  Label {
+    visible: view.audio.busy
+    text: "Switching device…"
+  }
+  Label {
+    visible: view.audio.error !== ""
+    text: view.audio.error
+    color: view.controller.controlWarningText
+  }
+  Label { text: "Changing these devices also moves running applications. Individual app routes below can override the default." }
+  Rectangle { width: parent.width; height: 1; color: view.controller.controlSurfaceBorder }
   Row {
     width: parent.width
     spacing: 8

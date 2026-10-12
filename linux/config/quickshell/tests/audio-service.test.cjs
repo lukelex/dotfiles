@@ -104,8 +104,8 @@ for (const microphone of [false, true]) {
 
 test('native default-device changes refresh the audio picker immediately when open', () => {
   assert.match(serviceSource, /import Quickshell\.Services\.Pipewire/);
-  assert.match(serviceSource, /function onDefaultAudioSinkChanged\(\) \{\n\s+if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
-  assert.match(serviceSource, /function onDefaultAudioSourceChanged\(\) \{[^}]*if \(service\.activePanels > 0\)\n\s+service\.refresh\(true\)/);
+  assert.match(serviceSource, /function onDefaultAudioSinkChanged\(\) \{\n\s+if \(service\.activePanels > 0 \|\| service\.mixerSettingsActive\)\n\s+service\.refresh\(true\)/);
+  assert.match(serviceSource, /function onDefaultAudioSourceChanged\(\) \{[^}]*if \(service\.activePanels > 0 \|\| service\.mixerSettingsActive\)\n\s+service\.refresh\(true\)/);
 });
 
 function serviceState(overrides = {}) {
