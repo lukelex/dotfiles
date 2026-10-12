@@ -16,7 +16,7 @@ function setup() {
     wifiSuggestionsEnabled: true, wifiWeakThreshold: 0.25, wifiRecoveryThreshold: 0.35, wifiMinimumImprovement: 0.15,
     activeNetwork: current, wifiSsid: current.name, wifiStrength: 0.2,
     wifiAvailable: true, wifiEnabled: true, wifiHardwareEnabled: true, wifiConnecting: false,
-    savedNetworks: [current, target], _wifiSuggestionShown: false,
+    savedNetworks: [current, target], knownNetworks: [current, target], _wifiSuggestionShown: false,
     _wifiSuggestion: { running: false }, _wifiSuggestionConnecting: false,
     _state: { pending: false }, _connectionTimeout: { restart() {}, stop() {} },
   };
@@ -132,7 +132,7 @@ test('switch errors notify once and network names cannot inject body markup or s
 });
 
 test('background scans and delayed checks run only for weakness, with recovery hysteresis', () => {
-  assert.match(source, /value: service\.wifiEnabled && \(service\.wifiScanningEnabled \|\| service\.wifiSuggestionsEnabled && service\.wifiWeak\)/);
+  assert.match(source, /value: service\.wifiEnabled && !service\.wifiRescanSuspended\s+&& \(service\.wifiScanningEnabled \|\| service\.wifiDiscoveryEnabled \|\| service\.wifiSuggestionsEnabled && service\.wifiWeak\)/);
   assert.match(source, /suggestionDelaySeconds", 15\) \* 1000 : 15000/);
   assert.match(source, /running: service\.wifiSuggestionsEnabled && service\.wifiWeak && !service\._wifiSuggestionShown/);
   const { service, context } = setup();

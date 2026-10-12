@@ -12,14 +12,22 @@ FloatingWindow {
 
   required property var controller
   required property var service
+  required property var connectivity
   property string section: "notifications"
+  property string connectivityTab: "networks"
+  property bool connectivityAdvanced: false
+  readonly property bool wifiDiscoveryActive: visible && section === "connectivity" && connectivityTab === "networks"
+  onSectionChanged: {
+    connectivityTab = "networks"
+    connectivityAdvanced = false
+  }
   readonly property var sections: [
     { key: "notifications", label: "Notifications", icon: "bell" },
     { key: "display", label: "Display", icon: "sun" },
     { key: "monitors", label: "Monitors", icon: "monitor" },
     { key: "wallpaper", label: "Wallpaper", icon: "monitor" },
     { key: "power", label: "Power & battery", icon: "battery" },
-    { key: "connectivity", label: "Connectivity behavior", icon: "wifi" },
+    { key: "connectivity", label: "Connectivity", icon: "wifi" },
     { key: "idle", label: "Lock & idle", icon: "lock" },
     { key: "lockScreen", label: "Session & lock screen", icon: "lock" },
     { key: "input", label: "Input", icon: "keyboard" },
@@ -794,6 +802,7 @@ FloatingWindow {
     }
     Label {
       Layout.fillWidth: true
+      visible: window.section !== "connectivity" && window.section !== "audio"
       text: window.section === "audio"
         ? "Key steps are saved in preferences.json. Mixer levels, routes and modes are live audio-server state."
         : "Saved to linux/config/system-settings/preferences.json"
@@ -804,12 +813,67 @@ FloatingWindow {
         text: "Changes are saved in your dotfiles checkout. Commit this JSON file to carry preferences to another machine. Runtime history and temporary state stay local."
       }
     }
+    RowLayout {
+      Layout.fillWidth: true
+      visible: window.section === "connectivity"
+      spacing: 4
+      Repeater {
+        model: [{ key: "networks", label: "Wi-Fi networks", icon: "wifi" }, { key: "preferences", label: "Preferences", icon: "settings" }]
+        delegate: Controls.Button {
+          id: connectivityTabButton
+          required property var modelData
+          Layout.fillWidth: true
+          implicitHeight: 40
+          Accessible.role: Accessible.PageTab
+          Accessible.name: modelData.label
+          Accessible.selected: window.connectivityTab === modelData.key
+          onClicked: window.connectivityTab = modelData.key
+          contentItem: RowLayout {
+            spacing: 8
+            Item { Layout.fillWidth: true }
+            LucideIcon {
+              Layout.preferredWidth: 16
+              Layout.preferredHeight: 16
+              source: window.controller.icon(connectivityTabButton.modelData.icon)
+              color: window.controller.controlPrimaryText
+            }
+            Label {
+              text: connectivityTabButton.modelData.label
+              Layout.maximumWidth: Math.max(0, connectivityTabButton.availableWidth - 24)
+              horizontalAlignment: Text.AlignHCenter
+              verticalAlignment: Text.AlignVCenter
+            }
+            Item { Layout.fillWidth: true }
+          }
+          background: Rectangle {
+            radius: 10
+            color: window.connectivityTab === connectivityTabButton.modelData.key ? window.controller.controlActive
+              : connectivityTabButton.hovered ? window.controller.controlHover : window.controller.controlSurface
+            border.width: connectivityTabButton.activeFocus ? 2 : 1
+            border.color: window.connectivityTab === connectivityTabButton.modelData.key || connectivityTabButton.activeFocus
+              ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+          }
+        }
+      }
+    }
     Controls.ScrollView {
       id: preferenceScroll
       Layout.fillWidth: true
       Layout.fillHeight: true
       contentWidth: availableWidth
       clip: true
+      Connections {
+        target: window
+        function onSectionChanged() {
+          if (window.section === "connectivity" || window.section === "audio")
+            preferenceScroll.contentItem.contentY = 0
+        }
+        function onVisibleChanged() {
+          if (window.visible && (window.section === "connectivity" || window.section === "audio"))
+            preferenceScroll.contentItem.contentY = 0
+        }
+        function onConnectivityTabChanged() { preferenceScroll.contentItem.contentY = 0 }
+      }
       ColumnLayout {
         width: preferenceScroll.availableWidth
         spacing: 16
@@ -823,21 +887,67 @@ FloatingWindow {
         }
         Label {
           Layout.fillWidth: true
-          visible: window.section === "power" || window.section === "connectivity"
-          text: window.section === "power"
-            ? "Configure battery warnings. Power-profile selection stays in Control Center."
-            : "Suggestions never switch networks automatically. Connections and VPN controls stay in Connectivity."
+          visible: window.section === "power"
+          text: "Configure battery warnings. Power-profile selection stays in Control Center."
           color: window.controller.controlSecondaryText
+        }
+        SoundMixerControls {
+          Layout.fillWidth: true
+          visible: window.section === "audio"
+          controller: window.controller
+          mixer: window.controller.audioService.mixer
+          keyboardEnabled: true
         }
         Label {
           Layout.fillWidth: true
           visible: window.section === "audio"
-          text: "Everyday volume, mute and device selection stay in the bar's Sound panel. Changing a default device there also moves running applications; individual routes below do not change the default."
-          color: window.controller.controlSecondaryText
+          text: "Keyboard volume steps"
+          font.bold: true
+          HoverHandler { id: audioStorageHover }
+          Hint {
+            visible: audioStorageHover.hovered
+            text: "Key steps are saved in preferences.json. Mixer levels, routes and modes are live audio-server state. Everyday volume and default device selection are also available in the bar’s Sound panel."
+          }
+        }
+        ColumnLayout {
+          Layout.fillWidth: true
+          visible: window.section === "connectivity" && window.connectivityTab === "preferences"
+          spacing: 12
+          enabled: window.controller.preferences.ready && !window.controller.preferences.busy
+          Label { text: "Suggestions & alerts"; font.bold: true }
+          Toggle {
+            Layout.fillWidth: true
+            text: "Suggest stronger saved Wi-Fi"
+            checked: window.controller.preferences.value("connectivity.wifiSuggestions", true)
+            description: "Offers a stronger saved network when your signal is weak. Switching always requires your confirmation."
+            onClicked: window.controller.preferences.setValue("connectivity.wifiSuggestions", !window.controller.preferences.value("connectivity.wifiSuggestions", true))
+          }
+          Toggle {
+            Layout.fillWidth: true
+            text: "Bluetooth low-battery alerts"
+            checked: window.controller.preferences.value("connectivity.bluetoothBatteryAlerts", true)
+            description: "Warn once per connected device below the threshold. Alerts rearm after disconnecting or recovering."
+            onClicked: window.controller.preferences.setValue("connectivity.bluetoothBatteryAlerts", !window.controller.preferences.value("connectivity.bluetoothBatteryAlerts", true))
+          }
+          Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+          SoundButton {
+            Layout.fillWidth: true
+            text: window.connectivityAdvanced ? "⌄  Advanced tuning" : "›  Advanced tuning"
+            onClicked: window.connectivityAdvanced = !window.connectivityAdvanced
+          }
+          Label {
+            Layout.fillWidth: true
+            visible: window.connectivityAdvanced
+            text: "Thresholds and timing are saved in preferences.json. Suggestions never switch networks automatically."
+            color: window.controller.controlSecondaryText
+          }
         }
         Repeater {
           model: window.controller.preferences.fields.filter(field => {
             const category = field.key.split(".")[0]
+            if (category === "connectivity")
+              return window.section === "connectivity" && window.connectivityTab === "preferences"
+                && window.connectivityAdvanced && field.kind !== "boolean"
             return (category === window.section || window.section === "weather" && category === "clock")
               && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE"))
           })
@@ -964,16 +1074,17 @@ FloatingWindow {
           SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
           SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
         }
-        SoundMixerControls {
+        WifiSettings {
           Layout.fillWidth: true
-          visible: window.section === "audio"
+          visible: window.section === "connectivity" && window.connectivityTab === "networks"
           controller: window.controller
-          mixer: window.controller.audioService.mixer
-          keyboardEnabled: true
+          service: window.connectivity
         }
         SoundButton {
           visible: window.section === "audio"
-          text: "Open pavucontrol…"
+          text: "Advanced audio settings…"
+          HoverHandler { id: advancedAudioHover }
+          Hint { visible: advancedAudioHover.hovered; text: "Open pavucontrol for speaker testing and additional hardware controls." }
           onClicked: advancedAudioSettings.running = true
         }
         Label {

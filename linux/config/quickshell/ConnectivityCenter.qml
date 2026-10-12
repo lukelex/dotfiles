@@ -504,10 +504,10 @@ Scope {
           anchors.verticalCenter: parent.verticalCenter
           onOpening: popup.requestOpen(true)
           options: popup.bluetoothOnly ? [
-            { text: "Bluetooth preferences", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivity") },
+            { text: "Bluetooth preferences", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivityPreferences") },
             { text: "Bluetooth settings", run: () => { popup.requestClose(true); Quickshell.execDetached(["blueman-manager"]) } }
           ] : [
-            { text: "Connectivity preferences", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivity") },
+            { text: "Connectivity settings", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivity") },
             { text: "Network settings", run: () => { popup.requestClose(true); Quickshell.execDetached(["nm-connection-editor"]) } }
           ]
         }

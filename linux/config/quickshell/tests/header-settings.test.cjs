@@ -41,7 +41,8 @@ test('audio and control settings are in headers, not large footer actions', () =
 test('connectivity header gear retains all settings destinations without radio changes', () => {
   const source = read('ConnectivityCenter.qml');
   assert.match(source, /HeaderSettingsButton \{[^]*?onOpening: popup.requestOpen\(true\)/);
-  assert.match(source, /text: "Connectivity preferences"[^\n]*openSystemSettings\(popup.panel.screen, "connectivity"\)/);
+  assert.match(source, /text: "Connectivity settings"[^\n]*openSystemSettings\(popup.panel.screen, "connectivity"\)/);
+  assert.match(source, /text: "Bluetooth preferences"[^\n]*openSystemSettings\(popup.panel.screen, "connectivityPreferences"\)/);
   assert.match(source, /text: "Network settings"[^\n]*requestClose\(true\)[^\n]*nm-connection-editor/);
   assert.match(source, /text: "Bluetooth settings"[^\n]*requestClose\(true\)[^\n]*blueman-manager/);
   assert.doesNotMatch(source, /title: "(?:Network|Bluetooth) settings"/);

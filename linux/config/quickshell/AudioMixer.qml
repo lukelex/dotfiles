@@ -7,6 +7,7 @@ import QtQuick
 QtObject {
   id: mixer
   property bool active: false
+  property var deviceLabel: null
   property bool loading: false
   property string error: ""
   property string errorTarget: ""
@@ -25,7 +26,11 @@ QtObject {
       const data = JSON.parse(text)
       if (!Array.isArray(data.devices) || !Array.isArray(data.streams) || !Array.isArray(data.cards))
         throw new Error("Invalid mixer response")
-      mixer.devices = data.devices
+      mixer.devices = data.devices.map(device => {
+        if (!device.monitor && mixer.deviceLabel && device.labelData)
+          device.description = mixer.deviceLabel(device.labelData, device.kind === "input")
+        return device
+      })
       mixer.cards = data.cards
       mixer.targetTokens = data.devices.concat(data.streams, data.cards).map(target => target.token)
       const groups = new Map()

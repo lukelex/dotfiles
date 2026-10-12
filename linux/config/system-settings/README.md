@@ -53,10 +53,20 @@ the managed launchers now use preferences.json instead.
 
 ## Scope
 
+- **Wi-Fi networks:** System Settings → Connectivity → Wi-Fi networks explicitly scans while the
+  tab is visible, and offers a scan-again action. Nearby rows retain stable ordering during scans;
+  saved profiles remain manageable even when out of range. Connect saved profiles,
+  add nearby open or personal-security networks (passwords go directly to
+  NetworkManager and are not logged), and forget disconnected saved profiles.
+  Wi-Fi power is explicit. Disabling Wi-Fi stops scans and cancels in-flight
+  connection attempts through the existing timeout/state handler. Hidden networks,
+  enterprise authentication, certificates and advanced IP settings are delegated
+  to NetworkManager's connection editor. Discovery uses native NetworkManager data;
+  suggestions and bar-panel scans retain their existing policies.
 - **Audio behavior:** separate volume and microphone key increments (1–25%, both
   defaulting to 2%). These affect `u_audio` increment/decrement commands, retain
   the 100% cap, and leave explicit levels, mute and device routing unchanged.
-- **Connectivity behavior:** Bluetooth low-battery alerts can be disabled or given
+- **Connectivity preferences:** The Preferences tab keeps thresholds and timing under collapsed Advanced tuning. Bluetooth low-battery alerts can be disabled or given
   a 1–50% threshold (default 15%). Changes recheck connected devices without
   discovery scans. Already-warned devices do not replay on disable/re-enable;
   disconnect or recovery above the threshold rearms them. Unavailable battery
@@ -96,13 +106,13 @@ the managed launchers now use preferences.json instead.
   discharge-episode behavior, and rearm on charging or recovery above the low
   threshold. Disabling a level does not clear prior notification history. Power
   profiles remain in Control Center; no automatic power-profile switching is added.
-- **Connectivity behavior:** enable/disable stronger-saved-Wi-Fi suggestions,
+- **Connectivity → Preferences:** enable/disable stronger-saved-Wi-Fi suggestions,
   configure the weak and recovery thresholds, delay and minimum improvement.
   Defaults remain 25/35%, 15 seconds and 15 percentage points. Disabling suggestions
   stops weak-signal background scanning (panel-open scanning remains) and invalidates
   outstanding Switch actions. Delay changes restart pending checks; other choices
   immediately update eligibility without replaying an already-shown offer. No network switches occur without an explicit
-  action; VPN and network controls remain in Connectivity.
+  action; VPN stays in the Network popup and Wi-Fi profile discovery/management is in Connectivity → Wi-Fi networks.
 
 - **Display:** day/night temperature, sunrise/sunset coordinates, brightness-key
   step, and volume/brightness/layout OSD duration. The night-light on/off action

@@ -297,6 +297,7 @@ Scope {
   property var connectivityTarget: null
   property var bluetoothTarget: null
   property var audioOutputTarget: null
+  readonly property bool wifiSettingsOpen: systemSettings.wifiDiscoveryActive
   property var panelsByScreen: ({})
   property bool resizeMode: false
   property int resizeModeRevision: 0
@@ -345,6 +346,7 @@ Scope {
     id: connectivity
     preferences: root.preferences
     wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
+    wifiDiscoveryEnabled: root.wifiSettingsOpen
     trafficMonitoringEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
   }
 
@@ -820,8 +822,13 @@ Scope {
     for (const name of Object.keys(root.panelsByScreen))
       root.panelsByScreen[name].closeControlCenter()
     const panel = root.focusedPanel()
-    if (section)
-      systemSettings.section = section
+    if (section) {
+      systemSettings.section = section === "wifi" || section === "connectivityPreferences" ? "connectivity" : section
+      if (systemSettings.section === "connectivity") {
+        systemSettings.connectivityTab = section === "connectivityPreferences" ? "preferences" : "networks"
+        systemSettings.connectivityAdvanced = false
+      }
+    }
     systemSettings.open(targetScreen || (panel ? panel.screen : null))
   }
 
@@ -829,6 +836,7 @@ Scope {
     id: systemSettings
     controller: root
     service: root.notificationService
+    connectivity: connectivity
   }
 
   function closeNotifications() {

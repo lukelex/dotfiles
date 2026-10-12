@@ -21,7 +21,10 @@ QtObject {
   property bool _refreshQueued: false
   property int activePanels: 0
   property bool mixerSettingsActive: false
-  readonly property AudioMixer mixer: AudioMixer { active: service.mixerSettingsActive }
+  readonly property AudioMixer mixer: AudioMixer {
+    active: service.mixerSettingsActive
+    deviceLabel: (device, input) => input ? service.inputDescription(device) : service.outputDescription(device)
+  }
   property string _requestedSink: ""
   property string _requestedSource: ""
   property string _selectionWarning: ""
@@ -305,6 +308,11 @@ QtObject {
     return description
   }
 
+  function outputDescription(sink) {
+    return service.friendlyDescription(sink) || (typeof sink.description === "string" && sink.description.trim()
+      ? sink.description : sink.properties?.["node.nick"] || sink.name)
+  }
+
   function friendlyDescription(device, input = false) {
     const name = String(device.name || "")
     if (/usb-ACTIONS_Pebble_V3/.test(name) && !input)
@@ -350,8 +358,7 @@ QtObject {
         .filter(sink => sink && typeof sink.name === "string" && sink.name.trim())
         .map(sink => ({
           name: sink.name,
-          description: service.friendlyDescription(sink) || (typeof sink.description === "string" && sink.description.trim()
-            ? sink.description : sink.properties?.["node.nick"] || sink.name),
+          description: service.outputDescription(sink),
           iconName: service.outputIcon(sink),
         }))
         .sort((left, right) => left.description.localeCompare(right.description)

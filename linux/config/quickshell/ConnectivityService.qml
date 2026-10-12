@@ -30,6 +30,8 @@ QtObject {
   readonly property bool wifiEnabled: Networking.wifiEnabled
   readonly property bool wifiHardwareEnabled: Networking.wifiHardwareEnabled
   property bool wifiScanningEnabled: false
+  property bool wifiDiscoveryEnabled: false
+  property bool wifiRescanSuspended: false
   property bool trafficMonitoringEnabled: false
   property var _deviceSpeeds: ({})
   property var _trafficSamples: ({})
@@ -143,6 +145,12 @@ QtObject {
     || service._wiredDevices.find(device => device.hasLink) || service._wiredDevices[0] || null
   // Native signalStrength and BluetoothDevice.battery are fractions, not percentages.
   readonly property real wifiStrength: service.activeNetwork ? service.activeNetwork.signalStrength : 0
+  function wifiStrengthText(strength): string {
+    if (strength >= 0.75) return "Excellent"
+    if (strength >= 0.5) return "Good"
+    if (strength >= 0.25) return "Fair"
+    return "Weak"
+  }
   readonly property WifiNetwork activeNetwork: service._networks.find(network => network.connected) || null
   readonly property WifiNetwork connectingNetwork: service._state.pending
     ? service._state.requestedNetwork
@@ -154,6 +162,17 @@ QtObject {
   // No native availability flag: zero strength also includes out-of-range saved networks.
   readonly property var savedNetworks: service._networks.filter(network => network.known
     && (network.signalStrength > 0 || network.connected || network.stateChanging))
+  readonly property var knownNetworks: service._networks.filter(network => network.known)
+  readonly property var discoveredNetworks: service._networks.filter(network => !network.known && network.signalStrength > 0)
+    .sort((a, b) => b.signalStrength - a.signalStrength || a.name.localeCompare(b.name)
+      || a.device.name.localeCompare(b.device.name))
+  function wifiNeedsPassphrase(network): bool {
+    return network.security !== WifiSecurityType.Open && network.security !== WifiSecurityType.Owe
+  }
+  function wifiCanConnectDiscovered(network): bool {
+    return [WifiSecurityType.Open, WifiSecurityType.Owe, WifiSecurityType.WpaPsk,
+      WifiSecurityType.Wpa2Psk, WifiSecurityType.Sae].includes(network.security)
+  }
 
   // Zero can mean unavailable signal data. Scan in the background only while weak.
   property var preferences: null
@@ -357,7 +376,8 @@ QtObject {
       required property var modelData
       target: modelData
       property: "scannerEnabled"
-      value: service.wifiEnabled && (service.wifiScanningEnabled || service.wifiSuggestionsEnabled && service.wifiWeak)
+      value: service.wifiEnabled && !service.wifiRescanSuspended
+        && (service.wifiScanningEnabled || service.wifiDiscoveryEnabled || service.wifiSuggestionsEnabled && service.wifiWeak)
       restoreMode: Binding.RestoreBindingOrValue
     }
   }
@@ -387,6 +407,17 @@ QtObject {
   readonly property Timer _connectionTimeout: Timer {
     interval: 45000
     onTriggered: service._finishConnection("Wi-Fi connection timed out; check NetworkManager permissions and saved credentials.")
+  }
+  readonly property Timer _rescanResume: Timer {
+    interval: 500
+    onTriggered: service.wifiRescanSuspended = false
+  }
+
+  function rescanWifi(): void {
+    if (!service.wifiDiscoveryEnabled || !service.wifiEnabled || !service.wifiAvailable)
+      return
+    service.wifiRescanSuspended = true
+    service._rescanResume.restart()
   }
 
   readonly property Timer _ethernetTimeout: Timer {
@@ -534,7 +565,7 @@ QtObject {
       service._state.wifiError = "Wi-Fi is unavailable, disabled or hardware blocked."
       return false
     }
-    if (!network || service.savedNetworks.indexOf(network) < 0 || !network.known) {
+    if (!network || service.knownNetworks.indexOf(network) < 0 || !network.known) {
       service._state.wifiError = "The saved Wi-Fi network is no longer available."
       return false
     }
@@ -553,6 +584,55 @@ QtObject {
       return false
     }
     return true
+  }
+
+  function connectDiscoveredNetwork(network: WifiNetwork, passphrase: string): bool {
+    if (service._state.pending)
+      return false
+    service._state.wifiError = ""
+    service._state.wifiErrorReason = -1
+    if (!service.wifiAvailable || !service.wifiEnabled || !service.wifiHardwareEnabled) {
+      service._state.wifiError = "Wi-Fi is unavailable, disabled or hardware blocked."
+      return false
+    }
+    if (!network || service.discoveredNetworks.indexOf(network) < 0 || network.known) {
+      service._state.wifiError = "That discovered network is no longer available. Scan again."
+      return false
+    }
+    if (!service.wifiCanConnectDiscovered(network)) {
+      service._state.wifiError = "This security method needs NetworkManager's connection editor."
+      return false
+    }
+    const secured = service.wifiNeedsPassphrase(network)
+    if (secured && (typeof passphrase !== "string" || passphrase.length < 8 || passphrase.length > 63)) {
+      service._state.wifiError = "Enter a Wi-Fi passphrase of 8–63 characters."
+      return false
+    }
+    service._state.requestedNetwork = network
+    service._state.sawConnecting = false
+    service._state.pending = true
+    service._connectionTimeout.restart()
+    try {
+      network.connectWithPsk(secured ? passphrase : "")
+      service._state.wifiError = ""
+      return true
+    } catch (error) {
+      service._finishConnection(String(error))
+      return false
+    }
+  }
+
+  function forgetWifiNetwork(network: WifiNetwork): bool {
+    if (!network || service.knownNetworks.indexOf(network) < 0 || !network.known || network.connected
+        || network.stateChanging || service._state.pending)
+      return false
+    try {
+      network.forget()
+      return true
+    } catch (error) {
+      service._state.wifiError = "Could not forget this network: " + String(error)
+      return false
+    }
   }
 
   function clearErrors(): void {

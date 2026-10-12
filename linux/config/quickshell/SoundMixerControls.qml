@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls.Basic as Controls
 
 Column {
@@ -9,7 +10,7 @@ Column {
   required property var mixer
   required property bool keyboardEnabled
   signal interacted()
-  spacing: 12
+  spacing: 16
   property bool deviceDetails: false
 
   component Label: Text {
@@ -23,14 +24,24 @@ Column {
 
   component Button: Controls.Button {
     id: button
+    property string description: text
+    property bool quiet: false
     width: parent.width
     height: 36
     focusPolicy: view.keyboardEnabled ? Qt.StrongFocus : Qt.NoFocus
     onPressed: view.interacted()
+    Accessible.name: description
+    Controls.ToolTip {
+      visible: button.hovered || button.activeFocus
+      delay: 500
+      implicitWidth: Math.min(320, contentItem.implicitWidth + 20)
+      contentItem: Label { text: button.description; color: view.controller.controlPrimaryText }
+      background: Rectangle { radius: 8; color: view.controller.controlSurface; border.color: view.controller.controlSurfaceBorder }
+    }
     background: Rectangle {
       radius: 10
-      color: button.down || button.hovered ? view.controller.controlHover : view.controller.controlSurface
-      border.width: button.activeFocus ? 2 : 1
+      color: button.down || button.hovered ? view.controller.controlHover : button.quiet ? "transparent" : view.controller.controlSurface
+      border.width: button.activeFocus ? 2 : button.quiet ? 0 : 1
       border.color: button.activeFocus ? view.controller.controlActiveIcon : view.controller.controlSurfaceBorder
     }
     contentItem: Label {
@@ -98,7 +109,7 @@ Column {
     }
   }
 
-  component TargetControls: Column {
+  component TargetControls: Rectangle {
     id: targetRow
     required property var target
     property bool details: false
@@ -113,7 +124,16 @@ Column {
     }
     onTargetChanged: syncChannels()
     Component.onCompleted: syncChannels()
-    spacing: 6
+    implicitHeight: targetContent.height + 24
+    radius: 12
+    color: view.controller.controlSurface
+    border.color: view.controller.controlSurfaceBorder
+    Column {
+    id: targetContent
+    x: 12
+    y: 12
+    width: parent.width - 24
+    spacing: 8
     Label {
       text: (targetRow.stream ? (targetRow.target.kind === "playback" ? "Playback" : "Recording") + " · " : "")
         + targetRow.target.description + (targetRow.target.paused ? " · Paused" : "")
@@ -121,30 +141,38 @@ Column {
         + (targetRow.pending ? " · Applying…" : "")
       color: view.controller.controlPrimaryText
     }
-    Row {
+    RowLayout {
       width: parent.width
       spacing: 6
+      LucideIcon {
+        Layout.preferredWidth: 18
+        Layout.preferredHeight: 18
+        source: view.controller.icon(targetRow.target.kind === "recording" || targetRow.target.kind === "input" ? "mic" : targetRow.target.muted ? "volume-x" : "volume-2")
+        color: view.controller.controlSecondaryText
+      }
+      Level {
+        Layout.fillWidth: true
+        title: targetRow.target.description
+        enabled: targetRow.target.channels.length > 0
+        volume: targetRow.target.volume
+        maximum: targetRow.amplification ? 150 : 100
+        onEdited: value => view.mixer.change(targetRow.target, "volume", value)
+      }
       Button {
-        width: (parent.width - 6) / 2
+        Layout.preferredWidth: 76
         enabled: !targetRow.pending
-        text: targetRow.target.muted ? "Unmute" : targetRow.target.kind === "recording" ? "Mute app input" : "Mute"
+        text: targetRow.target.muted ? "Unmute" : "Mute"
+        description: text + " " + targetRow.target.description + (targetRow.target.kind === "recording" ? ". Muting this stream does not revoke microphone access." : "")
         onClicked: view.mixer.change(targetRow.target, "mute", !targetRow.target.muted)
       }
-      Button {
-        width: (parent.width - 6) / 2
-        text: targetRow.details ? "Less" : "Channels / boost"
-        onClicked: targetRow.details = !targetRow.details
-      }
     }
-    Level {
-      title: targetRow.target.description
-      enabled: targetRow.target.channels.length > 0
-      volume: targetRow.target.volume
-      maximum: targetRow.amplification ? 150 : 100
-      onEdited: value => view.mixer.change(targetRow.target, "volume", value)
+    Button {
+      quiet: true
+      text: (targetRow.details ? "⌄  " : "›  ") + (targetRow.stream ? "Routing, channels & amplification" : "Connector, channels & amplification")
+      onClicked: targetRow.details = !targetRow.details
     }
     Choice {
-      visible: targetRow.stream
+      visible: targetRow.stream && targetRow.details
       enabled: !targetRow.pending
       choices: targetRow.routes
       label: targetRow.target.kind === "playback" ? "Output" : "Input"
@@ -152,12 +180,12 @@ Column {
       onChosen: option => view.mixer.change(targetRow.target, "route", null, { deviceToken: option.token })
     }
     Label {
-      visible: targetRow.stream && targetRow.target.kind === "recording"
+      visible: targetRow.details && targetRow.stream && targetRow.target.kind === "recording"
       text: "Muting this stream does not revoke microphone access."
       font.pixelSize: 10
     }
     Choice {
-      visible: !targetRow.stream && choices.length > 1
+      visible: targetRow.details && !targetRow.stream && choices.length > 1
       enabled: !targetRow.pending
       choices: targetRow.target.ports || []
       selected: targetRow.target.activePort || ""
@@ -179,7 +207,7 @@ Column {
           id: channel
           required property string payload
           readonly property var entry: JSON.parse(payload)
-          width: targetRow.width
+          width: targetContent.width
           Label { text: channel.entry.name }
           Level {
             title: targetRow.target.description + " " + channel.entry.name
@@ -195,10 +223,16 @@ Column {
       text: view.mixer.error
       color: view.controller.controlWarningText
     }
+    }
   }
 
-  Label { text: "Applications"; color: view.controller.controlPrimaryText }
-  Label { visible: view.mixer.applications.count === 0; text: view.mixer.loading ? "Reading application audio…" : "No application audio streams." }
+  Row {
+    width: parent.width
+    spacing: 8
+    LucideIcon { width: 18; height: 18; source: view.controller.icon("volume-2"); color: view.controller.controlSecondaryText }
+    Label { width: parent.width - 26; text: "Applications"; font.bold: true; color: view.controller.controlPrimaryText }
+  }
+  Label { visible: view.mixer.applications.count === 0; text: view.mixer.loading ? "Reading application audio…" : "No apps are using audio. Playback and recording controls appear here when active." }
   Label { visible: view.mixer.error !== "" && !view.mixer.targetTokens.includes(view.mixer.errorTarget); text: view.mixer.error; color: view.controller.controlWarningText }
   Repeater {
     model: view.mixer.applications
@@ -213,7 +247,7 @@ Column {
       ListModel { id: streams; dynamicRoles: true }
       onEntryChanged: view.mixer.syncModel(streams, entry.streams)
       Component.onCompleted: view.mixer.syncModel(streams, entry.streams)
-      Label { text: application.entry.name; color: view.controller.controlPrimaryText }
+      Label { text: application.entry.name; font.bold: true; color: view.controller.controlPrimaryText }
       Button {
         visible: streams.count > 2
         text: application.expanded ? "Collapse streams" : streams.count + " streams · Show controls"
@@ -230,7 +264,8 @@ Column {
       }
     }
   }
-  Button { text: view.deviceDetails ? "Hide device settings" : "Device settings"; onClicked: view.deviceDetails = !view.deviceDetails }
+  Rectangle { width: parent.width; height: 1; color: view.controller.controlSurfaceBorder }
+  Button { quiet: true; text: view.deviceDetails ? "⌄  Devices & hardware modes" : "›  Devices & hardware modes"; onClicked: view.deviceDetails = !view.deviceDetails }
   Column {
     id: deviceSettings
     width: view.width

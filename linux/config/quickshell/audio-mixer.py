@@ -51,6 +51,7 @@ def snapshot():
       monitor = kind == 'input' and (item.get('monitor_of_sink') not in (None, '', 4294967295)
         or item.get('name', '').endswith('.monitor'))
       device.update(description=('System audio — ' if monitor else '') + item.get('description', item['name']),
+        labelData={key: item.get(key) for key in ('name', 'description', 'properties', 'ports', 'active_port')},
         monitor=monitor, activePort=item.get('active_port', ''),
         ports=[{'name': p['name'], 'description': p.get('description', p['name'])}
           for p in item.get('ports', []) if p.get('availability', 'unknown') not in ('not available', 'no')])

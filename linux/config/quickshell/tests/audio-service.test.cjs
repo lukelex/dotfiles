@@ -130,6 +130,7 @@ function serviceState(overrides = {}) {
   };
   service.friendlyDescription = loadFunction('friendlyDescription', {});
   service.inputDescription = loadFunction('inputDescription', { service });
+  service.outputDescription = loadFunction('outputDescription', { service });
   return service;
 }
 

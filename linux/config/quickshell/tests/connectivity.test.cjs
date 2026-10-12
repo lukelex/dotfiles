@@ -8,6 +8,7 @@ const source = fs.readFileSync(path.join(__dirname, '../ConnectivityService.qml'
 const ConnectionState = { Disconnected: 0, Connecting: 1, Connected: 2 };
 const BluetoothAdapterState = { Blocked: 0 };
 const NetworkConnectivity = { Unknown: 0, None: 1, Portal: 2, Limited: 3, Full: 4 };
+const WifiSecurityType = { Open: 0, Owe: 1, WpaPsk: 2, Wpa2Psk: 3, Sae: 4, Wpa2Eap: 5 };
 
 test('Wi-Fi strength uses qualitative labels while Bluetooth batteries keep percentages', () => {
   const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
@@ -81,9 +82,12 @@ function serviceForTest() {
   });
   const network = {
     known: true,
+    security: WifiSecurityType.Wpa2Psk,
     connected: false,
     state: ConnectionState.Disconnected,
     connect() { calls.connect++; },
+    connectWithPsk(value) { calls.psk = value; },
+    forget() { calls.forgot = true; this.known = false; },
     disconnect() { assert.fail('Activation must not disconnect a network'); },
   };
   const adapter = {
@@ -109,8 +113,14 @@ function serviceForTest() {
     wifiAvailable: true,
     wifiEnabled: true,
     wifiHardwareEnabled: true,
+    wifiAvailable: true,
     bluetoothAvailable: true,
     savedNetworks: [network],
+    knownNetworks: [network],
+    discoveredNetworks: [],
+    wifiDiscoveryEnabled: true,
+    wifiRescanSuspended: false,
+    _rescanResume: { restart() { calls.rescan = (calls.rescan || 0) + 1; } },
     activeNetwork: { connected: true, disconnect: network.disconnect },
     ethernetAvailable: true,
     ethernetDevice: wiredDevice,
@@ -131,6 +141,7 @@ function serviceForTest() {
   const context = vm.createContext({
     service,
     ConnectionState,
+    WifiSecurityType,
     NetworkConnectivity,
     ConnectionFailReason: { toString: reason => `Connection failure ${reason}` },
     BluetoothAdapterState,
@@ -140,7 +151,7 @@ function serviceForTest() {
       set wifiEnabled(value) { calls.power.push(['wifi', value]); },
     },
   });
-  for (const name of ['connectNetwork', '_finishConnection', 'setWifiEnabled', 'setEthernetEnabled',
+  for (const name of ['connectNetwork', 'connectDiscoveredNetwork', 'forgetWifiNetwork', 'wifiNeedsPassphrase', 'wifiCanConnectDiscovered', 'rescanWifi', '_finishConnection', 'setWifiEnabled', 'setEthernetEnabled',
     'setBluetoothEnabled', 'onConnectionFailed', 'onStateChanged', 'finishEthernet', 'reconcileEthernet', 'ethernetStatus', 'internetStatusText']) {
     const match = source.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
     assert.ok(match, `Missing QML function ${name}`);
@@ -157,6 +168,81 @@ test('Ethernet toggle disables autoconnect and disconnects active adapters', () 
   assert.deepEqual(calls.autoconnect, [false]);
   assert.equal(calls.ethernetDisconnect, 1);
   assert.equal(calls.ethernetConnect, 0);
+});
+
+test('saved profiles remain manageable out of range, connect without disconnecting, and forget only when safe', () => {
+  const { service, network, calls } = serviceForTest();
+  service.savedNetworks = [];
+  service.knownNetworks = [network];
+  assert.equal(service.connectNetwork(network), true);
+  assert.equal(calls.connect, 1);
+  service._state.pending = false;
+  service._connectionTimeout.stop();
+  network.connected = true;
+  assert.equal(service.forgetWifiNetwork(network), false);
+  network.connected = false;
+  assert.equal(service.forgetWifiNetwork(network), true);
+  assert.equal(calls.forgot, true);
+});
+
+test('discovered Wi-Fi uses native PSK connection and validates security/passphrases and current discovery', () => {
+  const { service, calls, network } = serviceForTest();
+  network.known = false;
+  service.knownNetworks = [];
+  service.discoveredNetworks = [network];
+  assert.equal(service.connectDiscoveredNetwork(network, 'short'), false);
+  assert.match(service._state.wifiError, /8–63/);
+  assert.equal(calls.psk, undefined);
+  assert.equal(service.connectDiscoveredNetwork(network, 'correct horse'), true);
+  assert.equal(calls.psk, 'correct horse');
+  assert.equal(service._state.requestedNetwork, network);
+  service._finishConnection('');
+  network.security = WifiSecurityType.Open;
+  assert.equal(service.connectDiscoveredNetwork(network, ''), true);
+  assert.equal(calls.psk, '');
+  service._finishConnection('');
+  service.discoveredNetworks = [];
+  assert.equal(service.connectDiscoveredNetwork(network, 'correct horse'), false);
+  assert.match(service._state.wifiError, /no longer available/);
+});
+
+test('discovered WPA personal modes are supported but enterprise authentication is delegated', () => {
+  const { service, network } = serviceForTest();
+  for (const security of [WifiSecurityType.Open, WifiSecurityType.Owe, WifiSecurityType.WpaPsk,
+    WifiSecurityType.Wpa2Psk, WifiSecurityType.Sae]) {
+    network.security = security;
+    assert.equal(service.wifiCanConnectDiscovered(network), true);
+  }
+  network.security = WifiSecurityType.Wpa2Eap;
+  assert.equal(service.wifiCanConnectDiscovered(network), false);
+  network.known = false;
+  service.knownNetworks = [];
+  service.discoveredNetworks = [network];
+  assert.equal(service.connectDiscoveredNetwork(network, 'password123'), false);
+  assert.match(service._state.wifiError, /connection editor/);
+});
+
+test('rescan explicitly restarts the scanner only while discovery page and radio are active', () => {
+  const { service, calls } = serviceForTest();
+  service.rescanWifi();
+  assert.equal(service.wifiRescanSuspended, true);
+  assert.equal(calls.rescan, 1);
+  service.wifiRescanSuspended = false;
+  service.wifiDiscoveryEnabled = false;
+  service.rescanWifi();
+  assert.equal(calls.rescan, 1);
+  service.wifiDiscoveryEnabled = true;
+  service.wifiEnabled = false;
+  service.rescanWifi();
+  assert.equal(calls.rescan, 1);
+});
+
+test('Wi-Fi discovery scanner is enabled only for a visible network panel, explicit discover page or weak suggestions', () => {
+  const bar = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
+  assert.match(bar, /wifiScanningEnabled: root\.connectivityTarget !== null && root\.connectivityTarget\.visible/);
+  assert.match(bar, /wifiDiscoveryEnabled: root\.wifiSettingsOpen/);
+  assert.match(source, /service\.wifiScanningEnabled \|\| service\.wifiDiscoveryEnabled \|\| service\.wifiSuggestionsEnabled && service\.wifiWeak/);
+  assert.match(source, /service\.wifiEnabled && !service\.wifiRescanSuspended/);
 });
 
 test('Ethernet toggle enables autoconnect and activates an available profile', () => {
@@ -245,7 +331,7 @@ for (const scenario of ['unavailable', 'disabled', 'hardware blocked', 'missing'
     if (scenario === 'unavailable') service.wifiAvailable = false;
     if (scenario === 'disabled') service.wifiEnabled = false;
     if (scenario === 'hardware blocked') service.wifiHardwareEnabled = false;
-    if (scenario === 'not saved') service.savedNetworks = [];
+    if (scenario === 'not saved') service.knownNetworks = [];
     if (scenario === 'unknown') network.known = false;
     service._state.wifiError = 'Previous failure';
     service._state.wifiErrorReason = 7;
