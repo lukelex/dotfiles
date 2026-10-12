@@ -4,9 +4,11 @@ return {
   opts = {},
   config = function()
     require('noice').setup {
-      -- lsp = {
-      --   enable = false
-      -- },
+      lsp = {
+        hover = {
+          silent = true,
+        },
+      },
       presets = {
         long_message_to_split = true,
         lsp_doc_border = true,
