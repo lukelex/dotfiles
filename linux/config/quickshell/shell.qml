@@ -1,7 +1,17 @@
 //@ pragma UseQApplication
 import Quickshell
+import QtQml
 
 Scope {
+  Connections {
+    target: Quickshell
+
+    function onReloadCompleted() {
+      Quickshell.inhibitReloadPopup()
+      notifications.showOsd("Reload", 0, "refresh-cw", "Quickshell Reloaded")
+    }
+  }
+
   SystemPreferences { id: preferences }
   NotificationService {
     id: notifications

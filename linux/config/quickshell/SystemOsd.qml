@@ -11,6 +11,7 @@ PopupWindow {
 
   property bool closePending: false
   property var displayedOsd: null
+  readonly property bool labeledOsd: displayedOsd && ["Layout", "Reload"].includes(displayedOsd.summary)
 
   readonly property bool muted: displayedOsd && (displayedOsd.summary === "Volume" && displayedOsd.value === 0
     || displayedOsd.summary === "Microphone" && /mic-off/.test(displayedOsd.appIcon))
@@ -28,7 +29,7 @@ PopupWindow {
   function iconName() {
     if (!popup.displayedOsd)
       return "sun"
-    if (popup.displayedOsd.summary === "Layout")
+    if (popup.labeledOsd)
       return popup.displayedOsd.osdIconName || "maximize"
     if (popup.displayedOsd.summary === "Brightness")
       return "sun"
@@ -169,7 +170,7 @@ PopupWindow {
       Item {
         height: 12
         width: parent.width
-        visible: !popup.displayedOsd || popup.displayedOsd.summary !== "Layout"
+        visible: !popup.labeledOsd
 
         Rectangle {
           id: meterTrack
@@ -202,7 +203,7 @@ PopupWindow {
         font.pixelSize: 11
         horizontalAlignment: Text.AlignHCenter
         text: popup.muted ? "Muted"
-          : popup.displayedOsd && popup.displayedOsd.summary === "Layout"
+          : popup.labeledOsd
             ? (popup.displayedOsd.osdLabel || "")
             : Math.round(popup.value) + "%"
         width: parent.width

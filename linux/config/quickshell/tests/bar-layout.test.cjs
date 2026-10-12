@@ -438,8 +438,9 @@ test('i3 OSD fires when the layout changes while the focused node is unchanged',
 
 test('SystemOsd renders Layout OSDs with the supplied icon and label instead of a meter', () => {
   const systemOsd = fs.readFileSync(path.join(__dirname, '../SystemOsd.qml'), 'utf8');
-  assert.match(systemOsd, /summary === "Layout"[\s\S]*?osdIconName/);
-  assert.match(systemOsd, /summary !== "Layout"/);
+  assert.match(systemOsd, /labeledOsd: displayedOsd && \["Layout", "Reload"\]/);
+  assert.match(systemOsd, /if \(popup\.labeledOsd\)[\s\S]*?osdIconName/);
+  assert.match(systemOsd, /visible: !popup\.labeledOsd/);
   assert.match(systemOsd, /osdLabel \|\| ""/);
 });
 
