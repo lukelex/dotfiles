@@ -50,7 +50,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 
 - Connectivity is one settings sidebar entry: Wi-Fi networks is the default tab, Preferences contains suggestion/alert switches with thresholds and timing under collapsed Advanced tuning. Discovery is active only on the visible networks tab, with one binding owned by Bar; Bluetooth's settings shortcut opens Preferences directly.
 
-- Audio settings leads with application streams and compact volume/mute rows. Expand routing, connectors, channels and amplification per target; device/hardware modes are a separate disclosure. Keyboard step preferences and the advanced audio tool follow the mixer. Preserve keyed stream/channel delegates while expanding details.
+- Audio settings uses the shared `SettingsSection.qml` icon-led cards for Current devices, Applications, Devices & hardware modes, Keyboard volume steps, and Advanced audio. App streams and device rows sit inside their subsection surface with dividers, not separate nested cards. Expand routing, connectors, channels and amplification per target; device/hardware modes remain a separate disclosure. Keyboard step preferences and the advanced audio tool follow the mixer. Preserve keyed app, stream, device and channel delegates while expanding details. `SystemSettings.qml` also uses this shared subsection component for its card-based pages.
 
 - Power & battery groups Low, Critical, Urgent and Final warnings into standard icon-led subsection cards, each containing its enable switch and percentage threshold separated by a divider. Keep thresholds editable independently of warning enablement; the existing preference backend owns range/order validation and notification behavior.
 

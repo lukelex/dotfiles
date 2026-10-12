@@ -1080,15 +1080,27 @@ FloatingWindow {
           mixer: window.controller.audioService.mixer
           keyboardEnabled: true
         }
-        Label {
+        SettingsSubsection {
           Layout.fillWidth: true
           visible: window.section === "audio"
-          text: "Keyboard volume steps"
-          font.bold: true
-          HoverHandler { id: audioStorageHover }
-          Hint {
-            visible: audioStorageHover.hovered
-            text: "Key steps are saved in preferences.json. Mixer levels, routes and modes are live audio-server state. Everyday volume and default device selection are also available in the bar’s Sound panel."
+          title: "Keyboard volume steps"
+          iconName: "keyboard"
+          Repeater {
+            model: window.controller.preferences.fields.filter(field => field.key.startsWith("audio."))
+            delegate: ColumnLayout {
+              id: audioField
+              required property var modelData
+              required property int index
+              Layout.fillWidth: true
+              spacing: 12
+              Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: 1
+                visible: audioField.index > 0
+                color: window.controller.controlSurfaceBorder
+              }
+              PreferenceField { modelData: audioField.modelData }
+            }
           }
         }
         ColumnLayout {
@@ -1127,7 +1139,7 @@ FloatingWindow {
         Repeater {
           model: window.controller.preferences.fields.filter(field => {
             const category = field.key.split(".")[0]
-            if (category === "power" || category === "display") return false
+            if (["power", "display", "audio"].includes(category)) return false
             if (category === "connectivity")
               return window.section === "connectivity" && window.connectivityTab === "preferences"
                 && window.connectivityAdvanced && field.kind !== "boolean"
@@ -1187,12 +1199,20 @@ FloatingWindow {
           controller: window.controller
           service: window.connectivity
         }
-        SoundButton {
+        SettingsSubsection {
+          Layout.fillWidth: true
           visible: window.section === "audio"
-          text: "Advanced audio settings…"
-          HoverHandler { id: advancedAudioHover }
-          Hint { visible: advancedAudioHover.hovered; text: "Open pavucontrol for speaker testing and additional hardware controls." }
-          onClicked: advancedAudioSettings.running = true
+          title: "Advanced audio"
+          iconName: "sliders"
+          Label {
+            Layout.fillWidth: true
+            text: "Open pavucontrol for speaker testing and additional hardware controls."
+            color: window.controller.controlSecondaryText
+          }
+          SoundButton {
+            text: "Advanced audio settings…"
+            onClicked: advancedAudioSettings.running = true
+          }
         }
         Label {
           Layout.fillWidth: true
@@ -1316,81 +1336,8 @@ FloatingWindow {
     }
   }
 
-  component SettingsSubsection: Rectangle {
-    id: subsection
-    required property string title
-    required property string iconName
-    property string description: title
-    property bool collapsible: false
-    property bool expanded: true
-    property bool framed: true
-    default property alias contents: subsectionBody.data
-    signal toggled()
-    implicitHeight: subsectionContent.implicitHeight + 28
-    radius: 18
-    color: framed ? window.controller.controlSurface : "transparent"
-    border.width: framed ? 1 : 0
-    border.color: window.controller.controlSurfaceBorder
-    ColumnLayout {
-      id: subsectionContent
-      anchors.fill: parent
-      anchors.margins: 14
-      spacing: 14
-      Controls.Button {
-        id: subsectionHeader
-        Layout.fillWidth: true
-        padding: 0
-        implicitHeight: Math.max(32, contentItem.implicitHeight)
-        enabled: subsection.collapsible
-        Accessible.name: subsection.title
-        Accessible.description: subsection.description
-        Accessible.role: subsection.collapsible ? Accessible.Button : Accessible.Heading
-        Accessible.checkable: subsection.collapsible
-        Accessible.checked: subsection.expanded
-        onClicked: subsection.toggled()
-        contentItem: RowLayout {
-          spacing: 10
-          LucideIcon {
-            Layout.preferredWidth: 20
-            Layout.preferredHeight: 20
-            source: window.controller.icon(subsection.iconName)
-            color: window.controller.controlActiveIcon
-          }
-          Label {
-            Layout.fillWidth: true
-            text: subsection.title
-            font.pixelSize: 14
-            font.bold: true
-          }
-          LucideIcon {
-            Layout.preferredWidth: 16
-            Layout.preferredHeight: 16
-            visible: subsection.collapsible
-            source: window.controller.icon("chevron-right")
-            rotation: subsection.expanded ? 90 : 0
-            color: window.controller.controlSecondaryText
-          }
-        }
-        background: Rectangle {
-          radius: 8
-          color: subsectionHeader.hovered ? window.controller.controlHover : "transparent"
-          border.width: subsectionHeader.activeFocus ? 1 : 0
-          border.color: window.controller.controlActiveIcon
-        }
-      }
-      Rectangle {
-        Layout.fillWidth: true
-        implicitHeight: 1
-        visible: subsection.expanded
-        color: window.controller.controlSurfaceBorder
-      }
-      ColumnLayout {
-        id: subsectionBody
-        Layout.fillWidth: true
-        visible: subsection.expanded
-        spacing: 12
-      }
-    }
+  component SettingsSubsection: SettingsSection {
+    controller: window.controller
   }
 
   component GeneralOptions: ColumnLayout {

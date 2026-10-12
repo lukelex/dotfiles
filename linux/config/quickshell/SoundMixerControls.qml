@@ -126,14 +126,13 @@ Column {
     onTargetChanged: syncChannels()
     Component.onCompleted: syncChannels()
     implicitHeight: targetContent.height + 24
-    radius: 12
-    color: view.controller.controlSurface
-    border.color: view.controller.controlSurfaceBorder
+    color: "transparent"
+    Rectangle { width: parent.width; height: 1; color: view.controller.controlSurfaceBorder }
     Column {
     id: targetContent
-    x: 12
+    x: 0
     y: 12
-    width: parent.width - 24
+    width: parent.width
     spacing: 8
     Label {
       text: (targetRow.stream ? (targetRow.target.kind === "playback" ? "Playback" : "Recording") + " · " : "")
@@ -229,110 +228,133 @@ Column {
     }
   }
 
-  Label { text: "Current devices"; font.bold: true; color: view.controller.controlPrimaryText }
-  Choice {
-    label: "Output"
-    choices: view.audio.outputs
-    selected: view.audio.defaultSink
-    enabled: !view.audio.busy && view.audio.loaded
-    onChosen: option => view.audio.setDefaultSink(option.name)
+  SettingsSection {
+    width: view.width
+    controller: view.controller
+    title: "Current devices"
+    iconName: "headphones"
+    Column {
+      Layout.fillWidth: true
+      spacing: 12
+      Choice {
+        label: "Output"
+        choices: view.audio.outputs
+        selected: view.audio.defaultSink
+        enabled: !view.audio.busy && view.audio.loaded
+        onChosen: option => view.audio.setDefaultSink(option.name)
+      }
+      Choice {
+        label: "Microphone"
+        choices: view.audio.inputs
+        selected: view.audio.defaultSource
+        enabled: !view.audio.busy && view.audio.loaded
+        onChosen: option => view.audio.setDefaultSource(option.name)
+      }
+      Label {
+        visible: view.audio.busy
+        text: "Switching device…"
+      }
+      Label {
+        visible: view.audio.error !== ""
+        text: view.audio.error
+        color: view.controller.controlWarningText
+      }
+      Label { text: "Changing these devices also moves running applications. Individual app routes below can override the default." }
+    }
   }
-  Choice {
-    label: "Microphone"
-    choices: view.audio.inputs
-    selected: view.audio.defaultSource
-    enabled: !view.audio.busy && view.audio.loaded
-    onChosen: option => view.audio.setDefaultSource(option.name)
+  SettingsSection {
+    width: view.width
+    controller: view.controller
+    title: "Applications"
+    iconName: "volume-2"
+    Column {
+      id: applicationContent
+      Layout.fillWidth: true
+      spacing: 12
+      Label { visible: view.mixer.applications.count === 0; text: view.mixer.loading ? "Reading application audio…" : "No apps are using audio. Playback and recording controls appear here when active." }
+      Label { visible: view.mixer.error !== "" && !view.mixer.targetTokens.includes(view.mixer.errorTarget); text: view.mixer.error; color: view.controller.controlWarningText }
+      Repeater {
+        model: view.mixer.applications
+        delegate: Column {
+          id: application
+          required property string payload
+          required property string identity
+          readonly property var entry: JSON.parse(payload)
+          property bool expanded: false
+          width: applicationContent.width
+          spacing: 8
+          ListModel { id: streams; dynamicRoles: true }
+          onEntryChanged: view.mixer.syncModel(streams, entry.streams)
+          Component.onCompleted: view.mixer.syncModel(streams, entry.streams)
+          Label { text: application.entry.name; font.bold: true; color: view.controller.controlPrimaryText }
+          Button {
+            visible: streams.count > 2
+            text: application.expanded ? "Collapse streams" : streams.count + " streams · Show controls"
+            onClicked: application.expanded = !application.expanded
+          }
+          Repeater {
+            model: streams
+            delegate: TargetControls {
+              required property string payload
+              width: application.width
+              target: JSON.parse(payload)
+              visible: streams.count <= 2 || application.expanded
+            }
+          }
+        }
+      }
+    }
   }
-  Label {
-    visible: view.audio.busy
-    text: "Switching device…"
-  }
-  Label {
-    visible: view.audio.error !== ""
-    text: view.audio.error
-    color: view.controller.controlWarningText
-  }
-  Label { text: "Changing these devices also moves running applications. Individual app routes below can override the default." }
-  Rectangle { width: parent.width; height: 1; color: view.controller.controlSurfaceBorder }
-  Row {
-    width: parent.width
-    spacing: 8
-    LucideIcon { width: 18; height: 18; source: view.controller.icon("volume-2"); color: view.controller.controlSecondaryText }
-    Label { width: parent.width - 26; text: "Applications"; font.bold: true; color: view.controller.controlPrimaryText }
-  }
-  Label { visible: view.mixer.applications.count === 0; text: view.mixer.loading ? "Reading application audio…" : "No apps are using audio. Playback and recording controls appear here when active." }
-  Label { visible: view.mixer.error !== "" && !view.mixer.targetTokens.includes(view.mixer.errorTarget); text: view.mixer.error; color: view.controller.controlWarningText }
-  Repeater {
-    model: view.mixer.applications
-    delegate: Column {
-      id: application
-      required property string payload
-      required property string identity
-      readonly property var entry: JSON.parse(payload)
-      property bool expanded: false
-      width: view.width
-      spacing: 8
-      ListModel { id: streams; dynamicRoles: true }
-      onEntryChanged: view.mixer.syncModel(streams, entry.streams)
-      Component.onCompleted: view.mixer.syncModel(streams, entry.streams)
-      Label { text: application.entry.name; font.bold: true; color: view.controller.controlPrimaryText }
-      Button {
-        visible: streams.count > 2
-        text: application.expanded ? "Collapse streams" : streams.count + " streams · Show controls"
-        onClicked: application.expanded = !application.expanded
+  SettingsSection {
+    width: view.width
+    controller: view.controller
+    title: "Devices & hardware modes"
+    iconName: "speaker"
+    collapsible: true
+    expanded: view.deviceDetails
+    onToggled: {
+      view.interacted()
+      view.deviceDetails = !view.deviceDetails
+    }
+    Column {
+      id: deviceSettings
+      Layout.fillWidth: true
+      spacing: 12
+      ListModel { id: devices; dynamicRoles: true }
+      ListModel { id: cards; dynamicRoles: true }
+      Connections {
+        target: view.mixer
+        function onDevicesChanged() { view.mixer.syncModel(devices, view.mixer.devices.filter(device => !device.monitor)) }
+        function onCardsChanged() { view.mixer.syncModel(cards, view.mixer.cards) }
+      }
+      Component.onCompleted: {
+        view.mixer.syncModel(devices, view.mixer.devices.filter(device => !device.monitor))
+        view.mixer.syncModel(cards, view.mixer.cards)
       }
       Repeater {
-        model: streams
-        delegate: TargetControls {
-          required property string payload
-          width: application.width
-          target: JSON.parse(payload)
-          visible: streams.count <= 2 || application.expanded
-        }
+        model: devices
+        delegate: TargetControls { required property string payload; width: deviceSettings.width; target: JSON.parse(payload) }
       }
-    }
-  }
-  Rectangle { width: parent.width; height: 1; color: view.controller.controlSurfaceBorder }
-  Button { quiet: true; text: view.deviceDetails ? "⌄  Devices & hardware modes" : "›  Devices & hardware modes"; onClicked: view.deviceDetails = !view.deviceDetails }
-  Column {
-    id: deviceSettings
-    width: view.width
-    visible: view.deviceDetails
-    spacing: 12
-    ListModel { id: devices; dynamicRoles: true }
-    ListModel { id: cards; dynamicRoles: true }
-    Connections {
-      target: view.mixer
-      function onDevicesChanged() { view.mixer.syncModel(devices, view.mixer.devices.filter(device => !device.monitor)) }
-      function onCardsChanged() { view.mixer.syncModel(cards, view.mixer.cards) }
-    }
-    Component.onCompleted: {
-      view.mixer.syncModel(devices, view.mixer.devices.filter(device => !device.monitor))
-      view.mixer.syncModel(cards, view.mixer.cards)
-    }
-    Repeater {
-      model: devices
-      delegate: TargetControls { required property string payload; width: deviceSettings.width; target: JSON.parse(payload) }
-    }
-    Repeater {
-      model: cards
-      delegate: Column {
-        id: card
-        required property string payload
-        readonly property var entry: JSON.parse(payload)
-        width: deviceSettings.width
-        spacing: 6
-        Label { text: card.entry.description; color: view.controller.controlPrimaryText }
-        Choice {
-          label: "Mode"
-          choices: card.entry.profiles
-          selected: card.entry.activeProfile
-          enabled: view.mixer.pendingTarget !== card.entry.token
-          onChosen: option => view.mixer.change(card.entry, "profile", option.name)
+      Repeater {
+        model: cards
+        delegate: Column {
+          id: card
+          required property string payload
+          readonly property var entry: JSON.parse(payload)
+          width: deviceSettings.width
+          spacing: 6
+          Rectangle { width: parent.width; height: 1; color: view.controller.controlSurfaceBorder }
+          Label { text: card.entry.description; color: view.controller.controlPrimaryText }
+          Choice {
+            label: "Mode"
+            choices: card.entry.profiles
+            selected: card.entry.activeProfile
+            enabled: view.mixer.pendingTarget !== card.entry.token
+            onChosen: option => view.mixer.change(card.entry, "profile", option.name)
+          }
+          Label { text: "Changing mode may interrupt sound or change microphone availability. Headset modes can reduce playback quality."; font.pixelSize: 10 }
+          Label { visible: view.mixer.errorTarget === card.entry.token; text: view.mixer.error; color: view.controller.controlWarningText }
         }
-        Label { text: "Changing mode may interrupt sound or change microphone availability. Headset modes can reduce playback quality."; font.pixelSize: 10 }
-        Label { visible: view.mixer.errorTarget === card.entry.token; text: view.mixer.error; color: view.controller.controlWarningText }
       }
     }
   }
