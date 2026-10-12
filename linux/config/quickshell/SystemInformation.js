@@ -63,12 +63,6 @@ function normalize(data) {
     row("box", "Packages", Number.isFinite(packages.all) ? String(packages.all) : ""),
     row("clock", "Uptime", uptime)
   ];
-  const displays = list("Display").map(display => {
-    const mode = display.output || {};
-    return row("monitor", display.name || "Display", mode.width && mode.height
-      ? mode.width + " × " + mode.height + (mode.refreshRate ? " · " + Number(mode.refreshRate.toFixed(2)) + " Hz" : "")
-        + (display.primary ? " · Primary" : "") : "");
-  });
   return {
     hostname: title.hostName || "This computer",
     model: [host.vendor, host.version || host.family || host.name].filter(Boolean).join(" · "),
@@ -76,8 +70,7 @@ function normalize(data) {
     groups: [
       { title: "Hardware", icon: "cpu", rows: hardware },
       { title: "Storage", icon: "hard-drive", rows: Array.from(disks.values()) },
-      { title: "Desktop & session", icon: "box", rows: session },
-      { title: "Displays", icon: "monitor", rows: displays }
+      { title: "Desktop & session", icon: "box", rows: session }
     ].filter(group => group.rows.length)
   };
 }

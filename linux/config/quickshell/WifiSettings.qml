@@ -10,7 +10,7 @@ ColumnLayout {
   id: page
   required property var controller
   required property var service
-  spacing: 20
+  spacing: 16
   property var pendingPassphraseNetwork: null
   property string actionKey: ""
   property string actionName: ""
@@ -363,25 +363,20 @@ ColumnLayout {
     }
   }
 
-  component NetworkGroup: Rectangle {
+  component NetworkGroup: Item {
     id: group
     required property var entries
     property bool current: false
     property bool offline: false
     property alias count: records.count
-    implicitHeight: rows.implicitHeight + 8
+    implicitHeight: rows.implicitHeight
     visible: count > 0
-    radius: 14
-    color: current ? page.controller.controlActive : page.controller.controlSurface
-    border.color: current ? page.controller.controlActiveIcon : page.controller.controlSurfaceBorder
     ListModel { id: records; dynamicRoles: true }
     onEntriesChanged: page.syncRows(records, entries)
     Component.onCompleted: page.syncRows(records, entries)
     ColumnLayout {
       id: rows
-      x: 12
-      y: 4
-      width: group.width - 24
+      width: group.width
       spacing: 0
       Repeater {
         model: records
@@ -410,9 +405,14 @@ ColumnLayout {
     }
   }
 
+  SettingsSection {
+    Layout.fillWidth: true
+    controller: page.controller
+    title: "Wi-Fi connection"
+    iconName: "wifi"
   RowLayout {
     Layout.fillWidth: true
-    Label { Layout.fillWidth: true; text: "Wi-Fi"; color: page.controller.controlPrimaryText; font.pixelSize: 14 }
+    Label { Layout.fillWidth: true; text: "Wi-Fi radio"; color: page.controller.controlPrimaryText }
     Button {
       text: "ⓘ"
       implicitWidth: 32
@@ -479,11 +479,13 @@ ColumnLayout {
     text: (page.actionKey ? page.actionName + ": " : "") + page.service.wifiError
     color: page.controller.controlWarningText
   }
+  }
 
-  ColumnLayout {
+  SettingsSection {
     Layout.fillWidth: true
-    spacing: 8
-    Label { Layout.fillWidth: true; text: "Saved networks"; color: page.controller.controlPrimaryText; font.bold: true }
+    controller: page.controller
+    title: "Saved networks"
+    iconName: "wifi"
     NetworkGroup { Layout.fillWidth: true; entries: page.availableSaved }
     Label {
       Layout.fillWidth: true
@@ -491,20 +493,20 @@ ColumnLayout {
       text: page.radioReady ? "No other saved networks in range." : "Enable Wi-Fi to find saved networks in range."
     }
   }
-  ColumnLayout {
+  SettingsSection {
     Layout.fillWidth: true
-    spacing: 8
-    RowLayout {
-      Layout.fillWidth: true
-      Label { Layout.fillWidth: true; text: "Other nearby networks"; color: page.controller.controlPrimaryText; font.bold: true }
+    controller: page.controller
+    title: "Other nearby networks"
+    iconName: "search"
       Button {
+        Layout.alignment: Qt.AlignRight
+        text: "Scan again"
         iconName: "refresh-cw"
         quiet: true
         description: page.service.wifiRescanSuspended ? "Requesting scan…" : "Scan again"
         enabled: page.radioReady && !page.service.wifiRescanSuspended
         onClicked: page.service.rescanWifi()
       }
-    }
     NetworkGroup { Layout.fillWidth: true; entries: page.service.discoveredNetworks }
     Label {
       Layout.fillWidth: true
@@ -512,17 +514,15 @@ ColumnLayout {
       text: page.radioReady ? "No new networks found. Use Scan again to refresh." : "Enable Wi-Fi to discover nearby networks."
     }
   }
-  ColumnLayout {
+  SettingsSection {
     Layout.fillWidth: true
     visible: page.unavailableSaved.length > 0
-    spacing: 8
-    Button {
-      Layout.fillWidth: true
-      quiet: true
-      iconName: page.unavailableExpanded ? "chevrons-down-up" : "chevron-right"
-      text: "Unavailable saved networks (" + page.unavailableSaved.length + ")"
-      onClicked: page.unavailableExpanded = !page.unavailableExpanded
-    }
+    controller: page.controller
+    title: "Unavailable saved networks (" + page.unavailableSaved.length + ")"
+    iconName: "wifi-off"
+    collapsible: true
+    expanded: page.unavailableExpanded
+    onToggled: page.unavailableExpanded = !page.unavailableExpanded
     NetworkGroup {
       Layout.fillWidth: true
       entries: page.unavailableSaved
@@ -530,10 +530,11 @@ ColumnLayout {
       visible: page.unavailableExpanded && count > 0
     }
   }
-  Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: page.controller.controlSurfaceBorder }
-  ColumnLayout {
+  SettingsSection {
     Layout.fillWidth: true
-    spacing: 4
+    controller: page.controller
+    title: "Advanced network setup"
+    iconName: "settings"
     Button {
       Layout.fillWidth: true
       quiet: true

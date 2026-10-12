@@ -541,6 +541,60 @@ FloatingWindow {
         spacing: 16
         enabled: !monitors.busy && !monitors.pending
         SettingsSubsection {
+          Layout.fillWidth: true
+          title: "Displays"
+          iconName: "monitor"
+          Label {
+            Layout.fillWidth: true
+            visible: monitors.snapshot.outputs.length === 0
+            text: "No displays reported."
+            color: window.controller.controlSecondaryText
+          }
+          Repeater {
+            model: monitors.snapshot.outputs
+            delegate: ColumnLayout {
+              id: displaySummary
+              required property var modelData
+              required property int index
+              Layout.fillWidth: true
+              spacing: 12
+              Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: 1
+                visible: displaySummary.index > 0
+                color: window.controller.controlSurfaceBorder
+              }
+              RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                LucideIcon {
+                  Layout.preferredWidth: 18
+                  Layout.preferredHeight: 18
+                  source: window.controller.icon(displaySummary.modelData.enabled ? "monitor" : "monitor-off")
+                  color: window.controller.controlSecondaryText
+                }
+                ColumnLayout {
+                  Layout.fillWidth: true
+                  spacing: 4
+                  Label {
+                    Layout.fillWidth: true
+                    text: displaySummary.modelData.description || displaySummary.modelData.connector
+                    color: window.controller.controlSecondaryText
+                  }
+                  Label {
+                    Layout.fillWidth: true
+                    text: displaySummary.modelData.enabled
+                      ? displaySummary.modelData.mode.replace("x", " × ")
+                        + " · " + Number(Number(displaySummary.modelData.rate).toFixed(2)) + " Hz"
+                        + (displaySummary.modelData.primary ? " · Primary" : "")
+                      : "Disabled"
+                  }
+                }
+              }
+            }
+          }
+        }
+        SettingsSubsection {
           id: savedProfiles
           Layout.fillWidth: true
           title: "Saved profiles"
@@ -1009,6 +1063,29 @@ FloatingWindow {
             : "These presentation controls apply to Hyprlock on Wayland. Your X11 locker remains unchanged. Idle locking is configured in Lock & idle."
           color: window.controller.controlSecondaryText
         }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "power" && window.controller.batteryAvailable
+          title: "Battery"
+          iconName: window.controller.batteryIcon()
+          Label {
+            Layout.fillWidth: true
+            text: window.controller.batteryPercentage + "% · " + window.controller.batteryState.replace(/-/g, " ")
+              + (window.controller.batteryHealthAvailable ? " · Health " + Math.round(window.controller.batteryHealth) + "%" : "")
+          }
+          Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 6
+            radius: 3
+            color: window.controller.controlSliderTrack
+            Rectangle {
+              width: parent.width * Math.max(0, Math.min(1, window.controller.batteryPercentage / 100))
+              height: parent.height
+              radius: 3
+              color: window.controller.controlSecondaryText
+            }
+          }
+        }
         Label {
           Layout.fillWidth: true
           visible: window.section === "power"
@@ -1103,12 +1180,12 @@ FloatingWindow {
             }
           }
         }
-        ColumnLayout {
+        SettingsSubsection {
           Layout.fillWidth: true
           visible: window.section === "connectivity" && window.connectivityTab === "preferences"
-          spacing: 12
+          title: "Suggestions & alerts"
+          iconName: "bell"
           enabled: window.controller.preferences.ready && !window.controller.preferences.busy
-          Label { text: "Suggestions & alerts"; font.bold: true }
           Toggle {
             Layout.fillWidth: true
             text: "Suggest stronger saved Wi-Fi"
@@ -1116,6 +1193,7 @@ FloatingWindow {
             description: "Offers a stronger saved network when your signal is weak. Switching always requires your confirmation."
             onClicked: window.controller.preferences.setValue("connectivity.wifiSuggestions", !window.controller.preferences.value("connectivity.wifiSuggestions", true))
           }
+          Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
           Toggle {
             Layout.fillWidth: true
             text: "Bluetooth low-battery alerts"
@@ -1123,48 +1201,85 @@ FloatingWindow {
             description: "Warn once per connected device below the threshold. Alerts rearm after disconnecting or recovering."
             onClicked: window.controller.preferences.setValue("connectivity.bluetoothBatteryAlerts", !window.controller.preferences.value("connectivity.bluetoothBatteryAlerts", true))
           }
-          Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-          SoundButton {
-            Layout.fillWidth: true
-            text: window.connectivityAdvanced ? "⌄  Advanced tuning" : "›  Advanced tuning"
-            onClicked: window.connectivityAdvanced = !window.connectivityAdvanced
-          }
+        }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "connectivity" && window.connectivityTab === "preferences"
+          title: "Advanced tuning"
+          iconName: "sliders"
+          collapsible: true
+          expanded: window.connectivityAdvanced
+          onToggled: window.connectivityAdvanced = !window.connectivityAdvanced
           Label {
             Layout.fillWidth: true
-            visible: window.connectivityAdvanced
             text: "Thresholds and timing are saved in preferences.json. Suggestions never switch networks automatically."
             color: window.controller.controlSecondaryText
           }
+          Repeater {
+            model: window.controller.preferences.fields.filter(field => field.key.startsWith("connectivity.") && window.connectivityAdvanced && field.kind !== "boolean")
+            delegate: ColumnLayout {
+              id: connectivityField
+              required property var modelData
+              Layout.fillWidth: true
+              spacing: 12
+              Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+              PreferenceField { modelData: connectivityField.modelData }
+            }
+          }
         }
         Repeater {
-          model: window.controller.preferences.fields.filter(field => {
-            const category = field.key.split(".")[0]
-            if (["power", "display", "audio"].includes(category)) return false
-            if (category === "connectivity")
-              return window.section === "connectivity" && window.connectivityTab === "preferences"
-                && window.connectivityAdvanced && field.kind !== "boolean"
-            return (category === window.section || window.section === "weather" && category === "clock")
-              && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE"))
-          })
-          delegate: PreferenceField {}
-        }
-        Repeater {
-          model: window.section === "display" ? [
-            { title: "Color temperature", icon: "moon", keys: ["display.dayTemperature", "display.nightTemperature"] },
-            { title: "Sunrise & sunset", icon: "globe", keys: ["display.latitude", "display.longitude"] },
-            { title: "Brightness controls", icon: "sun", keys: ["display.linkBrightness", "display.brightnessStep"] },
-            { title: "On-screen indicators", icon: "monitor", keys: ["display.osdDurationMs"] }
-          ] : []
+          model: {
+            const groups = {
+              display: [
+                { title: "Color temperature", icon: "moon", keys: ["display.dayTemperature", "display.nightTemperature"] },
+                { title: "Sunrise & sunset", icon: "globe", keys: ["display.latitude", "display.longitude"] },
+                { title: "Brightness controls", icon: "sun", keys: ["display.linkBrightness", "display.brightnessStep"] },
+                { title: "On-screen indicators", icon: "monitor", keys: ["display.osdDurationMs"] }
+              ],
+              wallpaper: [
+                { title: "Wallpaper at login", icon: "monitor", keys: ["wallpaper.startupMode", "wallpaper.folder"] }
+              ],
+              idle: [
+                { title: "Idle timers", icon: "clock", keys: ["idle.dimSeconds", "idle.lockSeconds", "idle.screenOffSeconds", "idle.x11LockSeconds", "idle.x11ScreenOffSeconds"] },
+                { title: "Defer locking", icon: "lock", keys: ["idle.deferFullscreen", "idle.deferMicrophone", "idle.deferCamera"] }
+              ],
+              lockScreen: [
+                { title: "Greeting & daily content", icon: "user", keys: ["lockScreen.showGreeting", "lockScreen.showQuote", "lockScreen.showWeather"] },
+                { title: "System status", icon: "gauge", keys: ["lockScreen.showBattery", "lockScreen.showNetwork", "lockScreen.showVpn", "lockScreen.showAudio", "lockScreen.showDnd"] },
+                { title: "Privacy & security", icon: "lock", keys: ["lockScreen.showPrivacy", "lockScreen.showSecurity"] },
+                { title: "Media", icon: "play", keys: ["lockScreen.showMedia", "lockScreen.showMediaArtwork"] },
+                { title: "Wallpaper & backdrop", icon: "monitor", keys: ["lockScreen.wallpaperBlur", "lockScreen.wallpaperBlurPasses", "lockScreen.wallpaperBrightness"] }
+              ],
+              input: [
+                { title: "Keyboard", icon: "keyboard", keys: ["input.repeatDelay", "input.repeatRate"] },
+                { title: "Mouse & pointer", icon: "mouse", keys: ["input.sensitivity", "input.acceleration", "input.naturalScroll"] },
+                { title: "Touchpad", icon: "laptop", keys: ["input.touchpadNaturalScroll", "input.tapToClick", "input.disableWhileTyping"] }
+              ],
+              weather: [
+                { title: "Date & time", icon: "calendar", keys: ["clock.hourFormat", "clock.dateFormat", "clock.firstDay"] },
+                { title: "Weather", icon: "cloud-sun", keys: ["weather.locationMode", "weather.city", "weather.units"] }
+              ],
+              desktop: [
+                { title: "Bar appearance", icon: "layout-panel-top", keys: ["desktop.density"] },
+                { title: "Panel interactions", icon: "mouse", keys: ["desktop.hoverPreviews", "desktop.hoverCloseDelayMs"] }
+              ]
+            }
+            return (groups[window.section] || []).map(group => ({
+              title: group.title, icon: group.icon,
+              fields: group.keys.map(key => window.controller.preferences.fields.find(field => field.key === key))
+                .filter(field => field && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE")))
+            })).filter(group => group.fields.length > 0)
+          }
           delegate: SettingsSubsection {
-            id: displayGroup
+            id: preferenceGroup
             required property var modelData
             Layout.fillWidth: true
             title: modelData.title
             iconName: modelData.icon
             Repeater {
-              model: displayGroup.modelData.keys.map(key => window.controller.preferences.fields.find(field => field.key === key)).filter(field => field !== undefined)
+              model: preferenceGroup.modelData.fields
               delegate: ColumnLayout {
-                id: displayField
+                id: groupedField
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
@@ -1172,26 +1287,37 @@ FloatingWindow {
                 Rectangle {
                   Layout.fillWidth: true
                   implicitHeight: 1
-                  visible: displayField.index > 0
+                  visible: groupedField.index > 0
                   color: window.controller.controlSurfaceBorder
                 }
                 PreferenceField {
                   Layout.fillWidth: true
-                  modelData: displayField.modelData
+                  modelData: groupedField.modelData
                 }
               }
             }
           }
         }
-        Flow {
+        SettingsSubsection {
           Layout.fillWidth: true
           visible: window.section === "wallpaper"
-          spacing: 8
-          enabled: !wallpaperAction.process.running
-          SoundButton { text: "Choose image…"; onClicked: wallpaperFileDialog.open() }
-          SoundButton { text: "Choose folder…"; onClicked: wallpaperFolderDialog.open() }
-          SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
-          SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
+          title: "Wallpaper actions"
+          iconName: "refresh-cw"
+          Flow {
+            Layout.fillWidth: true
+            spacing: 8
+            enabled: !wallpaperAction.process.running
+            SoundButton { text: "Choose image…"; onClicked: wallpaperFileDialog.open() }
+            SoundButton { text: "Choose folder…"; onClicked: wallpaperFolderDialog.open() }
+            SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
+            SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
+          }
+          Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
+            color: window.controller.controlWarningText
+          }
         }
         WifiSettings {
           Layout.fillWidth: true
@@ -1213,12 +1339,6 @@ FloatingWindow {
             text: "Advanced audio settings…"
             onClicked: advancedAudioSettings.running = true
           }
-        }
-        Label {
-          Layout.fillWidth: true
-          visible: window.section === "wallpaper" && text !== ""
-          text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
-          color: window.controller.controlWarningText
         }
       }
     }

@@ -31,7 +31,7 @@ ColumnLayout {
   Process {
     id: fetch
     command: ["fastfetch", "--config", "none", "--structure",
-      "Title:OS:Host:Kernel:Uptime:Packages:Display:DE:WM:CPU:GPU:Memory:Swap:Disk", "--format", "json"]
+      "Title:OS:Host:Kernel:Uptime:Packages:DE:WM:CPU:GPU:Memory:Swap:Disk", "--format", "json"]
     stdout: StdioCollector {
       onStreamFinished: {
         if (!page.loading) return
@@ -217,28 +217,6 @@ ColumnLayout {
                 InfoRow { Layout.fillWidth: true; entry: detail.modelData }
               }
             }
-          }
-        }
-      }
-      Rectangle {
-        Layout.fillWidth: true
-        visible: page.controller.batteryAvailable
-        implicitHeight: batteryContent.implicitHeight + 28
-        radius: 18
-        color: page.controller.controlSurface
-        border.color: page.controller.controlSurfaceBorder
-        ColumnLayout {
-          id: batteryContent
-          anchors.fill: parent
-          anchors.margins: 14
-          spacing: 12
-          Label { text: "Power"; font.pixelSize: 14; font.bold: true }
-          InfoRow {
-            Layout.fillWidth: true
-            entry: ({ icon: page.controller.batteryIcon(), label: "Battery",
-              value: page.controller.batteryPercentage + "% · " + page.controller.batteryState.replace(/-/g, " ")
-                + (page.controller.batteryHealthAvailable ? " · Health " + Math.round(page.controller.batteryHealth) + "%" : ""),
-              usage: page.controller.batteryPercentage / 100 })
           }
         }
       }

@@ -24,9 +24,9 @@ test('System Settings exposes Wi-Fi management and scans only while that page is
 test('Wi-Fi hierarchy puts current and saved connections before discovery and collapsed unavailable profiles', () => {
   const ui = read('WifiSettings.qml');
   const service = read('ConnectivityService.qml');
-  assert.match(ui, /text: "Other nearby networks"/);
+  assert.match(ui, /title: "Other nearby networks"/);
   assert.match(ui, /entries: page\.service\.discoveredNetworks/);
-  assert.match(ui, /text: "Saved networks"/);
+  assert.match(ui, /title: "Saved networks"/);
   assert.match(ui, /entries: page\.availableSaved/);
   assert.match(ui, /service\.connectNetwork\(row\.network\)/);
   assert.match(ui, /property bool unavailableExpanded: false/);

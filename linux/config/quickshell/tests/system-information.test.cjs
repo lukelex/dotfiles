@@ -35,24 +35,19 @@ test('generic opening resets the destination while contextual shortcuts retain t
   assert.equal(settings.section, 'system');
 });
 
-test('uses login shell and separates hardware, session and multiple displays', () => {
+test('uses login shell and separates hardware and session information', () => {
   const info = normalize([
     { type: 'Title', result: { hostName: 'test-host', userShell: '/usr/bin/zsh' } },
     { type: 'Shell', result: { prettyName: 'quickshell' } },
     { type: 'DE', error: 'No DE found' },
     { type: 'WM', result: { prettyName: 'i3', protocolName: 'X11' } },
-    { type: 'Uptime', result: { uptime: 90061000 } },
-    { type: 'Display', result: [
-      { name: 'Internal', output: { width: 1920, height: 1200, refreshRate: 60.002 } },
-      { name: 'External', output: { width: 3840, height: 2160, refreshRate: 144 } }
-    ] }
+    { type: 'Uptime', result: { uptime: 90061000 } }
   ]);
   assert.equal(info.hostname, 'test-host');
   const session = info.groups.find(g => g.title === 'Desktop & session').rows;
   assert.equal(session.find(r => r.label === 'Login shell').value, '/usr/bin/zsh');
   assert.equal(session.find(r => r.label === 'Desktop / session').value, 'i3 · X11');
   assert.equal(session.find(r => r.label === 'Uptime').value, '1d 1h 1m');
-  assert.equal(info.groups.find(g => g.title === 'Displays').rows.length, 2);
 });
 
 test('groups shared Btrfs capacity without merging independent filesystems', () => {
