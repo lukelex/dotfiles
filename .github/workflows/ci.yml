@@ -33,6 +33,8 @@ jobs:
         run: bash linux/scripts/tests/lock-launcher.test.sh
       - name: Check zsh syntax
         run: find linux/config/zsh -type f -print0 | xargs -0 zsh -n
+      - name: Test shell window titles
+        run: zsh linux/config/zsh/tests/window-title.test.zsh
       - name: Guard 1Password refs against plaintext secrets
         run: |
           bad="$(grep -nEH '^[A-Za-z_][A-Za-z0-9_]*=' linux/config/oprefs/*.env 2>/dev/null | grep -vE 'op://' || true)"

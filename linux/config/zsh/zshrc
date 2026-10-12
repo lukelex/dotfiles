@@ -11,6 +11,7 @@ case ":$PATH:" in
 esac
 
 source "$DOTFILES/linux/config/zsh/theme.zsh"
+source "$DOTFILES/linux/config/zsh/window-title.zsh"
 source "$DOTFILES/linux/config/zsh/history.zsh"
 source "$DOTFILES/linux/config/zsh/branches.zsh"
 source "$DOTFILES/linux/config/zsh/doc-search.zsh"
