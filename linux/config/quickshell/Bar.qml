@@ -822,7 +822,9 @@ Scope {
     for (const name of Object.keys(root.panelsByScreen))
       root.panelsByScreen[name].closeControlCenter()
     const panel = root.focusedPanel()
-    if (section) {
+    if (!section)
+      systemSettings.section = "system"
+    else {
       systemSettings.section = section === "wifi" || section === "connectivityPreferences" ? "connectivity" : section
       if (systemSettings.section === "connectivity") {
         systemSettings.connectivityTab = section === "connectivityPreferences" ? "preferences" : "networks"

@@ -13,7 +13,7 @@ FloatingWindow {
   required property var controller
   required property var service
   required property var connectivity
-  property string section: "notifications"
+  property string section: "system"
   property string connectivityTab: "networks"
   property bool connectivityAdvanced: false
   readonly property bool wifiDiscoveryActive: visible && section === "connectivity" && connectivityTab === "networks"
@@ -22,6 +22,7 @@ FloatingWindow {
     connectivityAdvanced = false
   }
   readonly property var sections: [
+    { key: "system", label: "System information", icon: "cpu" },
     { key: "notifications", label: "Notifications", icon: "bell" },
     { key: "display", label: "Display", icon: "sun" },
     { key: "monitors", label: "Monitors", icon: "monitor" },
@@ -427,10 +428,16 @@ FloatingWindow {
         color: window.controller.controlSurface
 
         Controls.ScrollView {
+          id: sidebarScroll
           anchors.fill: parent
           anchors.margins: 6
           contentWidth: availableWidth
           clip: true
+          Binding {
+            target: sidebarScroll.contentItem
+            property: "boundsBehavior"
+            value: Flickable.StopAtBounds
+          }
         Column {
           width: sidebar.width - 12
           spacing: 4
@@ -484,12 +491,19 @@ FloatingWindow {
         Layout.fillHeight: true
       }
       PreferencesPage {
-        visible: !["notifications", "monitors"].includes(window.section)
+        visible: !["system", "notifications", "monitors"].includes(window.section)
         Layout.fillWidth: true
         Layout.fillHeight: true
       }
       MonitorsPage {
         visible: window.section === "monitors"
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+      SystemInformation {
+        controller: window.controller
+        active: window.visible && window.section === "system"
+        visible: window.section === "system"
         Layout.fillWidth: true
         Layout.fillHeight: true
       }
@@ -517,6 +531,11 @@ FloatingWindow {
       Layout.fillHeight: true
       contentWidth: availableWidth
       clip: true
+      Binding {
+        target: monitorScroll.contentItem
+        property: "boundsBehavior"
+        value: Flickable.StopAtBounds
+      }
       ColumnLayout {
         width: monitorScroll.availableWidth
         spacing: 12
@@ -944,6 +963,11 @@ FloatingWindow {
       Layout.fillHeight: true
       contentWidth: availableWidth
       clip: true
+      Binding {
+        target: preferenceScroll.contentItem
+        property: "boundsBehavior"
+        value: Flickable.StopAtBounds
+      }
       Connections {
         target: window
         function onSectionChanged() {
