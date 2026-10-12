@@ -164,6 +164,37 @@ FloatingWindow {
     }
   }
 
+  component ScheduleTime: Controls.TextField {
+    id: timeInput
+    required property int minutesValue
+    signal edited(int minutes)
+    text: window.service.formatScheduleTime(minutesValue)
+    implicitWidth: 76
+    implicitHeight: 36
+    horizontalAlignment: TextInput.AlignHCenter
+    font.family: window.controller.fontFamily
+    font.pixelSize: 12
+    color: window.controller.controlPrimaryText
+    selectByMouse: true
+    validator: RegularExpressionValidator { regularExpression: /([01][0-9]|2[0-3]):[0-5][0-9]/ }
+    onEditingFinished: {
+      if (acceptableInput) {
+        const parts = text.split(":")
+        edited(Number(parts[0]) * 60 + Number(parts[1]))
+      }
+      text = Qt.binding(() => window.service.formatScheduleTime(timeInput.minutesValue))
+    }
+    onActiveFocusChanged: {
+      if (!activeFocus && !acceptableInput)
+        text = Qt.binding(() => window.service.formatScheduleTime(timeInput.minutesValue))
+    }
+    background: Rectangle {
+      radius: 8
+      color: window.controller.controlSurface
+      border.color: timeInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+    }
+  }
+
   function monitorChoices() {
     const entries = [{ label: "All monitors", value: "all" }, { label: "Focused monitor", value: "focused" }]
     for (const screen of Quickshell.screens)
@@ -305,6 +336,60 @@ FloatingWindow {
     }
     Toggle {
       Layout.fillWidth: true
+      text: "Scheduled DND"
+      iconName: "clock"
+      description: "Quiet hours use local time. Manual DND changes last until the next scheduled boundary. Disabling the schedule leaves the current DND state unchanged."
+      checked: window.service.dndScheduleEnabled
+      onClicked: window.service.setDndSchedule(!window.service.dndScheduleEnabled, window.service.dndStartMinutes,
+        window.service.dndEndMinutes, window.service.dndScheduleDays)
+    }
+    GridLayout {
+      visible: window.service.dndScheduleEnabled
+      Layout.fillWidth: true
+      columns: 2
+      columnSpacing: 12
+      rowSpacing: 8
+      Label { text: "Quiet hours" }
+      RowLayout {
+        Layout.alignment: Qt.AlignRight
+        spacing: 8
+        ScheduleTime {
+          minutesValue: window.service.dndStartMinutes
+          Accessible.name: "Quiet hours start (24-hour local time)"
+          onEdited: minutes => window.service.setDndSchedule(true, minutes,
+            window.service.dndEndMinutes, window.service.dndScheduleDays)
+        }
+        Label { text: "–" }
+        ScheduleTime {
+          minutesValue: window.service.dndEndMinutes
+          Accessible.name: "Quiet hours end (24-hour local time)"
+          onEdited: minutes => window.service.setDndSchedule(true, window.service.dndStartMinutes,
+            minutes, window.service.dndScheduleDays)
+        }
+      }
+      Label { text: "Repeat" }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: [
+          { label: "Every day", value: 127 },
+          { label: "Weekdays", value: 31 },
+          { label: "Weekends", value: 96 }
+        ]
+        selectedValue: window.service.dndScheduleDays
+        Accessible.name: "Quiet hours repeat on these start days"
+        onChosen: value => window.service.setDndSchedule(true, window.service.dndStartMinutes,
+          window.service.dndEndMinutes, value)
+      }
+    }
+    Label {
+      Layout.fillWidth: true
+      visible: text !== ""
+      text: window.service.dndScheduleError || window.service.dndScheduleStatus
+      color: window.controller.controlSecondaryText
+    }
+    Toggle {
+      Layout.fillWidth: true
       text: "Notification sounds"
       iconName: checked ? "volume-2" : "volume-x"
       description: "Controls sound for all apps without changing popups or history. Per-app sound preferences are preserved while muted."
@@ -422,8 +507,10 @@ FloatingWindow {
     Controls.ScrollView {
       id: optionsScroll
       Layout.fillWidth: true
-      Layout.preferredHeight: Math.min(generalOptions.implicitHeight, parent.height * 0.6)
+      Layout.minimumHeight: 0
+      Layout.preferredHeight: Math.min(generalOptions.implicitHeight, Math.max(160, window.height - 280))
       contentWidth: availableWidth
+      contentHeight: generalOptions.implicitHeight
       clip: true
       GeneralOptions {
         id: generalOptions

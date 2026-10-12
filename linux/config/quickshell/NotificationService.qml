@@ -23,6 +23,14 @@ QtObject {
   property var hovered: ({})
   property double now: 0
   property bool doNotDisturb: false
+  property bool preferencesLoaded: false
+  property bool scheduledDndActive: false
+  property string dndScheduleError: ""
+  property string dndScheduleStatus: ""
+  readonly property bool dndScheduleEnabled: settings.dndScheduleEnabled
+  readonly property int dndStartMinutes: settings.dndStartMinutes
+  readonly property int dndEndMinutes: settings.dndEndMinutes
+  readonly property int dndScheduleDays: settings.dndScheduleDays
   property bool notificationSoundsMuted: false
   property var applications: []
   onNotificationSoundsMutedChanged: {
@@ -140,9 +148,15 @@ QtObject {
     property string popupMonitor: "all"
     property int historyRetentionDays: 0
     property bool doNotDisturb: false
+    property bool dndScheduleEnabled: false
+    property int dndStartMinutes: 22 * 60
+    property int dndEndMinutes: 8 * 60
+    property int dndScheduleDays: 127
+    property double dndOverrideUntil: 0
+    property bool dndOverrideEnabled: false
     property bool notificationSoundsMuted: false
 
-    onDoNotDisturbChanged: service.doNotDisturb = doNotDisturb
+    onDoNotDisturbChanged: service.refreshDndSchedule()
     onNotificationSoundsMutedChanged: service.notificationSoundsMuted = notificationSoundsMuted
   }
 
@@ -173,6 +187,11 @@ QtObject {
     repeat: true
     running: service.historyRetentionDays > 0
     onTriggered: service.pruneHistory()
+  }
+
+  property SystemClock scheduleClock: SystemClock {
+    precision: SystemClock.Minutes
+    onDateChanged: service.refreshDndSchedule()
   }
 
   property Timer osdTimer: Timer {
@@ -223,6 +242,8 @@ QtObject {
     service.historyGroups = service.groupHistory(service.history)
     service.pruneHistory()
     service.syncPopup()
+    service.preferencesLoaded = true
+    service.refreshDndSchedule()
   }
 
   function saveHistory() {
@@ -380,6 +401,7 @@ QtObject {
   }
 
   function handleNotification(notification) {
+    service.refreshDndSchedule()
     const hints = notification.hints || {}
     const tag = String(hints["wired-tag"] || "")
     const value = typeof hints["value"] === "number" ? hints["value"] : -1
@@ -777,9 +799,22 @@ QtObject {
   }
 
   function setDoNotDisturb(enabled) {
-    service.doNotDisturb = enabled
+    if (service.dndScheduleEnabled) {
+      const date = new Date()
+      settings.dndOverrideEnabled = enabled
+      settings.dndOverrideUntil = service.nextDndBoundary(date)
+    }
     settings.doNotDisturb = enabled
+    service.applyDoNotDisturb(enabled)
+    service.refreshDndSchedule()
+  }
+
+  function applyDoNotDisturb(enabled) {
+    if (service.doNotDisturb === enabled)
+      return
+    service.doNotDisturb = enabled
     if (enabled) {
+      service.notificationSound.running = false
       // Suppression is presentation state, not dismissal. Do not replay these
       // records when DND ends, and leave native actions and system OSDs alive.
       service.history = service.history.map(record => Object.assign({}, record, { popupSuppressed: true }))
@@ -787,6 +822,72 @@ QtObject {
       service.saveHistory()
     }
     service.syncPopup()
+  }
+
+  function formatScheduleTime(minutes) {
+    return String(Math.floor(minutes / 60)).padStart(2, "0") + ":" + String(minutes % 60).padStart(2, "0")
+  }
+
+  function setDndSchedule(enabled, start, end, days) {
+    if (typeof enabled !== "boolean" || !Number.isInteger(start) || !Number.isInteger(end)
+        || start < 0 || start >= 1440 || end < 0 || end >= 1440
+        || start === end || ![127, 31, 96].includes(days)) {
+      service.dndScheduleError = "Choose different start and end times in 24-hour format."
+      return false
+    }
+    // Disabling automation leaves the current DND state under manual control.
+    const current = service.doNotDisturb
+    settings.dndScheduleEnabled = enabled
+    settings.dndStartMinutes = start
+    settings.dndEndMinutes = end
+    settings.dndScheduleDays = days
+    settings.dndOverrideUntil = 0
+    if (!enabled)
+      settings.doNotDisturb = current
+    service.dndScheduleError = ""
+    service.refreshDndSchedule()
+    return true
+  }
+
+  function dndIntervals(date) {
+    const intervals = []
+    if (!service.dndScheduleEnabled || service.dndStartMinutes === service.dndEndMinutes)
+      return intervals
+    const start = service.dndStartMinutes
+    const end = service.dndEndMinutes
+    for (let offset = -1; offset <= 7; offset++) {
+      const day = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset)
+      const weekday = (day.getDay() + 6) % 7
+      if (!(service.dndScheduleDays & (1 << weekday)))
+        continue
+      // Local calendar dates handle DST and overnight intervals without assuming 24-hour days.
+      const from = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(start / 60), start % 60)
+      const to = new Date(day.getFullYear(), day.getMonth(), day.getDate() + (end < start ? 1 : 0), Math.floor(end / 60), end % 60)
+      intervals.push({ start: from.getTime(), end: to.getTime() })
+    }
+    return intervals
+  }
+
+  function nextDndBoundary(date) {
+    const now = date.getTime()
+    const future = service.dndIntervals(date).flatMap(interval => [interval.start, interval.end]).filter(time => time > now)
+    return future.length ? Math.min(...future) : 0
+  }
+
+  function refreshDndSchedule() {
+    if (!service.preferencesLoaded)
+      return
+    const date = new Date()
+    const now = date.getTime()
+    service.scheduledDndActive = service.dndIntervals(date).some(interval => now >= interval.start && now < interval.end)
+    const overridden = service.dndScheduleEnabled && settings.dndOverrideUntil > now
+    if (!overridden && settings.dndOverrideUntil !== 0)
+      settings.dndOverrideUntil = 0
+    service.dndScheduleStatus = !service.dndScheduleEnabled ? ""
+      : overridden ? "Manual override until " + Qt.formatDateTime(new Date(settings.dndOverrideUntil), "ddd HH:mm")
+      : service.scheduledDndActive ? "Quiet hours active" : "Quiet hours inactive"
+    service.applyDoNotDisturb(overridden ? settings.dndOverrideEnabled
+      : service.dndScheduleEnabled ? service.scheduledDndActive : settings.doNotDisturb)
   }
 
   function setHovered(id, enabled) {

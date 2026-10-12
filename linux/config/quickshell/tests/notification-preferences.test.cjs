@@ -6,10 +6,10 @@ const { test } = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
 
-function preferences(names, values = {}) {
+function preferences(names, values = {}, globals = {}) {
   const settings = {};
   const service = { ...values };
-  const context = vm.createContext({ service, settings, Date });
+  const context = vm.createContext({ service, settings, Date, ...globals });
   for (const name of names) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, name);
@@ -80,4 +80,97 @@ test('retention removes only old inactive history without touching native lifecy
   service.history.push({ id: 5, time: 0 });
   service.pruneHistory();
   assert.equal(service.history.length, 2);
+});
+
+function schedule(initialDate) {
+  let now = initialDate.getTime();
+  class Clock extends Date {
+    constructor(...args) { super(...(args.length ? args : [now])); }
+    static now() { return now; }
+  }
+  const fixture = preferences(['dndIntervals', 'nextDndBoundary', 'refreshDndSchedule',
+    'setDndSchedule', 'setDoNotDisturb', 'applyDoNotDisturb', 'formatScheduleTime'], {
+    preferencesLoaded: true, doNotDisturb: false, history: [{ id: 1 }], pendingPopupRecords: [{ id: 1 }],
+    notificationSound: { running: true }, syncPopup() {}, saveHistory() {}
+  }, { Date: Clock, Qt: { formatDateTime: date => date.toISOString() } });
+  Object.assign(fixture.settings, {
+    dndScheduleEnabled: false, dndStartMinutes: 1320, dndEndMinutes: 480,
+    dndScheduleDays: 127, dndOverrideUntil: 0, dndOverrideEnabled: false, doNotDisturb: false
+  });
+  for (const key of ['dndScheduleEnabled', 'dndStartMinutes', 'dndEndMinutes', 'dndScheduleDays'])
+    Object.defineProperty(fixture.service, key, { get: () => fixture.settings[key] });
+  fixture.advance = date => { now = date.getTime(); fixture.service.refreshDndSchedule(); };
+  return fixture;
+}
+
+test('weekday quiet hours cross midnight based on the start day, with exclusive end boundaries', () => {
+  const { service, advance } = schedule(new Date(2026, 9, 16, 21, 59)); // Friday
+  service.setDndSchedule(true, 1320, 480, 31);
+  assert.equal(service.doNotDisturb, false);
+  advance(new Date(2026, 9, 16, 22));
+  assert.equal(service.doNotDisturb, true);
+  assert.equal(service.notificationSound.running, false);
+  assert.equal(service.history[0].popupSuppressed, true);
+  advance(new Date(2026, 9, 17, 7, 59));
+  assert.equal(service.doNotDisturb, true);
+  advance(new Date(2026, 9, 17, 8));
+  assert.equal(service.doNotDisturb, false);
+  assert.equal(service.history[0].popupSuppressed, true);
+  assert.equal(service.nextDndBoundary(new Date(2026, 9, 17, 8)), new Date(2026, 9, 19, 22).getTime());
+  advance(new Date(2026, 9, 17, 23));
+  assert.equal(service.doNotDisturb, false);
+});
+
+test('manual overrides survive refresh/reload and expire at the next boundary', () => {
+  const { service, settings, advance } = schedule(new Date(2026, 9, 12, 23));
+  service.setDndSchedule(true, 1320, 480, 127);
+  service.setDoNotDisturb(false);
+  assert.equal(service.doNotDisturb, false);
+  assert.equal(settings.dndOverrideUntil, new Date(2026, 9, 13, 8).getTime());
+  service.doNotDisturb = true; // Reconstructed runtime, persisted settings intact.
+  service.refreshDndSchedule();
+  assert.equal(service.doNotDisturb, false);
+  advance(new Date(2026, 9, 13, 8));
+  assert.equal(settings.dndOverrideUntil, 0);
+  assert.equal(service.doNotDisturb, false);
+  service.setDoNotDisturb(true);
+  assert.equal(settings.dndOverrideUntil, new Date(2026, 9, 13, 22).getTime());
+  advance(new Date(2026, 9, 14, 9)); // Resume after crossing both boundaries.
+  assert.equal(service.doNotDisturb, false);
+  assert.equal(settings.dndOverrideUntil, 0);
+});
+
+test('schedule validates times, supports daytime/weekend schedules and returns to manual control', () => {
+  const { service, settings, advance } = schedule(new Date(2026, 9, 17, 10));
+  assert.equal(service.setDndSchedule(true, 9 * 60, 17 * 60, 96), true);
+  assert.equal(service.doNotDisturb, true);
+  assert.equal(service.setDndSchedule(true, 540, 540, 96), false);
+  assert.equal(service.setDndSchedule(true, -1, 540, 96), false);
+  assert.equal(service.setDndSchedule(true, 1440, 540, 96), false);
+  assert.equal(service.setDndSchedule(true, 540, 1020, 0), false);
+  assert.equal(settings.dndEndMinutes, 1020);
+  service.setDndSchedule(false, 540, 1020, 96);
+  assert.equal(service.doNotDisturb, true);
+  advance(new Date(2026, 9, 19, 18));
+  assert.equal(service.doNotDisturb, true);
+  service.setDoNotDisturb(false);
+  assert.equal(service.doNotDisturb, false);
+  assert.equal(service.formatScheduleTime(5), '00:05');
+  assert.equal(service.formatScheduleTime(1439), '23:59');
+});
+
+test('local calendar boundaries handle spring-forward and fall-back overnight schedules', () => {
+  const previous = process.env.TZ;
+  process.env.TZ = 'America/New_York';
+  try {
+    for (const [date, hours] of [[new Date(2026, 2, 7, 22), 9], [new Date(2026, 9, 31, 22), 11]]) {
+      const { service } = schedule(date);
+      service.setDndSchedule(true, 1320, 480, 127);
+      assert.equal(service.doNotDisturb, true);
+      assert.equal(service.nextDndBoundary(date) - date.getTime(), hours * 3600000);
+    }
+  } finally {
+    if (previous === undefined) delete process.env.TZ;
+    else process.env.TZ = previous;
+  }
 });
