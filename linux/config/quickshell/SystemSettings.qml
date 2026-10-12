@@ -538,9 +538,13 @@ FloatingWindow {
       }
       ColumnLayout {
         width: monitorScroll.availableWidth
-        spacing: 12
+        spacing: 16
         enabled: !monitors.busy && !monitors.pending
-        Label { text: "Saved profiles"; font.bold: true }
+        SettingsSubsection {
+          id: savedProfiles
+          Layout.fillWidth: true
+          title: "Saved profiles"
+          iconName: "monitor"
         Label {
           Layout.fillWidth: true
           text: monitors.snapshot.profiles.length ? "Choose a detected setup. Keep the new layout within 20 seconds to confirm."
@@ -549,7 +553,7 @@ FloatingWindow {
         }
         GridLayout {
           Layout.fillWidth: true
-          columns: monitorScroll.availableWidth >= 480 ? 2 : 1
+          columns: savedProfiles.width - 28 >= 480 ? 2 : 1
           columnSpacing: 10
           rowSpacing: 10
         Repeater {
@@ -616,6 +620,7 @@ FloatingWindow {
           text: "Finish or reload your draft layout below before switching profiles."
           color: window.controller.controlWarningText
         }
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
         Toggle {
           Layout.fillWidth: true
           text: "Automatically switch setups"
@@ -623,17 +628,14 @@ FloatingWindow {
           description: "Use matching saved profiles when displays connect or disconnect. A kept manual layout remains until the connected hardware changes."
           onClicked: monitors.run("automatic", JSON.stringify(!monitors.snapshot.automatic))
         }
-        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-        SoundButton {
-          Layout.fillWidth: true
-          text: monitorPage.editing ? "⌄  Customize layout & manage profiles" : "›  Customize layout & manage profiles"
-          iconName: "settings"
-          onClicked: monitorPage.editing = !monitorPage.editing
         }
-        ColumnLayout {
+        SettingsSubsection {
           Layout.fillWidth: true
-          visible: monitorPage.editing
-          spacing: 12
+          title: "Customize layout & profiles"
+          iconName: "settings"
+          collapsible: true
+          expanded: monitorPage.editing
+          onToggled: monitorPage.editing = !monitorPage.editing
           Choice {
             Layout.fillWidth: true
             Accessible.name: "Profile to edit"
@@ -705,6 +707,12 @@ FloatingWindow {
           Layout.fillWidth: true
           Label { Layout.fillWidth: true; text: "Drag displays to arrange; edges snap."; color: window.controller.controlSecondaryText }
         }
+        }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: monitorPage.editing
+          title: "Display properties"
+          iconName: "monitor"
         Choice {
           Layout.fillWidth: true
           Accessible.name: "Selected display"
@@ -813,14 +821,26 @@ FloatingWindow {
           enabled: monitors.output?.enabled ?? false
           onClicked: monitors.edit("primary", !monitors.output.primary)
         }
-        SoundButton {
-          text: monitors.linkDetails ? "Hide link details" : "Link details"
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+        RowLayout {
+          Layout.fillWidth: true
+          SoundButton { text: "Reload current"; iconName: "refresh-cw"; onClicked: { monitors.resetAfterRead = true; monitors.refresh() } }
+          Item { Layout.fillWidth: true }
+          SoundButton { text: "Apply"; enabled: monitors.dirty; onClicked: monitors.run("apply", JSON.stringify(monitors.draft)) }
+        }
+        }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: monitorPage.editing
+          title: "Connection details"
+          iconName: "gauge"
+          collapsible: true
+          expanded: monitors.linkDetails !== null
           enabled: monitors.connectedOutput !== null && monitors.connectedOutput !== undefined
-          onClicked: {
+          onToggled: {
             if (monitors.linkDetails) monitors.linkDetails = null
             else monitors.run("details", monitors.connectedOutput.connector)
           }
-        }
         Label {
           Layout.fillWidth: true
           visible: monitors.linkDetails !== null
@@ -841,14 +861,12 @@ FloatingWindow {
             text: "These describe the current applied layout, not the draft. The estimate assumes uncompressed 8-bit RGB. EDID limits describe the monitor's HDMI capability, not the negotiated GPU/cable/dock link. max bpc is a limit, not active color depth."
           }
         }
-        RowLayout {
-          Layout.fillWidth: true
-          SoundButton { text: "Reload current"; iconName: "refresh-cw"; onClicked: { monitors.resetAfterRead = true; monitors.refresh() } }
-          Item { Layout.fillWidth: true }
-          SoundButton { text: "Apply"; enabled: monitors.dirty; onClicked: monitors.run("apply", JSON.stringify(monitors.draft)) }
         }
-        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-        Label { text: "Save & manage profiles"; font.bold: true }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: monitorPage.editing
+          title: "Save & manage profiles"
+          iconName: "boxes"
         Controls.TextField {
           id: profileName
           Layout.fillWidth: true
@@ -1109,121 +1127,46 @@ FloatingWindow {
         Repeater {
           model: window.controller.preferences.fields.filter(field => {
             const category = field.key.split(".")[0]
-            if (category === "power") return false
+            if (category === "power" || category === "display") return false
             if (category === "connectivity")
               return window.section === "connectivity" && window.connectivityTab === "preferences"
                 && window.connectivityAdvanced && field.kind !== "boolean"
             return (category === window.section || window.section === "weather" && category === "clock")
               && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE"))
           })
-          delegate: ColumnLayout {
-            id: preferenceRow
+          delegate: PreferenceField {}
+        }
+        Repeater {
+          model: window.section === "display" ? [
+            { title: "Color temperature", icon: "moon", keys: ["display.dayTemperature", "display.nightTemperature"] },
+            { title: "Sunrise & sunset", icon: "globe", keys: ["display.latitude", "display.longitude"] },
+            { title: "Brightness controls", icon: "sun", keys: ["display.linkBrightness", "display.brightnessStep"] },
+            { title: "On-screen indicators", icon: "monitor", keys: ["display.osdDurationMs"] }
+          ] : []
+          delegate: SettingsSubsection {
+            id: displayGroup
             required property var modelData
-            readonly property var currentValue: window.controller.preferences.value(modelData.key, "")
             Layout.fillWidth: true
-            spacing: 6
-            enabled: window.controller.preferences.ready && !window.controller.preferences.busy
-            Toggle {
-              Layout.fillWidth: true
-              visible: preferenceRow.modelData.kind === "boolean"
-              text: preferenceRow.modelData.label
-              checked: preferenceRow.currentValue === true
-              description: preferenceRow.modelData.key === "desktop.hoverPreviews"
-                ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover."
-                : preferenceRow.modelData.key === "display.linkBrightness" ? "When setting laptop brightness, also set keyboard and DDC-capable external displays to the same percentage. Enabling this does not immediately change any device."
-                : preferenceRow.modelData.key === "connectivity.bluetoothBatteryAlerts" ? "Warn once per device below the selected threshold. Disconnecting or recovering above the threshold rearms alerts; existing notification policies still apply."
-                : window.section === "lockScreen" ? "Changes apply on the next lock. Hiding a widget removes its label or image and stops its helper from running. Authentication, date/time and explicit locking are unchanged."
-                : window.section === "connectivity" ? "Only offers a stronger saved network on the same adapter. Clicking Switch rechecks your current preferences and network availability." : ""
-              onClicked: window.controller.preferences.setValue(preferenceRow.modelData.key, !preferenceRow.currentValue)
-            }
-            Label {
-              Layout.fillWidth: true
-              visible: preferenceRow.modelData.kind !== "boolean"
-              text: preferenceRow.modelData.label
-            }
-            Choice {
-              Layout.fillWidth: true
-              visible: preferenceRow.modelData.kind === "choice"
-              model: preferenceRow.modelData.values.map(value => {
-                const labels = {
-                  automatic: "Automatic (IP location)", fixed: "Fixed city",
-                  metric: "Celsius · metres/second", imperial: "Fahrenheit · miles/hour",
-                  flat: "Off (flat)", adaptive: "Adaptive", comfortable: "Comfortable", compact: "Compact",
-                  random: "Random from folder", restore: "Restore saved image",
-                  "24": "24-hour", "12": "12-hour", "0": "Sunday", "1": "Monday"
-                }
-                const label = preferenceRow.modelData.key === "clock.dateFormat"
-                  ? Qt.formatDate(new Date(), String(value)) : labels[String(value)] || String(value)
-                return { label: label, value: value }
-              })
-              selectedValue: preferenceRow.currentValue
-              Accessible.name: preferenceRow.modelData.label
-              onChosen: value => window.controller.preferences.setValue(preferenceRow.modelData.key, value)
-            }
-            Controls.TextField {
-              id: preferenceInput
-              Layout.fillWidth: true
-              visible: ["text", "number"].includes(preferenceRow.modelData.kind)
-              text: String(preferenceRow.currentValue)
-              color: window.controller.controlPrimaryText
-              selectionColor: window.controller.controlActive
-              selectedTextColor: window.controller.controlPrimaryText
-              font.family: window.controller.fontFamily
-              font.pixelSize: 12
-              padding: 10
-              Accessible.name: preferenceRow.modelData.label
-              onEditingFinished: {
-                const value = preferenceRow.modelData.kind === "number" ? Number(text) : text.trim()
-                if (value !== preferenceRow.currentValue)
-                  window.controller.preferences.setValue(preferenceRow.modelData.key, value)
-                text = Qt.binding(() => String(preferenceRow.currentValue))
-              }
-              background: Rectangle {
-                radius: 8
-                color: window.controller.controlSurface
-                border.color: preferenceInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
-              }
-            }
-            Controls.Slider {
-              id: temperatureSlider
-              Layout.fillWidth: true
-              visible: preferenceRow.modelData.key.endsWith("Temperature")
-              from: 2500
-              to: 10000
-              stepSize: 100
-              value: Number(preferenceRow.currentValue) || 2500
-              Accessible.name: preferenceRow.modelData.label
-              onPressedChanged: {
-                if (!pressed && visible && value !== preferenceRow.currentValue)
-                  window.controller.preferences.setValue(preferenceRow.modelData.key, Math.round(value))
-              }
-              onMoved: {
-                if (!pressed && visible)
-                  window.controller.preferences.setValue(preferenceRow.modelData.key, Math.round(value))
-              }
-              background: Rectangle {
-                x: temperatureSlider.leftPadding
-                y: temperatureSlider.topPadding + temperatureSlider.availableHeight / 2 - height / 2
-                width: temperatureSlider.availableWidth
-                height: 6
-                radius: 3
-                color: window.controller.controlSliderTrack
+            title: modelData.title
+            iconName: modelData.icon
+            Repeater {
+              model: displayGroup.modelData.keys.map(key => window.controller.preferences.fields.find(field => field.key === key)).filter(field => field !== undefined)
+              delegate: ColumnLayout {
+                id: displayField
+                required property var modelData
+                required property int index
+                Layout.fillWidth: true
+                spacing: 12
                 Rectangle {
-                  width: temperatureSlider.visualPosition * parent.width
-                  height: parent.height
-                  radius: 3
-                  color: window.controller.controlActiveIcon
+                  Layout.fillWidth: true
+                  implicitHeight: 1
+                  visible: displayField.index > 0
+                  color: window.controller.controlSurfaceBorder
                 }
-              }
-              handle: Rectangle {
-                x: temperatureSlider.leftPadding + temperatureSlider.visualPosition * (temperatureSlider.availableWidth - width)
-                y: temperatureSlider.topPadding + temperatureSlider.availableHeight / 2 - height / 2
-                implicitWidth: 18
-                implicitHeight: 18
-                radius: 9
-                color: window.controller.controlPrimaryText
-                border.width: temperatureSlider.activeFocus ? 2 : 0
-                border.color: window.controller.controlActiveIcon
+                PreferenceField {
+                  Layout.fillWidth: true
+                  modelData: displayField.modelData
+                }
               }
             }
           }
@@ -1257,6 +1200,118 @@ FloatingWindow {
           text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
           color: window.controller.controlWarningText
         }
+      }
+    }
+  }
+
+  component PreferenceField: ColumnLayout {
+    id: preferenceRow
+    required property var modelData
+    readonly property var currentValue: window.controller.preferences.value(modelData.key, "")
+    Layout.fillWidth: true
+    spacing: 6
+    enabled: window.controller.preferences.ready && !window.controller.preferences.busy
+    Toggle {
+      Layout.fillWidth: true
+      visible: preferenceRow.modelData.kind === "boolean"
+      text: preferenceRow.modelData.label
+      checked: preferenceRow.currentValue === true
+      description: preferenceRow.modelData.key === "desktop.hoverPreviews"
+        ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover."
+        : preferenceRow.modelData.key === "display.linkBrightness" ? "When setting laptop brightness, also set keyboard and DDC-capable external displays to the same percentage. Enabling this does not immediately change any device."
+        : preferenceRow.modelData.key === "connectivity.bluetoothBatteryAlerts" ? "Warn once per device below the selected threshold. Disconnecting or recovering above the threshold rearms alerts; existing notification policies still apply."
+        : window.section === "lockScreen" ? "Changes apply on the next lock. Hiding a widget removes its label or image and stops its helper from running. Authentication, date/time and explicit locking are unchanged."
+        : window.section === "connectivity" ? "Only offers a stronger saved network on the same adapter. Clicking Switch rechecks your current preferences and network availability." : ""
+      onClicked: window.controller.preferences.setValue(preferenceRow.modelData.key, !preferenceRow.currentValue)
+    }
+    Label {
+      Layout.fillWidth: true
+      visible: preferenceRow.modelData.kind !== "boolean"
+      text: preferenceRow.modelData.label
+    }
+    Choice {
+      Layout.fillWidth: true
+      visible: preferenceRow.modelData.kind === "choice"
+      model: preferenceRow.modelData.values.map(value => {
+        const labels = {
+          automatic: "Automatic (IP location)", fixed: "Fixed city",
+          metric: "Celsius · metres/second", imperial: "Fahrenheit · miles/hour",
+          flat: "Off (flat)", adaptive: "Adaptive", comfortable: "Comfortable", compact: "Compact",
+          random: "Random from folder", restore: "Restore saved image",
+          "24": "24-hour", "12": "12-hour", "0": "Sunday", "1": "Monday"
+        }
+        const label = preferenceRow.modelData.key === "clock.dateFormat"
+          ? Qt.formatDate(new Date(), String(value)) : labels[String(value)] || String(value)
+        return { label: label, value: value }
+      })
+      selectedValue: preferenceRow.currentValue
+      Accessible.name: preferenceRow.modelData.label
+      onChosen: value => window.controller.preferences.setValue(preferenceRow.modelData.key, value)
+    }
+    Controls.TextField {
+      id: preferenceInput
+      Layout.fillWidth: true
+      visible: ["text", "number"].includes(preferenceRow.modelData.kind)
+      text: String(preferenceRow.currentValue)
+      color: window.controller.controlPrimaryText
+      selectionColor: window.controller.controlActive
+      selectedTextColor: window.controller.controlPrimaryText
+      font.family: window.controller.fontFamily
+      font.pixelSize: 12
+      padding: 10
+      Accessible.name: preferenceRow.modelData.label
+      onEditingFinished: {
+        const value = preferenceRow.modelData.kind === "number" ? Number(text) : text.trim()
+        if (value !== preferenceRow.currentValue)
+          window.controller.preferences.setValue(preferenceRow.modelData.key, value)
+        text = Qt.binding(() => String(preferenceRow.currentValue))
+      }
+      background: Rectangle {
+        radius: 8
+        color: window.controller.controlSurface
+        border.color: preferenceInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+      }
+    }
+    Controls.Slider {
+      id: temperatureSlider
+      Layout.fillWidth: true
+      visible: preferenceRow.modelData.key.endsWith("Temperature")
+      from: 2500
+      to: 10000
+      stepSize: 100
+      value: Number(preferenceRow.currentValue) || 2500
+      Accessible.name: preferenceRow.modelData.label
+      onPressedChanged: {
+        if (!pressed && visible && value !== preferenceRow.currentValue)
+          window.controller.preferences.setValue(preferenceRow.modelData.key, Math.round(value))
+      }
+      onMoved: {
+        if (!pressed && visible)
+          window.controller.preferences.setValue(preferenceRow.modelData.key, Math.round(value))
+      }
+      background: Rectangle {
+        x: temperatureSlider.leftPadding
+        y: temperatureSlider.topPadding + temperatureSlider.availableHeight / 2 - height / 2
+        width: temperatureSlider.availableWidth
+        height: 6
+        radius: 3
+        color: window.controller.controlSliderTrack
+        Rectangle {
+          width: temperatureSlider.visualPosition * parent.width
+          height: parent.height
+          radius: 3
+          color: window.controller.controlActiveIcon
+        }
+      }
+      handle: Rectangle {
+        x: temperatureSlider.leftPadding + temperatureSlider.visualPosition * (temperatureSlider.availableWidth - width)
+        y: temperatureSlider.topPadding + temperatureSlider.availableHeight / 2 - height / 2
+        implicitWidth: 18
+        implicitHeight: 18
+        radius: 9
+        color: window.controller.controlPrimaryText
+        border.width: temperatureSlider.activeFocus ? 2 : 0
+        border.color: window.controller.controlActiveIcon
       }
     }
   }
