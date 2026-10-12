@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import x11_input
 
 DIRECTORY = Path(__file__).resolve().parent
 PREFERENCES = Path(os.environ.get("DOTFILES_PREFERENCES", DIRECTORY / "preferences.json"))
@@ -256,12 +257,18 @@ def apply(data, section):
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument('command', choices=['get', 'describe', 'set', 'patch', 'validate', 'apply', 'run-idle', 'run-night-light'])
+  parser.add_argument('command', choices=['get', 'describe', 'describe-input', 'apply-x11-input', 'set', 'patch', 'validate', 'apply', 'run-idle', 'run-night-light'])
   parser.add_argument('key', nargs='?')
   parser.add_argument('value', nargs='?')
   args = parser.parse_args()
   data = load()
-  if args.command == 'describe':
+  if args.command == 'describe-input':
+    print(json.dumps(x11_input.describe()))
+  elif args.command == 'apply-x11-input':
+    if os.environ.get('XDG_SESSION_TYPE') != 'x11':
+      raise ValueError('X11 input requires an X11 session')
+    x11_input.apply(data['input'])
+  elif args.command == 'describe':
     print(json.dumps({'data': data, 'fields': [dict(zip(['key', 'label', 'kind', 'values', 'session'], f)) for f in FIELDS]}))
   elif args.command == 'get':
     for key in args.key.split('.') if args.key else []:

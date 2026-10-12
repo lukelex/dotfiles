@@ -1,0 +1,54 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=linux/install/common.sh
+source "$install_dir/common.sh" "$@"
+is_server && exit 0
+
+# No AUR package exists. Install pinned native packages before dotpkg enables
+# the service; pacman resolves their runtime dependencies and tracks ownership.
+version=0.1.4
+packages=(openeffectsd openeffectsctl openeffects)
+checksums=(
+  d8052e4ccf116f94d2205f7f2c3f1fed65ee8cc9acd7ce8109533fa7f4b3ab81
+  cefbdc970614e340ce7559e5c12fa73f38655958796c08d157305de7207b9e2a
+  8d5995b9a16940c0a8d2612d72493a75fbb1956f1b0f3c28e3b4c7ffd9b40716
+)
+
+if [ "$(uname -m)" != x86_64 ]; then
+  printf 'OpenEffects release packages require x86_64.\n' >&2
+  exit 2
+fi
+
+needed=()
+for index in "${!packages[@]}"; do
+  package="${packages[$index]}"
+  installed="$(pacman -Q "$package" 2>/dev/null | awk '{print $2}')" || installed=""
+  if [ -z "$installed" ] || [ "$(vercmp "$installed" "$version-1")" -lt 0 ]; then
+    needed+=("$index")
+  fi
+done
+[ "${#needed[@]}" -gt 0 ] || exit 0
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  printf 'dry-run: install checksum-verified OpenEffects %s native packages\n' "$version"
+  exit 0
+fi
+
+temporary="$(mktemp -d)"
+trap 'rm -rf "$temporary"' EXIT
+files=()
+for index in "${needed[@]}"; do
+  asset="${packages[$index]}-$version-1-x86_64.pkg.tar.zst"
+  file="$temporary/$asset"
+  curl --fail --location --silent --show-error --connect-timeout 15 --max-time 180 \
+    "https://github.com/funinkina/openeffects/releases/download/v$version/$asset" \
+    --output "$file"
+  printf '%s  %s\n' "${checksums[$index]}" "$file" | sha256sum --check --status
+  files+=("$file")
+done
+args=(-U --needed)
+[ "${DOTPKG_YES:-0}" != 1 ] || args+=(--noconfirm)
+sudo pacman "${args[@]}" "${files[@]}"

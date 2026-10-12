@@ -108,4 +108,30 @@ For package and resource maintenance, see `dotpkg --help`. `dotpkg clean` only
 removes stale managed packages; `dotpkg recover` handles an interrupted
 transaction.
 
+### Webcam reactions
+
+Desktop syncs install checksum-pinned OpenEffects 0.1.4 native packages (x86_64)
+before dotpkg links its settings and enables its user service on `default.target`.
+The GTK preview dependency is declared in the manifest. Reactions are enabled,
+the physical camera is autodetected, and capture/effects processing stops when
+no application consumes the virtual camera. OpenEffects is managed by pacman,
+not dotpkg's package-clean stage, until an upstream package origin is available.
+
+To migrate an existing install, review your local manifest before running:
+
+```sh
+./linux/install/sync --refresh-manifest --replace
+```
+
+Refreshing backs up the local manifest; `--replace` can replace conflicting
+config paths across the desktop profile. Chrome is the shared default browser;
+its managed `chrome-flags.conf` enables PipeWire camera support. Fully quit and
+reopen Chrome after applying it, then select OpenEffects Virtual Camera in your
+calling app.
+
+Microsoft Edge is **not installed**. The `archqms` host overlay additionally
+links its flags file for an independently installed Edge. On that machine use
+`./linux/install/sync --host archqms --refresh-manifest --replace` and fully quit
+and reopen Edge after applying it.
+
 </details>

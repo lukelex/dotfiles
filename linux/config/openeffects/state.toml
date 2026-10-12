@@ -1,0 +1,33 @@
+bypass = false
+
+[effects.center_stage]
+enabled = true
+zoom = "tight"
+mode = "single"
+
+[effects.center_stage.crop]
+top = 12
+bottom = 12
+left = 12
+right = 12
+
+[effects.portrait_blur]
+enabled = false
+strength = 50
+
+[effects.bg_replace]
+enabled = false
+background = ""
+
+[effects.studio_light]
+enabled = true
+intensity = 50
+brightness = 0
+contrast = 50
+bg_brightness = 0
+
+[effects.reactions]
+enabled = true
+
+[camera]
+selected = ""

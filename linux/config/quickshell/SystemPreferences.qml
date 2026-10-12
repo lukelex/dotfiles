@@ -12,6 +12,34 @@ QtObject {
   property string error: ""
   property var queue: []
   property bool busy: false
+  property var x11Input: ({ devices: [], keys: [], error: "Detecting X11 pointing devices…" })
+
+  // Re-enumerate after hotplug; never retain device IDs in portable preferences.
+  property Timer inputRefresh: Timer {
+    interval: 10000
+    running: Quickshell.env("XDG_SESSION_TYPE") === "x11"
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: { if (!preferences.inputReader.running) preferences.inputReader.running = true }
+  }
+  property Process inputReader: Process {
+    command: ["python3", preferences.helper, "describe-input"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        try {
+          const result = JSON.parse(text)
+          const changed = JSON.stringify(result.devices) !== JSON.stringify(preferences.x11Input.devices)
+          preferences.x11Input = result
+          if (changed && preferences.ready && result.keys.length > 0) {
+            preferences.queue.push(["apply-x11-input"])
+            preferences.runNext()
+          }
+        } catch (_) {
+          preferences.x11Input = { devices: [], keys: [], error: "Could not detect X11 pointing devices." }
+        }
+      }
+    }
+  }
 
   function value(key, fallback) {
     const parts = key.split(".")
@@ -77,6 +105,9 @@ QtObject {
             if ((initial && section === "input") || (!initial && JSON.stringify(previous[section]) !== JSON.stringify(result.data[section])))
               preferences.queue.push(["apply", section])
           }
+          if (Quickshell.env("XDG_SESSION_TYPE") === "x11" && preferences.x11Input.keys.length > 0
+              && (initial || JSON.stringify(previous.input) !== JSON.stringify(result.data.input)))
+            preferences.queue.push(["apply-x11-input"])
         } catch (_) {
           preferences.error = "Could not load preferences. Check preferences.json and run settings.py validate."
         }

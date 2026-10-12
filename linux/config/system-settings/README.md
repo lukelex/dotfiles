@@ -51,6 +51,14 @@ under `$XDG_CACHE_HOME/dotfiles/settings/`. Do not edit these generated configs.
 The older `gammastep/config.ini` and `hypr/hypridle.conf` describe legacy defaults;
 the managed launchers now use preferences.json instead.
 
+On i3/X11, install `xorg-xinput` and `xf86-input-libinput` for mouse/trackpad
+configuration. The combined Keyboard, Mouse & Trackpad page shows properties
+supported by connected libinput devices. Mouse and trackpad scrolling are
+independent; pointer speed and acceleration apply to both. Quickshell checks
+device topology every 10 seconds and reapplies saved settings on startup and
+after reconnects. Device IDs remain runtime-only. Without Quickshell, run
+`python3 linux/config/system-settings/settings.py apply-x11-input` explicitly.
+
 ## Scope
 
 - **Wi-Fi networks:** System Settings → Connectivity → Wi-Fi networks explicitly scans while the

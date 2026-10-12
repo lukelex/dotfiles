@@ -31,7 +31,7 @@ FloatingWindow {
     { key: "connectivity", label: "Connectivity", icon: "wifi" },
     { key: "idle", label: "Lock & idle", icon: "lock" },
     { key: "lockScreen", label: "Session & lock screen", icon: "lock" },
-    { key: "input", label: "Input", icon: "keyboard" },
+    { key: "input", label: "Keyboard, Mouse & Trackpad", icon: "keyboard" },
     { key: "audio", label: "Audio", icon: "volume-2" },
     { key: "weather", label: "Date & weather", icon: "calendar" },
     { key: "desktop", label: "Desktop & bar", icon: "settings" }
@@ -1227,6 +1227,24 @@ FloatingWindow {
             }
           }
         }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "input" && Quickshell.env("XDG_SESSION_TYPE") === "x11"
+            && (window.controller.preferences.x11Input.error !== "" || window.controller.preferences.x11Input.keys.length === 0)
+          title: "Mouse & trackpad"
+          iconName: "mouse"
+          Label {
+            Layout.fillWidth: true
+            text: window.controller.preferences.x11Input.error || "No supported libinput pointing devices detected. Connect a mouse or trackpad to configure it."
+            color: window.controller.controlSecondaryText
+          }
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: window.section === "input"
+          text: "Pointer sensitivity and acceleration apply to both mouse and trackpad. Scrolling and tap settings are configured separately."
+          color: window.controller.controlSecondaryText
+        }
         Repeater {
           model: {
             const groups = {
@@ -1252,8 +1270,9 @@ FloatingWindow {
               ],
               input: [
                 { title: "Keyboard", icon: "keyboard", keys: ["input.repeatDelay", "input.repeatRate"] },
-                { title: "Mouse & pointer", icon: "mouse", keys: ["input.sensitivity", "input.acceleration", "input.naturalScroll"] },
-                { title: "Touchpad", icon: "laptop", keys: ["input.touchpadNaturalScroll", "input.tapToClick", "input.disableWhileTyping"] }
+                { title: "Pointer", icon: "mouse", keys: ["input.sensitivity", "input.acceleration"] },
+                { title: "Mouse", icon: "mouse", keys: ["input.naturalScroll"] },
+                { title: "Trackpad", icon: "laptop", keys: ["input.touchpadNaturalScroll", "input.tapToClick", "input.disableWhileTyping"] }
               ],
               weather: [
                 { title: "Date & time", icon: "calendar", keys: ["clock.hourFormat", "clock.dateFormat", "clock.firstDay"] },
@@ -1267,7 +1286,9 @@ FloatingWindow {
             return (groups[window.section] || []).map(group => ({
               title: group.title, icon: group.icon,
               fields: group.keys.map(key => window.controller.preferences.fields.find(field => field.key === key))
-                .filter(field => field && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE")))
+                .filter(field => field && (!field.session || field.session === Quickshell.env("XDG_SESSION_TYPE")
+                  || Quickshell.env("XDG_SESSION_TYPE") === "x11" && field.key.startsWith("input.")
+                    && window.controller.preferences.x11Input.keys.includes(field.key.split(".")[1])))
             })).filter(group => group.fields.length > 0)
           }
           delegate: SettingsSubsection {
@@ -1364,13 +1385,33 @@ FloatingWindow {
         : window.section === "connectivity" ? "Only offers a stronger saved network on the same adapter. Clicking Switch rechecks your current preferences and network availability." : ""
       onClicked: window.controller.preferences.setValue(preferenceRow.modelData.key, !preferenceRow.currentValue)
     }
-    Label {
+    GridLayout {
+      id: fieldLayout
       Layout.fillWidth: true
       visible: preferenceRow.modelData.kind !== "boolean"
+      readonly property real editorWidth: preferenceRow.modelData.kind === "choice"
+        ? Math.max(140, ...preferenceChoice.model.map(entry => fieldMetrics.advanceWidth(entry.label) + 56))
+        : preferenceRow.modelData.kind === "number"
+          ? Math.max(100, ...preferenceRow.modelData.values.map(value => fieldMetrics.advanceWidth(String(value)) + 28))
+          : Math.max(180, fieldMetrics.advanceWidth(String(preferenceRow.currentValue)) + 28)
+      readonly property bool inlineEditor: width >= fieldMetrics.advanceWidth(preferenceRow.modelData.label) + editorWidth + 16
+      columns: inlineEditor ? 2 : 1
+      columnSpacing: 16
+      rowSpacing: 6
+      FontMetrics {
+        id: fieldMetrics
+        font.family: window.controller.fontFamily
+        font.pixelSize: 12
+      }
+    Label {
+      Layout.fillWidth: true
       text: preferenceRow.modelData.label
     }
     Choice {
-      Layout.fillWidth: true
+      id: preferenceChoice
+      Layout.fillWidth: !fieldLayout.inlineEditor
+      Layout.preferredWidth: fieldLayout.inlineEditor ? fieldLayout.editorWidth : -1
+      Layout.alignment: Qt.AlignRight
       visible: preferenceRow.modelData.kind === "choice"
       model: preferenceRow.modelData.values.map(value => {
         const labels = {
@@ -1390,7 +1431,9 @@ FloatingWindow {
     }
     Controls.TextField {
       id: preferenceInput
-      Layout.fillWidth: true
+      Layout.fillWidth: !fieldLayout.inlineEditor
+      Layout.preferredWidth: fieldLayout.inlineEditor ? fieldLayout.editorWidth : -1
+      Layout.alignment: Qt.AlignRight
       visible: ["text", "number"].includes(preferenceRow.modelData.kind)
       text: String(preferenceRow.currentValue)
       color: window.controller.controlPrimaryText
@@ -1411,6 +1454,7 @@ FloatingWindow {
         color: window.controller.controlSurface
         border.color: preferenceInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
       }
+    }
     }
     Controls.Slider {
       id: temperatureSlider

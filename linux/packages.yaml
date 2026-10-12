@@ -243,6 +243,8 @@ profiles:
         xorg-server:
         xorg-xinit:
         xorg-xkill:
+        xorg-xinput:
+        xf86-input-libinput:
         xss-lock:
         xwallpaper:
     options:

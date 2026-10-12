@@ -1,0 +1,8 @@
+profiles:
+  desktop:
+    packages:
+      desktop:
+        google-chrome:
+          configs:
+            - linux/config/google-chrome/chrome-flags.conf:$XDG_CONFIG_HOME/chrome-flags.conf
+            - linux/config/microsoft-edge/microsoft-edge-stable-flags.conf:$XDG_CONFIG_HOME/microsoft-edge-stable-flags.conf
