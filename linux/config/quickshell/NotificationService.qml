@@ -122,6 +122,12 @@ QtObject {
     ? customNotificationSoundPath.split("/").pop() : "ICQ (default)"
   readonly property string popupCorner: settings.popupCorner
   readonly property string popupMonitor: settings.popupMonitor
+  readonly property int historyRetentionDays: settings.historyRetentionDays
+  property bool historyBeingRead: false
+  onHistoryBeingReadChanged: {
+    if (!historyBeingRead)
+      service.pruneHistory()
+  }
 
   property Settings settings: Settings {
     id: settings
@@ -132,6 +138,7 @@ QtObject {
     property string soundFilePath: ""
     property string popupCorner: "top-right"
     property string popupMonitor: "all"
+    property int historyRetentionDays: 0
     property bool doNotDisturb: false
     property bool notificationSoundsMuted: false
 
@@ -159,6 +166,13 @@ QtObject {
       service.now = Date.now()
       service.expireDue()
     }
+  }
+
+  property Timer historyRetentionTimer: Timer {
+    interval: 60000
+    repeat: true
+    running: service.historyRetentionDays > 0
+    onTriggered: service.pruneHistory()
   }
 
   property Timer osdTimer: Timer {
@@ -207,11 +221,32 @@ QtObject {
     for (const record of service.history.slice().reverse())
       service.trackApplication(record)
     service.historyGroups = service.groupHistory(service.history)
+    service.pruneHistory()
     service.syncPopup()
   }
 
   function saveHistory() {
     historySaveTimer.restart()
+  }
+
+  function setHistoryRetentionDays(days) {
+    if (![0, 1, 7, 30].includes(days))
+      return
+    settings.historyRetentionDays = days
+    service.pruneHistory()
+  }
+
+  function pruneHistory() {
+    if (!(service.historyRetentionDays > 0) || service.historyBeingRead)
+      return
+    const cutoff = Date.now() / 1000 - service.historyRetentionDays * 86400
+    const retained = service.history.filter(record => record.time >= cutoff
+      || service.live[record.id] || service.hovered[record.id])
+    if (retained.length === service.history.length)
+      return
+    service.history = retained
+    service.historyGroups = service.groupHistory(retained)
+    service.saveHistory()
   }
 
   function loadApplications() {

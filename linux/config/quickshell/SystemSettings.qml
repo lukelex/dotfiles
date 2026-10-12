@@ -382,6 +382,28 @@ FloatingWindow {
         Accessible.name: "Popup corner"
         onChosen: value => window.service.setPopupCorner(value)
       }
+      Label {
+        text: "Keep history"
+        HoverHandler { id: retentionHover }
+        Hint {
+          text: "Removes older inactive notifications, up to the existing 100-entry limit. Live notifications are kept; cleanup pauses while history is open. App preferences are kept."
+          visible: retentionHover.hovered
+        }
+      }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: [
+          { label: "No age limit", value: 0 },
+          { label: "1 day", value: 1 },
+          { label: "7 days", value: 7 },
+          { label: "30 days", value: 30 }
+        ]
+        selectedValue: window.service.historyRetentionDays
+        Accessible.name: "Keep notification history"
+        Accessible.description: "Removes older inactive history. Up to 100 entries are kept, regardless of age limit."
+        onChosen: value => window.service.setHistoryRetentionDays(value)
+      }
     }
   }
 

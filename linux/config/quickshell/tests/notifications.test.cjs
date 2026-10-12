@@ -28,6 +28,7 @@ function serviceForTest() {
     applications: [],
     pendingPopupRecords: [],
     saveHistory: () => {},
+    pruneHistory: () => {},
   };
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);

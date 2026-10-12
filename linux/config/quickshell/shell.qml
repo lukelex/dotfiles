@@ -4,6 +4,7 @@ import Quickshell
 Scope {
   NotificationService {
     id: notifications
+    historyBeingRead: bar.notificationCenterOpen || bar.githubReviewCenterOpen
   }
 
   GitHubPrService {
@@ -20,6 +21,7 @@ Scope {
   }
 
   Bar {
+    id: bar
     notificationService: notifications
     githubPrService: githubPrs
     audioService: audioService
