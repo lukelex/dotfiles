@@ -120,6 +120,8 @@ QtObject {
   readonly property string notificationSoundPath: customNotificationSoundPath || defaultNotificationSoundPath
   readonly property string notificationSoundName: customNotificationSoundPath
     ? customNotificationSoundPath.split("/").pop() : "ICQ (default)"
+  readonly property string popupCorner: settings.popupCorner
+  readonly property string popupMonitor: settings.popupMonitor
 
   property Settings settings: Settings {
     id: settings
@@ -128,6 +130,8 @@ QtObject {
     property string githubSeenJson: "[]"
     property string applicationsJson: "[]"
     property string soundFilePath: ""
+    property string popupCorner: "top-right"
+    property string popupMonitor: "all"
     property bool doNotDisturb: false
     property bool notificationSoundsMuted: false
 
@@ -396,6 +400,25 @@ QtObject {
 
     service.notificationSound.running = true
     service.notificationSoundTimer.start()
+  }
+
+  function setPopupCorner(corner) {
+    if (["top-right", "top-left", "bottom-right", "bottom-left"].includes(corner))
+      settings.popupCorner = corner
+  }
+
+  function setPopupMonitor(monitor) {
+    if (typeof monitor === "string" && monitor.length > 0)
+      settings.popupMonitor = monitor
+  }
+
+  function popupScreenMatches(name, screens, focusedName) {
+    if (service.popupMonitor === "all")
+      return true
+    const names = screens.map(screen => screen.name)
+    const preferred = names.includes(service.popupMonitor) ? service.popupMonitor
+      : names.includes(focusedName) ? focusedName : names[0]
+    return name === preferred
   }
 
   function setNotificationSoundFile(fileUrl) {

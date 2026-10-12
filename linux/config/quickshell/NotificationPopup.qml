@@ -12,6 +12,12 @@ PopupWindow {
   required property var service
 
   property int wiggleMargin: 6
+  readonly property bool leftAligned: service.popupCorner.endsWith("left")
+  readonly property bool bottomAligned: service.popupCorner.startsWith("bottom")
+  readonly property bool selectedScreen: {
+    const focused = controller.focusedPanel()
+    return service.popupScreenMatches(panel.screen.name, Quickshell.screens, focused ? focused.screen.name : "")
+  }
   property var popupStacks: null
   readonly property var emptyRecord: ({
     id: "",
@@ -24,14 +30,14 @@ PopupWindow {
   })
 
   anchor.window: panel
-  anchor.rect.x: Math.max(0, parentWindow.width - width - 12 + wiggleMargin)
-  anchor.rect.y: parentWindow.height + 12
+  anchor.rect.x: leftAligned ? 12 - wiggleMargin : Math.max(0, panel.width - width - 12 + wiggleMargin)
+  anchor.rect.y: bottomAligned ? Math.max(panel.height + 12, panel.screen.height - height - 12) : panel.height + 12
   color: "transparent"
   implicitWidth: Math.min(396, panel.screen.width - 24) + wiggleMargin * 2
   implicitHeight: column.height
   surfaceFormat.opaque: false
 
-  visible: popupGroupModel.count > 0 && !controller.notificationCenterOpen
+  visible: popupGroupModel.count > 0 && !controller.notificationCenterOpen && selectedScreen
 
   ListModel {
     id: popupGroupModel
@@ -152,7 +158,7 @@ PopupWindow {
       NumberAnimation {
         target: dismissTranslate
         property: "x"
-        to: popup.width
+        to: popup.leftAligned ? -popup.width : popup.width
         duration: 240
         easing.type: Easing.InCubic
       }
@@ -186,7 +192,7 @@ PopupWindow {
     }
 
     function playEntry() {
-      entryTranslate.x = popup.width
+      entryTranslate.x = popup.leftAligned ? -popup.width : popup.width
       entryAnimation.restart()
     }
 

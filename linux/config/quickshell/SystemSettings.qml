@@ -140,6 +140,40 @@ FloatingWindow {
     }
   }
 
+  component Choice: Controls.ComboBox {
+    id: choice
+    property var selectedValue
+    signal chosen(var value)
+    textRole: "label"
+    valueRole: "value"
+    currentIndex: model.findIndex(entry => entry.value === selectedValue)
+    onActivated: chosen(currentValue)
+    implicitHeight: 36
+    font.family: window.controller.fontFamily
+    font.pixelSize: 12
+    palette.button: window.controller.controlSurface
+    palette.buttonText: window.controller.controlPrimaryText
+    palette.base: window.controller.controlSurface
+    palette.text: window.controller.controlPrimaryText
+    palette.highlight: window.controller.controlActive
+    palette.highlightedText: window.controller.controlPrimaryText
+    background: Rectangle {
+      radius: 8
+      color: choice.hovered ? window.controller.controlHover : window.controller.controlSurface
+      border.color: choice.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+    }
+  }
+
+  function monitorChoices() {
+    const entries = [{ label: "All monitors", value: "all" }, { label: "Focused monitor", value: "focused" }]
+    for (const screen of Quickshell.screens)
+      entries.push({ label: screen.name, value: screen.name })
+    const saved = window.service.popupMonitor
+    if (!entries.some(entry => entry.value === saved))
+      entries.push({ label: saved + " (disconnected)", value: saved })
+    return entries
+  }
+
   function applicationIcon(application) {
     const systemIcons = {
       "bluetooth connections": "bluetooth",
@@ -259,18 +293,8 @@ FloatingWindow {
     }
   }
 
-  component NotificationsPage: ColumnLayout {
+  component GeneralOptions: ColumnLayout {
     spacing: 12
-    Label {
-      text: "Notifications"
-      font.pixelSize: 16
-      Accessible.description: "Apps appear here after sending a notification and stay listed after their history is cleared."
-      HoverHandler { id: headingHover }
-      Hint {
-        text: "Apps appear here after sending a notification and stay listed after their history is cleared."
-        visible: headingHover.hovered
-      }
-    }
     Toggle {
       Layout.fillWidth: true
       text: "Do Not Disturb"
@@ -330,6 +354,62 @@ FloatingWindow {
       color: window.controller.controlPrimaryText
     }
 
+    GridLayout {
+      Layout.fillWidth: true
+      columns: 2
+      columnSpacing: 12
+      rowSpacing: 8
+      Label { text: "Popup monitor" }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: window.monitorChoices()
+        selectedValue: window.service.popupMonitor
+        Accessible.name: "Popup monitor"
+        onChosen: value => window.service.setPopupMonitor(value)
+      }
+      Label { text: "Popup corner" }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: [
+          { label: "Top right", value: "top-right" },
+          { label: "Top left", value: "top-left" },
+          { label: "Bottom right", value: "bottom-right" },
+          { label: "Bottom left", value: "bottom-left" }
+        ]
+        selectedValue: window.service.popupCorner
+        Accessible.name: "Popup corner"
+        onChosen: value => window.service.setPopupCorner(value)
+      }
+    }
+  }
+
+  component NotificationsPage: ColumnLayout {
+    spacing: 12
+    Label {
+      text: "Notifications"
+      font.pixelSize: 16
+      Accessible.description: "Apps appear here after sending a notification and stay listed after their history is cleared."
+      HoverHandler { id: headingHover }
+      Hint {
+        text: "Apps appear here after sending a notification and stay listed after their history is cleared."
+        visible: headingHover.hovered
+      }
+    }
+    Controls.ScrollView {
+      id: optionsScroll
+      Layout.fillWidth: true
+      Layout.preferredHeight: Math.min(generalOptions.implicitHeight, parent.height * 0.6)
+      contentWidth: availableWidth
+      clip: true
+      GeneralOptions {
+        id: generalOptions
+        width: optionsScroll.availableWidth
+      }
+    }
+
+    Label { text: "Applications"; font.bold: true }
     ListView {
       id: applicationList
       Layout.fillWidth: true

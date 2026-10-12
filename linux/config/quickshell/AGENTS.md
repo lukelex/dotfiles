@@ -23,6 +23,7 @@ for changes. Prefer the Principle of Least Surprise over novelty or decoration.
 - System Settings uses an icon-and-label sidebar to identify its current section, collapsing to icons with tooltips at narrow widths. Only implemented sections appear; Notifications is the first section.
 - Notification settings use compact app rows: app icon/name on the left, bell and speaker switches together on the right. State-specific icons, hover/focus tooltips and application-specific accessible names explain the controls without repeating a Notifications label in every row.
 - Notification sound selection uses the OS file picker and persists a local file path in notification settings. An empty path selects the bundled ICQ sound. Preview is explicit (including while muted or in DND), lasts at most ten seconds, reports playback failures inline, and stops when changing the file or closing settings.
+- Popup placement persists a corner and monitor selection. All monitors/top-right preserve the original default; focused-monitor and named-monitor modes show a single stack. Disconnected named monitors fall back to the focused or first screen without losing the saved choice. System OSDs and history-panel placement remain independent.
 
 ## Visual Language
 
