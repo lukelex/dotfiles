@@ -67,6 +67,25 @@ test('popup privacy removes text, images and action labels without modifying ret
   assert.equal(synced, 1);
 });
 
+test('popup duration sets default deadlines without overriding critical or explicit sender lifetimes', () => {
+  const now = 1234567890000;
+  const { service, settings } = preferences(['computeExpiry', 'setPopupDurationSeconds'], {
+    popupDurationSeconds: 20, isTeamsNotification: notification => notification.teams === true
+  }, { Date: { now: () => now } });
+  for (const seconds of [0, 5, 10, 20, 30, 60]) {
+    service.setPopupDurationSeconds(seconds);
+    service.popupDurationSeconds = settings.popupDurationSeconds;
+    const expected = seconds ? now + seconds * 1000 : 0;
+    assert.equal(service.computeExpiry({ expireTimeout: -1 }, 'normal'), expected);
+    assert.equal(service.computeExpiry({ expireTimeout: 0, teams: true }, 'normal'), expected);
+    assert.equal(service.computeExpiry({ expireTimeout: 1500 }, 'normal'), now + 1500);
+    assert.equal(service.computeExpiry({ expireTimeout: 0 }, 'normal'), 0);
+    assert.equal(service.computeExpiry({ expireTimeout: -1 }, 'critical'), 0);
+  }
+  service.setPopupDurationSeconds(-1);
+  assert.equal(settings.popupDurationSeconds, 60);
+});
+
 test('retention removes only old inactive history without touching native lifecycle or app preferences', () => {
   const now = Date.now() / 1000;
   let saves = 0;

@@ -21,6 +21,7 @@ function serviceForTest() {
     tagMap: {},
     hovered: {},
     popupLimit: 5,
+    popupDurationSeconds: 20,
     popupGroupWindow: 30,
     notificationGroupWindow: 5 * 60,
     historyGroups: [],

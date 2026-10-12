@@ -538,6 +538,30 @@ FloatingWindow {
         onChosen: value => window.service.setPopupCorner(value)
       }
       Label {
+        text: "Popup duration"
+        HoverHandler { id: durationHover }
+        Hint {
+          text: "Default lifetime for new notifications. Explicit app timeouts and critical alerts keep their own lifetime. Hover pauses expiry; history remains after expiry."
+          visible: durationHover.hovered
+        }
+      }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: [
+          { label: "5 seconds", value: 5 },
+          { label: "10 seconds", value: 10 },
+          { label: "20 seconds (default)", value: 20 },
+          { label: "30 seconds", value: 30 },
+          { label: "1 minute", value: 60 },
+          { label: "Until dismissed", value: 0 }
+        ]
+        selectedValue: window.service.popupDurationSeconds
+        Accessible.name: "Default popup duration"
+        Accessible.description: "Applies to new notifications using the default timeout."
+        onChosen: value => window.service.setPopupDurationSeconds(value)
+      }
+      Label {
         text: "Keep history"
         HoverHandler { id: retentionHover }
         Hint {

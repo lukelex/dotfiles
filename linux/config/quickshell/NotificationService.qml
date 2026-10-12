@@ -129,6 +129,7 @@ QtObject {
   readonly property string notificationSoundName: customNotificationSoundPath
     ? customNotificationSoundPath.split("/").pop() : "ICQ (default)"
   readonly property string popupCorner: settings.popupCorner
+  readonly property int popupDurationSeconds: settings.popupDurationSeconds
   readonly property string popupMonitor: settings.popupMonitor
   readonly property bool popupPreviews: settings.popupPreviews
   readonly property string lockScreenPrivacy: settings.lockScreenPrivacy
@@ -147,6 +148,7 @@ QtObject {
     property string applicationsJson: "[]"
     property string soundFilePath: ""
     property string popupCorner: "top-right"
+    property int popupDurationSeconds: 20
     property string popupMonitor: "all"
     property bool popupPreviews: true
     property string lockScreenPrivacy: "show"
@@ -468,6 +470,11 @@ QtObject {
       settings.popupCorner = corner
   }
 
+  function setPopupDurationSeconds(seconds) {
+    if ([0, 5, 10, 20, 30, 60].includes(seconds))
+      settings.popupDurationSeconds = seconds
+  }
+
   function setPopupPreviews(enabled) {
     if (typeof enabled === "boolean")
       settings.popupPreviews = enabled
@@ -625,11 +632,11 @@ QtObject {
   function computeExpiry(notification, urgency) {
     if (urgency === "critical")
       return 0
-    if (notification.expireTimeout === 0)
-      return service.isTeamsNotification(notification) ? Date.now() + 20000 : 0
+    if (notification.expireTimeout === 0 && !service.isTeamsNotification(notification))
+      return 0
     if (notification.expireTimeout > 0)
       return Date.now() + notification.expireTimeout
-    return Date.now() + 20000
+    return service.popupDurationSeconds > 0 ? Date.now() + service.popupDurationSeconds * 1000 : 0
   }
 
   function effectiveUrgency(notification, urgency) {
