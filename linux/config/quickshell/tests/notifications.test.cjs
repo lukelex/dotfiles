@@ -6,6 +6,8 @@ const { test } = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '../NotificationService.qml'), 'utf8');
 const popupSource = fs.readFileSync(path.join(__dirname, '../NotificationPopup.qml'), 'utf8');
+const defaultsSource = fs.readFileSync(path.join(__dirname, '../NotificationDefaults.js'), 'utf8');
+const NotificationDefaults = vm.runInNewContext(defaultsSource.replace(/^\.pragma library\s*/, '') + '\n;({ applications })');
 
 function serviceForTest() {
   const service = {
@@ -23,16 +25,20 @@ function serviceForTest() {
     notificationGroupWindow: 5 * 60,
     historyGroups: [],
     historyGroupSequence: 0,
+    applications: [],
+    pendingPopupRecords: [],
+    saveHistory: () => {},
   };
   const removed = [];
   service.popupRecordRemoved = id => removed.push(id);
-  const context = vm.createContext({ service, Date });
-  for (const name of ['appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation']) {
+  const settings = {};
+  const context = vm.createContext({ service, settings, Date, NotificationDefaults });
+  for (const name of ['migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     service[name] = vm.runInContext(`(${match[0]})`, context);
   }
-  return { service, removed };
+  return { service, removed, settings };
 }
 
 function record(id, appName = 'A', urgency = 'normal') {
@@ -90,6 +96,95 @@ test('sound mute is restored from settings and survives DND changes', () => {
   service.setDoNotDisturb(false);
   assert.equal(service.notificationSoundsMuted, true);
   assert.equal(settings.notificationSoundsMuted, true);
+});
+
+test('application registry survives history removal and restores validated independent preferences', () => {
+  const { service, settings } = serviceForTest();
+  service.trackApplication(record(1, ' Chat '));
+  service.trackApplication(record(2, 'CHAT'));
+  service.trackApplication(record(3, '__proto__'));
+  assert.equal(service.applications.length, 2);
+  service.setApplicationPreference('chat', 'sound', false);
+  service.setApplicationPreference('chat', 'enabled', false);
+  service.history = [];
+  service.applications = [];
+  service.loadApplications();
+  assert.equal(service.applications.length, 2);
+  assert.equal(service.trackApplication(record(4, 'Chat')).enabled, false);
+  service.setApplicationPreference('chat', 'enabled', true);
+  assert.equal(service.applications[0].sound, false);
+  const saved = JSON.parse(settings.applicationsJson);
+  settings.applicationsJson = JSON.stringify([null, {}, ...saved, saved[0], { appName: 'New', enabled: 'false' }]);
+  service.loadApplications();
+  assert.equal(service.applications.length, 3);
+  assert.equal(service.applications[2].enabled, true);
+});
+
+test('connection sound defaults migrate once and preserve saved choices across reloads', () => {
+  const { service, settings } = serviceForTest();
+  service.migrateApplicationDefaults();
+  assert.equal(service.applications.length, 3);
+  for (const entry of service.applications) {
+    assert.equal(entry.enabled, true);
+    assert.equal(entry.sound, false);
+  }
+  assert.equal(service.trackApplication({ appName: 'System' }).sound, true);
+  service.setApplicationPreference('usb connections', 'sound', true);
+  service.setApplicationPreference('bluetooth connections', 'enabled', false);
+  const saved = settings.applicationsJson;
+  service.loadApplications();
+  service.migrateApplicationDefaults();
+  assert.equal(settings.applicationsJson, saved);
+  assert.equal(service.trackApplication({ appName: 'USB connections' }).sound, true);
+  assert.equal(service.trackApplication({ appName: 'Bluetooth connections' }).enabled, false);
+});
+
+test('disabling an app removes its active popups without deleting history or replaying on enable', () => {
+  const { service } = serviceForTest();
+  service.history = [record(1, 'Chat'), record(2, 'Other')];
+  service.live = { 1: {}, 2: {} };
+  service.pendingPopupRecords = service.history.slice();
+  service.trackApplication(service.history[0]);
+  service.syncPopup();
+  service.setApplicationPreference('chat', 'enabled', false);
+  assert.equal(service.history.length, 2);
+  assert.deepEqual(Array.from(service.popup, entry => entry.id), [2]);
+  assert.deepEqual(Array.from(service.pendingPopupRecords, entry => entry.id), [2]);
+  service.setApplicationPreference('chat', 'enabled', true);
+  service.syncPopup();
+  assert.deepEqual(Array.from(service.popup, entry => entry.id), [2]);
+});
+
+test('per-app policy blocks delivery and sound while system OSDs bypass application settings', () => {
+  for (const enabled of [false, true]) {
+    for (const sound of [false, true]) {
+      for (const osd of [false, true]) {
+        const { service } = serviceForTest();
+        let dismissed = 0;
+        let sounds = 0;
+        let updates = 0;
+        service.trackApplication(record(1));
+        service.setApplicationPreference('a', 'enabled', enabled);
+        service.setApplicationPreference('a', 'sound', sound);
+        service.buildRecord = n => record(n.id);
+        service.isSystemOsd = () => osd;
+        service.osdTimer = { restart() {} };
+        service.addHistory = item => service.history.push(item);
+        service.playNotificationSound = () => sounds++;
+        const context = vm.createContext({ service, popupUpdateTimer: { start: () => updates++ } });
+        const handle = vm.runInContext(`(${source.match(/  function handleNotification\([^]*?\n  \}/)[0]})`, context);
+        handle({ id: 1, closed: { connect() {} }, dismiss: () => dismissed++ });
+        assert.equal(dismissed, !osd && !enabled ? 1 : 0);
+        assert.equal(service.history.length, !osd && enabled ? 1 : 0);
+        assert.equal(sounds, !osd && enabled && sound ? 1 : 0);
+        assert.equal(updates, !osd && enabled ? 1 : 0);
+        if (!osd && !enabled) {
+          assert.equal(service.live[1], undefined);
+          assert.equal(service.liveDeadlines[1], undefined);
+        }
+      }
+    }
+  }
 });
 
 test('only adjacent notifications with the same app and urgency group', () => {

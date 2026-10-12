@@ -34,7 +34,7 @@ notify_event() {
   tag="bluetooth-${address//:/-}"
 
   printf 'bluetooth-notify: %s %s %s\n' "$state" "$type" "$name" >&2
-  notify-send -a System \
+  notify-send -a "Bluetooth connections" \
     -i "$LUCIDE_PATH/$icon.svg" \
     -h "string:wired-tag:$tag" \
     -u low \

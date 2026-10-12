@@ -9,3 +9,11 @@ hl.window_rule({
   max_size = { 1, 1 },
   no_blur = true,
 })
+
+hl.window_rule({
+  match = {
+    title = "^Quickshell System Settings$",
+  },
+  float = true,
+  center = true,
+})

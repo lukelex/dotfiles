@@ -758,6 +758,16 @@ PopupWindow {
           }
         }
 
+        QuickAction {
+          active: false
+          controller: popup.controller
+          width: parent.width
+          height: 40
+          iconName: "settings"
+          title: "System Settings"
+          onActivated: popup.controller.openSystemSettings(popup.panel.screen)
+        }
+
         TrayModule {
           id: trayModule
 

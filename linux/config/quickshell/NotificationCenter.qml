@@ -1130,7 +1130,7 @@ PopupWindow {
 
           anchors.verticalCenter: parent.verticalCenter
           anchors.left: parent.left
-          anchors.right: clearButton.visible ? clearButton.left : soundButton.left
+          anchors.right: clearButton.visible ? clearButton.left : settingsButton.left
           anchors.rightMargin: 8
           color: popup.controller.controlPrimaryText
           font.family: popup.controller.fontFamily
@@ -1181,11 +1181,23 @@ PopupWindow {
           onClicked: popup.service.setNotificationSoundsMuted(!popup.service.notificationSoundsMuted)
         }
 
+        HeaderIconButton {
+          id: settingsButton
+          anchors.right: soundButton.left
+          anchors.rightMargin: 8
+          anchors.verticalCenter: parent.verticalCenter
+          iconName: "settings"
+          description: "Notification settings"
+          Accessible.role: Accessible.Button
+          Accessible.name: description
+          onClicked: popup.controller.openSystemSettings(popup.panel.screen)
+        }
+
         DismissButton {
           id: clearButton
 
           anchors {
-            right: soundButton.left
+            right: settingsButton.left
             rightMargin: 8
             verticalCenter: parent.verticalCenter
           }

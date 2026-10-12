@@ -58,7 +58,7 @@ notify_event() {
   esac
 
   printf 'usb-notify: %s %s\n' "$action" "$name" >&2
-  notify-send -a System \
+  notify-send -a "USB connections" \
     -i "$LUCIDE_PATH/$icon.svg" \
     -h "string:wired-tag:$tag" \
     -u low \

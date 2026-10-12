@@ -14,6 +14,7 @@ test('silent cable notifications stay visible without playing the notification s
   const played = [];
   const service = {
     doNotDisturb: false, tagMap: {}, live: {}, liveDeadlines: {}, liveRevision: 0, popupLimit: 5, pendingPopupRecords: [],
+    trackApplication: () => ({ enabled: true, sound: true }),
     buildRecord: notification => ({ id: notification.id }),
     isSystemOsd: () => false,
     addHistory: () => {},
@@ -36,6 +37,7 @@ test('DND suppresses popup and sound but still captures history', () => {
   const history = [];
   const service = {
     doNotDisturb: true, tagMap: {}, live: {}, liveDeadlines: {}, liveRevision: 0, popupLimit: 5, pendingPopupRecords: [],
+    trackApplication: () => ({ enabled: true, sound: true }),
     buildRecord: notification => ({ id: notification.id }),
     isSystemOsd: () => false,
     addHistory: record => history.push(record),

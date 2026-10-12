@@ -107,10 +107,9 @@ power() {
         icon="$LUCIDE_PATH/battery-charging.svg"
         body="$charge% charged"
       fi
-      notify-send -a System \
+      notify-send -a "Power connection" \
         -i "$icon" \
         -h string:wired-tag:battery-charging \
-        -h boolean:suppress-sound:true \
         -h int:value:"$charge" \
         "$summary" "$body"
       ;;
@@ -126,10 +125,9 @@ power() {
       else
         icon="$LUCIDE_PATH/battery-full.svg"
       fi
-      notify-send -a System \
+      notify-send -a "Power connection" \
         -i "$icon" \
         -h string:wired-tag:battery \
-        -h boolean:suppress-sound:true \
         -h int:value:"$charge" \
         "Running on battery" "$charge% remaining"
       ;;

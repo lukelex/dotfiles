@@ -3,6 +3,7 @@ import Quickshell.Services.Notifications
 import Quickshell.Io
 import QtCore
 import QtQml
+import "NotificationDefaults.js" as NotificationDefaults
 
 QtObject {
   id: service
@@ -23,6 +24,7 @@ QtObject {
   property double now: 0
   property bool doNotDisturb: false
   property bool notificationSoundsMuted: false
+  property var applications: []
   onNotificationSoundsMutedChanged: {
     if (notificationSoundsMuted)
       service.notificationSound.running = false
@@ -109,6 +111,7 @@ QtObject {
     location: "file://" + Quickshell.env("HOME") + "/.local/state/dotfiles/notifications.conf"
     property string historyJson: "[]"
     property string githubSeenJson: "[]"
+    property string applicationsJson: "[]"
     property bool doNotDisturb: false
     property bool notificationSoundsMuted: false
 
@@ -163,6 +166,8 @@ QtObject {
   }
 
   function loadInitial() {
+    service.loadApplications()
+    service.migrateApplicationDefaults()
     try {
       const parsed = JSON.parse(settings.historyJson)
       service.history = service.restoreHistory(parsed)
@@ -179,12 +184,77 @@ QtObject {
     }
     service.doNotDisturb = settings.doNotDisturb
     service.notificationSoundsMuted = settings.notificationSoundsMuted
+    for (const record of service.history.slice().reverse())
+      service.trackApplication(record)
     service.historyGroups = service.groupHistory(service.history)
     service.syncPopup()
   }
 
   function saveHistory() {
     historySaveTimer.restart()
+  }
+
+  function loadApplications() {
+    const applications = []
+    const keys = new Set()
+    try {
+      const parsed = JSON.parse(settings.applicationsJson)
+      if (Array.isArray(parsed)) {
+        for (const entry of parsed) {
+          if (!entry || typeof entry.appName !== "string" || !entry.appName.trim())
+            continue
+          const appName = entry.appName.trim()
+          const key = service.appKey({ appName: appName })
+          if (keys.has(key))
+            continue
+          keys.add(key)
+          applications.push({ key: key, appName: appName,
+            enabled: entry.enabled !== false, sound: entry.sound !== false })
+        }
+      }
+    } catch (error) {}
+    service.applications = applications
+  }
+
+  function trackApplication(record) {
+    const key = service.appKey(record)
+    const existing = service.applications.find(entry => entry.key === key)
+    if (existing)
+      return existing
+    const entry = { key: key, appName: String(record.appName || "Unknown").trim() || "Unknown",
+      enabled: true, sound: true }
+    service.applications = service.applications.concat([entry])
+    settings.applicationsJson = JSON.stringify(service.applications)
+    return entry
+  }
+
+  function migrateApplicationDefaults() {
+    const missing = NotificationDefaults.applications.filter(entry =>
+      !service.applications.some(app => app.key === service.appKey(entry)))
+    if (missing.length === 0)
+      return
+    service.applications = service.applications.concat(missing.map(entry =>
+      Object.assign({}, entry, { key: service.appKey(entry) })))
+    settings.applicationsJson = JSON.stringify(service.applications)
+  }
+
+  function setApplicationPreference(key, preference, enabled) {
+    if (!["enabled", "sound"].includes(preference) || typeof enabled !== "boolean")
+      return
+    const entry = service.applications.find(app => app.key === key)
+    if (!entry || entry[preference] === enabled)
+      return
+    service.applications = service.applications.map(app => app.key === key
+      ? Object.assign({}, app, { [preference]: enabled }) : app)
+    settings.applicationsJson = JSON.stringify(service.applications)
+    if (preference === "enabled" && !enabled) {
+      // Keep old history, but never replay its popups after re-enabling an app.
+      service.history = service.history.map(record => service.appKey(record) === key
+        ? Object.assign({}, record, { popupSuppressed: true }) : record)
+      service.pendingPopupRecords = service.pendingPopupRecords.filter(record => service.appKey(record) !== key)
+      service.saveHistory()
+      service.syncPopup()
+    }
   }
 
   function restoreHistory(parsed) {
@@ -285,11 +355,18 @@ QtObject {
       return
     }
 
+    const application = service.trackApplication(record)
+    if (!application.enabled) {
+      notification.dismiss()
+      service.releaseLive(record.id, notification)
+      service.syncPopup()
+      return
+    }
     service.liveDeadlines[record.id] = record.expiresAt
     service.addHistory(record)
     if (service.doNotDisturb)
       return
-    if (hints["suppress-sound"] !== true)
+    if (application.sound && hints["suppress-sound"] !== true)
       service.playNotificationSound()
     service.pendingPopupRecords = service.pendingPopupRecords
       .filter(entry => entry.id !== record.id).concat([record]).slice(-service.popupLimit)
@@ -447,7 +524,7 @@ QtObject {
   }
 
   function appKey(record) {
-    return String(record.appName || "Unknown").toLowerCase()
+    return (String(record.appName || "Unknown").trim() || "Unknown").toLowerCase()
   }
 
   function groupHistory(records) {
