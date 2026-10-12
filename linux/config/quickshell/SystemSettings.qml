@@ -157,6 +157,56 @@ FloatingWindow {
     palette.text: window.controller.controlPrimaryText
     palette.highlight: window.controller.controlActive
     palette.highlightedText: window.controller.controlPrimaryText
+    delegate: Controls.ItemDelegate {
+      id: option
+      required property int index
+      width: choice.width - 8
+      implicitHeight: 36
+      padding: 8
+      highlighted: choice.highlightedIndex === index
+      Accessible.name: choice.textAt(index)
+      contentItem: RowLayout {
+        spacing: 8
+        Label {
+          Layout.fillWidth: true
+          text: choice.textAt(option.index)
+          elide: Text.ElideRight
+          maximumLineCount: 1
+          color: window.controller.controlPrimaryText
+        }
+        LucideIcon {
+          Layout.preferredWidth: 16
+          Layout.preferredHeight: 16
+          source: window.controller.icon("circle-check")
+          visible: choice.currentIndex === option.index
+          color: window.controller.controlPrimaryText
+        }
+      }
+      background: Rectangle {
+        radius: 6
+        color: choice.currentIndex === option.index ? window.controller.controlActive
+          : option.highlighted || option.hovered ? window.controller.controlHover : window.controller.controlSurface
+      }
+    }
+    popup: Controls.Popup {
+      y: choice.height + 4
+      width: choice.width
+      padding: 4
+      implicitHeight: Math.min(contentItem.implicitHeight + 8, 240, window.height - 80)
+      contentItem: ListView {
+        clip: true
+        implicitHeight: contentHeight
+        model: choice.popup.visible ? choice.delegateModel : null
+        currentIndex: choice.highlightedIndex
+        boundsBehavior: Flickable.StopAtBounds
+        Controls.ScrollIndicator.vertical: Controls.ScrollIndicator {}
+      }
+      background: Rectangle {
+        radius: 8
+        color: window.controller.controlSurface
+        border.color: window.controller.controlBorder
+      }
+    }
     background: Rectangle {
       radius: 8
       color: choice.hovered ? window.controller.controlHover : window.controller.controlSurface
