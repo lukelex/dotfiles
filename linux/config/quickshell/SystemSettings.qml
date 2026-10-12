@@ -23,6 +23,7 @@ FloatingWindow {
     { key: "idle", label: "Lock & idle", icon: "lock" },
     { key: "lockScreen", label: "Session & lock screen", icon: "lock" },
     { key: "input", label: "Input", icon: "keyboard" },
+    { key: "audio", label: "Audio", icon: "volume-2" },
     { key: "weather", label: "Date & weather", icon: "calendar" },
     { key: "desktop", label: "Desktop & bar", icon: "settings" }
   ]
@@ -40,6 +41,16 @@ FloatingWindow {
       wallpaperFolderDialog.close()
       service.stopSoundPreview()
     }
+  }
+
+  Binding {
+    target: window.controller.audioService
+    property: "mixerSettingsActive"
+    value: window.visible && window.section === "audio"
+  }
+  Process {
+    id: advancedAudioSettings
+    command: ["pavucontrol"]
   }
 
   function open(targetScreen) {
@@ -783,7 +794,9 @@ FloatingWindow {
     }
     Label {
       Layout.fillWidth: true
-      text: "Saved to linux/config/system-settings/preferences.json"
+      text: window.section === "audio"
+        ? "Key steps are saved in preferences.json. Mixer levels, routes and modes are live audio-server state."
+        : "Saved to linux/config/system-settings/preferences.json"
       color: window.controller.controlSecondaryText
       HoverHandler { id: storageHover }
       Hint {
@@ -816,6 +829,12 @@ FloatingWindow {
             : "Suggestions never switch networks automatically. Connections and VPN controls stay in Connectivity."
           color: window.controller.controlSecondaryText
         }
+        Label {
+          Layout.fillWidth: true
+          visible: window.section === "audio"
+          text: "Everyday volume, mute and device selection stay in the bar's Sound panel. Changing a default device there also moves running applications; individual routes below do not change the default."
+          color: window.controller.controlSecondaryText
+        }
         Repeater {
           model: window.controller.preferences.fields.filter(field => {
             const category = field.key.split(".")[0]
@@ -836,6 +855,8 @@ FloatingWindow {
               checked: preferenceRow.currentValue === true
               description: preferenceRow.modelData.key === "desktop.hoverPreviews"
                 ? "Calendar, connectivity, audio, reviews and Control Center. Notification history and privacy indicators remain available on hover."
+                : preferenceRow.modelData.key === "display.linkBrightness" ? "When setting laptop brightness, also set keyboard and DDC-capable external displays to the same percentage. Enabling this does not immediately change any device."
+                : preferenceRow.modelData.key === "connectivity.bluetoothBatteryAlerts" ? "Warn once per device below the selected threshold. Disconnecting or recovering above the threshold rearms alerts; existing notification policies still apply."
                 : window.section === "power" ? "Warnings fire once per level in a discharge episode. Critical, urgent and final levels use critical urgency; notification policies still apply."
                 : window.section === "lockScreen" ? "Changes apply on the next lock. Hiding a widget removes its label or image and stops its helper from running. Authentication, date/time and explicit locking are unchanged."
                 : window.section === "connectivity" ? "Only offers a stronger saved network on the same adapter. Clicking Switch rechecks your current preferences and network availability." : ""
@@ -942,6 +963,18 @@ FloatingWindow {
           SoundButton { text: "Choose folder…"; onClicked: wallpaperFolderDialog.open() }
           SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
           SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
+        }
+        SoundMixerControls {
+          Layout.fillWidth: true
+          visible: window.section === "audio"
+          controller: window.controller
+          mixer: window.controller.audioService.mixer
+          keyboardEnabled: true
+        }
+        SoundButton {
+          visible: window.section === "audio"
+          text: "Open pavucontrol…"
+          onClicked: advancedAudioSettings.running = true
         }
         Label {
           Layout.fillWidth: true

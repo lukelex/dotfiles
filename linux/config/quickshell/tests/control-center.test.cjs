@@ -87,7 +87,8 @@ test('hover centers do not grab focus from their bar triggers', () => {
 
 test('Control Center keeps tray content bounded and preserves hover menus', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
-  assert.match(source, /implicitHeight: Math\.min\(sections\.implicitHeight \+ 32, maxHeight\)/);
+  assert.match(source, /implicitHeight: Math\.min\(sections\.implicitHeight \+ 74, maxHeight\)/);
+  assert.match(source, /anchors.topMargin: header.y \+ header.height \+ 10/);
   assert.match(source, /contentHeight: sections\.implicitHeight/);
   assert.match(source, /TrayModule/);
   assert.match(source, /else if \(!trayModule\.menuOpen\)/);

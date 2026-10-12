@@ -20,6 +20,8 @@ QtObject {
   property bool _readSucceeded: false
   property bool _refreshQueued: false
   property int activePanels: 0
+  property bool mixerSettingsActive: false
+  readonly property AudioMixer mixer: AudioMixer { active: service.mixerSettingsActive }
   property string _requestedSink: ""
   property string _requestedSource: ""
   property string _selectionWarning: ""
@@ -538,6 +540,8 @@ QtObject {
     target: Pipewire.nodes
     function onValuesChanged() {
       service.syncMicrophoneMute()
+      if (service.mixerSettingsActive)
+        service.mixer.refresh()
       if (service.activePanels > 0)
         queuedRefresh.restart()
     }

@@ -4,6 +4,10 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
+preferences=$(python3 "$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py" get audio)
+volume_step=$(jq -r '.volumeStep' <<< "$preferences")
+microphone_step=$(jq -r '.microphoneStep' <<< "$preferences")
+
 VOL_HIGH=$(printf "\ue1ab")
 VOL_MEDIUM=$(printf "\ue1ab")
 VOL_LOW=$(printf "\ue1aa")
@@ -121,12 +125,12 @@ case $1 in
         show_mic
         ;;
       inc)
-        mic=$(awk -v current="$(get_mic)" 'BEGIN { print (current > 98 ? 100 : current + 2) }')
+        mic=$(awk -v current="$(get_mic)" -v step="$microphone_step" 'BEGIN { print (current + step > 100 ? 100 : current + step) }')
         wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$mic%"
         show_mic
         ;;
       dec)
-        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 2%-
+        wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$microphone_step%-"
         show_mic
         ;;
       show) show_mic ;;
@@ -141,10 +145,10 @@ case $1 in
       get) get_volume ;;
       icon) icon_volume ;;
       inc)
-        wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 2%+
+        wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ "$volume_step%+"
         show_volume ;;
       dec)
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-
+        wpctl set-volume @DEFAULT_AUDIO_SINK@ "$volume_step%-"
         show_volume ;;
       set)
         vol=$(echo "$3" | awk '{if ($1 > 100) print 100; else if ($1 < 0) print 0; else print $1}')

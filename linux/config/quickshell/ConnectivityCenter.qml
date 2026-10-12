@@ -11,6 +11,7 @@ Scope {
   required property var controller
   required property var panel
   required property var service
+  property bool bluetoothOnly: false
   property bool pinned: false
   property bool closing: false
   property bool closeImmediately: false
@@ -21,12 +22,14 @@ Scope {
   readonly property bool visible: preview.visible || pinnedPopup.visible
   readonly property real width: Math.max(1, Math.min(432, (popup.panel.screen ? popup.panel.screen.width : popup.panel.width) - 24))
   readonly property real availableHeight: Math.max(1, (popup.panel.screen ? popup.panel.screen.height : 768) - popup.panel.height - 24)
-  readonly property real height: Math.min(availableHeight, sections.implicitHeight + 32)
+  readonly property real height: Math.min(availableHeight, sections.implicitHeight + 82)
   signal shown()
   onShown: {
-    popup.controller.refreshControlStatus()
-    popup.controller.vpnService.refresh()
-    popup.controller.vpnService.refreshLocations()
+    if (!popup.bluetoothOnly) {
+      popup.controller.refreshControlStatus()
+      popup.controller.vpnService.refresh()
+      popup.controller.vpnService.refreshLocations()
+    }
   }
 
   function openPinned(request) {
@@ -452,9 +455,9 @@ Scope {
     Flickable {
       id: panelScroll
       x: 16
-      y: 16
+      y: 66
       width: parent.width - 32
-      height: Math.max(1, parent.height - 32)
+      height: Math.max(1, parent.height - 82)
       contentWidth: width
       contentHeight: sections.implicitHeight
       clip: true
@@ -470,25 +473,43 @@ Scope {
       spacing: 10
 
       Row {
-        width: parent.width
+        parent: content
+        x: 16
+        y: 16
+        width: content.width - 32
         height: 40
         spacing: 8
         Column {
-          width: parent.width - 40
+          width: parent.width - 80
           anchors.verticalCenter: parent.verticalCenter
           spacing: 2
           Label {
             width: parent.width
-            text: "Connectivity"
+            text: popup.bluetoothOnly ? "Bluetooth" : "Network"
             font.pixelSize: 16
             color: popup.controller.controlPrimaryText
           }
           Label {
             width: parent.width
             text: popup.service.internetStatus
+            visible: !popup.bluetoothOnly
             color: popup.controller.controlPrimaryText
             Accessible.name: "NetworkManager internet status: " + text
           }
+        }
+        HeaderSettingsButton {
+          controller: popup.controller
+          description: popup.bluetoothOnly ? "Bluetooth settings" : "Network settings"
+          keyboardEnabled: popup.pinned
+          anchors.verticalCenter: parent.verticalCenter
+          onOpening: popup.requestOpen(true)
+          options: popup.bluetoothOnly ? [
+            { text: "Bluetooth preferences", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivity") },
+            { text: "Bluetooth settings", run: () => { popup.requestClose(true); Quickshell.execDetached(["blueman-manager"]) } }
+          ] : [
+            { text: "Connectivity preferences", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivity") },
+            { text: "Network settings", run: () => { popup.requestClose(true); Quickshell.execDetached(["nm-connection-editor"]) } }
+          ]
         }
         Item {
           id: closeButton
@@ -499,7 +520,7 @@ Scope {
           Keys.onReturnPressed: popup.requestClose()
           Keys.onSpacePressed: popup.requestClose()
           Accessible.role: Accessible.Button
-          Accessible.name: "Close connectivity"
+          Accessible.name: popup.bluetoothOnly ? "Close Bluetooth" : "Close network"
           Accessible.onPressAction: popup.requestClose()
           Rectangle {
             anchors.fill: parent
@@ -528,6 +549,7 @@ Scope {
       Action {
         width: parent.width
         title: "Wi-Fi"
+        visible: !popup.bluetoothOnly
         showTraffic: popup.service.wifiConnected
         iconName: "wifi"
         radioSwitch: true
@@ -550,7 +572,7 @@ Scope {
       }
 
       Repeater {
-        model: popup.service._wiredDevices.length ? popup.service._wiredDevices : [null]
+        model: popup.bluetoothOnly ? [] : popup.service._wiredDevices.length ? popup.service._wiredDevices : [null]
         delegate: Action {
           required property var modelData
           width: sections.width
@@ -574,7 +596,7 @@ Scope {
 
       Label {
         width: parent.width
-        visible: text !== ""
+        visible: !popup.bluetoothOnly && text !== ""
         text: popup.service.ethernetError
         color: popup.controller.urgent
         elide: Text.ElideNone
@@ -584,18 +606,19 @@ Scope {
       Label {
         width: parent.width
         text: "Saved networks"
+        visible: !popup.bluetoothOnly
         font.pixelSize: 12
       }
 
       Label {
         width: parent.width
-        visible: popup.service.wifiConnecting
+        visible: !popup.bluetoothOnly && popup.service.wifiConnecting
         text: popup.service.connectingNetwork ? "Connecting to " + popup.service.connectingNetwork.name + "..." : "Connecting..."
       }
 
       Label {
         width: parent.width
-        visible: text !== ""
+        visible: !popup.bluetoothOnly && text !== ""
         text: popup.service.wifiError
         color: popup.controller.urgent
         elide: Text.ElideNone
@@ -604,10 +627,11 @@ Scope {
 
       ConnectionDeviceList {
         id: wifiScroll
+        visible: !popup.bluetoothOnly
         width: parent.width
-        entries: popup.service.savedNetworks
+        entries: popup.bluetoothOnly ? [] : popup.service.savedNetworks
         keyForEntry: network => JSON.stringify([network.device.name, network.name, network.security])
-        panelVisible: popup.visible
+        panelVisible: popup.visible && !popup.bluetoothOnly
         keyboardEnabled: popup.pinned
         focusFallback: closeButton
         delegate: Action {
@@ -639,7 +663,7 @@ Scope {
       Label {
         width: parent.width
         height: visible ? 30 : 0
-        visible: popup.service.savedNetworks.length === 0
+        visible: !popup.bluetoothOnly && popup.service.savedNetworks.length === 0
         text: popup.service.wifiEnabled ? "No saved networks in range" : "Turn on Wi-Fi to see saved networks"
         verticalAlignment: Text.AlignVCenter
       }
@@ -647,6 +671,7 @@ Scope {
       Action {
         width: parent.width
         title: "Add Wi-Fi network…"
+        visible: !popup.bluetoothOnly
         iconName: "wifi"
         detail: "Create a Wi-Fi profile in Network settings. Enter the network name and security credentials, then save. In-range profiles appear in Saved networks."
         enabled: popup.service.wifiAvailable
@@ -659,6 +684,7 @@ Scope {
       Action {
         width: parent.width
         title: "NordVPN"
+        visible: !popup.bluetoothOnly
         iconName: "globe"
         radioSwitch: true
         active: popup.controller.vpnService.connected
@@ -673,7 +699,7 @@ Scope {
 
       Label {
         width: parent.width
-        visible: text !== ""
+        visible: !popup.bluetoothOnly && text !== ""
         text: popup.controller.vpnService.error || popup.controller.vpnService.statusError || popup.controller.vpnService.locationsError
         color: popup.controller.urgent
         elide: Text.ElideNone
@@ -683,7 +709,7 @@ Scope {
       Action {
         width: parent.width
         title: "Refresh VPN status"
-        visible: popup.controller.vpnService.installed && !popup.controller.vpnService.statusKnown
+        visible: !popup.bluetoothOnly && popup.controller.vpnService.installed && !popup.controller.vpnService.statusKnown
         height: visible ? 40 : 0
         onActivated: popup.controller.vpnService.refresh()
       }
@@ -692,7 +718,7 @@ Scope {
         width: parent.width
         height: visible ? 32 : 0
         spacing: 10
-        visible: popup.controller.vpnService.installed
+        visible: !popup.bluetoothOnly && popup.controller.vpnService.installed
 
         Label {
           anchors.verticalCenter: parent.verticalCenter
@@ -746,6 +772,7 @@ Scope {
       Action {
         width: parent.width
         title: "Bluetooth"
+        visible: popup.bluetoothOnly
         iconName: "bluetooth"
         radioSwitch: true
         active: popup.service.bluetoothEnabled
@@ -765,12 +792,13 @@ Scope {
       Label {
         width: parent.width
         text: "Connected devices"
+        visible: popup.bluetoothOnly
         font.pixelSize: 12
       }
 
       Label {
         width: parent.width
-        visible: text !== ""
+        visible: popup.bluetoothOnly && text !== ""
         text: popup.service.bluetoothError
         color: popup.controller.urgent
         elide: Text.ElideNone
@@ -779,11 +807,12 @@ Scope {
 
       ConnectionDeviceList {
         id: bluetoothScroll
+        visible: popup.bluetoothOnly
         width: parent.width
         maximumHeight: 140
-        entries: popup.service.connectedBluetoothDevices
+        entries: popup.bluetoothOnly ? popup.service.connectedBluetoothDevices : []
         keyForEntry: device => device.dbusPath
-        panelVisible: popup.visible
+        panelVisible: popup.visible && popup.bluetoothOnly
         keyboardEnabled: popup.pinned
         focusFallback: closeButton
         delegate: Rectangle {
@@ -838,33 +867,11 @@ Scope {
       Label {
         width: parent.width
         height: visible ? 30 : 0
-        visible: popup.service.connectedBluetoothDevices.length === 0
+        visible: popup.bluetoothOnly && popup.service.connectedBluetoothDevices.length === 0
         text: "No connected devices"
         verticalAlignment: Text.AlignVCenter
       }
 
-      Row {
-        width: parent.width
-        spacing: 10
-        Action {
-          width: (parent.width - parent.spacing) / 2
-          title: "Network settings"
-          iconName: "settings"
-          onActivated: {
-            popup.requestClose(true)
-            Quickshell.execDetached(["nm-connection-editor"])
-          }
-        }
-        Action {
-          width: (parent.width - parent.spacing) / 2
-          title: "Bluetooth settings"
-          iconName: "settings"
-          onActivated: {
-            popup.requestClose(true)
-            Quickshell.execDetached(["blueman-manager"])
-          }
-        }
-      }
     }
   }
 }

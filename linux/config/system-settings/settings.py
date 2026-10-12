@@ -16,6 +16,11 @@ CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "dotfil
 
 # key, label, kind, allowed values/range, session (empty means both)
 FIELDS = [
+  ("audio.volumeStep", "Volume key step (%)", "number", [1, 25], ""),
+  ("audio.microphoneStep", "Microphone key step (%)", "number", [1, 25], ""),
+  ("display.linkBrightness", "Link display and keyboard brightness", "boolean", [], ""),
+  ("connectivity.bluetoothBatteryAlerts", "Bluetooth low-battery alerts", "boolean", [], ""),
+  ("connectivity.bluetoothBatteryThreshold", "Bluetooth low-battery threshold (%)", "number", [1, 50], ""),
   ("lockScreen.showGreeting", "Greeting and username", "boolean", [], "wayland"),
   ("lockScreen.showQuote", "Daily quote", "boolean", [], "wayland"),
   ("lockScreen.showBattery", "Battery status", "boolean", [], "wayland"),

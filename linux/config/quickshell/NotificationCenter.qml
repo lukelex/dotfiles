@@ -1192,7 +1192,7 @@ PopupWindow {
           description: "Notification settings"
           Accessible.role: Accessible.Button
           Accessible.name: description
-          onClicked: popup.controller.openSystemSettings(popup.panel.screen)
+          onClicked: popup.controller.openSystemSettings(popup.panel.screen, "notifications")
         }
 
         DismissButton {

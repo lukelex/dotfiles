@@ -8,14 +8,15 @@ const source = fs.readFileSync(path.join(__dirname, '../ConnectivityService.qml'
 
 function setup() {
   const commands = [];
+  const service = { _bluetoothBatteryWarnings: {}, bluetoothBatteryAlertsEnabled: true, bluetoothBatteryThreshold: 0.15 };
   const match = source.match(/^( +)function checkBluetoothBattery\([^]*?\n\1\}/m);
   assert.ok(match);
   const check = vm.runInNewContext(`(${match[0].replace('): void', ')')})`, {
-    service: { _bluetoothBatteryWarnings: {} },
+    service,
     Quickshell: { env: () => '/home/test', execDetached: command => commands.push(Array.from(command)) },
   });
   const device = { dbusPath: '/headphones', connected: true, batteryAvailable: true, battery: 0.15, name: 'Headphones' };
-  return { check, commands, device };
+  return { check, commands, device, service };
 }
 
 test('already connected and newly connected low batteries notify once per connection', () => {
@@ -84,4 +85,28 @@ test('native watchers cover startup, connections, battery availability and charg
     assert.match(source, new RegExp(`${event}\\(\\) \\{ service\\.checkBluetoothBattery`));
   }
   assert.match(source, /Component\.onCompleted: service\.checkBluetoothBattery/);
+});
+
+test('Bluetooth alert preference and threshold re-evaluate without replaying a warned device', () => {
+  const { check, commands, device, service } = setup();
+  service.bluetoothBatteryAlertsEnabled = false;
+  check(device);
+  assert.equal(commands.length, 0);
+  service.bluetoothBatteryAlertsEnabled = true;
+  service.bluetoothBatteryThreshold = 0.1;
+  check(device);
+  assert.equal(commands.length, 0);
+  service.bluetoothBatteryThreshold = 0.2;
+  check(device);
+  assert.equal(commands.length, 1);
+  service.bluetoothBatteryAlertsEnabled = false;
+  check(device);
+  service.bluetoothBatteryAlertsEnabled = true;
+  check(device);
+  assert.equal(commands.length, 1);
+  device.battery = 0.3;
+  check(device);
+  device.battery = 0.19;
+  check(device);
+  assert.equal(commands.length, 2);
 });

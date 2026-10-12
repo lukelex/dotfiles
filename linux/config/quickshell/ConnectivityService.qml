@@ -278,6 +278,18 @@ QtObject {
     }
   }
 
+  readonly property bool bluetoothBatteryAlertsEnabled: preferences ? preferences.value("connectivity.bluetoothBatteryAlerts", true) : true
+  readonly property real bluetoothBatteryThreshold: preferences ? preferences.value("connectivity.bluetoothBatteryThreshold", 15) / 100 : 0.15
+  readonly property string bluetoothBatteryPolicy: String(bluetoothBatteryAlertsEnabled) + ":" + bluetoothBatteryThreshold
+  onBluetoothBatteryPolicyChanged: service._bluetoothPolicyTimer.restart()
+  readonly property Timer _bluetoothPolicyTimer: Timer {
+    interval: 0
+    onTriggered: {
+      for (const device of Bluetooth.devices.values)
+        service.checkBluetoothBattery(device)
+    }
+  }
+
   function checkBluetoothBattery(device): void {
     if (!device)
       return
@@ -289,11 +301,11 @@ QtObject {
     if (!device.batteryAvailable || !Number.isFinite(device.battery)
         || device.battery < 0 || device.battery > 1)
       return
-    if (device.battery > 0.15) {
+    if (device.battery > service.bluetoothBatteryThreshold) {
       delete service._bluetoothBatteryWarnings[key]
       return
     }
-    if (service._bluetoothBatteryWarnings[key] === device)
+    if (!service.bluetoothBatteryAlertsEnabled || service._bluetoothBatteryWarnings[key] === device)
       return
     service._bluetoothBatteryWarnings[key] = device
     const name = (device.name || "Bluetooth device").replace(/&/g, "&amp;")

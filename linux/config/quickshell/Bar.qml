@@ -295,6 +295,7 @@ Scope {
   property var githubReviewCenterTarget: null
   property var todayCenterTarget: null
   property var connectivityTarget: null
+  property var bluetoothTarget: null
   property var audioOutputTarget: null
   property var panelsByScreen: ({})
   property bool resizeMode: false
@@ -347,9 +348,16 @@ Scope {
     trafficMonitoringEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
   }
 
-  function closeConnectivity() {
+  function closeBluetooth() {
+    if (root.bluetoothTarget)
+      root.bluetoothTarget.requestClose()
+  }
+
+  function closeConnectivity(includeBluetooth = true) {
     if (root.connectivityTarget)
       root.connectivityTarget.requestClose()
+    if (includeBluetooth)
+      root.closeBluetooth()
   }
 
   function closeAudioOutput() {
@@ -802,7 +810,7 @@ Scope {
       panel.toggleNotifications()
   }
 
-  function openSystemSettings(targetScreen) {
+  function openSystemSettings(targetScreen, section = "") {
     root.cancelHoverClose()
     root.closeNotifications()
     root.closeConnectivity()
@@ -812,6 +820,8 @@ Scope {
     for (const name of Object.keys(root.panelsByScreen))
       root.panelsByScreen[name].closeControlCenter()
     const panel = root.focusedPanel()
+    if (section)
+      systemSettings.section = section
     systemSettings.open(targetScreen || (panel ? panel.screen : null))
   }
 
@@ -1264,6 +1274,11 @@ Scope {
     function openCalendar() { root.openCalendarFromKeyboard() }
     function openSettings() { root.openSystemSettings(null) }
     function openConnectivity() { root.openConnectivityFromKeyboard() }
+    function openBluetooth() {
+      const panel = root.focusedPanel()
+      if (panel)
+        panel.openBluetooth(true)
+    }
     function openAudioOutput() { root.openAudioOutputFromKeyboard() }
     function toggleDoNotDisturb() { root.toggleDoNotDisturbFromKeyboard() }
     function refreshLayout() {
@@ -1324,6 +1339,7 @@ Scope {
 
       function openConnectivity(pin = false) {
         root.cancelHoverClose()
+        root.closeBluetooth()
         root.closeAudioOutput()
         if (root.connectivityTarget !== connectivityCenter)
           root.closeConnectivity()
@@ -1333,6 +1349,20 @@ Scope {
         root.closeGitHubReviewCenter()
         root.closeDateTime()
         connectivityCenter.requestOpen(pin)
+      }
+
+      function openBluetooth(pin = false) {
+        root.cancelHoverClose()
+        root.closeConnectivity(false)
+        root.closeAudioOutput()
+        root.closeDateTime()
+        root.closeNotifications()
+        root.closeGitHubReviewCenter()
+        controlCenter.requestClose()
+        if (root.bluetoothTarget !== bluetoothCenter)
+          root.closeBluetooth()
+        root.bluetoothTarget = bluetoothCenter
+        bluetoothCenter.requestOpen(pin)
       }
 
       function openControlCenter() {
@@ -1375,6 +1405,14 @@ Scope {
 
       ConnectivityCenter {
         id: connectivityCenter
+        controller: root
+        panel: panel
+        service: connectivity
+      }
+
+      ConnectivityCenter {
+        id: bluetoothCenter
+        bluetoothOnly: true
         controller: root
         panel: panel
         service: connectivity
@@ -1917,40 +1955,51 @@ Scope {
 
         Item {
           height: root.barFontSize
-          width: root.barFontSize * 2 + 8
-
-          Row {
-            spacing: 8
-            LucideIcon {
-              width: root.barFontSize
-              height: root.barFontSize
-              source: root.icon(!connectivity.wifiConnected && connectivity.ethernetConnected ? "ethernet-port"
-                : !connectivity.wifiEnabled ? "wifi-off"
-                : !connectivity.wifiConnected ? "wifi-zero"
-                : connectivity.wifiStrength < 0.35 ? "wifi-low"
-                : connectivity.wifiStrength < 0.7 ? "wifi-high" : "wifi")
-              color: connectivity.wifiConnected || connectivity.ethernetConnected ? root.foreground : root.muted
-            }
-            LucideIcon {
-              width: root.barFontSize
-              height: root.barFontSize
-              source: root.icon(connectivity.bluetoothEnabled ? "bluetooth" : "bluetooth-off")
-              color: connectivity.connectedBluetoothDevices.some(device => device.batteryAvailable && device.battery <= 0.15)
-                ? root.urgent : connectivity.connectedBluetoothDevices.length > 0 ? root.foreground : root.muted
-            }
+          width: root.barFontSize
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(!connectivity.wifiConnected && connectivity.ethernetConnected ? "ethernet-port"
+              : !connectivity.wifiEnabled ? "wifi-off"
+              : !connectivity.wifiConnected ? "wifi-zero"
+              : connectivity.wifiStrength < 0.35 ? "wifi-low"
+              : connectivity.wifiStrength < 0.7 ? "wifi-high" : "wifi")
+            color: connectivity.wifiConnected || connectivity.ethernetConnected ? root.foreground : root.muted
           }
 
           MouseArea {
             anchors.fill: parent
-            anchors.margins: -5
+            anchors.margins: -4
             Accessible.role: Accessible.Button
-            Accessible.name: "Wi-Fi and Bluetooth"
+            Accessible.name: "Network connections"
             Accessible.onPressAction: panel.openConnectivity(true)
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openConnectivity() }
             onExited: connectivityCenter.scheduleClose()
             onClicked: panel.openConnectivity(true)
+          }
+        }
+
+        Item {
+          height: root.barFontSize
+          width: root.barFontSize
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(connectivity.bluetoothEnabled ? "bluetooth" : "bluetooth-off")
+            color: connectivity.connectedBluetoothDevices.some(device => device.batteryAvailable && device.battery <= 0.15)
+              ? root.urgent : connectivity.connectedBluetoothDevices.length > 0 ? root.foreground : root.muted
+          }
+          MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            Accessible.role: Accessible.Button
+            Accessible.name: "Bluetooth"
+            Accessible.onPressAction: panel.openBluetooth(true)
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openBluetooth() }
+            onExited: bluetoothCenter.scheduleClose()
+            onClicked: panel.openBluetooth(true)
           }
         }
 

@@ -6,7 +6,7 @@ source "$HOME/dotfiles/linux/variables.env"
 declare -ar BRIGHTNESS_ICONS=("" "" "")
 declare -ar BRIGHTNESS_IMAGES=(sun-dim sun-medium sun)
 
-LINK_FILE="$HOME/.cache/link-devices"
+preferences_helper="$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py"
 LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/u_backlight.lock"
 STEP=$(python3 "$(dirname "$(readlink -f "$0")")/../config/system-settings/settings.py" get display.brightnessStep)
 
@@ -61,16 +61,14 @@ show() {
 }
 
 link_state() {
-  if [[ -f "$LINK_FILE" ]]; then echo true; else echo false; fi
+  python3 "$preferences_helper" get display.linkBrightness
 }
 
 link_toggle() {
-  if [[ -f "$LINK_FILE" ]]; then
-    rm -f "$LINK_FILE"
-  else
-    mkdir -p "$(dirname "$LINK_FILE")"
-    : > "$LINK_FILE"
-  fi
+  local enabled
+  enabled=$(link_state)
+  if [[ $enabled == true ]]; then enabled=false; else enabled=true; fi
+  python3 "$preferences_helper" set display.linkBrightness "$enabled" > /dev/null
   link_state
 }
 

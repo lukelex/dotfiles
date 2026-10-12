@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import Quickshell.Services.Pipewire
-import Quickshell.Io
 import QtQuick
 import QtQuick.Controls as Controls
 
@@ -29,16 +28,6 @@ Scope {
     id: microphonePeak
     node: popup.visible && popup.controller.microphoneAvailable ? popup.controller.defaultMicrophone : null
     enabled: popup.visible && popup.controller.microphoneAvailable && !popup.controller.microphoneMuted
-  }
-
-  Process {
-    id: advancedSettings
-    command: ["pavucontrol"]
-  }
-
-  function openAdvancedSettings() {
-    popup.requestClose(true)
-    Qt.callLater(() => { advancedSettings.running = true })
   }
 
   function openPinned(request) {
@@ -144,125 +133,6 @@ Scope {
     font.pixelSize: 11
     textFormat: Text.PlainText
     elide: Text.ElideRight
-  }
-
-  component AudioDeviceRow: Item {
-    id: outputRow
-
-    required property var device
-    required property bool isInput
-    readonly property bool isDefault: outputRow.isInput
-      ? popup.service.defaultSource === device.name : popup.service.defaultSink === device.name
-    readonly property bool isPending: outputRow.isInput
-      ? popup.service.pendingSource === device.name : popup.service.pendingSink === device.name
-    readonly property var inputNode: isInput
-      ? popup.service.microphoneNodes.find(node => node.name === device.name) || null : null
-    readonly property string muteStatus: !isInput ? ""
-      : inputNode && inputNode.ready && inputNode.audio ? (inputNode.audio.muted ? "Muted" : "Unmuted")
-      : "Checking mute state…"
-
-    height: 48
-    width: parent.width
-    enabled: !popup.service.busy
-    activeFocusOnTab: enabled && popup.pinned
-    Accessible.role: Accessible.RadioButton
-    Accessible.name: device.description
-    Accessible.description: (isPending ? "Switching " + (isInput ? "input" : "output") + " device"
-      : isDefault ? "Current " + (isInput ? "input" : "output") + " device"
-      : "Select " + (isInput ? "input" : "output") + " device") + (muteStatus ? ", " + muteStatus : "")
-    Accessible.checkable: true
-    Accessible.checked: isDefault
-    Accessible.onPressAction: outputRow.activate()
-    Keys.onSpacePressed: event => { if (!event.isAutoRepeat) outputRow.activate() }
-    Keys.onReturnPressed: event => { if (!event.isAutoRepeat) outputRow.activate() }
-
-    function activate() {
-      if (!outputRow.enabled)
-        return
-      popup.requestOpen(true)
-      if (outputRow.isInput)
-        popup.service.setDefaultSource(outputRow.device.name)
-      else
-        popup.service.setDefaultSink(outputRow.device.name)
-    }
-
-    Rectangle {
-      anchors.fill: parent
-      border.color: outputRow.isPending ? popup.controller.controlActiveIcon
-        : outputRow.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
-      border.width: outputRow.activeFocus ? 2 : 1
-      color: outputRow.isDefault ? popup.controller.controlActive
-        : area.containsMouse ? popup.controller.controlHover : popup.controller.controlSurface
-      radius: 14
-    }
-
-    LucideIcon {
-      id: typeIcon
-
-      anchors {
-        left: parent.left
-        leftMargin: 12
-        verticalCenter: parent.verticalCenter
-      }
-      color: outputRow.isDefault ? popup.controller.controlActiveIcon : popup.controller.controlSecondaryText
-      height: 18
-      source: popup.controller.icon(outputRow.device.iconName || "speaker")
-      width: 18
-    }
-
-    Column {
-      anchors {
-        left: typeIcon.right
-        leftMargin: 10
-        right: statusIcon.left
-        rightMargin: 8
-        verticalCenter: parent.verticalCenter
-      }
-      spacing: 2
-
-      Label {
-        color: popup.controller.controlPrimaryText
-        font.pixelSize: 12
-        text: outputRow.device.description
-        width: parent.width
-      }
-
-      Label {
-        color: outputRow.isPending ? popup.controller.controlActiveIcon : popup.controller.controlSecondaryText
-        font.pixelSize: 10
-        text: (outputRow.isPending ? "Switching…"
-          : outputRow.isDefault ? "Current " + (outputRow.isInput ? "input" : "output") : "")
-          + (outputRow.muteStatus ? (outputRow.isPending || outputRow.isDefault ? " · " : "") + outputRow.muteStatus : "")
-        visible: text !== ""
-        width: parent.width
-      }
-    }
-
-    LucideIcon {
-      id: statusIcon
-
-      anchors {
-        right: parent.right
-        rightMargin: 12
-        verticalCenter: parent.verticalCenter
-      }
-      color: outputRow.isDefault ? popup.controller.controlActiveIcon
-        : outputRow.isPending ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
-      height: 17
-      source: popup.controller.icon(outputRow.isPending ? "refresh-cw" : "circle-check")
-      visible: outputRow.isPending || outputRow.isDefault
-      width: 17
-    }
-
-    MouseArea {
-      id: area
-
-      anchors.fill: parent
-      cursorShape: outputRow.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-      enabled: outputRow.enabled
-      hoverEnabled: true
-      onClicked: outputRow.activate()
-    }
   }
 
   component VolumeControl: Column {
@@ -561,8 +431,16 @@ Scope {
           anchors.verticalCenter: parent.verticalCenter
           color: popup.controller.controlPrimaryText
           font.pixelSize: 16
-           text: "Audio Devices"
-          width: parent.width - closeButton.width - parent.spacing
+          text: "Sound"
+          width: parent.width - closeButton.width - settingsButton.width - parent.spacing * 2
+        }
+
+        HeaderSettingsButton {
+          id: settingsButton
+          controller: popup.controller
+          description: "Sound settings"
+          keyboardEnabled: popup.pinned
+          onActivated: popup.controller.openSystemSettings(popup.panel.screen, "audio")
         }
 
         Item {
@@ -572,7 +450,7 @@ Scope {
           height: 32
           activeFocusOnTab: popup.pinned
           Accessible.role: Accessible.Button
-           Accessible.name: "Close Audio Devices"
+          Accessible.name: "Close Sound"
           Accessible.onPressAction: popup.requestClose()
           Keys.onReturnPressed: popup.requestClose()
           Keys.onSpacePressed: popup.requestClose()
@@ -608,7 +486,7 @@ Scope {
 
         width: parent.width
         height: Math.max(1, Math.min(deviceSections.implicitHeight,
-          popup.availableHeight - 32 - sections.spacing * 2 - 32 - settingsFooter.height))
+          popup.availableHeight - 32 - sections.spacing - 32))
         contentWidth: width
         contentHeight: deviceSections.implicitHeight
         clip: true
@@ -645,6 +523,17 @@ Scope {
               width: parent.width - 28
               spacing: 12
 
+              SoundChoice {
+                controller: popup.controller
+                keyboardEnabled: popup.pinned
+                choices: popup.service.outputs
+                selected: popup.service.defaultSink
+                label: "Output"
+                enabled: !popup.service.busy
+                onInteracted: popup.requestOpen(true)
+                onChosen: option => popup.service.setDefaultSink(option.name)
+              }
+
               VolumeControl {
                 title: "Speaker"
                 enabled: popup.controller.audioAvailable
@@ -653,6 +542,17 @@ Scope {
                 volume: popup.controller.audioVolume
                 onVolumeEdited: value => popup.controller.setAudioVolume(value)
                 onMuteRequested: popup.controller.toggleAudio()
+              }
+
+              SoundChoice {
+                controller: popup.controller
+                keyboardEnabled: popup.pinned
+                choices: popup.service.inputs
+                selected: popup.service.defaultSource
+                label: "Microphone"
+                enabled: !popup.service.busy
+                onInteracted: popup.requestOpen(true)
+                onChosen: option => popup.service.setDefaultSource(option.name)
               }
 
               VolumeControl {
@@ -674,52 +574,6 @@ Scope {
                 wrapMode: Text.Wrap
               }
             }
-          }
-
-          Label {
-            width: parent.width
-            color: popup.controller.controlPrimaryText
-            font.pixelSize: 12
-            text: "Output devices"
-          }
-
-          Repeater {
-            model: popup.service.outputs
-            delegate: AudioDeviceRow {
-              required property var modelData
-              device: modelData
-              isInput: false
-              width: deviceSections.width
-            }
-          }
-
-          Label {
-            width: parent.width
-            visible: popup.service.outputs.length === 0
-            text: popup.service.loaded ? "No output devices found." : "Looking for devices…"
-          }
-
-          Label {
-            width: parent.width
-            color: popup.controller.controlPrimaryText
-            font.pixelSize: 12
-            text: "Input devices"
-          }
-
-          Repeater {
-            model: popup.service.inputs
-            delegate: AudioDeviceRow {
-              required property var modelData
-              device: modelData
-              isInput: true
-              width: deviceSections.width
-            }
-          }
-
-          Label {
-            width: parent.width
-            visible: popup.service.inputs.length === 0
-            text: popup.service.loaded ? "No input devices found." : "Looking for devices…"
           }
 
           Label {
@@ -771,96 +625,9 @@ Scope {
             elide: Text.ElideNone
           }
 
-          Label {
-            width: parent.width
-            text: "Applications using microphones"
-            color: popup.controller.controlPrimaryText
-            font.pixelSize: 12
-          }
-
-          Label {
-            width: parent.width
-            visible: popup.service.recordingApplications.length === 0
-            text: Pipewire.ready ? "No applications are recording." : "Checking recording applications…"
-          }
-
-          Flickable {
-            id: recordingScroll
-            width: parent.width
-            height: Math.min(recordingRows.implicitHeight, 156)
-            visible: popup.service.recordingApplications.length > 0
-            contentWidth: width
-            contentHeight: recordingRows.implicitHeight
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            flickableDirection: Flickable.VerticalFlick
-            Controls.ScrollBar.vertical: Controls.ScrollBar { policy: Controls.ScrollBar.AsNeeded }
-
-            Column {
-              id: recordingRows
-              width: recordingScroll.width - (recordingScroll.contentHeight > recordingScroll.height ? 12 : 0)
-              spacing: 6
-              Repeater {
-                model: popup.service.recordingApplications
-                delegate: Rectangle {
-                  id: recordingRow
-                  required property var modelData
-                  width: recordingRows.width
-                  height: 48
-                  radius: 14
-                  color: popup.controller.controlSurface
-                  border.width: 1
-                  border.color: popup.controller.controlSurfaceBorder
-                  Accessible.role: Accessible.StaticText
-                  Accessible.name: modelData.name + " using " + modelData.inputDescription
-                    + (modelData.muted ? ", input muted" : ", recording")
-                  Column {
-                    x: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 24
-                    spacing: 2
-                    Label {
-                      width: parent.width
-                      color: popup.controller.controlPrimaryText
-                      text: recordingRow.modelData.name
-                      font.pixelSize: 12
-                    }
-                    Label {
-                      width: parent.width
-                      text: recordingRow.modelData.inputDescription + (recordingRow.modelData.muted ? " · Input muted" : " · Recording")
-                        + (recordingRow.modelData.streamCount > 1 ? " · " + recordingRow.modelData.streamCount + " streams" : "")
-                      font.pixelSize: 10
-                    }
-                  }
-                }
-              }
-            }
-          }
-
         }
       }
 
-      Item {
-        id: settingsFooter
-        width: parent.width
-        height: 45
-
-        Rectangle {
-          width: parent.width
-          height: 1
-          color: popup.controller.controlSurfaceBorder
-        }
-
-        SoundAction {
-          anchors.right: parent.right
-          anchors.bottom: parent.bottom
-          width: Math.min(190, parent.width)
-          text: "Advanced settings"
-          accessibleName: "Advanced sound settings"
-          iconName: "sliders"
-          onActivated: popup.openAdvancedSettings()
-        }
-      }
     }
   }
 }

@@ -41,17 +41,11 @@ test('hover opening refreshes devices and shows the preview without pinning', ()
   assert.equal(opened, true);
 });
 
-test('selecting an output pins the widget before applying the device', () => {
-  const calls = [];
-  const popup = {
-    requestOpen(pin) { calls.push(['open', pin]); },
-    service: { setDefaultSink(name) { calls.push(['select', name]); } },
-  };
-  const outputRow = { enabled: true, device: { name: 'sink-usb' } };
-  const match = source.match(/    function activate\(\) \{[^]*?\n    \}/);
-  assert.ok(match, 'Missing OutputDeviceRow.activate');
-  vm.runInNewContext(`(${match[0]})`, { popup, outputRow })();
-  assert.deepEqual(calls, [['open', true], ['select', 'sink-usb']]);
+test('default device selectors pin before interaction and route through the existing audio service', () => {
+  assert.match(source, /choices: popup.service.outputs[^]*?onInteracted: popup.requestOpen\(true\)[^]*?onChosen: option => popup.service.setDefaultSink\(option.name\)/);
+  assert.match(source, /choices: popup.service.inputs[^]*?onInteracted: popup.requestOpen\(true\)[^]*?onChosen: option => popup.service.setDefaultSource\(option.name\)/);
+  assert.match(source, /openSystemSettings\(popup.panel.screen, "audio"\)/);
+  assert.doesNotMatch(source, /SoundMixerControls|pavucontrol/);
 });
 
 test('leaving the preview schedules closure only while it is not pinned', () => {

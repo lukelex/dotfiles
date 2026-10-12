@@ -16,7 +16,7 @@ PopupWindow {
   color: "transparent"
   grabFocus: false
   readonly property real maxHeight: Math.max(1, panel.screen.height - panel.height - 24)
-  implicitHeight: Math.min(sections.implicitHeight + 32, maxHeight)
+  implicitHeight: Math.min(sections.implicitHeight + 74, maxHeight)
   implicitWidth: Math.min(432, panel.screen.width - 24)
 
   surfaceFormat.opaque: false
@@ -434,11 +434,39 @@ PopupWindow {
       radius: 26
     }
 
+    Item {
+      id: header
+      x: 16
+      y: 16
+      width: parent.width - 32
+      height: 32
+      Text {
+        anchors.left: parent.left
+        anchors.right: settingsButton.left
+        anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        color: popup.controller.controlPrimaryText
+        font.family: popup.controller.fontFamily
+        font.pixelSize: 16
+        text: "Control Center"
+        elide: Text.ElideRight
+      }
+      HeaderSettingsButton {
+        id: settingsButton
+        anchors.right: parent.right
+        controller: popup.controller
+        description: "System Settings"
+        keyboardEnabled: false
+        onActivated: popup.controller.openSystemSettings(popup.panel.screen)
+      }
+    }
+
     Flickable {
       id: scroll
 
       anchors.fill: parent
       anchors.margins: 16
+      anchors.topMargin: header.y + header.height + 10
       contentWidth: width
       contentHeight: sections.implicitHeight
       clip: true
@@ -453,13 +481,6 @@ PopupWindow {
         id: sections
         width: scroll.width - (scroll.contentHeight > scroll.height ? 12 : 0)
         spacing: 16
-
-        Text {
-          color: popup.controller.controlPrimaryText
-          font.family: popup.controller.fontFamily
-          font.pixelSize: 16
-          text: "Control Center"
-        }
 
         Rectangle {
           height: adjustments.implicitHeight + 28
@@ -756,16 +777,6 @@ PopupWindow {
             title: "Lock Screen"
             onActivated: popup.controller.lockScreen()
           }
-        }
-
-        QuickAction {
-          active: false
-          controller: popup.controller
-          width: parent.width
-          height: 40
-          iconName: "settings"
-          title: "System Settings"
-          onActivated: popup.controller.openSystemSettings(popup.panel.screen)
         }
 
         TrayModule {

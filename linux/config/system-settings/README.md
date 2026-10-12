@@ -53,6 +53,22 @@ the managed launchers now use preferences.json instead.
 
 ## Scope
 
+- **Audio behavior:** separate volume and microphone key increments (1–25%, both
+  defaulting to 2%). These affect `u_audio` increment/decrement commands, retain
+  the 100% cap, and leave explicit levels, mute and device routing unchanged.
+- **Connectivity behavior:** Bluetooth low-battery alerts can be disabled or given
+  a 1–50% threshold (default 15%). Changes recheck connected devices without
+  discovery scans. Already-warned devices do not replay on disable/re-enable;
+  disconnect or recovery above the threshold rearms them. Unavailable battery
+  data does not rearm alerts. Normal notification policies still apply.
+- **Display brightness linking:** `display.linkBrightness` replaces the local
+  `~/.cache/link-devices` marker. `u_backlight link-get` and `link-toggle` now read
+  and write this portable preference. Enabling it does not change hardware;
+  subsequent laptop brightness `set` commands also set the keyboard and available
+  DDC displays. External-only controls and brightness key increments are unchanged.
+  To carry an enabled legacy marker on another machine, set
+  `python3 linux/config/system-settings/settings.py set display.linkBrightness true`.
+
 - **Session & lock screen:** configure Hyprlock's greeting/username, daily quote,
   battery widgets, network/VPN/audio/DND status, capture activity, failed-unlock
   status, weather and media text/artwork. Each hidden widget is removed from the
