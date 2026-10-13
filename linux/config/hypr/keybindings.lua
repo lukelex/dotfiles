@@ -53,7 +53,24 @@ hl.bind(SUPER .. " + SHIFT + D", hl.dsp.exec_cmd("hyprctl keyword general:layout
 hl.bind(SUPER .. " + SHIFT + E", hl.dsp.exec_cmd("u_hypr-cycle-layout"))
 
 hl.bind(SUPER .. " + SHIFT + minus", hl.dsp.window.move({ workspace = "special" }))
-hl.bind(SUPER .. " + minus", hl.dsp.workspace.toggle_special(""))
+local special_workspace_focus = {}
+local toggle_special = hl.dsp.workspace.toggle_special("")
+hl.bind(SUPER .. " + minus", function()
+  local workspace = hl.get_active_special_workspace() or hl.get_active_workspace()
+  local window = hl.get_active_window()
+  if workspace and window and window.workspace and window.workspace.id == workspace.id then
+    special_workspace_focus[workspace.id] = window
+  end
+
+  hl.dispatch(toggle_special)
+
+  workspace = hl.get_active_special_workspace() or hl.get_active_workspace()
+  window = workspace and special_workspace_focus[workspace.id]
+  -- Window objects expire safely; don't follow a closed or moved window.
+  if window and window.mapped and not window.hidden and window.workspace and window.workspace.id == workspace.id then
+    hl.dispatch(hl.dsp.focus({ window = window }))
+  end
+end)
 
 -- Submap for resizing windows
 hl.bind(SUPER .. " + r", hl.dsp.submap("resize"))
