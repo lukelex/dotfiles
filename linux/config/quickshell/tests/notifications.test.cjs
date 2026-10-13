@@ -554,13 +554,18 @@ test('hover protects an overdue notification from a full burst', () => {
   assert.deepEqual(removed, [1]);
 });
 
-test('already animated dismissal still reconciles service state', () => {
+test('dismissal broadcasts to every popup and a later reconciliation does not repeat it', () => {
   const { service, removed } = serviceForTest();
-  service.popup = [record(1)];
-  service.syncPopup(1);
+  const item = record(1);
+  service.history = [item];
+  service.popup = [item];
+  service.live[1] = { dismiss() {} };
+  service.dismissRecord(1);
   assert.equal(service.popup.length, 0);
   assert.equal(service.popupReversed.length, 0);
-  assert.deepEqual(removed, []);
+  assert.deepEqual(removed, [1]);
+  service.syncPopup();
+  assert.deepEqual(removed, [1]);
 });
 
 test('expiry covers hidden and trimmed notifications while preserving hover and persistent deadlines', () => {

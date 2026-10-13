@@ -885,7 +885,7 @@ QtObject {
       service.syncPopup()
   }
 
-  function syncPopup(suppressRemovalId) {
+  function syncPopup() {
     const cutoff = Date.now()
     const previousPopup = service.popup
     const candidates = service.history.filter(record => !service.isDndSuppressed(record) && !record.popupSuppressed && (record.expiresAt === 0 || record.expiresAt > cutoff || service.hovered[record.id]) && service.live[record.id])
@@ -895,7 +895,7 @@ QtObject {
     const nextPopup = candidates.filter(record => selected.includes(record))
 
     for (const record of previousPopup) {
-      if (record.id !== suppressRemovalId && !nextPopup.some(entry => entry.id === record.id))
+      if (!nextPopup.some(entry => entry.id === record.id))
         service.popupRecordRemoved(record.id)
     }
 
@@ -960,7 +960,7 @@ QtObject {
     return groups
   }
 
-  function dismissRecord(id, preservePopupLayout = false) {
+  function dismissRecord(id) {
     const notification = service.live[id]
     if (notification)
       notification.dismiss()
@@ -975,7 +975,7 @@ QtObject {
     service.historyRecordDismissed(id)
     service.historyGroups = service.historyGroups.filter(group => group.records.length > 0)
     service.saveHistory()
-    service.syncPopup(preservePopupLayout ? id : undefined)
+    service.syncPopup()
   }
 
   function dismissRecords(records) {

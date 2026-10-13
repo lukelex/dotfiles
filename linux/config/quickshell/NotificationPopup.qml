@@ -46,6 +46,11 @@ PopupWindow {
   }
 
   function addPopupRecord(record) {
+    for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
+      const stack = popup.popupStacks.itemAt(index)
+      if (stack && stack.updateRecord(record))
+        return
+    }
     const lastStack = popup.popupStacks ? popup.popupStacks.itemAt(popup.popupStacks.count - 1) : null
     if (lastStack && lastStack.canAddRecord(record)) {
       lastStack.addRecord(record)
@@ -114,6 +119,27 @@ PopupWindow {
     property real reflowOffset: 0
     property real unfoldOffset: 0
     property bool enterFromRight: false
+    property real presentationOpacity: 1
+    property real dismissalOpacity: 1
+    property var displayedRecordId: null
+
+    opacity: presentationOpacity * dismissalOpacity
+    onRecordChanged: {
+      if (toast.record && toast.record.id !== toast.displayedRecordId) {
+        const replacing = toast.displayedRecordId !== null
+        toast.displayedRecordId = toast.record.id
+        if (replacing)
+          toast.resetDismissal()
+      }
+    }
+
+    function resetDismissal() {
+      dismissAnimation.stop()
+      toast.dismissing = false
+      toast.dismissingRecordId = null
+      dismissTranslate.x = 0
+      toast.dismissalOpacity = 1
+    }
 
     readonly property var displayRecord: service.popupDisplayRecord(toast.record)
     readonly property var icon: service.iconFor(toast.displayRecord)
@@ -133,7 +159,7 @@ PopupWindow {
         y: toast.unfoldOffset
       }
     ]
-    width: parent.width
+    width: parent ? parent.width : 0
 
     Behavior on y {
       enabled: toast.animateReflow
@@ -147,10 +173,7 @@ PopupWindow {
     function activate() {
       if (toast.dismissing)
         return
-      toast.dismissing = true
-      toast.dismissingRecordId = toast.record.id
       toast.service.activateRecord(toast.record.id)
-      dismissAnimation.start()
     }
 
     ParallelAnimation {
@@ -163,15 +186,16 @@ PopupWindow {
         duration: 240
         easing.type: Easing.InCubic
       }
-      OpacityAnimator {
+      NumberAnimation {
         target: toast
+        property: "dismissalOpacity"
         to: 0
         duration: 180
         easing.type: Easing.InQuad
       }
-      onStopped: {
+      onFinished: {
         if (toast.dismissHandler)
-          toast.dismissHandler(toast.dismissingRecordId, toast.height)
+          toast.dismissHandler(toast.dismissingRecordId)
         else
           toast.service.dismissRecord(toast.dismissingRecordId)
       }
@@ -187,9 +211,10 @@ PopupWindow {
       easing.type: Easing.OutCubic
     }
 
-    function moveDown(distance) {
-      toast.reflowOffset = -distance
-      reflowAnimation.start()
+    function moveFrom(previousY) {
+      reflowAnimation.stop()
+      toast.reflowOffset = previousY - toast.y
+      reflowAnimation.restart()
     }
 
     function playEntry() {
@@ -365,6 +390,19 @@ PopupWindow {
         wrapMode: Text.Wrap
       }
 
+      Text {
+        width: parent.width
+        visible: text.length > 0
+        text: toast.service.activationPendingId === toast.record.id ? "Opening…"
+          : toast.service.activationErrorId === toast.record.id ? toast.service.activationError : ""
+        textFormat: Text.PlainText
+        wrapMode: Text.Wrap
+        color: toast.service.activationPendingId === toast.record.id
+          ? toast.controller.controlSecondaryText : toast.controller.urgent
+        font.family: toast.controller.fontFamily
+        font.pixelSize: 11
+      }
+
       Rectangle {
         color: toast.controller.controlSliderFill
         height: 4
@@ -466,6 +504,7 @@ PopupWindow {
     property var pendingStackExpiryIds: []
     property real expandedHeight: 0
     property bool reflowing: false
+    property var reflowPositions: null
 
     ListModel {
       id: recordModel
@@ -487,7 +526,7 @@ PopupWindow {
     clip: !reflowing
     height: records.length === 0 ? 0 : (showingExpanded ? expandedHeight : latestToast.height + layerCount * collapsedLayerOffset)
     visible: records.length > 0
-    width: parent.width
+    width: parent ? parent.width : 0
 
     Behavior on height {
       NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
@@ -511,7 +550,7 @@ PopupWindow {
 
       target: entryTranslate
       property: "x"
-      from: popup.width
+      from: popup.leftAligned ? -popup.width : popup.width
       to: 0
       duration: 280
       easing.type: Easing.OutCubic
@@ -520,16 +559,16 @@ PopupWindow {
     ParallelAnimation {
       id: expiryAnimation
 
-      NumberAnimation { target: expiryTranslate; property: "x"; to: popup.width; duration: 240; easing.type: Easing.InCubic }
+      NumberAnimation { target: expiryTranslate; property: "x"; to: popup.leftAligned ? -popup.width : popup.width; duration: 240; easing.type: Easing.InCubic }
       OpacityAnimator { target: stack; to: 0; duration: 180; easing.type: Easing.InQuad }
-      onStopped: {
+      onFinished: {
         if (stack.expiring && stack.removeHandler)
           stack.removeHandler(stack)
       }
     }
 
     SequentialAnimation {
-      loops: Animation.Infinite
+      loops: 1
       running: stack.hasCritical
 
       PauseAnimation { duration: 1800 }
@@ -640,12 +679,13 @@ PopupWindow {
       record: stack.latestRecord || popup.emptyRecord
       service: stack.service
       urgentAttention: stack.hasCritical
-      opacity: stack.showingExpanded ? 0 : 1
+      presentationOpacity: stack.showingExpanded ? 0 : 1
+      dismissHandler: id => stack.dismissRecord(id)
       visible: stack.records.length > 0
       y: stack.layerCount * stack.collapsedLayerOffset
       z: 3
 
-      Behavior on opacity {
+      Behavior on presentationOpacity {
         NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
       }
     }
@@ -700,24 +740,28 @@ PopupWindow {
           bellAngle: stack.bellAngle
           enterFromRight: notification && notification.entering === true
           interactive: stack.showingExpanded
-          opacity: stack.showingExpanded ? 1 : 0
-          dismissHandler: (id, height) => stack.dismissRecord(id, height)
+          presentationOpacity: stack.showingExpanded ? 1 : 0
+          dismissHandler: id => stack.dismissRecord(id)
           record: notification || popup.emptyRecord
           service: stack.service
           urgentAttention: notification && notification.urgency === "critical"
           unfoldOffset: stack.expanded ? 0 : 16 + expandedCard.index * 3
           y: expandedColumn.cardY(expandedCard.index, height)
+          onHeightChanged: {
+            if (stack.showingExpanded)
+              Qt.callLater(stack.updateExpandedHeight)
+          }
 
           Behavior on unfoldOffset {
             NumberAnimation {
-              duration: 360 + expandedCard.index * 70
+              duration: 360 + Math.max(0, expandedCard.index) * 70
               easing.type: Easing.OutCubic
             }
           }
 
-          Behavior on opacity {
+          Behavior on presentationOpacity {
             SequentialAnimation {
-              PauseAnimation { duration: stack.expanded ? expandedCard.index * 140 : 0 }
+              PauseAnimation { duration: stack.expanded ? Math.max(0, expandedCard.index) * 140 : 0 }
               NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
             }
           }
@@ -725,26 +769,75 @@ PopupWindow {
       }
     }
 
-    function dismissRecord(id, removedHeight) {
-      const index = stack.records.findIndex(record => record.id === id)
-      if (index < 0)
+    function dismissRecord(id) {
+      const service = stack.service
+      stack.removeRecords([id])
+      service.dismissRecord(id)
+    }
+
+    function removeRecords(ids) {
+      if (!stack.records.some(record => ids.includes(record.id)))
         return
-      const visualIndex = recordModel.count - index - 1
-      const reflowDistance = removedHeight + expandedColumn.spacing
-      stack.reflowing = true
-      reflowTimer.restart()
-      for (let cardIndex = visualIndex + 1; cardIndex < expandedCards.count; cardIndex++) {
-        const card = expandedCards.itemAt(cardIndex)
-        if (card)
-          card.moveDown(reflowDistance)
+      if (stack.showingExpanded && !stack.reflowPositions) {
+        const positions = {}
+        for (let index = 0; index < expandedCards.count; index++) {
+          const card = expandedCards.itemAt(index)
+          if (card)
+            positions[card.record.id] = card.y + card.reflowOffset
+        }
+        stack.reflowPositions = positions
+        stack.reflowing = true
       }
-      stack.records = stack.records.filter(record => record.id !== id)
-      recordModel.remove(visualIndex)
-      stack.service.dismissRecord(id, true)
+      for (let index = recordModel.count - 1; index >= 0; index--) {
+        if (ids.includes(recordModel.get(index).notification.id))
+          recordModel.remove(index)
+      }
+      stack.records = stack.records.filter(record => !ids.includes(record.id))
       if (stack.records.length === 0)
         stack.removeHandler(stack)
-      else if (stack.showingExpanded)
+      else
+        Qt.callLater(stack.finishReflow)
+    }
+
+    function finishReflow() {
+      if (stack.showingExpanded) {
+        stack.updateExpandedHeight()
+        for (let index = 0; index < expandedCards.count; index++) {
+          const card = expandedCards.itemAt(index)
+          if (card && stack.reflowPositions && stack.reflowPositions[card.record.id] !== undefined)
+            card.moveFrom(stack.reflowPositions[card.record.id])
+        }
+      }
+      stack.reflowPositions = null
+      reflowTimer.restart()
+    }
+
+    function updateRecord(record) {
+      const index = stack.records.findIndex(entry => entry.id === record.id)
+      if (index < 0)
+        return false
+      if (stack.expiring) {
+        stack.expiring = false
+        expiryAnimation.stop()
+        expiryTranslate.x = 0
+        stack.opacity = 1
+      }
+      stack.pendingStackExpiryIds = stack.pendingStackExpiryIds.filter(id => id !== record.id)
+      if (stack.expiringStackRecordId === record.id) {
+        stack.expiringStackRecordId = stack.pendingStackExpiryIds[0] || ""
+        stack.pendingStackExpiryIds = stack.pendingStackExpiryIds.slice(1)
+        if (stack.expiringStackRecordId === "") {
+          stackedExpiryTimer.stop()
+          stack.expiringLayerIndex = -1
+        }
+      }
+      stack.records = stack.records.map(entry => entry.id === record.id ? record : entry)
+      recordModel.setProperty(recordModel.count - index - 1, "notification", record)
+      if (stackHover.hovered)
+        stack.service.setHovered(record.id, true)
+      if (stack.showingExpanded)
         Qt.callLater(stack.updateExpandedHeight)
+      return true
     }
 
     function canAddRecord(record) {
@@ -764,8 +857,7 @@ PopupWindow {
       stack.records = stack.records.concat([record])
       if (stackHover.hovered)
         stack.service.setHovered(record.id, true)
-      record.entering = true
-      recordModel.insert(0, { notification: record })
+      recordModel.insert(0, { notification: Object.assign({}, record, { entering: true }) })
 
       if (stack.showingExpanded) {
         Qt.callLater(stack.updateExpandedHeight)
@@ -782,10 +874,6 @@ PopupWindow {
       const index = stack.records.findIndex(record => record.id === id)
       if (index < 0)
         return false
-
-      const visualIndex = recordModel.count - index - 1
-      const removedCard = expandedCards.itemAt(visualIndex)
-      const removedHeight = removedCard ? removedCard.height : latestToast.height
 
       if (stack.records.length === 1) {
         stack.expiring = true
@@ -806,18 +894,7 @@ PopupWindow {
         return true
       }
 
-      stack.records = stack.records.filter(record => record.id !== id)
-      recordModel.remove(visualIndex)
-
-      if (stack.showingExpanded) {
-        const reflowDistance = removedHeight + expandedColumn.spacing
-        for (let cardIndex = visualIndex + 1; cardIndex < expandedCards.count; cardIndex++) {
-          const card = expandedCards.itemAt(cardIndex)
-          if (card)
-            card.moveDown(reflowDistance)
-        }
-        Qt.callLater(() => stack.expandedHeight = expandedColumn.contentHeight)
-      }
+      stack.removeRecords([id])
 
       return true
     }
@@ -825,18 +902,10 @@ PopupWindow {
     function finishStackExpiry() {
       // One exit animation covers a burst; do not build a serial removal backlog.
       const ids = stack.pendingStackExpiryIds.concat([stack.expiringStackRecordId])
-      for (let index = recordModel.count - 1; index >= 0; index--) {
-        if (ids.includes(recordModel.get(index).notification.id))
-          recordModel.remove(index)
-      }
-      stack.records = stack.records.filter(record => !ids.includes(record.id))
       stack.expiringLayerIndex = -1
       stack.expiringStackRecordId = ""
       stack.pendingStackExpiryIds = []
-      if (stack.showingExpanded)
-        Qt.callLater(stack.updateExpandedHeight)
-      if (stack.records.length === 0)
-        stack.removeHandler(stack)
+      stack.removeRecords(ids)
     }
 
   }
