@@ -9,7 +9,7 @@ QtObject {
   id: service
 
   readonly property var cameraNodes: Pipewire.nodes.values.filter(node => node.type === PwNodeType.VideoSource)
-  readonly property var cameraLinks: Pipewire.linkGroups.values.filter(group => service.isCamera(group.source))
+  readonly property var cameraLinks: Pipewire.linkGroups.values.filter(group => service.isCamera(group.source) && !service.isEffectsDaemon(group.target))
   readonly property bool inUse: directInUse || cameraLinks.some(group => group.state === PwLinkState.Active)
   property var directUsage: []
   readonly property var directApplications: directUsage.map(entry => entry.name)
@@ -66,6 +66,12 @@ QtObject {
     const properties = node.properties || {}
     return properties["device.api"] === "v4l2" || properties["device.api"] === "libcamera"
       || !!properties["api.v4l2.path"] || !!properties["api.libcamera.path"]
+      || node.name === "openeffects" || properties["node.name"] === "openeffects"
+  }
+
+  function isEffectsDaemon(node) {
+    const properties = node.properties || {}
+    return properties["application.process.binary"] === "openeffectsd"
   }
 
   // Metadata/link subscriptions do not create a capture stream.

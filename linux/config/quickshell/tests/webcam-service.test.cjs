@@ -21,6 +21,25 @@ test('camera detection excludes screen sharing, audio and unclassified video sou
   assert.equal(isCamera({ type: 1 }), false);
 });
 
+test('OpenEffects virtual-camera consumers count, but the intermediary daemon does not', () => {
+  const isEffectsDaemon = vm.runInNewContext(`(${source.match(/  function isEffectsDaemon\([^]*?\n  \}/)[0]})`);
+  const camera = { type: 1, name: 'openeffects' };
+  assert.equal(isCamera(camera), true);
+  assert.equal(isCamera({ type: 1, properties: { 'node.name': 'openeffects' } }), true);
+  const daemon = { properties: { 'application.process.binary': 'openeffectsd' } };
+  const browser = { properties: { 'application.process.binary': 'firefox' } };
+  const expression = source.match(/readonly property var cameraLinks: (.*)/)[1];
+  const links = [
+    { source: { type: 1, properties: { 'device.api': 'v4l2' } }, target: daemon },
+    { source: camera, target: browser },
+  ];
+  const result = vm.runInNewContext(expression, {
+    Pipewire: { linkGroups: { values: links } }, service: { isCamera, isEffectsDaemon },
+  });
+  assert.equal(result.length, 1);
+  assert.equal(result[0].target, browser);
+});
+
 test('only active camera links or direct device access show the shared bar indicator', () => {
   const expression = source.match(/readonly property bool inUse: (.*)/)[1];
   const evaluate = (links, directInUse = false) => vm.runInNewContext(expression, {
@@ -137,6 +156,21 @@ with tempfile.TemporaryDirectory(prefix='webcam-test-', dir='/tmp/opencode') as 
   (other / 'comm').write_text('zoom')
   (other / 'fd' / '1').symlink_to('/dev/video0')
   assert apps(sysfs, proc) == ['firefox', 'zoom']
+  (other / 'exe').symlink_to('/usr/bin/openeffectsd')
+  assert apps(sysfs, proc) == ['firefox']
+  (proc / '123' / 'exe').unlink()
+  (proc / '123' / 'exe').symlink_to('/usr/bin/openeffectsd')
+  assert not scan(sysfs, proc)
+  (proc / '123' / 'exe').unlink()
+  (proc / '123' / 'exe').symlink_to('/usr/bin/firefox')
+  (other / 'exe').unlink()
+  (other / 'exe').symlink_to('/usr/bin/python3.14')
+  (other / 'cmdline').write_bytes(b'python3\\0/usr/bin/cameractrlsgtk4\\0')
+  assert apps(sysfs, proc) == ['firefox']
+  (other / 'cmdline').write_bytes(b'python3\\0/home/user/camera_capture.py\\0')
+  assert apps(sysfs, proc) == ['firefox', 'python3.14']
+  (other / 'exe').unlink()
+  (other / 'cmdline').unlink()
   (sysfs / 'video0' / 'name').write_text('Desk camera')
   assert usage(sysfs, proc) == [
     {'name': 'firefox', 'devicePath': '/dev/video0', 'deviceName': 'Desk camera'},

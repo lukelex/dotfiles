@@ -32,6 +32,8 @@ Scope {
     id: webcamService
   }
 
+  OpenEffectsService { id: openEffects }
+
   Bar {
     id: bar
     preferences: preferences
@@ -39,5 +41,6 @@ Scope {
     githubPrService: githubPrs
     audioService: audioService
     webcamService: webcamService
+    openEffectsService: openEffects
   }
 }

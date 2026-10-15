@@ -31,7 +31,11 @@ def usage(sysfs=Path("/sys/class/video4linux"), proc=Path("/proc")):
         try:
           device = os.readlink(descriptor)
           if device in devices:
-            users.add((process_name(process), device))
+            name = process_name(process)
+            # The effects daemon is an intermediary, not a camera consumer.
+            # Its virtual camera's actual consumers are observed via PipeWire.
+            if name != "openeffectsd" and not is_camera_settings(process):
+              users.add((name, device))
         except OSError:
           continue
     except OSError:
@@ -43,6 +47,19 @@ def usage(sysfs=Path("/sys/class/video4linux"), proc=Path("/proc")):
 
 def applications(sysfs=Path("/sys/class/video4linux"), proc=Path("/proc")):
   return sorted({entry["name"] for entry in usage(sysfs, proc)}, key=str.casefold)
+
+
+def is_camera_settings(process):
+  # CameraCtrls holds a control descriptor open even without a preview.
+  # Match the script, not the Python interpreter used by other camera apps.
+  try:
+    argv = (process / "cmdline").read_bytes().split(b"\0")
+    executable = Path(os.fsdecode(argv[0])).name
+    script = Path(os.fsdecode(argv[1])).name if len(argv) > 1 else ""
+    settings_apps = {"cameractrlsgtk", "cameractrlsgtk4"}
+    return executable in settings_apps or (executable.startswith("python") and script in settings_apps)
+  except OSError:
+    return False
 
 
 def process_name(process):

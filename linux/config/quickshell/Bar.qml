@@ -288,6 +288,7 @@ Scope {
   required property var githubPrService
   required property var audioService
   required property var webcamService
+  required property var openEffectsService
   readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
   property bool githubReviewCenterOpen: false
   property var controlCenterTarget: null
@@ -1921,6 +1922,44 @@ Scope {
             iconName: "webcam"
             applications: root.webcamService.recordingApplications
             applicationDetails: root.webcamService.applicationDevices
+          }
+        }
+
+        Item {
+          height: root.barFontSize
+          width: root.barFontSize
+          visible: root.openEffectsService.available || root.openEffectsService.pending || root.openEffectsService.error.length > 0
+
+          Rectangle {
+            anchors.fill: parent
+            anchors.margins: -3
+            radius: 4
+            color: effectsHover.containsMouse ? root.controlHover : "transparent"
+          }
+          LucideIcon {
+            anchors.fill: parent
+            source: root.icon(root.openEffectsService.pending ? "refresh-cw" : "sparkles")
+            color: root.openEffectsService.error ? root.urgent
+              : !root.openEffectsService.available || root.openEffectsService.bypass ? root.muted : root.controlActiveIcon
+          }
+          Rectangle {
+            anchors.centerIn: parent
+            width: root.barFontSize + 2
+            height: 2
+            rotation: -45
+            color: root.muted
+            visible: root.openEffectsService.available && root.openEffectsService.bypass && !root.openEffectsService.pending
+          }
+          MouseArea {
+            id: effectsHover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: root.openEffectsService.pending ? Qt.BusyCursor : Qt.PointingHandCursor
+            Accessible.role: Accessible.Button
+            Accessible.name: root.openEffectsService.description
+            Accessible.onPressAction: root.openEffectsService.toggle()
+            onEntered: root.openEffectsService.refresh()
+            onClicked: root.openEffectsService.toggle()
           }
         }
 
