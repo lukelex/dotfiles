@@ -336,6 +336,10 @@ resources:
       target: $XDG_CONFIG_HOME/mimeapps.list
       profiles:
         - desktop
+    - source: linux/config/yazi.desktop
+      target: $HOME/.local/share/applications/yazi.desktop
+      profiles:
+        - desktop
     - source: linux/config/opencode-desktop/ai.opencode.desktop.desktop
       target: $HOME/.local/share/applications/ai.opencode.desktop.desktop
       profiles:
