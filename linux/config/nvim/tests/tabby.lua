@@ -28,7 +28,7 @@ end
 
 local function mapping(desc)
   for _, map in ipairs(vim.api.nvim_get_keymap('n')) do
-    if map.desc == desc then map.callback(); return end
+    if map.desc == desc then return map.callback() end
   end
   error('missing mapping ' .. desc)
 end
@@ -68,7 +68,7 @@ vim.cmd('tabmove 18')
 render(true)
 vim.o.columns = 20
 local _, compact_text = render(true)
-assert(compact_text:find('/'), 'compact label lost name prefix')
+assert(compact_text:find('^%d+ '), 'compact label lost number prefix')
 assert(compact_text:find('100%%'), 'compact label lost workspace name')
 vim.o.columns = 80
 vim.cmd('tabnext 1')
@@ -77,7 +77,9 @@ mapping('Page tabline right')
 local after = render(false)
 assert(after[1] == before[#before] + 1, 'forward page did not advance a viewport')
 mapping('Page tabline left')
-assert(render(false)[1] == 1, 'backward page did not return to start')
+assert(render(false)[1] < after[1], 'backward page did not move left')
+for _ = 1, 20 do mapping('Page tabline left') end
+assert(render(false)[1] == 1, 'backward paging did not reach start')
 for _ = 1, 100 do mapping('Scroll tabline right') end
 local ending = render(false)
 assert(ending[#ending] == #vim.api.nvim_list_tabpages(), 'end not visible')
@@ -171,5 +173,110 @@ vim.cmd('tabclose')
 render(true)
 vim.cmd('tabonly')
 render(true)
+
+-- Indicators count non-floating windows and only their displayed buffers.
+-- Evaluate the renderer directly while resizing this headless instance; avoid
+-- drawing native click regions until the UI has processed the resize.
+vim.o.showtabline = 0
+vim.o.columns = 120
+vim.cmd('silent only')
+names.set(0, 'Workspace')
+vim.bo.modified = false
+local _, clean = render(true)
+assert(not clean:find('●', 1, true), 'clean tab marked modified')
+local hidden = vim.api.nvim_create_buf(true, false)
+vim.api.nvim_buf_set_lines(hidden, 0, -1, false, { 'hidden changes' })
+assert(not select(2, render(true)):find('●', 1, true), 'hidden buffer marked workspace modified')
+local displayed = vim.api.nvim_get_current_buf()
+vim.api.nvim_buf_set_lines(displayed, 0, -1, false, { 'visible changes' })
+local _, dirty = render(true)
+assert(dirty:find('●', 1, true), 'displayed modification missing')
+assert(vim.fn.strdisplaywidth(clean) == vim.fn.strdisplaywidth(dirty), 'modified marker shifted layout')
+vim.bo.modified = false
+vim.cmd('vsplit')
+local _, split_text = render(true)
+assert(split_text:find('Workspace', 1, true) and split_text:find(' ×2%s+$'), 'window count is not before the close slot')
+local floating = vim.api.nvim_open_win(hidden, false, {
+  relative = 'editor', row = 2, col = 2, width = 10, height = 2, style = 'minimal',
+})
+local _, floating_text = render(true)
+assert(floating_text:find('×2', 1, true) and not floating_text:find('×3', 1, true), 'float counted as workspace window')
+assert(not floating_text:find('●', 1, true), 'floating buffer marked workspace modified')
+vim.api.nvim_win_close(floating, true)
+names.set(0, '')
+local _, fallback = render(true)
+assert(fallback:find('×2', 1, true) and not fallback:find('[1+]', 1, true), 'fallback duplicated window count')
+names.set(0, 'Workspace')
+vim.cmd('tabnew')
+names.set(0, 'Other')
+local _, buttons = render(true)
+assert(buttons:find('×2 ', 1, true), 'inactive count did not occupy the close slot')
+local left_gap, right_gap = buttons:match('1( +)Workspace( +)×2')
+assert(left_gap and math.abs(#left_gap - #right_gap) <= 1, 'inactive filename padding is not balanced')
+local _, close_count = buttons:gsub('', '')
+assert(close_count == 1, 'inactive tab has a close button')
+local before_focus = vim.fn.strdisplaywidth(buttons)
+vim.cmd('tabnext 1')
+local _, focused = render(true)
+assert(focused:find('×2 ', 1, true), 'active count did not leave room for the close button')
+left_gap, right_gap = focused:match('1( +)Workspace( +)×2')
+assert(left_gap and math.abs(#left_gap - #right_gap) <= 1, 'active filename padding is not balanced')
+assert(vim.fn.strdisplaywidth(focused) == before_focus, 'focus change shifted labels')
+names.set(0, '/very/long/project/root/server/handlers/user.lua')
+local _, path_label = render(true)
+assert(path_label:find('…', 1, true) and path_label:find('handlers/user.lua', 1, true), 'path truncation lost meaningful suffix')
+names.set(0, 'A-very-long-descriptive-workspace-END')
+local _, middle_label = render(true)
+assert(middle_label:find('A-very', 1, true) and middle_label:find('END', 1, true), 'name truncation lost either end')
+local active_hl = vim.api.nvim_get_hl(0, { name = 'DotfilesTabActive', link = false })
+assert(active_hl.bold and not active_hl.underline, 'active tab styling is incorrect')
+vim.api.nvim_set_hl(0, 'TabLineSel', { fg = '#abcdef', bg = '#123456' })
+vim.api.nvim_exec_autocmds('ColorScheme', {})
+active_hl = vim.api.nvim_get_hl(0, { name = 'DotfilesTabActive', link = false })
+assert(active_hl.fg == 0xabcdef and active_hl.bold and not active_hl.underline, 'highlights did not follow colorscheme')
+
+-- Exercise wheel routing without an attached mouse; outside the bar it must
+-- return the native key, while bar scrolling never changes the selected tab.
+for i = 3, 12 do
+  vim.cmd('tabnew')
+  names.set(0, 'workspace' .. i)
+end
+vim.cmd('tabnext 1')
+vim.o.columns = 80
+vim.o.showtabline = 2
+render(true)
+local original_mouse = vim.fn.getmousepos
+local mouse_row = 1
+vim.fn.getmousepos = function() return { screenrow = mouse_row } end
+local wheel_current = vim.api.nvim_get_current_tabpage()
+assert(mapping('Scroll tabline with ScrollWheelDown') == '<Ignore>', 'bar wheel not consumed')
+assert(vim.wait(1000, function() return render(false)[1] == 2 end), 'wheel did not scroll right')
+local _, position_text = render(false)
+assert(position_text:find('tabs 2–', 1, true) and position_text:find('←active 1', 1, true), 'browsing position/active direction missing')
+assert(vim.api.nvim_get_current_tabpage() == wheel_current, 'wheel changed workspace')
+assert(mapping('Scroll tabline with ScrollWheelUp') == '<Ignore>')
+assert(vim.wait(1000, function() return render(false)[1] == 1 end), 'wheel did not scroll left')
+assert(mapping('Scroll tabline with ScrollWheelRight') == '<Ignore>')
+assert(vim.wait(1000, function() return render(false)[1] == 2 end), 'horizontal wheel did not scroll right')
+assert(mapping('Scroll tabline with ScrollWheelLeft') == '<Ignore>')
+assert(vim.wait(1000, function() return render(false)[1] == 1 end), 'horizontal wheel did not scroll left')
+mouse_row = 4
+assert(mapping('Scroll tabline with ScrollWheelDown') == '<ScrollWheelDown>', 'buffer wheel was intercepted')
+mouse_row = 1
+vim.o.showtabline = 0
+assert(mapping('Scroll tabline with ScrollWheelDown') == '<ScrollWheelDown>', 'hidden bar intercepted wheel')
+vim.o.showtabline = 2
+vim.fn.getmousepos = original_mouse
+vim.cmd('tabnext 12')
+render(true)
+for _ = 1, 20 do mapping('Scroll tabline left') end
+assert(select(2, render(false)):find('→active 12', 1, true), 'rightward active indicator missing')
+for _, width in ipairs({ 12, 20, 40, 69, 70, 80, 160 }) do
+  vim.o.showtabline = 0
+  vim.o.columns = width
+  render(false)
+  mapping('Scroll tabline right')
+  render(false)
+end
 print('Passed ' .. checks .. ' tabline render checks and picker regressions')
 vim.cmd('qa!')
