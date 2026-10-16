@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Services.Notifications
+import Quickshell.Bluetooth
 import Quickshell.Io
 import QtCore
 import QtQml
@@ -25,9 +26,16 @@ QtObject {
   property var osd: null
   property var tagMap: ({})
   property var hovered: ({})
+  property var _pendingBluetoothBatteries: ({})
   property double now: 0
   property bool doNotDisturb: false
   property bool preferencesLoaded: false
+
+  readonly property Timer _bluetoothBatteryRetry: Timer {
+    interval: 250
+    repeat: true
+    onTriggered: service.refreshBluetoothNotificationBatteries()
+  }
   property bool scheduledDndActive: false
   property string dndScheduleError: ""
   property string dndScheduleStatus: ""
@@ -744,7 +752,7 @@ QtObject {
       desktopEntry: notification.desktopEntry || "",
       image: notification.image || "",
       summary: notification.summary || "",
-      body: notification.body || "",
+      body: service.bluetoothConnectedBody(notification),
       githubReviewUrl: String((notification.hints || {})["x-github-review-url"] || ""),
       githubRepository: String((notification.hints || {})["x-github-review-repository"] || ""),
       githubNumber: String((notification.hints || {})["x-github-review-number"] || ""),
@@ -762,7 +770,63 @@ QtObject {
     // Store the visible body rather than Chromium's transient origin prefix, so
     // the message stays correct after its browser icon is discarded from history.
     record.body = service.displayBody(record)
+    delete service._pendingBluetoothBatteries[id]
+    if (record.summary === "Bluetooth device connected" && record.body === (notification.body || "")) {
+      service._pendingBluetoothBatteries[id] = { body: record.body, deadline: Date.now() + 15000 }
+      service._bluetoothBatteryRetry.start()
+    }
     return record
+  }
+
+  function refreshBluetoothNotificationBatteries() {
+    let changed = false
+    for (const id of Object.keys(service._pendingBluetoothBatteries)) {
+      const pending = service._pendingBluetoothBatteries[id]
+      const record = service.history.find(entry => entry.id === id)
+      if (!record || Date.now() > pending.deadline) {
+        delete service._pendingBluetoothBatteries[id]
+        continue
+      }
+      const body = service.bluetoothConnectedBody({ summary: record.summary, body: pending.body })
+      if (body === pending.body)
+        continue
+      const updated = Object.assign({}, record, { body: body })
+      service.history = service.history.map(entry => entry.id === id ? updated : entry)
+      service.pendingPopupRecords = service.pendingPopupRecords.map(entry => entry.id === id ? updated : entry)
+      delete service._pendingBluetoothBatteries[id]
+      changed = true
+    }
+    if (changed) {
+      historyGroupTimer.start()
+      service.saveHistory()
+      service.syncPopup()
+    }
+    if (!Object.keys(service._pendingBluetoothBatteries).length)
+      service._bluetoothBatteryRetry.stop()
+  }
+
+  function bluetoothConnectedBody(notification): string {
+    const body = String(notification.body || "")
+    if (notification.summary !== "Bluetooth device connected")
+      return body
+
+    const connected = Bluetooth.devices.values.filter(device => device.connected
+      && device.batteryAvailable && Number.isFinite(device.battery)
+      && device.battery >= 0 && device.battery <= 1)
+    if (!connected.length)
+      return body
+
+    const text = String(notification.summary || "") + "\n" + body
+    const matching = connected.filter(device => device.name && text.toLowerCase().includes(device.name.toLowerCase()))
+    const connectedDevices = Bluetooth.devices.values.filter(device => device.connected)
+    // Never borrow another device's battery while this device's reading is pending.
+    const device = matching.length === 1 ? matching[0]
+      : !body && connectedDevices.length === 1 && connected.length === 1 ? connected[0] : null
+    if (!device)
+      return body
+
+    const battery = Math.round(device.battery * 100) + "%"
+    return body ? body + "\nBattery: " + battery : "Battery: " + battery
   }
 
   function buildActions(notification, tag) {

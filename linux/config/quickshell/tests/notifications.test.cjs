@@ -19,6 +19,8 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
     historyIdSequence: 0,
     githubSeenIds: {},
     pendingPopupRecords: [],
+    _pendingBluetoothBatteries: {},
+    _bluetoothBatteryRetry: { start() {}, stop() {} },
     liveDeadlines: {},
     liveRevision: 0,
     historyLimit: 100,
@@ -42,17 +44,89 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
   service.historyRecordDismissed = () => {};
   service.playNotificationSound = () => {};
   service.osdTimer = { restart() {}, stop() {} };
-  const context = vm.createContext({ service, Date, settings, NotificationDefaults,
+  const Bluetooth = { devices: { values: [] } };
+  const context = vm.createContext({ service, Date, settings, NotificationDefaults, Bluetooth,
     historyGroupTimer: { start() {} }, popupUpdateTimer: { start() {} },
     Qt: { callLater: callback => callback() }, NotificationUrgency: { Critical: 2, Low: 0 },
   });
-  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissRecord', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation', 'restoredId', 'newHistoryId', 'loadInitial', 'handleNotification', 'buildRecord', 'buildActions', 'isBrowserIcon', 'displayBody', 'isSystemOsd', 'addHistory', 'isGithubReview', 'isGithubReviewSeen']) {
+  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissRecord', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation', 'restoredId', 'newHistoryId', 'loadInitial', 'handleNotification', 'buildRecord', 'bluetoothConnectedBody', 'buildActions', 'isBrowserIcon', 'displayBody', 'isSystemOsd', 'addHistory', 'isGithubReview', 'isGithubReviewSeen']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
-    service[name] = vm.runInContext(`(${match[0]})`, context);
+    const functionSource = name === 'bluetoothConnectedBody' ? match[0].replace('): string', ')') : match[0];
+    service[name] = vm.runInContext(`(${functionSource})`, context);
   }
-  return { service, removed, settings };
+  const retry = source.match(/  function refreshBluetoothNotificationBatteries\([^]*?\n  \}/);
+  service.refreshBluetoothNotificationBatteries = vm.runInContext(`(${retry[0]})`, context);
+  return { service, removed, settings, Bluetooth };
 }
+
+test('Bluetooth connected notifications include the matching device battery level', () => {
+  const { service, Bluetooth } = serviceForTest();
+  Bluetooth.devices.values = [
+    { name: 'Headphones', connected: true, batteryAvailable: true, battery: 0.73 },
+    { name: 'Mouse', connected: true, batteryAvailable: true, battery: 0.42 },
+  ];
+  assert.equal(service.bluetoothConnectedBody({
+    summary: 'Bluetooth device connected', body: 'Headphones connected',
+  }), 'Headphones connected\nBattery: 73%');
+  assert.equal(service.bluetoothConnectedBody({
+    summary: 'Bluetooth device connected', body: 'Unknown device connected',
+  }), 'Unknown device connected');
+  assert.equal(service.bluetoothConnectedBody({
+    summary: 'Device connected', body: 'Headphones connected',
+  }), 'Headphones connected');
+});
+
+test('Bluetooth connected notification only uses a sole battery device when its name is omitted', () => {
+  const { service, Bluetooth } = serviceForTest();
+  Bluetooth.devices.values = [
+    { name: 'Headphones', connected: true, batteryAvailable: true, battery: 0.73 },
+  ];
+  assert.equal(service.bluetoothConnectedBody({ summary: 'Bluetooth device connected', body: '' }), 'Battery: 73%');
+  Bluetooth.devices.values.push({ name: 'Mouse', connected: true, batteryAvailable: true, battery: 0.42 });
+  assert.equal(service.bluetoothConnectedBody({ summary: 'Bluetooth device connected', body: '' }), '');
+  Bluetooth.devices.values[0].batteryAvailable = false;
+  assert.equal(service.bluetoothConnectedBody({ summary: 'Bluetooth device connected', body: '' }), '');
+});
+
+test('a delayed headphone battery updates the existing notification without replaying it', () => {
+  const { service, Bluetooth } = serviceForTest();
+  const headphones = { name: 'WH-1000XM5', connected: true, batteryAvailable: false, battery: 0 };
+  Bluetooth.devices.values = [headphones,
+    { name: 'Mouse', connected: true, batteryAvailable: true, battery: 0.5 }];
+  const notification = { summary: 'Bluetooth device connected', body: 'Audio device: WH-1000XM5', actions: [] };
+  const entry = service.buildRecord(notification, '', -1, 'headphones');
+  assert.equal(entry.body, notification.body);
+  service.history = [entry];
+  service.pendingPopupRecords = [entry];
+  let updates = 0;
+  let stops = 0;
+  service.syncPopup = () => updates++;
+  service._bluetoothBatteryRetry.stop = () => stops++;
+  service.refreshBluetoothNotificationBatteries();
+  assert.equal(updates, 0);
+  headphones.batteryAvailable = true;
+  headphones.battery = 1;
+  service.refreshBluetoothNotificationBatteries();
+  assert.equal(service.history[0].body, 'Audio device: WH-1000XM5\nBattery: 100%');
+  assert.equal(service.pendingPopupRecords[0].body, service.history[0].body);
+  assert.equal(service.history[0].id, entry.id);
+  assert.equal(service.history[0].expiresAt, entry.expiresAt);
+  assert.equal(updates, 1);
+  assert.equal(stops, 1);
+});
+
+test('battery retries expire without using another device or resurrecting removed history', () => {
+  const { service } = serviceForTest();
+  service._pendingBluetoothBatteries = {
+    missing: { body: '', deadline: Date.now() + 15000 },
+    expired: { body: '', deadline: 0 },
+  };
+  service.history = [{ id: 'expired', body: '' }];
+  service.refreshBluetoothNotificationBatteries();
+  assert.equal(Object.keys(service._pendingBluetoothBatteries).length, 0);
+  assert.equal(service.history[0].body, '');
+});
 
 function record(id, appName = 'A', urgency = 'normal') {
   return { id, appName, urgency, time: id, expiresAt: Date.now() + 5000 };
