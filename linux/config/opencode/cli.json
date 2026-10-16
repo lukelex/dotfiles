@@ -11,5 +11,8 @@
     "scrollbar": false,
     "thinking": "hide"
   },
+  "tabs": {
+    "indicators": "numbers"
+  },
   "animations": true
 }
