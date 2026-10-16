@@ -25,7 +25,12 @@ local components = {
   },
   diff = {
     "diff",
-    cond = win_width(85),
+    cond = win_width(60),
+    source = function()
+      local summary = vim.b.minidiff_summary
+      if not summary then return nil end
+      return { added = summary.add, modified = summary.change, removed = summary.delete }
+    end,
     symbols = { added = " ", modified = " ", removed = " " },
     diff_color = {
       added = { fg = "#87AF5F" },
