@@ -93,29 +93,29 @@ PopupWindow {
     }
   }
 
-  component DismissButton: Item {
+  component DismissButton: Controls.AbstractButton {
     id: button
 
     required property string description
     property string label: ""
-    property bool emphasized: false
-    signal clicked()
+    property real maximumWidth: implicitWidth
 
-    width: label ? buttonLabel.implicitWidth + 20 : 28
-    height: 28
-    activeFocusOnTab: enabled && visible
-    opacity: button.emphasized || area.containsMouse || activeFocus ? 1 : 0.45
+    implicitWidth: label ? buttonLabel.implicitWidth + 20 : 28
+    width: Math.min(implicitWidth, maximumWidth)
+    height: Math.max(28, buttonLabel.implicitHeight + 12)
+    focusPolicy: Qt.TabFocus
+    hoverEnabled: true
+    opacity: enabled ? 1 : 0.45
     Accessible.role: Accessible.Button
     Accessible.name: description
     Accessible.onPressAction: { if (enabled) clicked() }
-    Keys.onSpacePressed: event => { if (!event.isAutoRepeat) clicked() }
     Keys.onReturnPressed: event => { if (!event.isAutoRepeat) clicked() }
     Keys.onEnterPressed: event => { if (!event.isAutoRepeat) clicked() }
     Hint {
       parent: button
       x: button.width - implicitWidth
       y: -implicitHeight - 6
-      visible: button.enabled && (area.containsMouse || button.activeFocus)
+      visible: button.enabled && (button.hovered || button.activeFocus)
       text: button.description
     }
 
@@ -123,12 +123,12 @@ PopupWindow {
       NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
     }
 
-    Rectangle {
-      anchors.fill: parent
+    background: Rectangle {
       radius: 7
-      color: area.containsMouse || button.activeFocus ? popup.controller.controlSliderTrack : "transparent"
-      border.width: button.activeFocus ? 1 : 0
-      border.color: popup.controller.controlSecondaryText
+      color: button.down ? popup.controller.controlSliderTrack
+        : button.hovered ? popup.controller.controlHover : popup.controller.controlBackground
+      border.width: 1
+      border.color: button.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
     }
 
     LucideIcon {
@@ -144,18 +144,18 @@ PopupWindow {
       id: buttonLabel
       anchors.centerIn: parent
       text: button.label
+      textFormat: Text.PlainText
+      width: button.width - 20
+      horizontalAlignment: Text.AlignHCenter
+      wrapMode: Text.Wrap
       visible: button.label !== ""
-      color: popup.controller.controlSecondaryText
+      color: popup.controller.controlPrimaryText
       font.family: popup.controller.fontFamily
       font.pixelSize: 11
     }
 
-    MouseArea {
-      id: area
-      anchors.fill: parent
-      hoverEnabled: true
+    HoverHandler {
       cursorShape: Qt.PointingHandCursor
-      onClicked: button.clicked()
     }
   }
 
@@ -229,8 +229,6 @@ PopupWindow {
         card.bellAngle = 0
       }
     }
-
-    HoverHandler { id: cardHover }
 
     // Declared first so the buttons inside the surface keep their clicks.
     MouseArea {
@@ -345,7 +343,6 @@ PopupWindow {
 
             anchors.verticalCenter: parent.verticalCenter
             description: "Dismiss notification"
-            emphasized: cardHover.hovered
             enabled: !card.dismissing && !card.groupDismissing
             onClicked: card.startDismiss()
           }
@@ -378,22 +375,68 @@ PopupWindow {
           wrapMode: Text.Wrap
         }
 
+        Controls.AbstractButton {
+          id: disclosure
+
+          visible: card.canExpand
+          enabled: !card.dismissing && !card.groupDismissing
+          width: Math.min(parent.width, disclosureLabel.implicitWidth + 34)
+          height: 28
+          focusPolicy: Qt.TabFocus
+          hoverEnabled: true
+          Accessible.name: card.expanded ? "Collapse notification text" : "Read full notification"
+          Keys.onReturnPressed: event => { if (!event.isAutoRepeat) clicked() }
+          Keys.onEnterPressed: event => { if (!event.isAutoRepeat) clicked() }
+          onClicked: card.expanded = !card.expanded
+
+          background: Rectangle {
+            radius: 7
+            color: disclosure.down ? card.controller.controlSliderTrack
+              : disclosure.hovered ? card.controller.controlHover : "transparent"
+            border.width: disclosure.activeFocus ? 1 : 0
+            border.color: card.controller.controlActiveIcon
+          }
+
+          contentItem: Item {
+            LucideIcon {
+              anchors.left: parent.left
+              anchors.leftMargin: 4
+              anchors.verticalCenter: parent.verticalCenter
+              width: 14
+              height: 14
+              source: card.controller.icon("chevron-right")
+              rotation: card.expanded ? 270 : 90
+              color: card.controller.controlSecondaryText
+            }
+
+            Text {
+              id: disclosureLabel
+              anchors.left: parent.left
+              anchors.leftMargin: 24
+              anchors.right: parent.right
+              anchors.rightMargin: 6
+              anchors.verticalCenter: parent.verticalCenter
+              text: card.expanded ? "Show less" : "Show more"
+              elide: Text.ElideRight
+              color: card.controller.controlSecondaryText
+              font.family: card.controller.fontFamily
+              font.pixelSize: 11
+            }
+          }
+
+          HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+          }
+        }
+
         Flow {
           width: parent.width
           spacing: 6
-
-          DismissButton {
-            label: card.expanded ? "Show less" : "Show more"
-            description: card.expanded ? "Collapse notification text" : "Read full notification"
-            visible: card.canExpand
-            emphasized: true
-            onClicked: card.expanded = !card.expanded
-          }
+          topPadding: 7
 
           DismissButton {
             label: card.copied ? "Copied" : "Copy"
             description: "Copy notification text"
-            emphasized: true
             onClicked: {
               Quickshell.clipboardText = card.record.summary + (card.body ? "\n" + card.body : "")
               card.copied = true
@@ -406,8 +449,24 @@ PopupWindow {
             description: "Open notification in its application"
             visible: card.service.canActivate(card.record)
             enabled: card.service.activationPendingId === null && !card.dismissing
-            emphasized: true
             onClicked: card.activate()
+          }
+
+          Repeater {
+            model: card.isLive ? card.record.actions : []
+
+            delegate: DismissButton {
+              id: actionDelegate
+
+              required property var modelData
+              required property int index
+
+              label: modelData.text
+              description: modelData.text
+              maximumWidth: textColumn.width
+              enabled: !card.dismissing && !card.groupDismissing
+              onClicked: popup.service.invokeAction(card.record.id, actionDelegate.modelData.sourceIndex)
+            }
           }
         }
 
@@ -420,51 +479,6 @@ PopupWindow {
           color: card.controller.urgent
           font.family: card.controller.fontFamily
           font.pixelSize: 11
-        }
-
-        Flow {
-          spacing: 8
-          visible: card.isLive && card.record.actions.length > 0
-          width: parent.width
-
-          Repeater {
-            model: card.record.actions
-
-            delegate: Item {
-              id: actionDelegate
-
-              required property var modelData
-              required property int index
-
-              height: Math.max(28, buttonLabel.implicitHeight + 12)
-              width: Math.min(textColumn.width, buttonLabel.implicitWidth + 20)
-
-              Rectangle {
-                anchors.fill: parent
-                color: card.controller.controlBackground
-                radius: 8
-              }
-
-              Text {
-                id: buttonLabel
-
-                anchors.centerIn: parent
-                width: parent.width - 20
-                wrapMode: Text.Wrap
-                textFormat: Text.PlainText
-                color: card.controller.controlPrimaryText
-                font.family: card.controller.fontFamily
-                font.pixelSize: 11
-                text: actionDelegate.modelData.text
-              }
-
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-              onClicked: popup.service.invokeAction(card.record.id, actionDelegate.modelData.sourceIndex)
-              }
-            }
-          }
         }
       }
 
@@ -574,8 +588,6 @@ PopupWindow {
 
   component NotificationGroup: Item {
     id: notificationGroup
-
-    HoverHandler { id: groupHover }
 
     required property var controller
     required property var group
@@ -770,7 +782,6 @@ PopupWindow {
           verticalCenter: parent.verticalCenter
         }
         description: "Dismiss group"
-        emphasized: groupHover.hovered
         enabled: !notificationGroup.dismissing
         onClicked: notificationGroup.dismissGroup()
       }
@@ -1205,7 +1216,6 @@ PopupWindow {
           }
           label: "Clear all"
           description: "Clear notification history"
-          emphasized: true
           enabled: !clearAllAnimation.running && !groupDismissTimer.running
           onClicked: {
             popup.clearingRecords = popup.service.history.slice()
