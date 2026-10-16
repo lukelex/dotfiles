@@ -43,6 +43,11 @@ return {
       group = group,
       callback = function() browsing = false end,
     })
+    vim.api.nvim_create_autocmd('User', {
+      group = group,
+      pattern = 'DotfilesTabPicked',
+      callback = function() browsing = false end,
+    })
 
     require('tabby.tabline').set(function(line)
       local tabs = line.tabs().tabs
@@ -197,5 +202,6 @@ return {
     vim.keymap.set('n', '<leader>t]', function() page(1) end, { desc = 'Scroll tabline right' })
     vim.keymap.set('n', '<leader>t{', function() page(-1, true) end, { desc = 'Page tabline left' })
     vim.keymap.set('n', '<leader>t}', function() page(1, true) end, { desc = 'Page tabline right' })
+    vim.keymap.set('n', '<leader>tt', function() require('utils.tab_picker').open() end, { desc = 'Find tab' })
   end,
 }
