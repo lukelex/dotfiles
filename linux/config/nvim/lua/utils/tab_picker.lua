@@ -19,10 +19,6 @@ function M.open()
     format_item = function(item)
       return string.format('%d/%s%s', item.number, item.name, item.current and ' (current)' or '')
     end,
-    -- Override the file picker's window-selection mapping for this picker.
-    snacks = {
-      win = { input = { keys = { ['<CR>'] = { 'confirm', mode = { 'n', 'i' } } } } },
-    },
   }, function(item)
     if not item or not vim.api.nvim_tabpage_is_valid(item.tab) then return end
     -- Use the handle: tab numbers can change while the picker is open.

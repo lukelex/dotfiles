@@ -1,9 +1,11 @@
 return {
   { "echasnovski/mini.pairs",      opts = {}, event = { "InsertEnter" } },
-  { "echasnovski/mini.cursorword", opts = { delay = 50 }, event = { "BufRead" } },
+  { "echasnovski/mini.cursorword", opts = { delay = 250 }, event = { "BufRead" } },
   {
     "echasnovski/mini.indentscope",
-    opts = {},
+    opts = function()
+      return { draw = { animation = require("mini.indentscope").gen_animation.none() } }
+    end,
     event = { "BufRead" }
   },
   {

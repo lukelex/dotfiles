@@ -23,7 +23,7 @@ and mouse-wheel routing.
 - `<leader>t[` / `<leader>t]`: scroll one tab left/right.
 - `<leader>t{` / `<leader>t}`: scroll one viewport left/right.
 - `<leader>tt`: search all tab numbers and full names using the configured
-  Snacks UI selector; Enter switches to the selected native tab.
+  fzf-lua UI selector; Enter switches to the selected native tab.
 - `gt`, `gT`, and `{number}gt`: normal Neovim tab navigation.
 - Mouse wheel over the bar: scroll the viewport; elsewhere, scroll normally.
 

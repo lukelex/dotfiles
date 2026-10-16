@@ -1,8 +1,14 @@
 return {
   "ibhagwan/fzf-lua",
+  lazy = false,
   priority = 999,
   dependencies = { "nvim-tree/nvim-web-devicons" },
   keys = {
+    { "<leader>gd", function() FzfLua.diagnostics_workspace() end, desc = "Workspace diagnostics" },
+    { "<leader>d", function() FzfLua.diagnostics_document() end, desc = "Buffer diagnostics" },
+    { "<leader>lr", function() FzfLua.lsp_references() end, desc = "References" },
+    { "gr", function() FzfLua.lsp_references() end, desc = "References", nowait = true },
+    { "gd", function() FzfLua.lsp_definitions() end, desc = "Go to definition" },
     {
       "<leader>f",
       function() FzfLua.files() end,
@@ -37,7 +43,7 @@ return {
     },
     {
       "<leader>D",
-      function() FzfLua.lsp_workspace_diagnostics() end,
+      function() FzfLua.diagnostics_workspace() end,
       desc = "Workspace diagnostics",
     },
     {

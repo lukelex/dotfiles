@@ -4,21 +4,20 @@ local function lsp_count()
   return #clients
 end
 
-local function pathd(str)
-  local parts = vim.split(str, "/", { plain = true })
+local function win_width(minimum)
+  return function() return vim.api.nvim_win_get_width(0) >= minimum end
+end
 
-  if #parts >= 2 then
-    return parts[#parts - 1] .. "/" .. parts[#parts]
-  else
-    return str
-  end
+local function screen_width(minimum)
+  return function() return vim.o.columns >= minimum end
 end
 
 local components = {
   filename = {
     "filename",
     path = 1,
-    fmt = pathd,
+    globalstatus = false, -- Shorten against this split, not the global statusline.
+    shorting_target = 30,
     separator = {
       left = "",
       right = ""
@@ -26,6 +25,7 @@ local components = {
   },
   diff = {
     "diff",
+    cond = win_width(85),
     symbols = { added = " ", modified = " ", removed = " " },
     diff_color = {
       added = { fg = "#87AF5F" },
@@ -38,6 +38,7 @@ local components = {
   },
   lsp = {
     lsp_count,
+    cond = function() return vim.api.nvim_win_get_width(0) >= 110 and lsp_count() > 0 end,
     icon = " ",
     separator = {
       left = "",
@@ -45,12 +46,14 @@ local components = {
   },
   diagnostics = {
     "diagnostics",
+    cond = win_width(45),
     separator = {
       left = "",
     }
   },
   filetype = {
     "filetype",
+    cond = win_width(70),
     separator = {
       left = "",
       right = ""
@@ -65,10 +68,15 @@ local components = {
   },
   branch = {
     "branch",
+    cond = screen_width(60),
     icon = "",
     fmt = function(str)
       if vim.api.nvim_strwidth(str) > 25 then
-        return ("%s…"):format(str:sub(1, 24))
+        local shortened = str
+        while vim.fn.strdisplaywidth(shortened) > 24 do
+          shortened = vim.fn.strcharpart(shortened, 0, vim.fn.strchars(shortened) - 1)
+        end
+        return shortened .. "…"
       end
 
       return str
@@ -79,6 +87,7 @@ local components = {
   },
   progress = {
     "progress",
+    cond = screen_width(80),
     icon = " ",
     separator = {
       left = "",
@@ -100,9 +109,15 @@ return {
     dependencies = {
       "nvim-tree/nvim-web-devicons"
     },
-    opts = {
+    opts = function()
+      local colors = require("railscasts.colors")
+      local theme = vim.deepcopy(require("lualine.themes.railscasts"))
+      theme.inactive.a = { bg = colors.light_grey, fg = colors.black }
+      theme.inactive.b = { bg = colors.grey, fg = colors.beige_grey }
+
+      return {
       options = {
-        theme = "railscasts",
+        theme = theme,
         icons_enabled = true,
         globalstatus = true,
         refresh = {
@@ -126,11 +141,24 @@ return {
       sections = {
         lualine_a = { components.mode },
         lualine_b = { components.branch },
-        lualine_c = {},
-        lualine_x = { "encoding", "fileformat" },
+        lualine_c = {
+          { function()
+            local register = vim.fn.reg_recording()
+            return register ~= "" and ("REC @" .. register) or ""
+          end, color = { fg = "#DA4939", gui = "bold" } },
+        },
+        lualine_x = {
+          { "searchcount", cond = screen_width(60) },
+          { "encoding", cond = function()
+            local encoding = vim.bo.fileencoding ~= "" and vim.bo.fileencoding or vim.o.encoding
+            return encoding:lower() ~= "utf-8"
+          end },
+          { "fileformat", cond = function() return vim.bo.fileformat ~= "unix" end },
+        },
         lualine_y = { components.progress },
         lualine_z = { components.location }
       },
-    }
+      }
+    end,
   }
 }
