@@ -84,6 +84,23 @@ return {
     local smart_open = require("utils.smart_open")
 
     fzf.setup({
+      grep = {
+        prompt = "Grep (literal)> ",
+        rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=4096 --fixed-strings -e",
+        actions = {
+          ["ctrl-r"] = {
+            fn = function(_, opts)
+              local rg_opts = require("fzf-lua.utils").toggle_cmd_flag(opts.rg_opts, "--fixed-strings")
+              opts.__call_fn(vim.tbl_deep_extend("force", {}, opts.__call_opts, {
+                resume = true,
+                rg_opts = rg_opts,
+                prompt = rg_opts:find("--fixed-strings", 1, true) and "Grep (literal)> " or "Grep (regex)> ",
+              }))
+            end,
+            desc = "Toggle regex",
+          },
+        },
+      },
       actions = {
         files = {
           ["default"] = function(selected, opts)
