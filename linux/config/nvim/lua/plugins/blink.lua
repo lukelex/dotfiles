@@ -1,6 +1,6 @@
 return {
   "saghen/blink.cmp",
-  event = { "BufRead" },
+  event = { "BufRead", "InsertEnter" },
   version = "1.*",
   opts = {
     keymap = {
