@@ -41,6 +41,32 @@ return {
       desc = "Workspace diagnostics",
     },
     {
+      "<leader>gd",
+      function() FzfLua.lsp_workspace_diagnostics() end,
+      desc = "Workspace diagnostics",
+    },
+    {
+      "<leader>d",
+      function() FzfLua.lsp_document_diagnostics() end,
+      desc = "Buffer diagnostics",
+    },
+    {
+      "<leader>lr",
+      function() FzfLua.lsp_references() end,
+      desc = "References",
+    },
+    {
+      "gr",
+      function() FzfLua.lsp_references() end,
+      desc = "References",
+      nowait = true,
+    },
+    {
+      "gd",
+      function() FzfLua.lsp_definitions() end,
+      desc = "Goto Definition",
+    },
+    {
       "<leader>r",
       function() FzfLua.resume() end,
       desc = "Resume Last Picker",
@@ -75,23 +101,19 @@ return {
         },
       },
       winopts = {
-        -- fzf-lua enables Tree-sitter highlighting by default. Its first
-        -- parser initialization can fail while searching Rails/Ruby files;
-        -- this highlighting is optional and normal buffer highlighting stays
-        -- enabled by nvim-treesitter.
-        treesitter = false,
+        treesitter = true,
         preview = {
           layout = "vertical"
         },
       },
-      -- The previewer has a separate Tree-sitter path from the fzf window.
-      -- Disable it too; otherwise the first Ruby preview can still trigger
-      -- the parser error even when main-window highlighting is off.
+      -- Keep Tree-sitter highlighting in file previews while leaving it off
+      -- in the fzf results window (which previously failed on Ruby searches).
       previewers = {
         builtin = {
-          treesitter = { enabled = false },
+          treesitter = { enabled = true },
         },
       },
     })
+    fzf.register_ui_select()
   end,
 }
