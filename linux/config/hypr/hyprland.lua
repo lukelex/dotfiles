@@ -5,6 +5,7 @@ require("keybindings")
 hl.layer_rule({
   match = { namespace = "^fuzzel$" },
   blur = true,
+  no_anim = true,
 })
 
 hl.env("EDITOR", "nvim")
