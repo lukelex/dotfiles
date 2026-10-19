@@ -21,9 +21,9 @@ common:
       hunk:
         source: github
         repo: lukelex/hunk
-        ref: 4845407d43400c5fa0ff9af81d4cd8180ae21e6c
+        ref: 93d0e201141e8c7d533bb7cec892abe3efa35c74
         archive: source
-        sha256: fae307569375d791feece0e8daf3d022da3193e72fafa78053c94c346d9fedd7
+        sha256: 5ca7f0cb9f0dc8d9b4e57f63644df35322d8be8f4c6af0c152851f528da2eac5
         files:
           - source: bin/hunk-pager
             target: $HOME/.local/bin/hunk-pager

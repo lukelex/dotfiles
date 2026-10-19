@@ -42,6 +42,16 @@ alias gls="git log --oneline --decorate"
 alias grl="git reflog"
 alias gcap="git add . && git commit --amend --no-edit && git push --force-with-lease"
 
+# hunk: replace git status
+git() {
+  if [[ ${1-} == status ]]; then
+    shift
+    command git hunk status "$@"
+  else
+    command git "$@"
+  fi
+}
+
 git_clean() {
   local remote="${1:-origin}"
 
