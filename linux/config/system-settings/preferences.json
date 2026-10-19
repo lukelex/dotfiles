@@ -41,7 +41,7 @@
     "wallpaperBrightness": 78
   },
   "display": {
-    "linkBrightness": false,
+    "linkBrightness": true,
     "dayTemperature": 6500,
     "nightTemperature": 4000,
     "latitude": 55.6761,
@@ -101,7 +101,7 @@
     "dndStartMinutes": 1320,
     "dndEndMinutes": 480,
     "dndScheduleDays": 127,
-    "notificationSoundsMuted": true,
+    "notificationSoundsMuted": false,
     "allowCriticalDuringDnd": true,
     "applications": [
       {
@@ -139,6 +139,54 @@
         "appName": "flameshot",
         "enabled": true,
         "sound": false
+      },
+      {
+        "key": "kitty",
+        "appName": "kitty",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "claude",
+        "appName": "Claude",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "google chrome",
+        "appName": "Google Chrome",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "networkmanager applet",
+        "appName": "NetworkManager Applet",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "kooha",
+        "appName": "Kooha",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "satty",
+        "appName": "satty",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "seadrive",
+        "appName": "SeaDrive",
+        "enabled": true,
+        "sound": true
+      },
+      {
+        "key": "wireplumber",
+        "appName": "wireplumber",
+        "enabled": true,
+        "sound": true
       }
     ]
   }
