@@ -32,6 +32,14 @@
         "type": "remote",
         "url": "https://mcp.cloudflare.com/mcp"
       },
+      "github": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {env:GITHUB_TOKEN}",
+        },
+      },
     },
   },
 }

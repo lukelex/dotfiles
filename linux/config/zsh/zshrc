@@ -22,6 +22,11 @@ source "$DOTFILES/linux/config/aliases"
 # 1Password-backed shared secrets (skips quietly when locked/unavailable)
 source "$DOTFILES/linux/config/zsh/secrets.zsh"
 
+# GitHub token for OpenCode's GitHub MCP
+if command -v gh >/dev/null 2>&1; then
+  export GITHUB_TOKEN="$(gh auth token 2>/dev/null)"
+fi
+
 bindkey "^[[1;5C" forward-word      # Ctrl+right
 bindkey "^[[1;5D" backward-word     # Ctrl+left
 bindkey "^[[H"    beginning-of-line # Ctrl+a
