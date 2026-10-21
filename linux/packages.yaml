@@ -21,14 +21,18 @@ common:
       hunk:
         source: github
         repo: lukelex/hunk
-        ref: 93d0e201141e8c7d533bb7cec892abe3efa35c74
+        ref: a91ea0d1163bdb2c54e3f1af0d1d9bc4ded29378
         archive: source
-        sha256: 5ca7f0cb9f0dc8d9b4e57f63644df35322d8be8f4c6af0c152851f528da2eac5
+        sha256: e048b276588faba665964241f0d969a4e52405ebe166158c402cd4fc25d1c836
         files:
           - source: bin/hunk-pager
             target: $HOME/.local/bin/hunk-pager
           - source: bin/git-hunk
             target: $HOME/.local/bin/git-hunk
+          - source: bin/git-hunk-status
+            target: $HOME/.local/bin/git-hunk-status
+          - source: bin/hunk-render
+            target: $HOME/.local/bin/hunk-render
           - source: share/hunk/delta.gitconfig
             target: $HOME/.local/share/hunk/delta.gitconfig
       jq:
