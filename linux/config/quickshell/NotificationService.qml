@@ -1114,7 +1114,13 @@ QtObject {
 
   function nextDndBoundary(date) {
     const now = date.getTime()
-    const future = service.dndIntervals(date).flatMap(interval => [interval.start, interval.end]).filter(time => time > now)
+    const future = []
+    for (const interval of service.dndIntervals(date)) {
+      if (interval.start > now)
+        future.push(interval.start)
+      if (interval.end > now)
+        future.push(interval.end)
+    }
     return future.length ? Math.min(...future) : 0
   }
 
