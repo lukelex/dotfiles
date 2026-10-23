@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQuick.Controls as Controls
 
 PopupWindow {
@@ -312,12 +313,9 @@ PopupWindow {
     }
   }
 
-  Rectangle {
+  PanelSurface {
     anchors.fill: parent
-    border.color: popup.controller.controlBorder
-    border.width: 1
-    color: popup.controller.controlBackground
-    radius: 26
+    controller: popup.controller
   }
 
   HoverHandler {
@@ -345,7 +343,7 @@ PopupWindow {
         anchors.verticalCenter: parent.verticalCenter
         color: popup.controller.controlPrimaryText
         font.family: popup.controller.fontFamily
-        font.pixelSize: 16
+        font.pixelSize: Design.typography.heading
         elide: Text.ElideRight
         text: "GitHub pull requests"
       }

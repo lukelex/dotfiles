@@ -1,6 +1,7 @@
 import Quickshell
 import QtQml
 import QtQuick
+import "DesignTokens.js" as Design
 
 PopupWindow {
   id: popup
@@ -19,10 +20,10 @@ PopupWindow {
 
   anchor.window: panel
   anchor.rect.x: (parentWindow.width - width) / 2
-  anchor.rect.y: parentWindow.height + 64
+  anchor.rect.y: parentWindow.height + Design.osd.offset
   color: "transparent"
-  implicitHeight: 172
-  implicitWidth: 216
+  implicitHeight: Design.osd.height
+  implicitWidth: Design.osd.width
   surfaceFormat.opaque: false
   visible: false
 
@@ -91,13 +92,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 1
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
     ScaleAnimator {
       target: content
       to: 1
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
   }
@@ -108,13 +109,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 0
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     ScaleAnimator {
       target: content
       to: 0.94
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     onStopped: {
@@ -132,38 +133,35 @@ PopupWindow {
     anchors.fill: parent
     transformOrigin: Item.Center
 
-    Rectangle {
+    PanelSurface {
       anchors.fill: parent
-      color: popup.controller.controlBackground
-      radius: 26
-      border.color: popup.controller.controlBorder
-      border.width: 1
+      controller: popup.controller
     }
 
     Column {
       anchors {
         fill: parent
-        margins: 22
+        margins: Design.osd.padding
       }
-      spacing: 14
+      spacing: Design.spacing.card
 
       Item {
         anchors.horizontalCenter: parent.horizontalCenter
-        height: 66
-        width: 66
+        height: Design.osd.iconWell
+        width: Design.osd.iconWell
 
         Rectangle {
           anchors.fill: parent
           color: popup.controller.controlSurface
-          radius: 33
+          radius: width / 2
         }
 
         LucideIcon {
           anchors.centerIn: parent
           color: popup.muted ? popup.controller.controlSecondaryText : popup.controller.controlPrimaryText
-          height: 34
+          height: Design.osd.icon
           source: popup.controller.icon(popup.iconName())
-          width: 34
+          width: Design.osd.icon
         }
       }
 
@@ -177,7 +175,7 @@ PopupWindow {
 
           anchors.verticalCenter: parent.verticalCenter
           color: popup.controller.controlSliderTrack
-          height: 8
+          height: Design.osd.track
           radius: 4
           width: parent.width
 
@@ -200,7 +198,7 @@ PopupWindow {
       Text {
         color: popup.controller.controlSecondaryText
         font.family: popup.controller.fontFamily
-        font.pixelSize: 11
+        font.pixelSize: Design.typography.caption
         horizontalAlignment: Text.AlignHCenter
         text: popup.muted ? "Muted"
           : popup.labeledOsd

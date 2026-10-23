@@ -14,12 +14,13 @@ Hyprland/Wayland; platform-specific behavior must be verified independently.
 
 ## Visual Language
 
-- Reuse `Bar.qml` theme tokens and the controller's typography. Support light/dark themes and existing comfortable/compact sizing; do not introduce competing fonts or bar icon scales.
+- Use `DESIGN.md` for the design system and component recipes. `DesignTokens.js` owns palettes and shared metrics; `Bar.qml` exposes reactive theme colors and typography through the controller. Use `PanelSurface.qml` for panel/OSD bases and the shared settings components for their existing roles.
+- Reuse the controller's theme colors and typography and import static metrics from `DesignTokens.js` as `Design`. Support light/dark themes and existing comfortable/compact sizing; do not introduce competing fonts or bar icon scales.
 - Use `LucideIcon.qml` with assets from `../lucide/svg/`. Verify assets exist and preserve their license when adding variants.
 - Use `controlBackground` for the base, `controlSurface` for cards, `controlBorder` for panel outlines, and `controlSurfaceBorder` for card outlines/dividers. Use `controlPrimaryText` and `controlSecondaryText` for hierarchy.
 - Ordinary hover uses neutral `controlHover`. Restrained blue indicates selection/enabled state; warning colors indicate genuine problems. Muting and DND are intentional states, not warnings. Never convey important distinctions through color alone.
 - Panels sit about 12px below the bar with roughly 16px padding and rounded surfaces. Constrain them to screen bounds; allow wider content only when its task requires it.
-- Panel headings are 16px. Header gear/close controls use 32px targets, 16px icons and 10px-radius neutral surfaces. Place settings access in the header, with a contextual tooltip, rather than a large footer action.
+- Panel headings are 16px. Header gear/close controls use 32px targets and 16px icons; retain the shared gear's 8px radius and other header controls' 10px-radius neutral surfaces. Place settings access in the header, with a contextual tooltip, rather than a large footer action.
 - Keep labels legible and controls usable at narrow widths. Wrap meaningful text, reveal truncated values on hover/focus, and provide specific accessible names. Avoid overlapping hit areas.
 - Use slim 6px tracks for usage metrics. Keep normal values neutral and label units, direction and unavailable states honestly. Preserve contrast over media artwork with the existing dark scrim.
 - Avoid decorative gradients, oversized headings, constant motion, redundant borders and dashboard tiles without a functional purpose.
@@ -48,7 +49,7 @@ Hyprland/Wayland; platform-specific behavior must be verified independently.
 
 ## State And Backend Contracts
 
-- `shell.qml` composes the shell; `Bar.qml` owns shared tokens and per-screen wiring. Presentation components consume shared services rather than duplicating backend state or polling.
+- `shell.qml` composes the shell; `DesignTokens.js` owns shared visual values; `Bar.qml` binds them to preferences and owns per-screen wiring. Presentation components consume shared services rather than duplicating backend state or polling.
 - Prefer native event-driven Quickshell services. Bound subprocesses with timeouts, validate payloads and object identity, and ignore stale responses. Coalesce slider edits against captured targets; never retarget queued work to replacement devices.
 - Run scans, metering and frequent sampling only while their relevant surface or explicit policy needs them. Use debouncing, cooldowns and expiry-based refreshes; unrelated panels must not activate each other's work.
 - Treat freshness, measurements and capabilities honestly. Check native units and availability flags; distinguish advertised limits from negotiated state, estimates from measurements, and device links from internet access. Privacy indicators must observe activity without starting capture.

@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Networking
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQuick.Controls
 
 Scope {
@@ -215,14 +216,14 @@ Scope {
 
   ParallelAnimation {
     id: openAnim
-    NumberAnimation { target: content; property: "opacity"; to: 1; duration: 160; easing.type: Easing.OutCubic }
-    NumberAnimation { target: content; property: "y"; to: 0; duration: 160; easing.type: Easing.OutCubic }
+    NumberAnimation { target: content; property: "opacity"; to: 1; duration: Design.motion.enter; easing.type: Easing.OutCubic }
+    NumberAnimation { target: content; property: "y"; to: 0; duration: Design.motion.enter; easing.type: Easing.OutCubic }
   }
 
   ParallelAnimation {
     id: closeAnim
-    NumberAnimation { target: content; property: "opacity"; to: 0; duration: 120; easing.type: Easing.InCubic }
-    NumberAnimation { target: content; property: "y"; to: 6; duration: 120; easing.type: Easing.InCubic }
+    NumberAnimation { target: content; property: "opacity"; to: 0; duration: Design.motion.exit; easing.type: Easing.InCubic }
+    NumberAnimation { target: content; property: "y"; to: 6; duration: Design.motion.exit; easing.type: Easing.InCubic }
     onFinished: preview.visible = false
   }
 
@@ -445,12 +446,9 @@ Scope {
       }
     }
 
-    Rectangle {
+    PanelSurface {
       anchors.fill: parent
-      radius: 26
-      border.width: 1
-      border.color: popup.controller.controlBorder
-      color: popup.controller.controlBackground
+      controller: popup.controller
     }
 
     Flickable {
@@ -487,7 +485,7 @@ Scope {
           Label {
             width: parent.width
             text: popup.bluetoothOnly ? "Bluetooth" : "Network"
-            font.pixelSize: 16
+            font.pixelSize: Design.typography.heading
             color: popup.controller.controlPrimaryText
           }
           Label {

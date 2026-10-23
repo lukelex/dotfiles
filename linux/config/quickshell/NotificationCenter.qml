@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQml
 import QtQuick.Controls.Basic as Controls
 
@@ -18,7 +19,7 @@ PopupWindow {
   color: "transparent"
   grabFocus: false
   implicitHeight: Math.min(548, panel.screen.height - panel.height - 24)
-  implicitWidth: Math.min(432, panel.screen.width - 24)
+  implicitWidth: Math.min(Design.panel.width, panel.screen.width - Design.panel.gap * 2)
   surfaceFormat.opaque: false
 
   component Hint: Controls.ToolTip {
@@ -1053,13 +1054,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 1
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
     YAnimator {
       target: content
       to: 0
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
   }
@@ -1069,13 +1070,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 0
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     YAnimator {
       target: content
       to: 6
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     onStopped: {
@@ -1117,18 +1118,15 @@ PopupWindow {
       }
     }
 
-    Rectangle {
+    PanelSurface {
       anchors.fill: parent
-      border.color: popup.controller.controlBorder
-      border.width: 1
-      color: popup.controller.controlBackground
-      radius: 26
+      controller: popup.controller
     }
 
     Column {
       anchors {
         fill: parent
-        margins: 16
+        margins: Design.panel.padding
       }
       spacing: 12
 
@@ -1145,7 +1143,7 @@ PopupWindow {
           anchors.rightMargin: 8
           color: popup.controller.controlPrimaryText
           font.family: popup.controller.fontFamily
-          font.pixelSize: 16
+          font.pixelSize: Design.typography.heading
           elide: Text.ElideRight
           text: "Notifications"
         }

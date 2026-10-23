@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQuick.Controls as Controls
 
 PopupWindow {
@@ -17,7 +18,7 @@ PopupWindow {
   grabFocus: false
   readonly property real maxHeight: Math.max(1, panel.screen.height - panel.height - 24)
   implicitHeight: Math.min(sections.implicitHeight + 74, maxHeight)
-  implicitWidth: Math.min(432, panel.screen.width - 24)
+  implicitWidth: Math.min(Design.panel.width, panel.screen.width - Design.panel.gap * 2)
 
   surfaceFormat.opaque: false
 
@@ -376,13 +377,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 1
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
     YAnimator {
       target: content
       to: 0
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
   }
@@ -392,13 +393,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 0
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     YAnimator {
       target: content
       to: 6
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     onStopped: {
@@ -426,20 +427,17 @@ PopupWindow {
       }
     }
 
-    Rectangle {
+    PanelSurface {
       anchors.fill: parent
-      border.color: popup.controller.controlBorder
-      border.width: 1
-      color: popup.controller.controlBackground
-      radius: 26
+      controller: popup.controller
     }
 
     Item {
       id: header
-      x: 16
-      y: 16
-      width: parent.width - 32
-      height: 32
+      x: Design.panel.padding
+      y: Design.panel.padding
+      width: parent.width - Design.panel.padding * 2
+      height: Design.panel.headerHeight
       Text {
         anchors.left: parent.left
         anchors.right: settingsButton.left
@@ -447,7 +445,7 @@ PopupWindow {
         anchors.verticalCenter: parent.verticalCenter
         color: popup.controller.controlPrimaryText
         font.family: popup.controller.fontFamily
-        font.pixelSize: 16
+        font.pixelSize: Design.typography.heading
         text: "Control Center"
         elide: Text.ElideRight
       }
@@ -465,7 +463,7 @@ PopupWindow {
       id: scroll
 
       anchors.fill: parent
-      anchors.margins: 16
+      anchors.margins: Design.panel.padding
       anchors.topMargin: header.y + header.height + 10
       contentWidth: width
       contentHeight: sections.implicitHeight

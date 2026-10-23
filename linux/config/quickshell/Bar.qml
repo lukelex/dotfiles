@@ -9,6 +9,7 @@ import Quickshell.Services.UPower
 import Quickshell.Wayland
 import QtCore
 import QtQuick
+import "DesignTokens.js" as Design
 
 Scope {
   id: root
@@ -407,12 +408,14 @@ Scope {
     onTriggered: root.runHoverClose()
   }
 
-  readonly property color foreground: "#F3F4F5"
-  readonly property color urgent: "#DA4939"
-  readonly property color muted: "#A9ADB4"
+  readonly property var designPalette: Design.palette(root.darkMode)
+  readonly property var barMetrics: Design.barMetrics(preferences.value("desktop.density", "comfortable") === "compact")
+  readonly property color foreground: designPalette.foreground
+  readonly property color urgent: designPalette.urgent
+  readonly property color muted: designPalette.muted
   required property var preferences
-  readonly property string fontFamily: "Hack Nerd Font Mono"
-  readonly property int barFontSize: preferences.value("desktop.density", "comfortable") === "compact" ? 16 : 18
+  readonly property string fontFamily: Design.typography.family
+  readonly property int barFontSize: barMetrics.fontSize
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -600,20 +603,20 @@ Scope {
   property real previousCpuIdle: -1
   readonly property date currentDate: clock.date
 
-  readonly property color controlActive: root.darkMode ? "#3E5978" : "#C9E1F7"
-  readonly property color controlActiveIcon: root.darkMode ? "#8CAED8" : "#5C94C8"
-  readonly property color controlDownloadIcon: root.darkMode ? "#83E6B2" : "#167044"
-  readonly property color controlUploadIcon: root.darkMode ? "#D6B4FF" : "#7442AD"
-  readonly property color controlWarningText: root.darkMode ? "#F0C674" : "#805500"
-  readonly property color controlBackground: root.darkMode ? "#D9171A20" : "#D9F8F9FB"
-  readonly property color controlPrimaryText: root.darkMode ? "#F8F9FB" : "#20242A"
-  readonly property color controlSecondaryText: root.darkMode ? "#B7BEC9" : "#59616D"
-  readonly property color controlSliderFill: root.darkMode ? "#DDE1E7" : "#477AA8"
-  readonly property color controlSliderTrack: root.darkMode ? "#20242C" : "#D4D9E0"
-  readonly property color controlSurface: root.darkMode ? "#2B303A" : "#E8EBEF"
-  readonly property color controlBorder: root.darkMode ? "#3A424E" : "#D8DDE4"
-  readonly property color controlSurfaceBorder: root.darkMode ? "#33404D" : "#D7DCE3"
-  readonly property color controlHover: root.darkMode ? "#38404C" : "#DCE1E8"
+  readonly property color controlActive: designPalette.controlActive
+  readonly property color controlActiveIcon: designPalette.controlActiveIcon
+  readonly property color controlDownloadIcon: designPalette.controlDownloadIcon
+  readonly property color controlUploadIcon: designPalette.controlUploadIcon
+  readonly property color controlWarningText: designPalette.controlWarningText
+  readonly property color controlBackground: designPalette.controlBackground
+  readonly property color controlPrimaryText: designPalette.controlPrimaryText
+  readonly property color controlSecondaryText: designPalette.controlSecondaryText
+  readonly property color controlSliderFill: designPalette.controlSliderFill
+  readonly property color controlSliderTrack: designPalette.controlSliderTrack
+  readonly property color controlSurface: designPalette.controlSurface
+  readonly property color controlBorder: designPalette.controlBorder
+  readonly property color controlSurfaceBorder: designPalette.controlSurfaceBorder
+  readonly property color controlHover: designPalette.controlHover
 
   function icon(name) {
     return "file://" + Quickshell.env("HOME") + "/dotfiles/linux/config/lucide/svg/" + name + ".svg"
@@ -1444,7 +1447,7 @@ Scope {
 
       screen: modelData
       color: "transparent"
-      implicitHeight: root.preferences.value("desktop.density", "comfortable") === "compact" ? 34 : 40
+      implicitHeight: root.barMetrics.height
       focusable: false
       aboveWindows: true
 

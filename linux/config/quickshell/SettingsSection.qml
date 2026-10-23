@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Controls
 
@@ -15,21 +16,21 @@ Rectangle {
   property bool framed: true
   default property alias contents: subsectionBody.data
   signal toggled()
-  implicitHeight: subsectionContent.implicitHeight + 28
-  radius: 18
+  implicitHeight: subsectionContent.implicitHeight + Design.spacing.card * 2
+  radius: Design.radius.card
   color: framed ? controller.controlSurface : "transparent"
   border.width: framed ? 1 : 0
   border.color: controller.controlSurfaceBorder
   ColumnLayout {
     id: subsectionContent
     anchors.fill: parent
-    anchors.margins: 14
-    spacing: 14
+    anchors.margins: Design.spacing.card
+    spacing: Design.spacing.card
     Controls.Button {
       id: subsectionHeader
       Layout.fillWidth: true
       padding: 0
-      implicitHeight: Math.max(32, contentItem.implicitHeight)
+      implicitHeight: Math.max(Design.panel.headerHeight, contentItem.implicitHeight)
       enabled: subsection.collapsible
       Accessible.name: subsection.title
       Accessible.description: subsection.description
@@ -38,10 +39,10 @@ Rectangle {
       Accessible.checked: subsection.expanded
       onClicked: subsection.toggled()
       contentItem: RowLayout {
-        spacing: 10
+        spacing: Design.spacing.related
         LucideIcon {
-          Layout.preferredWidth: 20
-          Layout.preferredHeight: 20
+          Layout.preferredWidth: Design.icon.section
+          Layout.preferredHeight: Design.icon.section
           source: subsection.controller.icon(subsection.iconName)
           color: subsection.controller.controlActiveIcon
         }
@@ -49,15 +50,15 @@ Rectangle {
           Layout.fillWidth: true
           text: subsection.title
           font.family: subsection.controller.fontFamily
-          font.pixelSize: 14
+          font.pixelSize: Design.typography.section
           font.bold: true
           color: subsection.controller.controlPrimaryText
           textFormat: Text.PlainText
           wrapMode: Text.Wrap
         }
         LucideIcon {
-          Layout.preferredWidth: 16
-          Layout.preferredHeight: 16
+          Layout.preferredWidth: Design.icon.header
+          Layout.preferredHeight: Design.icon.header
           visible: subsection.collapsible
           source: subsection.controller.icon("chevron-right")
           rotation: subsection.expanded ? 90 : 0
@@ -65,7 +66,7 @@ Rectangle {
         }
       }
       background: Rectangle {
-        radius: 8
+        radius: Design.radius.control
         color: subsectionHeader.hovered ? subsection.controller.controlHover : "transparent"
         border.width: subsectionHeader.activeFocus ? 1 : 0
         border.color: subsection.controller.controlActiveIcon
@@ -81,7 +82,7 @@ Rectangle {
       id: subsectionBody
       Layout.fillWidth: true
       visible: subsection.expanded
-      spacing: 12
+      spacing: Design.spacing.row
     }
   }
 }

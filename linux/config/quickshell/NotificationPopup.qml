@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQml
 
 PopupWindow {
@@ -33,7 +34,7 @@ PopupWindow {
   anchor.rect.x: leftAligned ? 12 - wiggleMargin : Math.max(0, panel.width - width - 12 + wiggleMargin)
   anchor.rect.y: bottomAligned ? Math.max(panel.height + 12, panel.screen.height - height - 12) : panel.height + 12
   color: "transparent"
-  implicitWidth: Math.min(396, panel.screen.width - 24) + wiggleMargin * 2
+  implicitWidth: Math.min(Design.notification.width, panel.screen.width - Design.panel.gap * 2) + wiggleMargin * 2
   implicitHeight: column.height
   surfaceFormat.opaque: false
 
@@ -244,7 +245,7 @@ PopupWindow {
       border.color: toast.controller.controlSurfaceBorder
       border.width: 1
       color: toast.controller.controlSurface
-      radius: 18
+      radius: Design.notification.radius
     }
 
     Rectangle {
@@ -253,7 +254,7 @@ PopupWindow {
       anchors.fill: parent
       color: Qt.rgba(toast.controller.urgent.r, toast.controller.urgent.g, toast.controller.urgent.b, toast.urgentAttention ? 0.22 : 0.12)
       opacity: 0.18
-      radius: 18
+      radius: Design.notification.radius
       visible: toast.record.urgency === "critical" || toast.urgentAttention
 
       SequentialAnimation {
@@ -647,7 +648,7 @@ PopupWindow {
         color: stack.controller.controlSurface
         height: latestToast.height
         opacity: stack.expanded || index === stack.expiringLayerIndex ? 0 : 0.72 + index * 0.12
-        radius: 18
+        radius: Design.notification.radius
         scale: index === stack.expiringLayerIndex ? 0.9 : 1
         transformOrigin: Item.Center
         visible: stack.records.length > 0

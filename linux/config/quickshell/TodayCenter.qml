@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Services.Mpris
 import QtQuick
+import "DesignTokens.js" as Design
 import QtQuick.Controls.Basic as Controls
 import Qt5Compat.GraphicalEffects
 
@@ -337,14 +338,14 @@ Scope {
       target: content
       property: "opacity"
       to: 1
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
     NumberAnimation {
       target: content
       property: "y"
       to: 0
-      duration: 160
+      duration: Design.motion.enter
       easing.type: Easing.OutCubic
     }
   }
@@ -355,14 +356,14 @@ Scope {
       target: content
       property: "opacity"
       to: 0
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     NumberAnimation {
       target: content
       property: "y"
       to: 6
-      duration: 120
+      duration: Design.motion.exit
       easing.type: Easing.InCubic
     }
     onFinished: preview.visible = false
@@ -462,12 +463,9 @@ Scope {
       }
     }
 
-    Rectangle {
+    PanelSurface {
       anchors.fill: parent
-      radius: 26
-      color: popup.controller.controlBackground
-      border.width: 1
-      border.color: popup.controller.controlBorder
+      controller: popup.controller
     }
 
     Flickable {
@@ -505,7 +503,7 @@ Scope {
             Label {
               width: parent.width
               text: Qt.formatDate(popup.today, "d MMMM yyyy")
-              font.pixelSize: 16
+              font.pixelSize: Design.typography.heading
               color: popup.controller.controlPrimaryText
             }
           }

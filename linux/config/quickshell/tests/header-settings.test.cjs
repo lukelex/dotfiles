@@ -7,8 +7,14 @@ const read = name => fs.readFileSync(path.resolve(__dirname, '..', name), 'utf8'
 
 test('settings gear matches notification header sizing and supplies tooltip/accessibility', () => {
   const source = read('HeaderSettingsButton.qml');
-  assert.match(source, /width: 32\s+height: 32/);
-  assert.match(source, /width: 16\s+height: 16/);
+  const Design = vm.createContext({});
+  vm.runInContext(read('DesignTokens.js').replace(/^\.pragma library\s*/, ''), Design);
+  const sizes = [...source.matchAll(/width: ([^\n]+)\s+height: ([^\n]+)/g)]
+    .map(([, width, height]) => [
+      vm.runInNewContext(width, { Design }),
+      vm.runInNewContext(height, { Design }),
+    ]);
+  assert.deepEqual(sizes, [[32, 32], [16, 16]]);
   assert.match(source, /Accessible.name: description/);
   assert.match(source, /Controls.ToolTip/);
   assert.match(source, /source: button.controller.icon\("settings"\)/);
