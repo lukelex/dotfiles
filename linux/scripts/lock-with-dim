@@ -1,0 +1,33 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+dotfiles="$HOME/dotfiles"
+lock_brightness=$(python3 "$dotfiles/linux/config/system-settings/settings.py" get display.lockBrightness 2> /dev/null || printf '5')
+lock_brightness=${lock_brightness//[^0-9]/}
+if [[ ! $lock_brightness =~ ^[0-9]+$ ]] || (( lock_brightness > 100 )); then
+  lock_brightness=5
+fi
+
+backlight_was_dimmed=0
+backlight_before_lock=
+if command -v light > /dev/null 2>&1; then
+  backlight_before_lock=$(light -G 2> /dev/null | cut -f1 -d . || true)
+  if [[ $backlight_before_lock =~ ^[0-9]+$ ]] && (( backlight_before_lock > lock_brightness )); then
+    backlight_was_dimmed=1
+    light -S "$lock_brightness" 2> /dev/null || backlight_was_dimmed=0
+  fi
+fi
+
+restore_backlight() {
+  (( backlight_was_dimmed )) || return 0
+  local step value
+  for step in {1..15}; do
+    value=$(( lock_brightness + (backlight_before_lock - lock_brightness) * step / 15 ))
+    light -S "$value" 2> /dev/null || return 0
+    sleep 0.1
+  done
+}
+trap restore_backlight EXIT
+
+"$@"

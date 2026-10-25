@@ -57,6 +57,7 @@ FIELDS = [
   ("display.latitude", "Sunrise/sunset latitude", "number", [-90, 90], ""),
   ("display.longitude", "Sunrise/sunset longitude", "number", [-180, 180], ""),
   ("display.brightnessStep", "Brightness key step (%)", "number", [1, 25], ""),
+  ("display.lockBrightness", "Lock-screen brightness (%)", "number", [0, 100], ""),
   ("display.osdDurationMs", "On-screen indicator duration (ms)", "number", [500, 10000], ""),
   ("idle.dimSeconds", "Dim after (seconds; 0 disables)", "number", [0, 86400], "wayland"),
   ("idle.lockSeconds", "Lock after (seconds)", "number", [60, 86400], "wayland"),

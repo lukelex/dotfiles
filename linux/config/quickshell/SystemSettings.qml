@@ -1251,7 +1251,7 @@ FloatingWindow {
               display: [
                 { title: "Color temperature", icon: "moon", keys: ["display.dayTemperature", "display.nightTemperature"] },
                 { title: "Sunrise & sunset", icon: "globe", keys: ["display.latitude", "display.longitude"] },
-                { title: "Brightness controls", icon: "sun", keys: ["display.linkBrightness", "display.brightnessStep"] },
+                { title: "Brightness controls", icon: "sun", keys: ["display.linkBrightness", "display.brightnessStep", "display.lockBrightness"] },
                 { title: "On-screen indicators", icon: "monitor", keys: ["display.osdDurationMs"] }
               ],
               wallpaper: [

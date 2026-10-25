@@ -47,6 +47,7 @@
     "latitude": 55.6761,
     "longitude": 12.5683,
     "brightnessStep": 5,
+    "lockBrightness": 5,
     "osdDurationMs": 1500
   },
   "idle": {

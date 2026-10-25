@@ -21,6 +21,10 @@ while getopts ":i:a:d:" opt; do
   esac
 done
 
+lock_with_dim() {
+  "$SCRIPT_DIR/lock-with-dim" "$@"
+}
+
 if [[ -z "$arg_image" ]]; then
   if [[ -r "$DEFAULT_IMAGE" ]]; then
     arg_image=$DEFAULT_IMAGE
@@ -34,7 +38,7 @@ if (( ${#lock_args[@]} == 0 )); then
 fi
 
 lock_black() {
-  i3lock --color 000000 "${lock_args[@]}"
+  lock_with_dim i3lock --color 000000 "${lock_args[@]}"
   play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
 }
 
@@ -91,7 +95,7 @@ if output_img=$(build_image); then
   if [[ "$dry_run" == true ]]; then
     exit 0
   fi
-  i3lock --image "$output_img" "${lock_args[@]}"
+  lock_with_dim i3lock --image "$output_img" "${lock_args[@]}"
   play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
   exit 0
 fi
