@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-set -Eeuo pipefail
+# Brightness control is best-effort: failures must never prevent the locker
+# from starting. Keep unset-variable checking, but do not enable errexit.
+set -u
 
 dotfiles="$HOME/dotfiles"
 lock_brightness=$(python3 "$dotfiles/linux/config/system-settings/settings.py" get display.lockBrightness 2> /dev/null || printf '5')
