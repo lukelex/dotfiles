@@ -18,6 +18,15 @@
       },
     },
   },
+  "providers": {
+    "github-copilot": {
+      "models": {
+        "gpt-6-astra": {
+          "disabled": true,
+        },
+      },
+    },
+  },
   "mcp": {
     "servers": {
       "linear": {
