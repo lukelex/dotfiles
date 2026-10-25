@@ -11,6 +11,7 @@ fi
 
 backlight_was_dimmed=0
 backlight_before_lock=
+external_brightness=()
 if command -v light > /dev/null 2>&1; then
   backlight_before_lock=$(light -G 2> /dev/null | cut -f1 -d . || true)
   if [[ $backlight_before_lock =~ ^[0-9]+$ ]] && (( backlight_before_lock > lock_brightness )); then
@@ -19,12 +20,37 @@ if command -v light > /dev/null 2>&1; then
   fi
 fi
 
+# Keep a separate starting value for each DDC/CI display; the aggregate monitor
+# brightness interface only reports an average, which is not enough to restore
+# displays that began at different levels.
+if command -v ddcutil > /dev/null 2>&1; then
+  while IFS= read -r bus_path; do
+    [[ $bus_path =~ /dev/i2c-([0-9]+) ]] || continue
+    bus=${BASH_REMATCH[1]}
+    current=$(ddcutil --bus="$bus" getvcp 10 2> /dev/null \
+      | grep -oP 'current\s+value\s*=\s*\K\d+' | head -n 1 || true)
+    if [[ $current =~ ^[0-9]+$ ]] && (( current > lock_brightness )); then
+      if ddcutil --bus="$bus" setvcp 10 "$lock_brightness" > /dev/null 2>&1; then
+        external_brightness+=("$bus:$current")
+      fi
+    fi
+  done < <("$dotfiles/linux/scripts/monitors" brightness list 2> /dev/null || true)
+fi
+
 restore_backlight() {
-  (( backlight_was_dimmed )) || return 0
-  local step value
+  local step value entry bus original
+  (( backlight_was_dimmed )) || (( ${#external_brightness[@]} > 0 )) || return 0
   for step in {1..15}; do
-    value=$(( lock_brightness + (backlight_before_lock - lock_brightness) * step / 15 ))
-    light -S "$value" 2> /dev/null || return 0
+    if (( backlight_was_dimmed )); then
+      value=$(( lock_brightness + (backlight_before_lock - lock_brightness) * step / 15 ))
+      light -S "$value" 2> /dev/null || true
+    fi
+    for entry in "${external_brightness[@]}"; do
+      bus=${entry%%:*}
+      original=${entry#*:}
+      value=$(( lock_brightness + (original - lock_brightness) * step / 15 ))
+      ddcutil --bus="$bus" setvcp 10 "$value" > /dev/null 2>&1 || true
+    done
     sleep 0.1
   done
 }
