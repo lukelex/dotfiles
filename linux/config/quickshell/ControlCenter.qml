@@ -160,8 +160,15 @@ PopupWindow {
     required property string toggleIcon
     required property bool toggleActive
     property bool busy: false
+    property bool dragging: false
+    property real previewValue: value
     signal valueChangedByUser(real value)
     signal toggleRequested()
+
+    onValueChanged: {
+      if (!dragging)
+        previewValue = value
+    }
 
     height: 72
     opacity: enabled ? 1 : 0.55
@@ -220,7 +227,7 @@ PopupWindow {
         color: slider.controller.controlSliderFill
         height: parent.height
         radius: parent.radius
-        width: parent.width * Math.max(0, Math.min(100, slider.value)) / 100
+        width: parent.width * Math.max(0, Math.min(100, slider.previewValue)) / 100
       }
 
       MouseArea {
@@ -231,10 +238,19 @@ PopupWindow {
         enabled: !slider.busy
         onPositionChanged: function(mouse) {
           if (pressed)
-            slider.valueChangedByUser(Math.max(0, Math.min(100, mouse.x / width * 100)))
+            slider.previewValue = Math.max(0, Math.min(100, mouse.x / width * 100))
         }
         onPressed: function(mouse) {
-          slider.valueChangedByUser(Math.max(0, Math.min(100, mouse.x / width * 100)))
+          slider.dragging = true
+          slider.previewValue = Math.max(0, Math.min(100, mouse.x / width * 100))
+        }
+        onReleased: {
+          slider.dragging = false
+          slider.valueChangedByUser(Math.round(slider.previewValue))
+        }
+        onCanceled: {
+          slider.dragging = false
+          slider.previewValue = slider.value
         }
       }
     }
@@ -251,7 +267,7 @@ PopupWindow {
       color: slider.controller.controlSecondaryText
       font.family: slider.controller.fontFamily
       font.pixelSize: 11
-      text: Math.round(slider.value) + "%"
+      text: Math.round(slider.previewValue) + "%"
       width: 44
       horizontalAlignment: Text.AlignRight
     }

@@ -57,6 +57,14 @@ test('brightness slider shows a spinner while the DDC command is running', () =>
   assert.match(source, /running: spinner\.visible/);
 });
 
+test('brightness slider previews its percentage while dragging and applies on release', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
+  assert.match(source, /property real previewValue: value/);
+  assert.match(source, /text: Math\.round\(slider\.previewValue\) \+ "%"/);
+  assert.match(source, /onPositionChanged: function\(mouse\)[^]*?slider\.previewValue =/);
+  assert.match(source, /onReleased: \{[^]*?slider\.valueChangedByUser\(Math\.round\(slider\.previewValue\)\)/);
+});
+
 test('sensor temperature selection only accepts matching chips with usable readings', () => {
   const sensorTemperature = loadFunction('Bar.qml', 'sensorTemperature', {});
   const sensors = {
