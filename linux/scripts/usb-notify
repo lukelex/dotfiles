@@ -10,6 +10,79 @@ devtype=""
 model=""
 vendor=""
 interfaces=""
+batch_started=0
+batch_updated=0
+now=0
+partial_line=""
+declare -a batch_actions=() batch_names=() batch_icons=() batch_tags=()
+
+clock_ms() {
+  local timestamp="${EPOCHREALTIME/./}"
+  now=$((10#$timestamp / 1000))
+}
+
+flush_batch() {
+  local count=${#batch_actions[@]}
+  ((count > 0)) || return 0
+
+  local summary body icon tag connected=0 disconnected=0 i
+  icon="${batch_icons[0]}"
+  tag="${batch_tags[0]}"
+  body="${batch_names[0]}"
+  if ((count == 1)); then
+    if [ "${batch_actions[0]}" = add ]; then
+      summary="USB device connected"
+    else
+      summary="USB device disconnected"
+    fi
+  else
+    body=""
+    icon="usb"
+    tag="usb-batch"
+    for ((i = 0; i < count; i++)); do
+      if [ "${batch_actions[i]}" = add ]; then
+        connected=$((connected + 1))
+      else
+        disconnected=$((disconnected + 1))
+      fi
+      if ((i < 5)); then
+        body+="${body:+$'\n'}${batch_names[i]}"
+        if [ "${batch_actions[i]}" = add ]; then
+          body+=" (connected)"
+        else
+          body+=" (disconnected)"
+        fi
+      fi
+    done
+    if ((disconnected == 0)); then
+      summary="$connected USB devices connected"
+    elif ((connected == 0)); then
+      summary="$disconnected USB devices disconnected"
+      icon="unplug"
+    else
+      summary="USB: $connected connected, $disconnected disconnected"
+    fi
+    if ((count > 5)); then
+      body+=$'\n'"… and $((count - 5)) more"
+    fi
+  fi
+
+  notify-send -a "USB connections" \
+    -i "$LUCIDE_PATH/$icon.svg" \
+    -h "string:wired-tag:$tag" \
+    -u low \
+    -t 5000 \
+    "$summary" "$body" || true
+  batch_actions=() batch_names=() batch_icons=() batch_tags=()
+}
+
+flush_due() {
+  ((${#batch_actions[@]} > 0)) || return 0
+  clock_ms
+  if ((now - batch_updated >= 1000 || now - batch_started >= 3000)); then
+    flush_batch
+  fi
+}
 
 reset_event() {
   action=""
@@ -29,7 +102,7 @@ notify_event() {
     return 0
   fi
 
-  local name icon summary tag type
+  local name icon tag type
   model="${model//_/ }"
   vendor="${vendor//_/ }"
   name="${vendor:+$vendor }${model:-USB device}"
@@ -37,10 +110,8 @@ notify_event() {
 
   if [ "$action" = add ]; then
     icon="usb"
-    summary="USB device connected"
   else
     icon="unplug"
-    summary="USB device disconnected"
   fi
 
   # Use USB interface classes, not model-name guesses. Combined keyboard/mouse
@@ -58,17 +129,36 @@ notify_event() {
   esac
 
   printf 'usb-notify: %s %s\n' "$action" "$name" >&2
-  notify-send -a "USB connections" \
-    -i "$LUCIDE_PATH/$icon.svg" \
-    -h "string:wired-tag:$tag" \
-    -u low \
-    -t 5000 \
-    "$summary" "${type:+$type: }$name" || true
+  flush_due
+  clock_ms
+  if ((${#batch_actions[@]} == 0)); then
+    batch_started=$now
+  fi
+  batch_updated=$now
+  batch_actions+=("$action")
+  batch_names+=("${type:+$type: }$name")
+  batch_icons+=("$icon")
+  batch_tags+=("$tag")
 }
 
 # udevadm writes to a pipe here, so force line buffering for prompt notifications.
 stdbuf --output=L udevadm monitor --udev --property --subsystem-match=usb |
-  while IFS= read -r line; do
+  while true; do
+    # Wake while udev is idle too, so the last event in a burst gets delivered.
+    if IFS= read -r -t 0.2 line; then
+      line="$partial_line$line"
+      partial_line=""
+    else
+      status=$?
+      if ((status > 128)); then
+        partial_line+="$line"
+        flush_due
+        continue
+      fi
+      notify_event
+      flush_batch
+      break
+    fi
     case "$line" in
       "UDEV "*)
         notify_event
@@ -87,4 +177,5 @@ stdbuf --output=L udevadm monitor --udev --property --subsystem-match=usb |
         reset_event
         ;;
     esac
+    flush_due
   done
