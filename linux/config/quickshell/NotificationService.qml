@@ -1141,6 +1141,17 @@ QtObject {
   }
 
   function setHovered(id, enabled) {
+    if (service.hovered[id] && !enabled && service.live[id] && service.liveDeadlines[id] > 0) {
+      const notification = service.live[id]
+      const duration = notification.expireTimeout > 0
+        ? notification.expireTimeout : service.popupDurationSeconds > 0
+          ? service.popupDurationSeconds * 1000 : 5000
+      const deadline = Date.now() + Math.min(5000, duration)
+      service.liveDeadlines[id] = deadline
+      const record = service.history.find(entry => entry.id === id)
+      if (record)
+        record.expiresAt = deadline
+    }
     service.hovered[id] = enabled
   }
 

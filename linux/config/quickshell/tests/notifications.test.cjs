@@ -49,7 +49,7 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
     historyGroupTimer: { start() {} }, popupUpdateTimer: { start() {} },
     Qt: { callLater: callback => callback() }, NotificationUrgency: { Critical: 2, Low: 0 },
   });
-  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissRecord', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation', 'restoredId', 'newHistoryId', 'loadInitial', 'handleNotification', 'buildRecord', 'bluetoothConnectedBody', 'buildActions', 'isBrowserIcon', 'displayBody', 'isSystemOsd', 'addHistory', 'isGithubReview', 'isGithubReviewSeen']) {
+  for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissRecord', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation', 'restoredId', 'newHistoryId', 'loadInitial', 'handleNotification', 'buildRecord', 'bluetoothConnectedBody', 'buildActions', 'isBrowserIcon', 'displayBody', 'isSystemOsd', 'addHistory', 'isGithubReview', 'setHovered', 'setRecordsHovered', 'isGithubReviewSeen']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
     assert.ok(match, `Missing QML function ${name}`);
     const functionSource = name === 'bluetoothConnectedBody' ? match[0].replace('): string', ')') : match[0];
@@ -587,6 +587,77 @@ test('expiry covers hidden and trimmed notifications while preserving hover and 
   service.expireDue();
   assert.deepEqual(expired, [1, 2, 4]);
   assert.deepEqual(Object.keys(service.liveDeadlines), ['3']);
+});
+
+test('leaving a hovered live popup gives timed notifications five fresh seconds', () => {
+  const { service } = serviceForTest();
+  const item = { ...record(1), expiresAt: Date.now() - 1000 };
+  const expired = [];
+  service.history = [item];
+  service.live[1] = { expire: () => expired.push(1) };
+  service.liveDeadlines[1] = item.expiresAt;
+  service.setRecordsHovered([item], true);
+  service.now = Date.now();
+  service.expireDue();
+  assert.deepEqual(expired, []);
+
+  const leftAt = Date.now();
+  service.setRecordsHovered([item], false);
+  assert.ok(service.liveDeadlines[1] >= leftAt + 5000);
+  assert.ok(service.liveDeadlines[1] <= Date.now() + 5000);
+  assert.equal(item.expiresAt, service.liveDeadlines[1]);
+  service.syncPopup();
+  assert.deepEqual(Array.from(service.popup, entry => entry.id), [1]);
+  service.now = service.liveDeadlines[1] - 1;
+  service.expireDue();
+  assert.deepEqual(expired, []);
+
+  service.setHovered(1, true);
+  service.now = service.liveDeadlines[1] + 1;
+  service.expireDue();
+  assert.deepEqual(expired, []);
+  service.setHovered(1, false);
+  service.now = service.liveDeadlines[1];
+  service.expireDue();
+  assert.deepEqual(expired, [1]);
+});
+
+test('hover exit does not create deadlines for persistent or closed notifications', () => {
+  const { service } = serviceForTest();
+  const persistent = { ...record(1), expiresAt: 0 };
+  service.history = [persistent];
+  service.live[1] = { expire: () => assert.fail('persistent notification expired') };
+  service.liveDeadlines[1] = 0;
+  service.setHovered(1, true);
+  service.setHovered(1, false);
+  assert.equal(service.liveDeadlines[1], 0);
+  assert.equal(persistent.expiresAt, 0);
+
+  service.setHovered(1, true);
+  service.releaseLive(1, service.live[1]);
+  service.setHovered(1, false);
+  assert.equal(service.liveDeadlines[1], undefined);
+});
+
+test('hover exit respects sender timeouts shorter than five seconds', () => {
+  const { service } = serviceForTest();
+  const item = { ...record(1), expiresAt: Date.now() + 1000 };
+  service.history = [item];
+  service.live[1] = { expireTimeout: 1000, expire() {} };
+  service.liveDeadlines[1] = item.expiresAt;
+  service.setHovered(1, true);
+  const leftAt = Date.now();
+  service.setHovered(1, false);
+  assert.ok(item.expiresAt >= leftAt + 1000);
+  assert.ok(item.expiresAt <= Date.now() + 1000);
+
+  service.live[1].expireTimeout = -1;
+  service.popupDurationSeconds = 2;
+  service.setHovered(1, true);
+  const leftAgainAt = Date.now();
+  service.setHovered(1, false);
+  assert.ok(item.expiresAt >= leftAgainAt + 2000);
+  assert.ok(item.expiresAt <= Date.now() + 2000);
 });
 
 test('DND suppression survives reconciliation and does not dismiss native actions or OSDs', () => {
