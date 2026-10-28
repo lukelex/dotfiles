@@ -65,6 +65,10 @@
         "type": "remote",
         "url": "https://mcp.cloudflare.com/mcp"
       },
+      "datadog": {
+        "type": "remote",
+        "url": "https://mcp.datadoghq.eu/v1/mcp"
+      },
       "github": {
         "type": "remote",
         "url": "https://api.githubcopilot.com/mcp/",
