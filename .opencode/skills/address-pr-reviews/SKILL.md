@@ -17,3 +17,11 @@ When asked to handle review feedback on a pull request:
 8. Summarize what was changed, which feedback was intentionally left unaddressed and why, validation performed, and any comments that could not be resolved/replied to.
 
 Never post a reply or resolve a thread until the corresponding work/status is confirmed. Treat GitHub actions that publish comments or resolve threads as external side effects, and perform them only for feedback actually addressed as requested.
+
+## Long-running reviews and timeouts
+
+- Work in checkpoints: fetch feedback, triage it, implement changes, validate, then publish replies or resolve threads. Keep progress visible when a step is long-running.
+- If a `/review` wait or other orchestration call times out, treat the outcome as **unknown**. A timeout does not mean the review failed, completed, or posted anything.
+- Inspect the existing session's status and output, then continue waiting for or resume that session if supported. Do not launch a duplicate review run while the original may still be active; this avoids duplicated edits and GitHub side effects.
+- Before any GitHub reply or thread resolution, verify the corresponding change/status and whether that action has already happened. Perform and verify external actions individually where possible.
+- If the session cannot be inspected or resumed, stop before unconfirmed external actions. Tell the user the review is incomplete, what was confirmed, and what remains; do not claim a review was posted or work succeeded without evidence.
