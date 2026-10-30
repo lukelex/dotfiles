@@ -15,6 +15,8 @@ Use this skill when the user provides a Linear ticket or GitHub pull request lin
 
 ## Workflow
 
+When clarification or a user decision is needed, use OpenCode's question UI (`question` tool) with concise, explicit options rather than asking an open-ended question in chat. Use an “Other”/free-form response for cases that do not fit the listed options. If the question UI is unavailable, ask in chat as a fallback.
+
 1. Identify whether the link is a Linear issue or GitHub PR. Retrieve its description and relevant discussion/review context. If the link is inaccessible or ambiguous, ask for the missing context rather than guessing.
 2. Before editing, ask the user whether the work should be done on the current branch or in a worktree. Then inspect `git status`, the current branch, and existing changes in the chosen working tree. For a PR, confirm the checkout/worktree is the relevant one; don't switch branches or overwrite unrelated user changes. If the requested choice would risk existing changes or the correct PR worktree is unavailable, explain the issue and ask how to proceed.
 3. Check whether the working branch contains commits or changes that are not on `main` (or the repository's designated base branch). If it does, show the user what is ahead and ask whether those commits/changes should be included in the PR or whether the PR should contain only work related to this ticket. Don't rebase, reset, cherry-pick, or otherwise alter that history until the user chooses. If the base branch is unclear, ask or follow the repository's documented default.
