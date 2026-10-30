@@ -10,7 +10,7 @@ Use this skill when the user provides a Linear ticket or GitHub pull request lin
 ## Guiding documents
 
 1. Read `~/dotfiles/docs/software-architecture-rules.md` before making design decisions. Apply its principles to code organization, responsibility boundaries, abstractions, failure behavior, and tests. Treat these as guiding principles, not a reason to expand scope.
-2. Read `~/dotfiles/docs/LUKAS_WRITING_STYLE.md` before drafting or editing any text on Linear or GitHub. Preserve the user's meaning and facts; write directly and concisely without inventing opinions, status, test results, or commitments.
+2. Load `@lukas-voice` before drafting or editing any text on Linear or GitHub. Preserve the user's meaning and facts; write directly and concisely without inventing opinions, status, test results, or commitments.
 3. Inspect the target repository's `AGENTS.md` and any more specific `AGENTS.md` files governing the files you will touch. Follow those instructions alongside the repository's existing conventions and validation guidance. If instructions conflict, honor the more specific applicable repository guidance and explain material conflicts.
 
 ## Workflow
@@ -23,7 +23,7 @@ When clarification or a user decision is needed, use OpenCode's question UI (`qu
 4. Read the guiding documents and repository instructions above. Explore the relevant code and tests, then translate the ticket/PR intent into a narrow, concrete change. Ask before making consequential assumptions or broadening scope.
 5. Implement the change in the repository's established style. Keep decisions with the component that has the necessary context, prefer clear domain-specific behavior over premature generalization, account for failure paths and operational effects, and test observable behavior where practical.
 6. Run relevant checks specified by repository instructions and the project. Inspect the final diff and status to ensure changes are limited to the requested work. Report checks that were not run or did not pass accurately.
-7. If the task requires writing or updating a Linear/GitHub description, comment, review, or other published text, apply the writing guide and verify every factual claim. Publishing is an external side effect: do it only when explicitly requested, and only after verifying the code/work status. Never imply a comment was posted, a thread resolved, or a ticket updated unless confirmed.
+7. If the task requires writing or updating a Linear/GitHub description, comment, review, or other published text, apply `@lukas-voice` and verify every factual claim. Publishing is an external side effect: do it only when explicitly requested, and only after verifying the code/work status. Never imply a comment was posted, a thread resolved, or a ticket updated unless confirmed.
 8. Summarize the change, validation, and any unresolved questions or limitations. Keep the summary concise and factual.
 
 ## Guardrails
