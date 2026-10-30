@@ -34,6 +34,8 @@ Post findings inline where supported: severity, short title, precise diff lines,
 
 Verify test findings against the cited standards and existing coverage before posting. For missing tests, anchor the finding to the changed production behavior; if no suitable inline location exists, include it in the review body. Calibrate severity to the importance of the uncovered behavior or unmet requirement, not simply the absence of test files. Concrete test-quality and coverage findings are allowed by the validation-summary ban below.
 
+Before submitting, check every inline comment that proposes an exact replacement. It must contain a fenced `suggestion` block with the replacement code, anchored to exactly the lines it replaces. Inline prose or a regular code block is not a substitute. If the replacement cannot be safely expressed as an applicable suggestion, explain why and use a concise code example instead.
+
 Submit exactly one review with a brief summary: request changes for any Major or Medium finding; otherwise approve. Post it, don't just draft it. If PR identification, GitHub access, or submission fails, explain the blocker without claiming success.
 
 ## Voice
