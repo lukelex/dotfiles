@@ -103,7 +103,7 @@ def random_wallpaper(folder):
   folder = local_path(folder)
   if not folder.is_dir():
     raise ValueError('Wallpaper folder does not exist: ' + str(folder))
-  images = sorted(p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in EXTENSIONS)
+  images = sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in EXTENSIONS)
   if not images:
     raise ValueError('No supported images in wallpaper folder')
   size = screen_size()

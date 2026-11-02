@@ -105,7 +105,8 @@ after reconnects. Device IDs remain runtime-only. Without Quickshell, run
   folder, apply a random image now, restore the saved image, and select random or
   restore behavior at login. `wallpaper.py` and `u_wallpaper` share `~/wallpaper.png`
   and the existing xwallpaper/awww backends. Random selection ignores non-image
-  extensions and prefers images at least as large as the focused Wayland or
+  extensions, searches nested folders recursively, and prefers images at least
+  as large as the focused Wayland or
   primary X11 display with a similar aspect ratio. If none match or the display
   size is unavailable, it picks from all supported images; failures appear
   inline. Editing login preferences does not replace the live wallpaper.

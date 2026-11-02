@@ -36,9 +36,10 @@ fi
 test('wallpaper folder choices ignore non-images and startup restore uses the saved wallpaper', t => {
   const f = fixture(t);
   const folder = path.join(f.root, 'images with spaces');
-  fs.mkdirSync(folder);
-  fs.writeFileSync(path.join(folder, 'one.jpg'), 'image bytes');
-  fs.writeFileSync(path.join(folder, 'notes.txt'), 'not an image');
+  const nested = path.join(folder, 'landscapes', 'favorites', '2026');
+  fs.mkdirSync(nested, { recursive: true });
+  fs.writeFileSync(path.join(nested, 'one.jpg'), 'image bytes');
+  fs.writeFileSync(path.join(nested, 'notes.txt'), 'not an image');
   f.data.wallpaper.folder = '~/images with spaces';
   f.save();
   assert.equal(f.run('wallpaper.py', 'startup').status, 0);
@@ -65,7 +66,10 @@ test('random wallpaper prefers images large enough and close to the active displ
   const f = fixture(t);
   const folder = path.join(f.root, 'images');
   fs.mkdirSync(folder);
-  for (const name of ['wide.jpg', 'small.jpg', 'tall.jpg', 'notes.txt']) {
+  const nested = path.join(folder, 'landscapes', 'ultrawide');
+  fs.mkdirSync(nested, { recursive: true });
+  fs.writeFileSync(path.join(nested, 'wide.jpg'), 'wide.jpg');
+  for (const name of ['small.jpg', 'tall.jpg', 'notes.txt']) {
     fs.writeFileSync(path.join(folder, name), name);
   }
   fs.writeFileSync(path.join(f.root, 'bin/hyprctl'), `#!/bin/sh
@@ -81,7 +85,7 @@ esac
   f.env.XDG_SESSION_TYPE = 'wayland';
   assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
   assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'wide.jpg');
-  fs.unlinkSync(path.join(folder, 'wide.jpg'));
+  fs.unlinkSync(path.join(nested, 'wide.jpg'));
   fs.unlinkSync(path.join(folder, 'small.jpg'));
   assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
   assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'tall.jpg', 'falls back to all images');
