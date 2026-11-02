@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Wallpaper actions sharing the existing ~/wallpaper.png and native backends."""
 import argparse
+import errno
+import filecmp
 import json
 import os
 from pathlib import Path
@@ -36,7 +38,7 @@ def restore():
     run('xwallpaper', '--zoom', str(path))
 
 
-def choose(path):
+def choose(path, skip_current=False):
   path = local_path(str(path))
   if not path.is_file() or path.suffix.lower() not in EXTENSIONS:
     raise ValueError('Choose a supported image file')
@@ -46,6 +48,8 @@ def choose(path):
   backup = None
   try:
     shutil.copyfile(path, name)
+    if skip_current and destination.is_file() and filecmp.cmp(name, destination, shallow=False):
+      return False
     if destination.is_file():
       fd, backup = tempfile.mkstemp(prefix='.wallpaper-backup-', dir=Path.home())
       os.close(fd)
@@ -59,6 +63,7 @@ def choose(path):
       else:
         destination.unlink(missing_ok=True)
       raise
+    return True
   finally:
     Path(name).unlink(missing_ok=True)
     if backup:
@@ -83,19 +88,49 @@ def screen_size():
 
 
 def suitable_images(images, width, height):
+  def fits(image_width, image_height):
+    # Allow a little cropping, but avoid upscaling or losing much of the image.
+    return (image_width >= width and image_height >= height and image_width and image_height
+            and min(image_width * height, image_height * width) / max(image_width * height, image_height * width) >= 0.85)
+
   suitable = []
-  for image in images:
+  # Bound command-line length for large wallpaper collections.
+  for offset in range(0, len(images), 128):
+    batch = images[offset:offset + 128]
+    by_name = {str(image): image for image in batch if '\n' not in str(image)}
     try:
-      dimensions = subprocess.check_output(
-        ['magick', 'identify', '-ping', '-format', '%w %h', str(image) + '[0]'],
-        text=True, stderr=subprocess.DEVNULL)
-      image_width, image_height = map(int, dimensions.split())
-      # Allow a little cropping, but avoid upscaling or losing much of the image.
-      if (image_width >= width and image_height >= height
-          and min(image_width * height, image_height * width) / max(image_width * height, image_height * width) >= 0.85):
-        suitable.append(image)
-    except (OSError, subprocess.CalledProcessError, ValueError, ZeroDivisionError):
+      result = subprocess.run(
+        ['magick', 'identify', '-ping', '-format', '%i\t%w %h\n',
+         *(name + '[0]' for name in by_name)],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    except OSError:
       continue
+    # ImageMagick can report a bad image while still returning dimensions for
+    # the other files in the batch. Match by name rather than output position.
+    for line in result.stdout.splitlines():
+      name, separator, dimensions = line.rpartition('\t')
+      if not separator or name not in by_name:
+        continue
+      try:
+        image_width, image_height = map(int, dimensions.split())
+      except ValueError:
+        continue
+      if fits(image_width, image_height):
+        suitable.append(by_name[name])
+    # Newlines in filenames cannot be unambiguously parsed from identify's
+    # line-oriented output; inspect those rare images separately.
+    for image in batch:
+      if '\n' not in str(image):
+        continue
+      try:
+        dimensions = subprocess.check_output(
+          ['magick', 'identify', '-ping', '-format', '%w %h', str(image) + '[0]'],
+          text=True, stderr=subprocess.DEVNULL)
+        image_width, image_height = map(int, dimensions.split())
+        if fits(image_width, image_height):
+          suitable.append(image)
+      except (OSError, subprocess.CalledProcessError, ValueError, ZeroDivisionError):
+        continue
   return suitable
 
 
@@ -108,7 +143,25 @@ def random_wallpaper(folder):
     raise ValueError('No supported images in wallpaper folder')
   size = screen_size()
   matching = suitable_images(images, *size) if size and all(size) else []
-  choose(random.choice(matching or images))
+  candidates = list(matching)
+  random.shuffle(candidates)
+  remaining = [image for image in images if image not in matching]
+  random.shuffle(remaining)
+  candidates.extend(remaining)
+  last_error = None
+  for image in candidates:
+    try:
+      if choose(image, skip_current=True):
+        return
+    except OSError as error:
+      # SeaDrive can expose an image's header but fail while reading the full
+      # file. Try another candidate, without hiding local write/backend errors.
+      if error.errno != errno.EIO or error.filename != str(image):
+        raise
+      last_error = error
+  if last_error:
+    raise last_error
+  raise ValueError('No different wallpaper found in wallpaper folder')
 
 
 def main():

@@ -108,7 +108,9 @@ after reconnects. Device IDs remain runtime-only. Without Quickshell, run
   extensions, searches nested folders recursively, and prefers images at least
   as large as the focused Wayland or
   primary X11 display with a similar aspect ratio. If none match or the display
-  size is unavailable, it picks from all supported images; failures appear
+  size is unavailable, it picks from all supported images. Random selection
+  never reapplies the saved image, even if another file has identical contents;
+  it reports an error if no different image is available. Failures appear
   inline. Editing login preferences does not replace the live wallpaper.
   Folder paths under your home are stored with `~` so they
   remain portable. Images themselves are not copied into the repository.
