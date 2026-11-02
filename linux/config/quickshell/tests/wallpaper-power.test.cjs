@@ -61,6 +61,56 @@ test('wallpaper file picker URLs decode safely and Wayland uses the existing nat
   assert.notEqual(f.run('wallpaper.py', 'choose', 'file://remote/photo.png').status, 0);
 });
 
+test('random wallpaper prefers images large enough and close to the active display aspect ratio', t => {
+  const f = fixture(t);
+  const folder = path.join(f.root, 'images');
+  fs.mkdirSync(folder);
+  for (const name of ['wide.jpg', 'small.jpg', 'tall.jpg', 'notes.txt']) {
+    fs.writeFileSync(path.join(folder, name), name);
+  }
+  fs.writeFileSync(path.join(f.root, 'bin/hyprctl'), `#!/bin/sh
+echo '[{"width":1920,"height":1080,"focused":false},{"width":3440,"height":1440,"focused":true}]'
+`, { mode: 0o755 });
+  fs.writeFileSync(path.join(f.root, 'bin/magick'), `#!/bin/sh
+case "$5" in
+  */wide.jpg\\[0\\]) echo '3840 1600' ;;
+  */small.jpg\\[0\\]) echo '1920 800' ;;
+  */tall.jpg\\[0\\]) echo '3840 2160' ;;
+esac
+`, { mode: 0o755 });
+  f.env.XDG_SESSION_TYPE = 'wayland';
+  assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
+  assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'wide.jpg');
+  fs.unlinkSync(path.join(folder, 'wide.jpg'));
+  fs.unlinkSync(path.join(folder, 'small.jpg'));
+  assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
+  assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'tall.jpg', 'falls back to all images');
+});
+
+test('random wallpaper uses the primary X11 monitor and falls back if resolution is unavailable', t => {
+  const f = fixture(t);
+  const folder = path.join(f.root, 'images');
+  fs.mkdirSync(folder);
+  fs.writeFileSync(path.join(folder, 'wide.jpg'), 'wide');
+  fs.writeFileSync(path.join(folder, 'normal.jpg'), 'normal');
+  fs.writeFileSync(path.join(f.root, 'bin/xrandr'), `#!/bin/sh
+echo 'HDMI-1 connected 3440x1440+0+0'
+echo 'eDP-1 connected primary 1920x1080+3440+0'
+`, { mode: 0o755 });
+  fs.writeFileSync(path.join(f.root, 'bin/magick'), `#!/bin/sh
+case "$5" in
+  */wide.jpg\\[0\\]) echo '3840 1600' ;;
+  */normal.jpg\\[0\\]) echo '2560 1440' ;;
+esac
+`, { mode: 0o755 });
+  assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
+  assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'normal');
+  fs.unlinkSync(path.join(f.root, 'bin/xrandr'));
+  fs.unlinkSync(path.join(folder, 'wide.jpg'));
+  assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
+  assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'normal');
+});
+
 test('battery preferences suppress individual levels and retain once-per-episode markers', t => {
   const f = fixture(t);
   f.data.power = { lowWarningEnabled: true, lowThreshold: 25, criticalWarningEnabled: true,

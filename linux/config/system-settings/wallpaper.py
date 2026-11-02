@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Wallpaper actions sharing the existing ~/wallpaper.png and native backends."""
 import argparse
+import json
 import os
 from pathlib import Path
 import random
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
 from urllib.parse import unquote, urlparse
@@ -62,6 +65,40 @@ def choose(path):
       Path(backup).unlink(missing_ok=True)
 
 
+def screen_size():
+  try:
+    if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
+      monitors = json.loads(subprocess.check_output(['hyprctl', 'monitors', '-j'], text=True, stderr=subprocess.DEVNULL))
+      monitor = next((m for m in monitors if m.get('focused')), monitors[0])
+      return int(monitor['width']), int(monitor['height'])
+    output = subprocess.check_output(['xrandr', '--current'], text=True, stderr=subprocess.DEVNULL)
+    connected = [line for line in output.splitlines() if re.search(r'\bconnected\b', line) and ' disconnected' not in line]
+    line = next((line for line in connected if ' primary ' in line), connected[0])
+    size = re.search(r'\b(\d+)x(\d+)\+\d+\+\d+', line)
+    if size:
+      return int(size[1]), int(size[2])
+  except (OSError, subprocess.CalledProcessError, ValueError, IndexError, KeyError, TypeError):
+    pass
+  return None
+
+
+def suitable_images(images, width, height):
+  suitable = []
+  for image in images:
+    try:
+      dimensions = subprocess.check_output(
+        ['magick', 'identify', '-ping', '-format', '%w %h', str(image) + '[0]'],
+        text=True, stderr=subprocess.DEVNULL)
+      image_width, image_height = map(int, dimensions.split())
+      # Allow a little cropping, but avoid upscaling or losing much of the image.
+      if (image_width >= width and image_height >= height
+          and min(image_width * height, image_height * width) / max(image_width * height, image_height * width) >= 0.85):
+        suitable.append(image)
+    except (OSError, subprocess.CalledProcessError, ValueError, ZeroDivisionError):
+      continue
+  return suitable
+
+
 def random_wallpaper(folder):
   folder = local_path(folder)
   if not folder.is_dir():
@@ -69,7 +106,9 @@ def random_wallpaper(folder):
   images = sorted(p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in EXTENSIONS)
   if not images:
     raise ValueError('No supported images in wallpaper folder')
-  choose(random.choice(images))
+  size = screen_size()
+  matching = suitable_images(images, *size) if size and all(size) else []
+  choose(random.choice(matching or images))
 
 
 def main():
