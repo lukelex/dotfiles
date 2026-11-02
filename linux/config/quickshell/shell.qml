@@ -32,6 +32,7 @@ Scope {
     id: webcamService
   }
 
+  HeadsetService { id: headsets }
   OpenEffectsService { id: openEffects }
 
   Bar {
@@ -41,6 +42,7 @@ Scope {
     githubPrService: githubPrs
     audioService: audioService
     webcamService: webcamService
+    headsetService: headsets
     openEffectsService: openEffects
   }
 }

@@ -10,6 +10,7 @@ import Quickshell.Wayland
 import QtCore
 import QtQuick
 import "DesignTokens.js" as Design
+import QtQuick.Controls as Controls
 
 Scope {
   id: root
@@ -288,6 +289,7 @@ Scope {
   required property var notificationService
   required property var githubPrService
   required property var audioService
+  required property var headsetService
   required property var webcamService
   required property var openEffectsService
   readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
@@ -2067,6 +2069,66 @@ Scope {
             + (root.batteryTime ? ", " + root.batteryTime
               + (root.batteryState === "charging" ? " until full" : root.batteryState === "discharging" ? " remaining" : "") : "")
         }
+        Repeater {
+          model: root.headsetService.devices
+
+          delegate: Item {
+            id: headsetWidget
+            required property var modelData
+            readonly property string description: modelData.name + ": "
+              + (modelData.percentage === null ? "Battery percentage unavailable" : modelData.percentage + "%")
+              + (modelData.charging ? " · Charging" : modelData.percentage < 15 ? " · Battery low" : "")
+            height: root.barFontSize
+            width: headsetRow.width
+            Accessible.role: Accessible.StatusBar
+            Accessible.name: description
+
+            Row {
+              id: headsetRow
+              spacing: 4
+              LucideIcon {
+                width: root.barFontSize
+                height: root.barFontSize
+                source: root.icon("headphones")
+                color: headsetWidget.modelData.percentage < 15 && !headsetWidget.modelData.charging ? root.urgent : root.foreground
+              }
+              Text {
+                visible: headsetWidget.modelData.percentage !== null
+                text: headsetWidget.modelData.percentage === null ? "" : headsetWidget.modelData.percentage + "%"
+                font.family: root.fontFamily
+                font.pixelSize: root.barFontSize
+                color: root.foreground
+              }
+              LucideIcon {
+                visible: headsetWidget.modelData.charging
+                width: root.barFontSize
+                height: root.barFontSize
+                source: root.icon("battery-charging")
+                color: root.foreground
+              }
+            }
+            MouseArea {
+              id: headsetHover
+              anchors.fill: parent
+              hoverEnabled: true
+              acceptedButtons: Qt.NoButton
+            }
+            Controls.ToolTip {
+              visible: headsetHover.containsMouse
+              delay: 500
+              text: headsetWidget.description
+              contentItem: Text {
+                text: headsetWidget.description
+                textFormat: Text.PlainText
+                font.family: root.fontFamily
+                font.pixelSize: 11
+                color: root.controlPrimaryText
+              }
+              background: Rectangle { radius: 7; color: root.controlSurface; border.color: root.controlSurfaceBorder }
+            }
+          }
+        }
+
         Item {
           id: volumeWidget
 
