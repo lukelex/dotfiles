@@ -1,0 +1,37 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+# i3 disables fullscreen when hiding a scratchpad window. Keep the intent on
+# that window so it can be restored the next time it is shown.
+prefix=__dotfiles_scratch_fullscreen_
+focused_scratchpad() {
+  i3-msg -t get_tree | jq -r --arg prefix "$prefix" '
+    first(
+      .. | objects
+      | select(.scratchpad_state == "fresh" or .scratchpad_state == "changed")
+      | .. | objects | select(.focused == true)
+    ) // empty
+    | [.id, .fullscreen_mode, (any(.marks[]?; startswith($prefix)) | if . then 1 else 0 end)]
+    | @tsv
+  '
+}
+
+if state=$(focused_scratchpad) && [[ -n $state ]]; then
+  IFS=$'\t' read -r id fullscreen marked <<< "$state"
+  mark="${prefix}${id}"
+  if (( fullscreen > 0 )); then
+    i3-msg "[con_id=$id] mark --add $mark" >/dev/null
+  elif (( marked )); then
+    i3-msg "[con_id=$id] unmark $mark" >/dev/null
+  fi
+  i3-msg scratchpad show >/dev/null
+else
+  i3-msg scratchpad show >/dev/null
+  if state=$(focused_scratchpad) && [[ -n $state ]]; then
+    IFS=$'\t' read -r id _ marked <<< "$state"
+    if (( marked )); then
+      i3-msg "[con_id=$id] fullscreen enable" >/dev/null
+    fi
+  fi
+fi
