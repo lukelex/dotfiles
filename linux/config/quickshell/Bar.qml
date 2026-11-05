@@ -1138,6 +1138,10 @@ Scope {
 
     const onBattery = UPower.onBattery
     if (root.previousOnBattery !== null && root.previousOnBattery !== onBattery) {
+      if (!onBattery) {
+        root.notificationService.dismissTag("battery-low")
+        root.notificationService.dismissTag("battery-critical")
+      }
       powerNotification.command = [root.quickshellScripts + "/battery", "power",
         onBattery ? "unplugged" : "plugged", String(root.batteryPercentage), root.batteryState]
       powerNotification.running = true

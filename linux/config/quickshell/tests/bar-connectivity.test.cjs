@@ -38,9 +38,11 @@ test('power-source changes notify once per transition after the battery is ready
   assert.match(source, /function onOnBatteryChanged\(\) \{ root\.updatePowerSource\(\) \}/);
   assert.match(source, /function onReadyChanged\(\) \{ root\.updatePowerSource\(\); root\.checkBatteryWarnings\(\) \}/);
 
+  const dismissed = [];
   const root = {
     previousOnBattery: null, quickshellScripts: '/scripts', batteryState: 'discharging',
     batteryPercentage: 72,
+    notificationService: { dismissTag: tag => dismissed.push(tag) },
     updateBatteryStatus() { this.batteryAvailable = UPower.displayDevice.ready; },
   };
   const UPower = { onBattery: false, displayDevice: { ready: false, isPresent: true, percentage: 0.724 } };
@@ -53,9 +55,11 @@ test('power-source changes notify once per transition after the battery is ready
   UPower.displayDevice.ready = true;
   updatePowerSource();
   assert.equal(powerNotification.command, null);
+  assert.deepEqual(dismissed, []);
   UPower.onBattery = true;
   updatePowerSource();
   assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'unplugged', '72', 'discharging']);
+  assert.deepEqual(dismissed, []);
   assert.equal(batteryWarnings.running, true);
   powerNotification.running = false;
   updatePowerSource();
@@ -63,6 +67,10 @@ test('power-source changes notify once per transition after the battery is ready
   UPower.onBattery = false;
   updatePowerSource();
   assert.deepEqual(Array.from(powerNotification.command), ['/scripts/battery', 'power', 'plugged', '72', 'discharging']);
+  assert.deepEqual(dismissed, ['battery-low', 'battery-critical']);
+  dismissed.length = 0;
+  updatePowerSource();
+  assert.deepEqual(dismissed, []);
 });
 
 test('UPower battery changes update charge, state, health, and time without polling', () => {
