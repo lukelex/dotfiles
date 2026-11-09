@@ -22,7 +22,9 @@ from settings import atomic_write
 HERE = Path(__file__).resolve().parent
 STORE = Path(os.environ.get('DOTFILES_MONITOR_PROFILES', HERE / 'monitor-profiles.json'))
 SESSION = os.environ.get('XDG_SESSION_TYPE', 'x11')
-SESSION_KEY = hashlib.sha256((os.environ.get('HYPRLAND_INSTANCE_SIGNATURE', '') + os.environ.get('DISPLAY', '')).encode()).hexdigest()[:12]
+# XWayland's DISPLAY can be absent in clients of the same Hyprland session.
+SESSION_ID = os.environ.get('HYPRLAND_INSTANCE_SIGNATURE', '') if SESSION == 'wayland' else os.environ.get('DISPLAY', '')
+SESSION_KEY = hashlib.sha256(SESSION_ID.encode()).hexdigest()[:12]
 RUNTIME = Path(os.environ.get('XDG_RUNTIME_DIR', '/tmp')) / f'dotfiles-monitors-{os.getuid()}-{SESSION_KEY}'
 ROTATIONS = ['normal', 'left', 'inverted', 'right']
 TRANSFORMS = {'normal': 0, 'left': 1, 'inverted': 2, 'right': 3}
