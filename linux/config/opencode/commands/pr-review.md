@@ -1,8 +1,12 @@
 ---
-description: Run /review on the current GitHub PR and submit a review in Lukas's style
+description: Run /review on the current GitHub PR and submit a review with an optional Lukas voice
 ---
 
-Use `/review` to analyze the GitHub PR for this branch (or the supplied PR number/URL), then post one review in Lukas's style. $ARGUMENTS
+Use `/review` to analyze the GitHub PR for this branch (or the supplied PR number/URL), then post one review. $ARGUMENTS
+
+## Choose voice
+
+Before loading review skills or delegating, use the question tool to ask: "Should this review use @lukas-voice?" Offer "Yes" and "No" and wait for the answer. If yes, load `@lukas-voice` and apply it to review comments and user-facing summaries. If no, do not load or apply it; use concise, neutral review wording and skip the optional approval praise below. This choice overrides any instruction in `@lukas-review-guidelines` to load or follow `@lukas-voice`. Include the choice and this override in the delegated review context so the reviewer respects it without asking again.
 
 ## Prepare context
 
@@ -14,8 +18,8 @@ Load `@lukas-review-guidelines` and follow its architecture, repository guidance
 
 Use `opencode api` with its configured authentication; JSON-encode payloads instead of interpolating PR text into shell commands. Execute sequentially:
 
-1. `post /api/session --data <JSON>` with `{"title":"lukas-review: PR analysis","location":{"directory":"<absolute repository directory>","model":{"providerID":"<current provider ID>","model":"<current model ID>"}}}`. Read `data.id` as `<id>`. Use the model powering this `/lukas-review` invocation, not OpenCode's configured default; API-created sessions otherwise don't inherit the current model. If its exact provider and model IDs aren't available, stop and explain the blocker rather than guessing. Include the current agent if known, using the documented API shape; don't guess or auto-approve permissions.
-2. `post /api/session/<id>/command --data <JSON>` with `{"name":"review","text":"<PR URL and analysis instructions>"}`. Include the prepared context and discovered testing standards, and instruct the reviewer to load `@lukas-review-guidelines` and apply its complete test-scrutiny criteria. Require review of the full PR at the captured commits, not uncommitted changes, and an internal assessment of test coverage, including the rationale when no new tests are needed. Ask for findings with diff locations, consequences, and proposed fixes, or "Looks good to me." Require analysis only: no GitHub posts, file changes, commits, or `/lukas-review` invocation. Include the validation-summary ban below for user-facing output, but not this orchestration or the posting instructions.
+1. `post /api/session --data <JSON>` with `{"title":"pr-review: PR analysis","location":{"directory":"<absolute repository directory>","model":{"providerID":"<current provider ID>","model":"<current model ID>"}}}`. Read `data.id` as `<id>`. Use the model powering this `/pr-review` invocation, not OpenCode's configured default; API-created sessions otherwise don't inherit the current model. If its exact provider and model IDs aren't available, stop and explain the blocker rather than guessing. Include the current agent if known, using the documented API shape; don't guess or auto-approve permissions.
+2. `post /api/session/<id>/command --data <JSON>` with `{"name":"review","text":"<PR URL and analysis instructions>"}`. Include the prepared context, voice choice and override, and discovered testing standards, and instruct the reviewer to load `@lukas-review-guidelines` and apply its complete test-scrutiny criteria. Require review of the full PR at the captured commits, not uncommitted changes, and an internal assessment of test coverage, including the rationale when no new tests are needed. Ask for findings with diff locations, consequences, and proposed fixes, or "Looks good to me." Require analysis only: no GitHub posts, file changes, commits, or `/pr-review` invocation. Include the validation-summary ban below for user-facing output, but not this orchestration or the posting instructions.
 3. `post /api/experimental/session/<id>/wait`, then `get /api/session/<id>`. Proceed only when `data.outcome` is `succeeded`.
 4. `get '/api/session/<id>/message?type=assistant&order=asc'`. Read assistant text; follow `cursor.next` with the same type filter and no `order`. Retrieve any delegated child result too. Empty output or a launch acknowledgment is not a clean review.
 
