@@ -9,7 +9,7 @@ test('System Settings exposes Wi-Fi management and scans only while that page is
   const settings = read('SystemSettings.qml');
   const bar = read('Bar.qml');
   const service = read('ConnectivityService.qml');
-  assert.match(settings, /key: "connectivity", label: "Wi-Fi & connectivity"/);
+  assert.match(settings, /key: "connectivity", label: "Wi-Fi"/);
   assert.doesNotMatch(settings, /key: "wifi", label: "Wi-Fi networks"/);
   assert.match(settings, /WifiSettings \{[^]*?visible: window\.section === "connectivity"/);
   assert.match(settings, /wifiDiscoveryActive: visible && section === "connectivity"/);

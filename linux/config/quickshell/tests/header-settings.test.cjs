@@ -44,12 +44,13 @@ test('audio and control settings are in headers, not large footer actions', () =
   assert.match(read('NotificationCenter.qml'), /openSystemSettings\(popup.panel.screen, "notifications"\)/);
 });
 
-test('connectivity header gear retains all settings destinations without radio changes', () => {
+test('Bluetooth gear opens its page directly while network gear retains its menu', () => {
   const source = read('ConnectivityCenter.qml');
-  assert.match(source, /HeaderSettingsButton \{[^]*?onOpening: popup.requestOpen\(true\)/);
-  assert.match(source, /text: "Connectivity settings"[^\n]*openSystemSettings\(popup.panel.screen, "connectivity"\)/);
-  assert.match(source, /text: "Bluetooth preferences"[^\n]*openSystemSettings\(popup.panel.screen, "connectivityPreferences"\)/);
+  assert.match(source, /HeaderSettingsButton \{[^]*?onOpening: \{ if \(!popup.bluetoothOnly\) popup.requestOpen\(true\) \}/);
+  assert.match(source, /options: popup.bluetoothOnly \? \[\] : \[/);
+  assert.match(source, /text: "Wi-Fi settings"[^\n]*openSystemSettings\(popup.panel.screen, "connectivity"\)/);
+  assert.match(source, /onActivated: popup.controller.openSystemSettings\(popup.panel.screen, "bluetooth"\)/);
   assert.match(source, /text: "Network settings"[^\n]*requestClose\(true\)[^\n]*nm-connection-editor/);
-  assert.match(source, /text: "Bluetooth settings"[^\n]*requestClose\(true\)[^\n]*blueman-manager/);
+  assert.match(read('SystemSettings.qml'), /text: "Advanced Bluetooth settings…"[^\n]*blueman-manager/);
   assert.doesNotMatch(source, /title: "(?:Network|Bluetooth) settings"/);
 });

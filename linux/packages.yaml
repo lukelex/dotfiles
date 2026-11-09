@@ -148,6 +148,8 @@ profiles:
         postbird-bin:
         qt5-wayland:
         qt5ct:
+        # Native Bluetooth pairing agent used by Quickshell System Settings.
+        python-gobject:
         qt6-svg:
         qt6-wayland:
         quickshell:

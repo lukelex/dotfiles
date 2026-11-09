@@ -26,7 +26,8 @@ FloatingWindow {
   readonly property var sections: [
     { key: "system", label: "System information", icon: "cpu", group: "System" },
     { key: "power", label: "Power & battery", icon: "battery", group: "System" },
-    { key: "connectivity", label: "Wi-Fi & connectivity", icon: "wifi", group: "Devices & connections" },
+    { key: "connectivity", label: "Wi-Fi", icon: "wifi", group: "Devices & connections" },
+    { key: "bluetooth", label: "Bluetooth", icon: "bluetooth", group: "Devices & connections" },
     { key: "monitors", label: "Displays", icon: "monitor", group: "Devices & connections" },
     { key: "audio", label: "Sound", icon: "volume-2", group: "Devices & connections" },
     { key: "input", label: "Keyboard & pointer", icon: "keyboard", group: "Devices & connections" },
@@ -1152,7 +1153,7 @@ FloatingWindow {
           id: connectivityPreferences
           Layout.fillWidth: true
           visible: window.section === "connectivity"
-          title: "Suggestions & alerts"
+          title: "Wi-Fi suggestions"
           iconName: "bell"
           enabled: window.controller.preferences.ready && !window.controller.preferences.busy
           Toggle {
@@ -1162,15 +1163,7 @@ FloatingWindow {
             description: "Offers a stronger saved network when your signal is weak. Switching always requires your confirmation."
             onClicked: window.controller.preferences.setValue("connectivity.wifiSuggestions", !window.controller.preferences.value("connectivity.wifiSuggestions", true))
           }
-          Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-          Toggle {
-            Layout.fillWidth: true
-            text: "Bluetooth low-battery alerts"
-            checked: window.controller.preferences.value("connectivity.bluetoothBatteryAlerts", true)
-            description: "Warn once per connected device below the threshold. Alerts rearm after disconnecting or recovering."
-            onClicked: window.controller.preferences.setValue("connectivity.bluetoothBatteryAlerts", !window.controller.preferences.value("connectivity.bluetoothBatteryAlerts", true))
-          }
-          PreferenceStatus { controller: window.controller; preferences: window.controller.preferences; keys: ["connectivity.wifiSuggestions", "connectivity.bluetoothBatteryAlerts"] }
+          PreferenceStatus { controller: window.controller; preferences: window.controller.preferences; keys: ["connectivity.wifiSuggestions"] }
         }
         SettingsSubsection {
           Layout.fillWidth: true
@@ -1189,7 +1182,8 @@ FloatingWindow {
             color: window.controller.controlSecondaryText
           }
           Repeater {
-            model: window.controller.preferences.fields.filter(field => field.key.startsWith("connectivity.") && window.connectivityAdvanced && field.kind !== "boolean")
+            model: window.controller.preferences.fields.filter(field => field.key.startsWith("connectivity.")
+              && !field.key.startsWith("connectivity.bluetooth") && window.connectivityAdvanced && field.kind !== "boolean")
             delegate: ColumnLayout {
               id: connectivityField
               required property var modelData
@@ -1199,6 +1193,49 @@ FloatingWindow {
               PreferenceField { modelData: connectivityField.modelData }
             }
           }
+        }
+        BluetoothSettings {
+          Layout.fillWidth: true
+          visible: window.section === "bluetooth"
+          active: window.visible && visible
+          controller: window.controller
+          service: window.connectivity
+          onDisclosureToggled: preferenceScroll.preservePosition()
+          onRevealRequested: item => {
+            const flick = preferenceScroll.flickable
+            if (!flick || flick.moving || !window.visible || window.section !== "bluetooth") return
+            const top = item.mapToItem(flick.contentItem, 0, 0).y
+            if (top < flick.contentY || top + item.height > flick.contentY + flick.height) {
+              flick.contentY = top
+              flick.returnToBounds()
+            }
+          }
+        }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "bluetooth"
+          title: "Battery alerts"
+          iconName: "battery-low"
+          Repeater {
+            model: window.controller.preferences.fields.filter(field => field.key.startsWith("connectivity.bluetooth"))
+            delegate: ColumnLayout {
+              id: bluetoothField
+              required property var modelData
+              required property int index
+              Layout.fillWidth: true
+              spacing: 12
+              Rectangle { Layout.fillWidth: true; implicitHeight: 1; visible: bluetoothField.index > 0; color: window.controller.controlSurfaceBorder }
+              PreferenceField { modelData: bluetoothField.modelData }
+            }
+          }
+        }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "bluetooth"
+          title: "Advanced Bluetooth"
+          iconName: "settings"
+          Label { Layout.fillWidth: true; text: "Open Blueman for additional adapter and service controls." }
+          SoundButton { text: "Advanced Bluetooth settings…"; onClicked: Quickshell.execDetached(["blueman-manager"]) }
         }
         SettingsSubsection {
           Layout.fillWidth: true

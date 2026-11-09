@@ -52,8 +52,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-      - name: Install notification image renderer
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - name: Install Quickshell test dependencies
+        run: sudo apt-get update && sudo apt-get install -y imagemagick python3-gi gir1.2-glib-2.0 dbus
       - name: Run quickshell test suite
         run: node --test linux/config/quickshell/tests/*.test.cjs
 

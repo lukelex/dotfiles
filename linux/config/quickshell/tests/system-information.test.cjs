@@ -26,6 +26,8 @@ test('generic opening resets the destination while contextual shortcuts retain t
   assert.equal(settings.section, 'notifications');
   routing.openSystemSettings(null, 'audio');
   assert.equal(settings.section, 'audio');
+  routing.openSystemSettings(null, 'bluetooth');
+  assert.equal(settings.section, 'bluetooth');
   routing.openSystemSettings(null, 'connectivityPreferences');
   assert.equal(settings.section, 'connectivity');
   assert.equal(settings.connectivityAnchor, 'preferences');
