@@ -11,6 +11,8 @@ local function start(path, callback)
   local cancelled = false
   local active, replacement, discovery, timer
   local dirty = false
+  local failures, recovering, exhausted = 0, false, false
+  local retry_delays = { 250, 1000, 4000 }
   local refresh
   local prefix = path:gsub("/$", "") .. "/"
   local function report(message)
@@ -24,14 +26,53 @@ local function start(path, callback)
   local function stop(watcher)
     if watcher and not watcher.stopped then
       watcher.stopped = true
-      watcher.process:kill(2)
+      if watcher.process then watcher.process:kill(2) end
     end
+  end
+
+  local function retry(message)
+    failures = failures + 1
+    if timer and not timer:is_closing() then
+      timer:stop()
+      timer:close()
+    end
+    timer = nil
+    local delay = retry_delays[failures]
+    if not delay then
+      exhausted, recovering = true, false
+      report(message .. "; recovery exhausted, restart the LSP to retry")
+      return
+    end
+    recovering = true
+    report(message .. "; retry " .. failures .. "/" .. #retry_delays)
+    timer = vim.defer_fn(function()
+      timer = nil
+      recovering = false
+      if not cancelled and not discovery and not replacement then refresh() end
+    end, delay)
+  end
+
+  local function failed(watcher, message)
+    if cancelled or watcher.stopped then return end
+    -- A ready process must remain healthy for a while before resetting the
+    -- retry budget, otherwise rapid start/crash loops would retry forever.
+    if watcher.ready_at and vim.uv.hrtime() - watcher.ready_at >= 30e9 then
+      failures = 0
+    end
+    recovering = true
+    stop(watcher)
+    vim.schedule(function()
+      if cancelled then return end
+      if replacement == watcher then replacement = nil end
+      if active == watcher then active = nil end
+      retry(message)
+    end)
   end
 
   local function request_refresh()
     dirty = true
     vim.schedule(function()
-      if cancelled or timer or discovery or replacement then
+      if cancelled or recovering or exhausted or timer or discovery or replacement then
         return
       end
       -- Coalesce directory creation bursts; keep the current watcher serving events.
@@ -57,12 +98,12 @@ local function start(path, callback)
     for _, excluded in ipairs(exclusions) do
       table.insert(args, "@" .. excluded)
     end
-    watcher.process = vim.system(args, {
+    local spawned, process = pcall(vim.system, args, {
       -- Readiness messages are part of the handoff protocol below.
       env = { LC_ALL = "C" },
       stdout = function(err, data)
         if cancelled or watcher.stopped then return end
-        if err then report(err); return end
+        if err then failed(watcher, err); return end
         if not data then return end
         watcher.output = watcher.output .. data
         while true do
@@ -88,7 +129,7 @@ local function start(path, callback)
       end,
       stderr = function(err, data)
         if cancelled or watcher.stopped then return end
-        if err then report(err); return end
+        if err then failed(watcher, err); return end
         watcher.errors = watcher.errors .. (data or "")
         while true do
           local newline = watcher.errors:find("\n", 1, true)
@@ -99,8 +140,15 @@ local function start(path, callback)
             vim.schedule(function()
               if cancelled or watcher.stopped then return end
               local previous = active
+              watcher.ready_at = vim.uv.hrtime()
               active, replacement = watcher, nil
               stop(previous)
+              if recovering and timer then
+                timer:stop()
+                timer:close()
+                timer = nil
+              end
+              recovering = false
               if dirty then request_refresh() end
             end)
           elseif line ~= "" and not line:match("^Setting up watches%.")
@@ -110,20 +158,19 @@ local function start(path, callback)
         end
       end,
     }, function(result)
-      if not cancelled and not watcher.stopped then
-        vim.schedule(function()
-          if replacement == watcher then replacement = nil end
-          if active == watcher then active = nil end
-        end)
-        report("watcher exited with status " .. result.code)
-      end
+      failed(watcher, "watcher exited with status " .. result.code)
     end)
+    if spawned then
+      watcher.process = process
+    else
+      failed(watcher, "could not start watcher: " .. tostring(process))
+    end
   end
 
   refresh = function()
     dirty = false
     -- Explicit @ exclusions prune scans; --exclude alone only filters events.
-    discovery = vim.system({
+    local spawned, process = pcall(vim.system, {
       "fd", "--hidden", "--no-ignore", "--case-sensitive", "--type", "d",
       "--prune", "--absolute-path", "--print0", "^(tmp|\\.git)$", path,
     }, {}, function(result)
@@ -131,7 +178,7 @@ local function start(path, callback)
         discovery = nil
         if cancelled then return end
         if result.code ~= 0 then
-          report("directory discovery failed: " .. result.stderr)
+          retry("directory discovery failed: " .. result.stderr)
           return
         end
         local exclusions = {}
@@ -148,6 +195,11 @@ local function start(path, callback)
         end
       end)
     end)
+    if spawned then
+      discovery = process
+    else
+      retry("could not start discovery: " .. tostring(process))
+    end
   end
   refresh()
 

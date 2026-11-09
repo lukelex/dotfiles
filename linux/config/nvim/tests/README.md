@@ -49,6 +49,7 @@ Run from the repository root on Linux with Neovim 0.12+, `fd`, and
 
 ```sh
 nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch.lua
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-recovery.lua
 ```
 
 The watcher test uses real background processes and temporary directories. It
@@ -57,6 +58,10 @@ shared watchers, independent subscriber filters, filenames containing whitespace
 automatic pruning of new/moved-in tmp trees, continuous events during watcher
 handoff, and cancellation both during discovery and after startup. It does not load the
 editor's plugins or modify saved sessions.
+
+The recovery test injects process failures and advances retry timers deterministically.
+It checks recovery, bounded backoff, preserving a healthy watcher during failed
+handoff, and cancellation of pending retries.
 
 ## LSP root regression checks
 
