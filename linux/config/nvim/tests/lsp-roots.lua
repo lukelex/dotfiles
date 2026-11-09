@@ -38,6 +38,24 @@ local ok, err = xpcall(function()
   assert(root(base .. "/unrelated/app.ts") == nil, "Git-only package started Tailwind")
   write(base .. "/broken/package.json", "{ malformed")
   assert(root(base .. "/broken/app.ts") == nil, "malformed manifest started Tailwind")
+  for _, content in ipairs({
+    '{"description":"tailwindcss example","scripts":{"lint":"tailwindcss"}}',
+    '{"dependencies":{"eslint-plugin-tailwindcss":"latest"}}',
+    '{"dependencies":{"tailwindcss":false}}',
+    '{"dependencies":null}',
+    '{"dependencies":"tailwindcss"}',
+    '"tailwindcss"',
+    '{"dependencies":{"tailwindcss":',
+  }) do
+    write(base .. "/false-positive/package.json", content)
+    assert(root(base .. "/false-positive/app.ts") == nil, "non-dependency started Tailwind: " .. content)
+  end
+  for _, field in ipairs({ "dependencies", "devDependencies", "peerDependencies", "optionalDependencies" }) do
+    write(base .. "/dependency/package.json", vim.json.encode({ [field] = { tailwindcss = "^4.0.0" } }))
+    assert(root(base .. "/dependency/app.ts") == base .. "/dependency", "dependency field missed: " .. field)
+  end
+  write(base .. "/integration/package.json", '{"devDependencies":{"@tailwindcss/vite":"^4.0.0"}}')
+  assert(root(base .. "/integration/app.ts") == base .. "/integration", "Tailwind integration missed")
   write(base .. "/v4/packages/plain/package.json", '{}')
   assert(root(base .. "/v4/packages/plain/app.ts") == base .. "/v4", "wrong manifest selected")
   write(base .. "/v4/packages/nested/tailwind.config.ts")
