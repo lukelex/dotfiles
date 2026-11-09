@@ -8,7 +8,7 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../SystemInformation.js'), 'utf8'), context);
 const normalize = data => JSON.parse(JSON.stringify(context.normalize(data)));
 
-test('generic opening resets the destination while contextual shortcuts retain their section and tab', () => {
+test('generic opening resets the destination while contextual shortcuts retain their section and anchor', () => {
   const source = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
   const start = source.indexOf('  function openSystemSettings(');
   const end = source.indexOf('\n  SystemSettings {', start);
@@ -28,9 +28,9 @@ test('generic opening resets the destination while contextual shortcuts retain t
   assert.equal(settings.section, 'audio');
   routing.openSystemSettings(null, 'connectivityPreferences');
   assert.equal(settings.section, 'connectivity');
-  assert.equal(settings.connectivityTab, 'preferences');
+  assert.equal(settings.connectivityAnchor, 'preferences');
   routing.openSystemSettings(null, 'wifi');
-  assert.equal(settings.connectivityTab, 'networks');
+  assert.equal(settings.connectivityAnchor, 'networks');
   routing.openSystemSettings(null);
   assert.equal(settings.section, 'system');
 });

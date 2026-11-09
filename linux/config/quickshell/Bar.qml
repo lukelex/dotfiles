@@ -833,7 +833,7 @@ Scope {
     else {
       systemSettings.section = section === "wifi" || section === "connectivityPreferences" ? "connectivity" : section
       if (systemSettings.section === "connectivity") {
-        systemSettings.connectivityTab = section === "connectivityPreferences" ? "preferences" : "networks"
+        systemSettings.connectivityAnchor = section === "connectivityPreferences" ? "preferences" : "networks"
         systemSettings.connectivityAdvanced = false
       }
     }

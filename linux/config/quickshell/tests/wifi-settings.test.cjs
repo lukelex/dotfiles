@@ -11,8 +11,8 @@ test('System Settings exposes Wi-Fi management and scans only while that page is
   const service = read('ConnectivityService.qml');
   assert.match(settings, /key: "connectivity", label: "Wi-Fi & connectivity"/);
   assert.doesNotMatch(settings, /key: "wifi", label: "Wi-Fi networks"/);
-  assert.match(settings, /WifiSettings \{[^]*?visible: window\.section === "connectivity" && window\.connectivityTab === "networks"/);
-  assert.match(settings, /wifiDiscoveryActive: visible && section === "connectivity" && connectivityTab === "networks"/);
+  assert.match(settings, /WifiSettings \{[^]*?visible: window\.section === "connectivity"/);
+  assert.match(settings, /wifiDiscoveryActive: visible && section === "connectivity"/);
   assert.match(bar, /readonly property bool wifiSettingsOpen: systemSettings.wifiDiscoveryActive/);
   assert.match(bar, /wifiDiscoveryEnabled: root.wifiSettingsOpen/);
   assert.match(settings, /property bool connectivityAdvanced: false/);

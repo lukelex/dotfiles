@@ -16,11 +16,11 @@ FloatingWindow {
   property string section: "system"
   readonly property bool displayPage: section === "monitors" || section === "display"
   readonly property string sidebarSection: displayPage ? "monitors" : section
-  property string connectivityTab: "networks"
+  property string connectivityAnchor: "networks"
   property bool connectivityAdvanced: false
-  readonly property bool wifiDiscoveryActive: visible && section === "connectivity" && connectivityTab === "networks"
+  readonly property bool wifiDiscoveryActive: visible && section === "connectivity"
   onSectionChanged: {
-    connectivityTab = "networks"
+    connectivityAnchor = "networks"
     connectivityAdvanced = false
   }
   readonly property var sections: [
@@ -941,49 +941,6 @@ FloatingWindow {
       font.pixelSize: 16
       font.bold: true
     }
-    RowLayout {
-      Layout.fillWidth: true
-      visible: window.section === "connectivity"
-      spacing: 4
-      Repeater {
-        model: [{ key: "networks", label: "Wi-Fi networks", icon: "wifi" }, { key: "preferences", label: "Suggestions & alerts", icon: "bell" }]
-        delegate: Controls.Button {
-          id: connectivityTabButton
-          required property var modelData
-          Layout.fillWidth: true
-          implicitHeight: 40
-          Accessible.role: Accessible.PageTab
-          Accessible.name: modelData.label
-          Accessible.selected: window.connectivityTab === modelData.key
-          onClicked: window.connectivityTab = modelData.key
-          contentItem: RowLayout {
-            spacing: 8
-            Item { Layout.fillWidth: true }
-            LucideIcon {
-              Layout.preferredWidth: 16
-              Layout.preferredHeight: 16
-              source: window.controller.icon(connectivityTabButton.modelData.icon)
-              color: window.controller.controlPrimaryText
-            }
-            Label {
-              text: connectivityTabButton.modelData.label
-              Layout.maximumWidth: Math.max(0, connectivityTabButton.availableWidth - 24)
-              horizontalAlignment: Text.AlignHCenter
-              verticalAlignment: Text.AlignVCenter
-            }
-            Item { Layout.fillWidth: true }
-          }
-          background: Rectangle {
-            radius: 10
-            color: window.connectivityTab === connectivityTabButton.modelData.key ? window.controller.controlActive
-              : connectivityTabButton.hovered ? window.controller.controlHover : window.controller.controlSurface
-            border.width: connectivityTabButton.activeFocus ? 2 : 1
-            border.color: window.connectivityTab === connectivityTabButton.modelData.key || connectivityTabButton.activeFocus
-              ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
-          }
-        }
-      }
-    }
     SettingsScrollView {
       id: preferenceScroll
       Layout.fillWidth: true
@@ -992,9 +949,17 @@ FloatingWindow {
         target: window
         function onSectionChanged() { preferenceScroll.resetPosition() }
         function onVisibleChanged() {
-          if (window.visible) preferenceScroll.resetPosition()
+          if (!window.visible) return
+          preferenceScroll.resetPosition()
+          Qt.callLater(() => {
+            if (!window.visible || window.section !== "connectivity" || window.connectivityAnchor !== "preferences") return
+            const flick = preferenceScroll.flickable
+            if (flick && !flick.moving) {
+              flick.contentY = Math.min(connectivityPreferences.y,
+                Math.max(flick.originY, flick.contentHeight - flick.height + flick.originY))
+            }
+          })
         }
-        function onConnectivityTabChanged() { preferenceScroll.resetPosition() }
       }
       ColumnLayout {
         width: preferenceScroll.availableWidth
@@ -1154,9 +1119,17 @@ FloatingWindow {
             }
           }
         }
-        SettingsSubsection {
+        WifiSettings {
           Layout.fillWidth: true
-          visible: window.section === "connectivity" && window.connectivityTab === "preferences"
+          visible: window.section === "connectivity"
+          controller: window.controller
+          service: window.connectivity
+          onDisclosureToggled: preferenceScroll.preservePosition()
+        }
+        SettingsSubsection {
+          id: connectivityPreferences
+          Layout.fillWidth: true
+          visible: window.section === "connectivity"
           title: "Suggestions & alerts"
           iconName: "bell"
           enabled: window.controller.preferences.ready && !window.controller.preferences.busy
@@ -1179,7 +1152,7 @@ FloatingWindow {
         }
         SettingsSubsection {
           Layout.fillWidth: true
-          visible: window.section === "connectivity" && window.connectivityTab === "preferences"
+          visible: window.section === "connectivity"
           title: "Advanced tuning"
           iconName: "sliders"
           collapsible: true
@@ -1338,13 +1311,6 @@ FloatingWindow {
             text: "Lock screen appearance…"
             onClicked: window.section = "lockScreen"
           }
-        }
-        WifiSettings {
-          Layout.fillWidth: true
-          visible: window.section === "connectivity" && window.connectivityTab === "networks"
-          controller: window.controller
-          service: window.connectivity
-          onDisclosureToggled: preferenceScroll.preservePosition()
         }
         SettingsSubsection {
           Layout.fillWidth: true
@@ -1506,6 +1472,7 @@ FloatingWindow {
     property bool quietHoursExpanded: false
     property bool soundExpanded: false
     property bool presentationExpanded: false
+    property bool privacyExpanded: false
     function toggleDetails(key) {
       const offset = scrollView.contentY - scrollView.originY
       notificationOptions[key] = !notificationOptions[key]
@@ -1514,7 +1481,7 @@ FloatingWindow {
     spacing: 16
     SettingsSubsection {
       Layout.fillWidth: true
-      title: "General"
+      title: "Notification delivery"
       iconName: "bell"
     Toggle {
       Layout.fillWidth: true
@@ -1610,7 +1577,7 @@ FloatingWindow {
     SettingsSubsection {
       Layout.fillWidth: true
       iconName: "volume-2"
-      title: "Sound selection"
+      title: "Notification sound"
       description: "Choose, preview or reset the notification sound. Current sound: " + window.service.notificationSoundName
       collapsible: true
       expanded: notificationOptions.soundExpanded
@@ -1665,8 +1632,8 @@ FloatingWindow {
     SettingsSubsection {
       Layout.fillWidth: true
       iconName: "settings"
-      title: "Popups, privacy & history"
-      description: "Choose popup position and duration, message previews, lock-screen privacy and history retention."
+      title: "Popup placement & behavior"
+      description: "Choose where popups appear, how long they stay and whether notifications animate."
       collapsible: true
       expanded: notificationOptions.presentationExpanded
       onToggled: notificationOptions.toggleDetails("presentationExpanded")
@@ -1682,27 +1649,6 @@ FloatingWindow {
         selectedValue: window.service.popupMonitor
         Accessible.name: "Popup monitor"
         onChosen: value => window.service.setPopupMonitor(value)
-      }
-      Label {
-        text: "Lock screen"
-        activeFocusOnTab: true
-        HoverHandler { id: lockPrivacyHover }
-        Hint {
-          text: "Controls the lock-screen notification panel. Message bodies are always hidden; choose whether titles or app names are shown."
-          visible: lockPrivacyHover.hovered || lockPrivacyHover.parent.activeFocus
-        }
-      }
-      Choice {
-        Layout.fillWidth: true
-        Layout.minimumWidth: 0
-        model: [
-          { label: "Show titles", value: "show" },
-          { label: "App names only", value: "redact" },
-          { label: "Hide notifications", value: "hide" }
-        ]
-        selectedValue: window.service.lockScreenPrivacy
-        Accessible.name: "Lock-screen notification privacy"
-        onChosen: value => window.service.setLockScreenPrivacy(value)
       }
       Label { text: "Popup corner" }
       Choice {
@@ -1743,6 +1689,57 @@ FloatingWindow {
         Accessible.description: "Applies to new notifications using the default timeout."
         onChosen: value => window.service.setPopupDurationSeconds(value)
       }
+    }
+    Toggle {
+      Layout.fillWidth: true
+      text: "Reduce notification motion"
+      iconName: "bell"
+      checked: window.service.reduceMotion
+      description: "Show notification changes immediately, without slides, staggered expansion or attention pulses. Applies to popups and notification history."
+      onClicked: window.service.setReduceMotion(!window.service.reduceMotion)
+    }
+    }
+    SettingsSubsection {
+      Layout.fillWidth: true
+      iconName: "lock"
+      title: "Privacy & history"
+      description: "Control message previews, lock-screen visibility and how long notification history is kept."
+      collapsible: true
+      expanded: notificationOptions.privacyExpanded
+      onToggled: notificationOptions.toggleDetails("privacyExpanded")
+    Toggle {
+      Layout.fillWidth: true
+      text: "Popup message previews"
+      iconName: "lock"
+      checked: window.service.popupPreviews
+      description: "When off, popups show the app name and New notification, hiding message text, images and action labels. Full content remains in history."
+      onClicked: window.service.setPopupPreviews(!window.service.popupPreviews)
+    }
+    SettingsGrid {
+      Layout.fillWidth: true
+      columnSpacing: 12
+      rowSpacing: 12
+      Label {
+        text: "Lock screen"
+        activeFocusOnTab: true
+        HoverHandler { id: lockPrivacyHover }
+        Hint {
+          text: "Controls the lock-screen notification panel. Message bodies are always hidden; choose whether titles or app names are shown."
+          visible: lockPrivacyHover.hovered || lockPrivacyHover.parent.activeFocus
+        }
+      }
+      Choice {
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        model: [
+          { label: "Show titles", value: "show" },
+          { label: "App names only", value: "redact" },
+          { label: "Hide notifications", value: "hide" }
+        ]
+        selectedValue: window.service.lockScreenPrivacy
+        Accessible.name: "Lock-screen notification privacy"
+        onChosen: value => window.service.setLockScreenPrivacy(value)
+      }
       Label {
         text: "Keep history"
         activeFocusOnTab: true
@@ -1766,22 +1763,6 @@ FloatingWindow {
         Accessible.description: "Removes older inactive history. Up to 100 entries are kept, regardless of age limit."
         onChosen: value => window.service.setHistoryRetentionDays(value)
       }
-    }
-    Toggle {
-      Layout.fillWidth: true
-      text: "Popup message previews"
-      iconName: "lock"
-      checked: window.service.popupPreviews
-      description: "When off, popups show the app name and New notification, hiding message text, images and action labels. Full content remains in history."
-      onClicked: window.service.setPopupPreviews(!window.service.popupPreviews)
-    }
-    Toggle {
-      Layout.fillWidth: true
-      text: "Reduce notification motion"
-      iconName: "bell"
-      checked: window.service.reduceMotion
-      description: "Show notification changes immediately, without slides, staggered expansion or attention pulses. Applies to popups and notification history."
-      onClicked: window.service.setReduceMotion(!window.service.reduceMotion)
     }
     }
   }
