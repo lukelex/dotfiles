@@ -58,6 +58,8 @@ shared watchers, independent subscriber filters, filenames containing whitespace
 automatic pruning of new/moved-in tmp trees, continuous events during watcher
 handoff, and cancellation both during discovery and after startup. It does not load the
 editor's plugins or modify saved sessions.
+Discovery checks verify that only added subtrees are scanned, direct tmp creation
+needs no scan, and moved-out exclusions are removed from the cache.
 
 The recovery test injects process failures and advances retry timers deterministically.
 It checks recovery, bounded backoff, preserving a healthy watcher during failed

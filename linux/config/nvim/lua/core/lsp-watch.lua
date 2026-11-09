@@ -11,6 +11,7 @@ local function start(path, callback)
   local cancelled = false
   local active, replacement, discovery, timer
   local dirty = false
+  local changed_dirs, cached_exclusions = {}, nil
   local failures, recovering, exhausted = 0, false, false
   local retry_delays = { 250, 1000, 4000 }
   local refresh
@@ -48,7 +49,7 @@ local function start(path, callback)
     timer = vim.defer_fn(function()
       timer = nil
       recovering = false
-      if not cancelled and not discovery and not replacement then refresh() end
+      if not cancelled and not discovery and not replacement then refresh(true) end
     end, delay)
   end
 
@@ -69,8 +70,9 @@ local function start(path, callback)
     end)
   end
 
-  local function request_refresh()
+  local function request_refresh(changed, exists)
     dirty = true
+    if changed then changed_dirs[changed:gsub("/$", "")] = exists end
     vim.schedule(function()
       if cancelled or recovering or exhausted or timer or discovery or replacement then
         return
@@ -114,9 +116,13 @@ local function start(path, callback)
           local flags = watcher.output:sub(first + 1, second - 1)
           local event = flags:match("^[^,]+")
           watcher.output = watcher.output:sub(second + 1)
-          if flags:find("ISDIR", 1, true) and (event == "CREATE" or event == "MOVED_TO") then
-            -- A normal directory moved in may already contain nested tmp trees.
-            request_refresh()
+          if flags:find("ISDIR", 1, true) then
+            if event == "CREATE" or event == "MOVED_TO" then
+              -- A moved-in directory may already contain nested tmp trees.
+              request_refresh(fullpath, true)
+            elseif event == "DELETE" or event == "MOVED_FROM" then
+              request_refresh(fullpath, false)
+            end
           end
           local relative = "/" .. fullpath:sub(#prefix + 1):gsub("/$", "") .. "/"
           local ignored = relative:find("/tmp/", 1, true) or relative:find("/.git/", 1, true)
@@ -167,31 +173,74 @@ local function start(path, callback)
     end
   end
 
-  refresh = function()
+  refresh = function(full)
     dirty = false
-    -- Explicit @ exclusions prune scans; --exclude alone only filters events.
-    local spawned, process = pcall(vim.system, {
+    local updates = changed_dirs
+    changed_dirs = {}
+    local next_exclusions = vim.tbl_extend("force", {}, cached_exclusions or {})
+    local scan = {}
+    if full or not cached_exclusions then
+      next_exclusions = {}
+      scan = { path }
+    else
+      local paths = vim.tbl_keys(updates)
+      table.sort(paths, function(a, b) return #a < #b end)
+      local covered = {}
+      for _, changed in ipairs(paths) do
+        local nested = false
+        for _, ancestor in ipairs(covered) do
+          if vim.startswith(changed, ancestor .. "/") then nested = true; break end
+        end
+        if not nested then
+          table.insert(covered, changed)
+          for excluded in pairs(next_exclusions) do
+            if excluded == changed or vim.startswith(excluded, changed .. "/") then
+              next_exclusions[excluded] = nil
+            end
+          end
+          if updates[changed] then
+            local name = vim.fs.basename(changed)
+            if name == "tmp" or name == ".git" then
+              next_exclusions[changed] = true
+            else
+              table.insert(scan, changed)
+            end
+          end
+        end
+      end
+    end
+    local function finish(output)
+      for excluded in output:gmatch("[^%z]+") do
+        next_exclusions[excluded:gsub("/$", "")] = true
+      end
+      cached_exclusions = next_exclusions
+      local exclusions = vim.tbl_keys(next_exclusions)
+      table.sort(exclusions)
+      if active and active.exclusions == table.concat(exclusions, "\0") then
+        if dirty then request_refresh() end
+      else
+        launch(exclusions)
+      end
+    end
+    if #scan == 0 then
+      finish("")
+      return
+    end
+    -- Scan only added/moved subtrees. Full discovery is reserved for startup
+    -- and recovery, where the cached directory state may no longer be reliable.
+    local args = {
       "fd", "--hidden", "--no-ignore", "--case-sensitive", "--type", "d",
-      "--prune", "--absolute-path", "--print0", "^(tmp|\\.git)$", path,
-    }, {}, function(result)
+      "--prune", "--absolute-path", "--print0", "^(tmp|\\.git)$",
+    }
+    vim.list_extend(args, scan)
+    local spawned, process = pcall(vim.system, args, {}, function(result)
       vim.schedule(function()
         discovery = nil
         if cancelled then return end
         if result.code ~= 0 then
           retry("directory discovery failed: " .. result.stderr)
-          return
-        end
-        local exclusions = {}
-        for excluded in result.stdout:gmatch("[^%z]+") do
-          table.insert(exclusions, (excluded:gsub("/$", "")))
-        end
-        table.sort(exclusions)
-        if active and active.exclusions == table.concat(exclusions, "\0") then
-          -- inotifywait already watches new normal directories; rebuild only
-          -- when the exclusions actually changed.
-          if dirty then request_refresh() end
         else
-          launch(exclusions)
+          finish(result.stdout)
         end
       end)
     end)

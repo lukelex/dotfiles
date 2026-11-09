@@ -56,7 +56,7 @@ local ok, err = xpcall(function()
   vim.fn.mkdir(root .. "/.git/objects", "p")
   vim.system = function(command, ...)
     local process = system(command, ...)
-    table.insert(children, { command = command[1], process = process })
+    table.insert(children, { command = command[1], args = command, process = process })
     return process
   end
   watch.setup()
@@ -102,8 +102,8 @@ local ok, err = xpcall(function()
     end
     return spawn(command, options, on_exit)
   end
-  vim.fn.mkdir(root .. "/tmp/new/deep", "p")
-  write(root .. "/tmp/new/deep/ignored.lua")
+  vim.fn.mkdir(root .. "/new/tmp/deep", "p")
+  write(root .. "/new/tmp/deep/ignored.lua")
   wait(function() return finish_discovery ~= nil end, "new tmp did not trigger rediscovery")
   local during = root .. "/src/during-rebuild.lua"
   write(during)
@@ -122,7 +122,10 @@ local ok, err = xpcall(function()
     end, "watcher handoff did not prune tmp directories")
     return current
   end
-  process = handoff(process, 4)
+  process = handoff(process, 5)
+  local discoveries = processes("fd")
+  assert(discoveries[#discoveries].args[#discoveries[#discoveries].args] == root .. "/new",
+    "incremental discovery scanned beyond the added subtree")
   for path in pairs(all) do
     local relative = "/" .. path:sub(#root + 2) .. "/"
     assert(not relative:find("/tmp/", 1, true), "dynamic tmp event leaked")
@@ -133,7 +136,7 @@ local ok, err = xpcall(function()
   vim.fn.mkdir(base .. "/staging/tmp/deep", "p")
   write(base .. "/staging/tmp/deep/ignored.lua")
   assert(vim.uv.fs_rename(base .. "/staging", root .. "/imported"))
-  process = handoff(process, 6)
+  process = handoff(process, 7)
   local imported = root .. "/imported/src/keep.lua"
   write(imported)
   wait(function() return filtered[imported] ~= nil end, "moved-in source directory is not watched")
@@ -158,6 +161,19 @@ local ok, err = xpcall(function()
   local normal = root .. "/src/normal/keep.lua"
   write(normal)
   wait(function() return filtered[normal] ~= nil end, "normal new directory is not watched")
+
+  -- Creating a tmp directory needs no discovery process at all.
+  local scans = #processes("fd")
+  vim.fn.mkdir(root .. "/tmp/deep", "p")
+  process = handoff(process, 8)
+  assert(#processes("fd") == scans, "direct tmp creation unnecessarily ran discovery")
+
+  -- Removing an imported tree must forget its cached exclusion; moving it back
+  -- under another name must discover/prune its tmp tree at the new location.
+  assert(vim.uv.fs_rename(root .. "/imported", base .. "/staging"))
+  process = handoff(process, 6)
+  assert(vim.uv.fs_rename(base .. "/staging", root .. "/renamed"))
+  process = handoff(process, 8)
 
   cancel_all()
   cancel_all()
