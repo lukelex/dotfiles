@@ -56,3 +56,13 @@ checks exclusions under `/tmp` (including regex characters in workspace names),
 shared watchers, independent subscriber filters, filenames containing whitespace,
 and cancellation both during discovery and after startup. It does not load the
 editor's plugins or modify saved sessions.
+
+## LSP root regression checks
+
+```sh
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-roots.lua
+```
+
+Requires the configured `nvim-lspconfig` plugin (or `LSPCONFIG_NVIM_PATH`). Checks
+Tailwind v3/v4, nested packages, Git boundaries, and Solargraph's Gemfile root.
+No language servers are started or installed.

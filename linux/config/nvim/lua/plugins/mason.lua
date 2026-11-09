@@ -46,7 +46,6 @@ return {
     })
 
     vim.lsp.config("solargraph", {
-      root_markers = { "backend", "Gemfile", ".git" },
       init_options = { formatting = false },
       settings = {
         solargraph = {
@@ -55,6 +54,10 @@ return {
           formatting = false
         }
       },
+    })
+
+    vim.lsp.config("tailwindcss", {
+      root_dir = require("core.lsp-roots").tailwind,
     })
 
     vim.lsp.config("yamlls", {
