@@ -151,7 +151,7 @@ FloatingWindow {
     property string description: text
     property bool showHint: text === "" || description !== text
     implicitHeight: 32
-    implicitWidth: contentItem.implicitWidth + 16
+    implicitWidth: implicitContentWidth + leftPadding + rightPadding
     padding: 8
     opacity: enabled ? 1 : 0.45
     Accessible.name: description
