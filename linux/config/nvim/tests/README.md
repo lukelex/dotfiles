@@ -77,3 +77,43 @@ No language servers are started or installed.
 
 The `nvim-tests` CI job runs all three LSP suites on Ubuntu with Neovim 0.12.6,
 `fd`, `inotify-tools`, and the `nvim-lspconfig` revision from `lazy-lock.json`.
+
+## Full-session startup profiling
+
+With the normal plugins and language servers already installed:
+
+```sh
+python linux/config/nvim/scripts/profile-startup.py ~/projects/SimplerQMS
+python linux/config/nvim/scripts/profile-startup.py ~/projects/SimplerQMS --treesitter async
+```
+
+This runs the real TUI in a 180×50 pseudo-terminal for 20 seconds. It restores a
+temporary copy of the saved session and disables session autosave and ShaDa writes.
+Plugins and language servers run normally, including their usual logs and caches.
+Terminal probes are answered so missing DSR responses do not distort timings.
+Use `--seconds`, `--session`, or `--output` to customize the run. Output directories
+must be new; the default is a temporary directory printed at completion.
+
+Each run retains `startup.log`, `terminal.log`, and `result.json`. Results include
+startup/restore timing, 10 ms heartbeat gaps, client attachment times and roots,
+loaded buffers, notifications, and synchronous subprocess calls taking over 10 ms.
+The post-restore gap excludes the heartbeat spanning session restoration; it
+measures subsequent responsiveness while language servers start. Timings describe
+the synthetic terminal and local cache state, not an interactive typing benchmark.
+
+### SimplerQMS measurement — 2026-11-09
+
+Two warm-cache runs per mode with Neovim 0.12.6, four restored buffers (YAML,
+TypeScript, and two Ruby files), and 15-second observation windows:
+
+| Tree-sitter mode | Startup | Session restoration | Largest post-restore gap |
+| --- | --- | --- | --- |
+| Configured synchronous parsing | 263–268 ms | 209–213 ms | 20–30 ms |
+| Asynchronous parsing | 261–262 ms | 208–209 ms | 20–27 ms |
+
+Solargraph and StandardRB used the backend root; ESLint and TypeScript used the
+E2E root. Tailwind did not start for these buffers. No synchronous subprocess
+call exceeded 10 ms. There was no repeat of the multi-second post-open freeze.
+The Tree-sitter difference was small relative to run-to-run variation, so the
+configured parsing mode was retained. Session restoration accounted for most
+startup work, rather than delayed LSP watcher registration.
