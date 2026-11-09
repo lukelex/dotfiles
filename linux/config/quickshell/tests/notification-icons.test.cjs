@@ -328,6 +328,7 @@ test('live notifications invoke their default action without a competing focus f
 test('notification action buttons focus their sender before invoking the action', () => {
   const events = [];
   const service = {
+    activationPendingId: null,
     live: { 1: { actions: [{ identifier: 'settings', invoke: () => events.push('action') }] } },
     history: [{ id: 1 }],
     focusRecord: () => events.push('focus'),
@@ -337,9 +338,24 @@ test('notification action buttons focus their sender before invoking the action'
   assert.deepEqual(events, ['focus', 'action', 'dismiss:1']);
 });
 
+test('a destroyed native action reports failure without deleting its history', () => {
+  const service = {
+    activationPendingId: null,
+    live: { 1: { actions: [{ invoke() { throw new Error('destroyed'); } }] } },
+    history: [{ id: 1 }],
+    focusRecord() {},
+    dismissRecord() { assert.fail('Failed actions retain history'); },
+  };
+  assert.equal(invokeAction(service, 1, 0), false);
+  assert.equal(service.activationErrorId, 1);
+  assert.match(service.activationError, /no longer available/);
+  assert.equal(service.history.length, 1);
+});
+
 test('lower-profile notification action switches profile and dismisses the notification', () => {
   const events = [];
   const service = {
+    activationPendingId: null,
     live: {},
     history: [{ id: 1, actions: [{ identifier: 'lower-profile', sourceIndex: -1 }] }],
     lowerPowerProfile: {

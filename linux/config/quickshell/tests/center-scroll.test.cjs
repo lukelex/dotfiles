@@ -65,7 +65,7 @@ test('scroll clamps at the shortened bottom and respects user scrolling', () => 
 
 test('Clear all fades each notification group parent with card dismissal timing', () => {
   assert.match(source, /function startClearAllDismiss\(\) \{\s*clearAllDismissAnimation\.start\(\)/);
-  assert.match(source, /OpacityAnimator \{\s*id: clearAllDismissAnimation\s*target: notificationGroup\s*to: 0\s*duration: 200\s*easing\.type: Easing\.OutCubic/);
+  assert.match(source, /OpacityAnimator \{\s*id: clearAllDismissAnimation\s*target: notificationGroup\s*to: 0\s*duration: popup.reducedMotion \? 0 : 200\s*easing\.type: Easing\.OutCubic/);
   assert.match(source, /function startClearAllDismissals\(\)[^]*?group\.startClearAllDismiss\(\)/);
   assert.match(source, /popup\.startClearAllDismissals\(\)\s*clearAllAnimation\.start\(\)/);
 });
@@ -86,7 +86,7 @@ test('hover-close cancellation and open reversal belong to the local notificatio
   const closeAnim = { running: true, stop() { this.running = false; assert.equal(popup.closePending, false); } };
   const openAnim = { start() { this.started = true; } };
   const hoverCloseTimer = { running: true, stop() { this.running = false; } };
-  loadFunction('requestOpen', { popup, closeAnim, openAnim, hoverCloseTimer })();
+  loadFunction('requestOpen', { popup, closeAnim, openAnim, hoverCloseTimer, preview: { visible: true }, content: { opacity: 0.5 } })();
   assert.equal(hoverCloseTimer.running, false);
   assert.equal(openAnim.started, true);
   assert.equal(popup.visible, true);
@@ -107,10 +107,15 @@ test('notification IPC toggle routes to the focused monitor instead of the last 
 test('opening a history card never implicitly dismisses its text', () => {
   const calls = [];
   const card = { record: { id: 1 }, dismissing: false, service: {
+    activationPendingId: null,
     activateRecord: id => { calls.push(id); return false; },
     dismissRecord() { assert.fail('Open must retain history'); },
   } };
   const match = source.match(/    function activate\([^]*?\n    \}/);
-  vm.runInNewContext(`(${match[0]})`, { card })();
+  const popup = { activateFromCenter(id) {
+    card.record = null;
+    card.service.activateRecord(id);
+  } };
+  vm.runInNewContext(`(${match[0]})`, { card, popup })();
   assert.deepEqual(calls, [1]);
 });

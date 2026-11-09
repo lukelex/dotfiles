@@ -95,6 +95,7 @@
     "popupDurationSeconds": 20,
     "popupMonitor": "all",
     "popupPreviews": true,
+    "reduceMotion": false,
     "lockScreenPrivacy": "show",
     "historyRetentionDays": 7,
     "doNotDisturb": false,

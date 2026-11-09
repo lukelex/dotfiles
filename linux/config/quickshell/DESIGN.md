@@ -163,6 +163,29 @@ layout. Toasts and history share the palette and visual vocabulary while owning
 their different grouping, expansion and dismissal behavior. Preserve hover
 protection and sender deadlines. Sound, history and native delivery lifecycle
 are separate from presentation; DND does not suppress system OSDs.
+Titles, bodies and action labels use plain text in both views. Action rows wrap
+within the card. Toast stacks scroll when their content exceeds the screen's
+available height; never place actions beyond the reachable viewport.
+Use `NotificationButton` for wrapping actions and explicit dismiss controls, with
+neutral hover/pressed states and visible keyboard focus. Opening preserves
+history; only dismissal removes a record. Unavailable activation uses an ordinary
+cursor; pending activation shows feedback and blocks competing actions.
+Anchor popup scrolling to a surviving record during arrivals, replacement,
+expansion and removal. Clamp to bounds and relinquish the anchor on manual scroll.
+
+The bell's hover preview stays non-focusable; its click still toggles DND.
+The center's keyboard control promotes the preview to a pinned window, as do
+keyboard/IPC open requests. Keep the preview snapshot until the pinned window
+renders. Pinned history supports Tab, Close, Escape and outside-click dismissal;
+hover exit never closes it. Release the grab before settings or external actions.
+Failed app opening returns to the originating center, with the attempted record,
+expanded group and reading offset restored. Cancel this return when the user
+opens or closes another panel; late failures must not steal focus.
+Clear all offers an eight-second Undo for the captured history snapshot. Undo
+restores sanitized text/history only, never closed native actions, sounds or
+popups; later arrivals are retained. Below 400px, a keyboard-accessible overflow
+menu holds DND, sound, settings and Clear all, leaving the heading and Close/Pin
+control usable.
 
 ### System OSDs
 
@@ -179,9 +202,14 @@ Keep animation cancellation and reversal in the owning component.
 
 Notification motion is a separate recipe: current toast entry is 280ms,
 dismissal translation 240ms with 180ms fade; history dismissal uses 260ms
-translation and 200ms fade. Group expansion and finite urgent emphasis retain
-their local choreography. Do not replace these with panel timing or add looping
-attention cues, spring overshoot or motion unrelated to a state transition.
+translation and 200ms fade. Popup expansion uses 240ms geometry and a single
+180ms card fade, with at most 100ms stagger. Center disclosures resize and rotate
+their chevrons over 180ms. Critical notifications use a single 600ms tint pulse
+plus a persistent text/icon indication, without shaking or rotating the card.
+Do not add looping attention cues, spring overshoot or motion unrelated to a
+state transition.
+The notification-specific reduced-motion preference makes popup/history
+transitions immediate, removes stagger delays and disables attention pulses.
 
 Always distinguish enabled, disabled, disconnected, unavailable and pending.
 Confirm success from backend state; preserve the user's selection on failure.

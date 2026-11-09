@@ -6,21 +6,85 @@ import "DesignTokens.js" as Design
 import QtQml
 import QtQuick.Controls.Basic as Controls
 
-PopupWindow {
+Scope {
   id: popup
 
   required property var controller
   required property var panel
   required property var service
 
-  anchor.window: panel
-  anchor.rect.x: Math.max(0, parentWindow.width - width - 12)
-  anchor.rect.y: parentWindow.height + 12
-  color: "transparent"
-  grabFocus: false
-  implicitHeight: Math.min(548, panel.screen.height - panel.height - 24)
-  implicitWidth: Math.min(Design.panel.width, panel.screen.width - Design.panel.gap * 2)
-  surfaceFormat.opaque: false
+  readonly property real height: Math.min(548, panel.screen.height - panel.height - 24)
+  readonly property real width: Math.min(Design.panel.width, panel.screen.width - Design.panel.gap * 2)
+  readonly property bool visible: preview.visible || pinnedPopup.visible
+  readonly property bool reducedMotion: service.reduceMotion
+  property bool pinned: false
+  property bool promotionPending: false
+  property var promotionSnapshot: null
+  property var promotionWindow: null
+  property int pinRequest: 0
+  property var activationReturn: null
+  property var restoreAfterOpen: null
+  readonly property bool compactHeader: width < 400
+  property bool overflowRequested: false
+
+  function activateFromCenter(id, actionIndex = null) {
+    if (popup.service.activationPendingId !== null)
+      return
+    const entry = popup.readingEntries().find(entry => entry.id === id)
+    const position = { id: id, contentY: historyView.contentY, expandedGroupKey: popup.expandedGroupKey,
+      offset: entry ? entry.y - historyView.contentY : null }
+    popup.requestClose(true)
+    popup.activationReturn = position
+    if (actionIndex === null)
+      popup.service.activateRecord(id)
+    else
+      popup.service.invokeAction(id, actionIndex)
+    popup.checkActivationReturn()
+  }
+
+  function checkActivationReturn() {
+    const position = popup.activationReturn
+    if (!position)
+      return
+    const failed = popup.service.activationErrorId === position.id && popup.service.activationError !== ""
+    if (!failed && popup.service.activationPendingId === position.id)
+      return
+    popup.activationReturn = null
+    if (failed && popup.service.history.some(record => record.id === position.id)) {
+      popup.restoreAfterOpen = position
+      popup.requestOpen(true)
+    }
+  }
+
+  function restoreActivationPosition() {
+    const position = popup.restoreAfterOpen
+    if (!position || !popup.visible)
+      return
+    popup.restoreAfterOpen = null
+    popup.expandedGroupKey = position.expandedGroupKey
+    notificationList.forceLayout()
+    popup.readingAnchor = position.offset === null ? null : { id: position.id, offset: position.offset }
+    historyView.contentY = Math.max(0, Math.min(position.contentY, historyView.contentHeight - historyView.height))
+    popup.restoreReadingPosition()
+    anchorRelease.restart()
+  }
+
+  function clearAll() {
+    if (clearAllAnimation.running || groupDismissTimer.running || popup.service.history.length === 0)
+      return
+    popup.clearingRecords = popup.service.history.slice()
+    popup.startClearAllDismissals()
+    clearAllAnimation.start()
+  }
+
+  function openOverflow() {
+    popup.overflowRequested = true
+    popup.requestOpen(true)
+    if (pinnedPopup.visible) {
+      popup.overflowRequested = false
+      headerMenu.open()
+    }
+  }
 
   component Hint: Controls.ToolTip {
     id: hint
@@ -42,122 +106,42 @@ PopupWindow {
     }
   }
 
-  component HeaderIconButton: Item {
+  component HeaderIconButton: NotificationButton {
     id: button
 
-    required property string iconName
     property color idleColor: popup.controller.controlPrimaryText
     property color activeColor: popup.controller.controlActiveIcon
     property bool active: false
     property bool destructive: false
-    property string description: ""
-    signal clicked
-
+    controller: popup.controller
+    keyboardEnabled: popup.pinned
+    iconSize: 16
+    foregroundColor: button.active || (button.destructive && button.hovered) ? button.activeColor : button.idleColor
     height: 32
     width: 32
 
-    Hint {
-      parent: button
-      x: button.width - implicitWidth
-      y: -implicitHeight - 6
-      text: button.description
-      visible: button.description.length > 0 && (area.containsMouse || button.activeFocus)
-    }
-
-    Rectangle {
-      anchors.fill: parent
+    background: Rectangle {
       color: button.active
-        ? Qt.rgba(button.activeColor.r, button.activeColor.g, button.activeColor.b, area.containsMouse ? 0.35 : 0.18)
-        : (area.containsMouse
+        ? Qt.rgba(button.activeColor.r, button.activeColor.g, button.activeColor.b, button.hovered ? 0.35 : 0.18)
+        : (button.hovered
           ? (button.destructive
             ? Qt.rgba(button.activeColor.r, button.activeColor.g, button.activeColor.b, 0.25)
-            : popup.controller.controlSurface)
+            : popup.controller.controlHover)
           : "transparent")
       radius: 8
-    }
-
-    LucideIcon {
-      anchors.centerIn: parent
-      color: button.active || (button.destructive && area.containsMouse) ? button.activeColor : button.idleColor
-      height: 16
-      source: popup.controller.icon(button.iconName)
-      width: 16
-    }
-
-    MouseArea {
-      id: area
-
-      anchors.fill: parent
-      cursorShape: Qt.PointingHandCursor
-      hoverEnabled: true
-      onClicked: button.clicked()
+      border.width: button.activeFocus ? 1 : 0
+      border.color: popup.controller.controlActiveIcon
     }
   }
 
-  component DismissButton: Controls.AbstractButton {
+  component DismissButton: NotificationButton {
     id: button
 
-    required property string description
     property string label: ""
-    property real maximumWidth: implicitWidth
-
-    implicitWidth: label ? buttonLabel.implicitWidth + 20 : 28
-    width: Math.min(implicitWidth, maximumWidth)
-    height: Math.max(28, buttonLabel.implicitHeight + 12)
-    focusPolicy: Qt.TabFocus
-    hoverEnabled: true
-    opacity: enabled ? 1 : 0.45
-    Accessible.role: Accessible.Button
-    Accessible.name: description
-    Accessible.onPressAction: { if (enabled) clicked() }
-    Keys.onReturnPressed: event => { if (!event.isAutoRepeat) clicked() }
-    Keys.onEnterPressed: event => { if (!event.isAutoRepeat) clicked() }
-    Hint {
-      parent: button
-      x: button.width - implicitWidth
-      y: -implicitHeight - 6
-      visible: button.enabled && (button.hovered || button.activeFocus)
-      text: button.description
-    }
-
-    Behavior on opacity {
-      NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
-    }
-
-    background: Rectangle {
-      radius: 7
-      color: button.down ? popup.controller.controlSliderTrack
-        : button.hovered ? popup.controller.controlHover : popup.controller.controlBackground
-      border.width: 1
-      border.color: button.activeFocus ? popup.controller.controlActiveIcon : popup.controller.controlSurfaceBorder
-    }
-
-    LucideIcon {
-      anchors.centerIn: parent
-      width: 14
-      height: 14
-      visible: !button.label
-      source: popup.controller.icon("x")
-      color: popup.controller.controlSecondaryText
-    }
-
-    Text {
-      id: buttonLabel
-      anchors.centerIn: parent
-      text: button.label
-      textFormat: Text.PlainText
-      width: button.width - 20
-      horizontalAlignment: Text.AlignHCenter
-      wrapMode: Text.Wrap
-      visible: button.label !== ""
-      color: popup.controller.controlPrimaryText
-      font.family: popup.controller.fontFamily
-      font.pixelSize: 11
-    }
-
-    HoverHandler {
-      cursorShape: Qt.PointingHandCursor
-    }
+    controller: popup.controller
+    text: label
+    iconName: label ? "" : "x"
+    keyboardEnabled: popup.pinned
   }
 
   component NotificationCard: Item {
@@ -176,58 +160,24 @@ PopupWindow {
     property bool expanded: false
     property bool copied: false
     readonly property bool canExpand: expanded || summaryLabel.truncated || bodyLabel.truncated
-    property real bellAngle: 0
     property bool groupDismissing: false
     property int groupDismissDelay: 0
     property real groupDismissOffset: 0
 
-    transform: [
-      Translate {
-        id: urgentTranslate
-      },
-      Translate {
-        x: card.groupDismissOffset
-      }
-    ]
+    transform: Translate { x: card.groupDismissOffset }
     width: parent.width
     height: card.contentHeight
+
+    Behavior on height {
+      NumberAnimation { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic }
+    }
 
     Behavior on y {
       enabled: !card.dismissing && !card.groupDismissing
 
       YAnimator {
-        duration: 180
+        duration: popup.reducedMotion ? 0 : 180
         easing.type: Easing.OutCubic
-      }
-    }
-
-    SequentialAnimation {
-      id: urgentWiggle
-
-      loops: 1
-      running: popup.visible && card.isLive && card.record.urgency === "critical" && !card.dismissing
-
-      PauseAnimation { duration: 1800 }
-      ParallelAnimation {
-        NumberAnimation { target: urgentTranslate; property: "x"; to: 5; duration: 70; easing.type: Easing.OutQuad }
-        NumberAnimation { target: card; property: "bellAngle"; to: -12; duration: 70; easing.type: Easing.OutQuad }
-      }
-      ParallelAnimation {
-        NumberAnimation { target: urgentTranslate; property: "x"; to: -5; duration: 110; easing.type: Easing.InOutSine }
-        NumberAnimation { target: card; property: "bellAngle"; to: 10; duration: 110; easing.type: Easing.InOutSine }
-      }
-      ParallelAnimation {
-        NumberAnimation { target: urgentTranslate; property: "x"; to: 3; duration: 90; easing.type: Easing.InOutSine }
-        NumberAnimation { target: card; property: "bellAngle"; to: -6; duration: 90; easing.type: Easing.InOutSine }
-      }
-      ParallelAnimation {
-        NumberAnimation { target: urgentTranslate; property: "x"; to: 0; duration: 100; easing.type: Easing.OutQuad }
-        NumberAnimation { target: card; property: "bellAngle"; to: 0; duration: 100; easing.type: Easing.OutQuad }
-      }
-
-      onStopped: {
-        urgentTranslate.x = 0
-        card.bellAngle = 0
       }
     }
 
@@ -248,6 +198,7 @@ PopupWindow {
     Item {
       id: surface
 
+      clip: true
       height: parent.height
       width: parent.width
 
@@ -270,26 +221,24 @@ PopupWindow {
 
         SequentialAnimation {
           loops: 1
-          running: popup.visible && urgentBreath.visible
+          running: popup.visible && urgentBreath.visible && !popup.reducedMotion
 
           NumberAnimation {
             target: urgentBreath
             property: "opacity"
             from: 0.18
             to: 0.85
-            duration: 1100
+            duration: 180
             easing.type: Easing.InOutSine
           }
-          PauseAnimation { duration: 150 }
           NumberAnimation {
             target: urgentBreath
             property: "opacity"
             from: 0.85
             to: 0.18
-            duration: 1100
+            duration: 420
             easing.type: Easing.InOutSine
           }
-          PauseAnimation { duration: 450 }
         }
       }
 
@@ -316,7 +265,8 @@ PopupWindow {
             elide: Text.ElideRight
             font.family: card.controller.fontFamily
             font.pixelSize: 10
-            text: card.record.appName
+            text: (card.record.urgency === "critical" ? "Critical · " : "") + card.record.appName
+            textFormat: Text.PlainText
             width: parent.width - timeLabel.width - dismissButton.width - parent.spacing * 2
           }
 
@@ -383,7 +333,7 @@ PopupWindow {
           enabled: !card.dismissing && !card.groupDismissing
           width: Math.min(parent.width, disclosureLabel.implicitWidth + 34)
           height: 28
-          focusPolicy: Qt.TabFocus
+          focusPolicy: popup.pinned ? Qt.TabFocus : Qt.NoFocus
           hoverEnabled: true
           Accessible.name: card.expanded ? "Collapse notification text" : "Read full notification"
           Keys.onReturnPressed: event => { if (!event.isAutoRepeat) clicked() }
@@ -407,6 +357,9 @@ PopupWindow {
               height: 14
               source: card.controller.icon("chevron-right")
               rotation: card.expanded ? 270 : 90
+              Behavior on rotation {
+                RotationAnimation { duration: popup.reducedMotion ? 0 : 180; direction: RotationAnimation.Shortest; easing.type: Easing.OutCubic }
+              }
               color: card.controller.controlSecondaryText
             }
 
@@ -465,8 +418,12 @@ PopupWindow {
               label: modelData.text
               description: modelData.text
               maximumWidth: textColumn.width
-              enabled: !card.dismissing && !card.groupDismissing
-              onClicked: popup.service.invokeAction(card.record.id, actionDelegate.modelData.sourceIndex)
+              enabled: !card.dismissing && !card.groupDismissing && card.service.activationPendingId === null
+              onClicked: {
+                const id = card.record.id
+                const index = actionDelegate.modelData.sourceIndex
+                popup.activateFromCenter(id, index)
+              }
             }
           }
         }
@@ -512,14 +469,6 @@ PopupWindow {
           source: card.icon.kind === "lucide" ? card.controller.icon(card.icon.source) : ""
           visible: card.icon.kind === "lucide"
           width: 20
-
-          transform: Rotation {
-            id: bellRotation
-
-            angle: card.icon.kind === "lucide" && card.icon.source === "bell" ? card.bellAngle : 0
-            origin.x: notificationIcon.width / 2
-            origin.y: 0
-          }
         }
       }
     }
@@ -532,9 +481,10 @@ PopupWindow {
     }
 
     function activate() {
-      if (card.dismissing)
+      if (card.dismissing || card.groupDismissing || card.service.activationPendingId !== null)
         return
-      card.service.activateRecord(card.record.id)
+      const id = card.record.id
+      popup.activateFromCenter(id)
     }
 
     Timer {
@@ -555,12 +505,12 @@ PopupWindow {
     SequentialAnimation {
       id: groupDismissAnimation
 
-      PauseAnimation { duration: Math.max(0, card.groupDismissDelay) }
+      PauseAnimation { duration: popup.reducedMotion ? 0 : Math.max(0, card.groupDismissDelay) }
       NumberAnimation {
         target: card
         property: "groupDismissOffset"
         to: card.width
-        duration: 260
+        duration: popup.reducedMotion ? 0 : 260
         easing.type: Easing.InCubic
       }
     }
@@ -571,13 +521,13 @@ PopupWindow {
       XAnimator {
         target: surface
         to: card.width
-        duration: 260
+        duration: popup.reducedMotion ? 0 : 260
         easing.type: Easing.InCubic
       }
       OpacityAnimator {
         target: surface
         to: 0
-        duration: 200
+        duration: popup.reducedMotion ? 0 : 200
         easing.type: Easing.OutCubic
       }
       onStopped: {
@@ -599,6 +549,7 @@ PopupWindow {
     readonly property var icon: recordModel.count > 0 ? service.iconFor(recordModel.get(0).notification) : ({ kind: "lucide", source: "bell" })
     readonly property var latest: recordModel.count > 0 ? recordModel.get(0).notification : null
     readonly property bool expanded: popup.expandedGroupKey === group.key
+    property real revealProgress: expanded ? 1 : 0
     property bool dismissing: false
     property real headerDismissOffset: 0
 
@@ -609,11 +560,11 @@ PopupWindow {
     }
 
     clip: true
-    height: grouped ? groupHeader.height + (expanded ? cardList.height + 8 : 0) : cardList.height
+    height: grouped ? groupHeader.height + (cardList.height + 8) * revealProgress : cardList.height
     width: parent.width
 
-    Behavior on height {
-      NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+    Behavior on revealProgress {
+      NumberAnimation { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic }
     }
 
     Component.onCompleted: syncRecords(notificationGroup.records)
@@ -644,7 +595,7 @@ PopupWindow {
       target: notificationGroup
       property: "headerDismissOffset"
       to: notificationGroup.width
-      duration: 260
+      duration: popup.reducedMotion ? 0 : 260
       easing.type: Easing.InCubic
     }
 
@@ -657,7 +608,7 @@ PopupWindow {
 
       target: notificationGroup
       to: 0
-      duration: 200
+      duration: popup.reducedMotion ? 0 : 200
       easing.type: Easing.OutCubic
     }
 
@@ -665,6 +616,14 @@ PopupWindow {
       id: groupHeader
 
       enabled: !notificationGroup.dismissing
+      activeFocusOnTab: popup.pinned && notificationGroup.grouped && enabled
+      Accessible.role: Accessible.Button
+      Accessible.name: (notificationGroup.latest ? notificationGroup.latest.appName : "") + "; "
+        + recordModel.count + " notifications; " + (notificationGroup.expanded ? "collapse" : "expand")
+      Accessible.onPressAction: notificationGroup.toggleExpanded()
+      Keys.onSpacePressed: event => { if (!event.isAutoRepeat) notificationGroup.toggleExpanded() }
+      Keys.onReturnPressed: event => { if (!event.isAutoRepeat) notificationGroup.toggleExpanded() }
+      Keys.onEnterPressed: event => { if (!event.isAutoRepeat) notificationGroup.toggleExpanded() }
       height: Math.max(78, groupText.implicitHeight + 24)
       transform: Translate { x: notificationGroup.headerDismissOffset }
       visible: notificationGroup.grouped
@@ -685,7 +644,7 @@ PopupWindow {
 
       Rectangle {
         anchors.fill: parent
-        border.color: notificationGroup.controller.controlSurfaceBorder
+        border.color: groupHeader.activeFocus ? notificationGroup.controller.controlActiveIcon : notificationGroup.controller.controlSurfaceBorder
         border.width: 1
         color: notificationGroup.controller.controlSurface
         radius: 16
@@ -799,6 +758,9 @@ PopupWindow {
         height: 16
         source: notificationGroup.controller.icon("chevron-right")
         rotation: notificationGroup.expanded ? 90 : 0
+        Behavior on rotation {
+          RotationAnimation { duration: popup.reducedMotion ? 0 : 180; direction: RotationAnimation.Shortest; easing.type: Easing.OutCubic }
+        }
         width: 16
       }
     }
@@ -833,8 +795,8 @@ PopupWindow {
 
           Behavior on opacity {
             SequentialAnimation {
-              PauseAnimation { duration: notificationGroup.expanded ? Math.min(140, Math.max(0, historyCard.index) * 35) : 0 }
-              NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+              PauseAnimation { duration: notificationGroup.expanded && !popup.reducedMotion ? Math.min(140, Math.max(0, historyCard.index) * 35) : 0 }
+              NumberAnimation { duration: popup.reducedMotion ? 0 : 160; easing.type: Easing.OutCubic }
             }
           }
 
@@ -879,7 +841,7 @@ PopupWindow {
   // Owned by the panel so closing it cannot cancel an accepted dismissal.
   Timer {
     id: groupDismissTimer
-    interval: 480
+    interval: popup.reducedMotion ? 0 : 480
     onTriggered: {
       const records = popup.groupDismissRecords
       popup.groupDismissRecords = []
@@ -984,6 +946,8 @@ PopupWindow {
   Connections {
     target: popup.service
     function onHistoryGroupsChanged() { popup.syncHistory() }
+    function onActivationErrorChanged() { Qt.callLater(popup.checkActivationReturn) }
+    function onActivationPendingIdChanged() { Qt.callLater(popup.checkActivationReturn) }
   }
 
   ParallelAnimation {
@@ -993,18 +957,18 @@ PopupWindow {
       target: clearAllTranslate
       property: "x"
       to: popup.width
-      duration: 240
+      duration: popup.reducedMotion ? 0 : 240
       easing.type: Easing.InCubic
     }
     NumberAnimation {
       target: notificationList
       property: "opacity"
       to: 0
-      duration: 180
+      duration: popup.reducedMotion ? 0 : 180
       easing.type: Easing.InQuad
     }
     onFinished: {
-      popup.service.dismissRecords(popup.clearingRecords)
+      popup.service.clearHistoryWithUndo(popup.clearingRecords)
       popup.clearingRecords = []
       popup.expandedGroupKey = ""
       clearAllTranslate.x = 0
@@ -1015,38 +979,159 @@ PopupWindow {
     }
   }
 
-  function requestOpen() {
-    hoverCloseTimer.stop()
-    if (popup.visible && !closeAnim.running)
+  function openPinned(request) {
+    if (request !== popup.pinRequest)
       return
-    popup.closePending = false
-    closeAnim.stop()
-    if (!popup.visible) {
-      content.opacity = 0
-      content.y = 10
-      popup.visible = true
-    }
-    openAnim.start()
+    if (popup.pinned && !popup.closePending)
+      pinnedPopup.open()
+    popup.promotionPending = false
   }
 
-  function requestClose() {
-    hoverCloseTimer.stop()
-    if (!popup.visible || closeAnim.running)
+  function requestOpen(pin = false) {
+    popup.activationReturn = null
+    if (!pin && popup.closePending && popup.pinned)
       return
+    hoverCloseTimer.stop()
+    popup.closePending = false
+    closeAnim.stop()
+    if (!popup.visible && !popup.promotionPending) {
+      content.opacity = 0
+      content.y = popup.reducedMotion ? 0 : 10
+    }
+    if (pin || popup.pinned) {
+      popup.pinned = true
+      if (pinnedPopup.visible || popup.promotionPending)
+        return
+      popup.promotionPending = true
+      const request = ++popup.pinRequest
+      if (preview.visible) {
+        const captured = content.grabToImage(result => {
+          if (request !== popup.pinRequest || !popup.pinned || popup.closePending)
+            return
+          popup.promotionSnapshot = result
+        })
+        if (!captured) {
+          popup.promotionPending = false
+          popup.pinned = false
+        }
+      } else {
+        Qt.callLater(popup.openPinned, request)
+      }
+    } else {
+      preview.visible = true
+      if (content.opacity < 1 && !openAnim.running)
+        openAnim.start()
+    }
+  }
+
+  function requestClose(immediate = false) {
+    popup.activationReturn = null
+    popup.restoreAfterOpen = null
+    popup.overflowRequested = false
+    headerMenu.close()
+    popup.pinRequest++
+    popup.promotionPending = false
+    popup.promotionSnapshot = null
+    popup.promotionWindow = null
+    hoverCloseTimer.stop()
     popup.closePending = true
     openAnim.stop()
-    closeAnim.start()
+    if (pinnedPopup.visible)
+      pinnedPopup.close()
+    else
+      popup.pinned = false
+    if (immediate) {
+      closeAnim.stop()
+      preview.visible = false
+    } else if (preview.visible && !closeAnim.running) {
+      closeAnim.start()
+    }
   }
 
   // Soft rise + fade: content slides up into place on open and down on close.
   function requestHoverClose() {
-    hoverCloseTimer.restart()
+    if (!popup.pinned)
+      hoverCloseTimer.restart()
   }
 
   Timer {
     id: hoverCloseTimer
     interval: 250
-    onTriggered: popup.requestClose()
+    onTriggered: { if (!popup.pinned) popup.requestClose() }
+  }
+
+  PopupWindow {
+    id: preview
+    anchor.window: popup.panel
+    anchor.rect.x: Math.max(0, popup.panel.width - popup.width - 12)
+    anchor.rect.y: popup.panel.height + 12
+    implicitWidth: popup.width
+    implicitHeight: popup.height
+    color: "transparent"
+    surfaceFormat.opaque: false
+    grabFocus: false
+
+    Image {
+      anchors.fill: parent
+      source: popup.promotionSnapshot ? popup.promotionSnapshot.url : ""
+      visible: popup.promotionSnapshot !== null
+      z: 1
+      onStatusChanged: {
+        if (status === Image.Ready)
+          Qt.callLater(popup.openPinned, popup.pinRequest)
+      }
+    }
+  }
+
+  Connections {
+    target: popup.promotionWindow
+    function onFrameSwapped() {
+      if (pinnedPopup.visible && popup.promotionSnapshot) {
+        preview.visible = false
+        popup.promotionSnapshot = null
+        popup.promotionWindow = null
+      }
+    }
+  }
+
+  PopupWindow {
+    id: pinnedPopup
+    anchor.window: popup.panel
+    anchor.rect.x: Math.max(0, popup.panel.width - popup.width - 12)
+    anchor.rect.y: popup.panel.height + 12
+    implicitWidth: popup.width
+    implicitHeight: popup.height
+    color: "transparent"
+    surfaceFormat.opaque: false
+    grabFocus: true
+
+    function open() {
+      pinnedPopup.visible = true
+      if (popup.promotionSnapshot) {
+        popup.promotionWindow = content.nativeWindow
+        preview.contentItem.Window.window.raise()
+      }
+      content.forceActiveFocus()
+      Qt.callLater(popup.restoreActivationPosition)
+      if (popup.overflowRequested) {
+        popup.overflowRequested = false
+        headerMenu.open()
+      }
+      if (content.opacity < 1 && !openAnim.running)
+        openAnim.start()
+    }
+
+    function close() {
+      popup.pinned = false
+      pinnedPopup.visible = false
+      preview.visible = false
+      popup.promotionSnapshot = null
+      popup.promotionWindow = null
+    }
+    onVisibleChanged: {
+      if (!visible && popup.pinned)
+        popup.requestClose(true)
+    }
   }
 
   ParallelAnimation {
@@ -1054,13 +1139,13 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 1
-      duration: Design.motion.enter
+      duration: popup.reducedMotion ? 0 : Design.motion.enter
       easing.type: Easing.OutCubic
     }
     YAnimator {
       target: content
       to: 0
-      duration: Design.motion.enter
+      duration: popup.reducedMotion ? 0 : Design.motion.enter
       easing.type: Easing.OutCubic
     }
   }
@@ -1070,27 +1155,27 @@ PopupWindow {
     OpacityAnimator {
       target: content
       to: 0
-      duration: Design.motion.exit
+      duration: popup.reducedMotion ? 0 : Design.motion.exit
       easing.type: Easing.InCubic
     }
     YAnimator {
       target: content
       to: 6
-      duration: Design.motion.exit
+      duration: popup.reducedMotion ? 0 : Design.motion.exit
       easing.type: Easing.InCubic
     }
-    onStopped: {
-      if (popup.closePending) {
-        popup.closePending = false
-        popup.visible = false
-      }
-    }
+    onFinished: preview.visible = false
   }
 
   onVisibleChanged: {
     if (popup.visible) {
       popup.syncHistory()
     } else {
+      popup.pinned = false
+      popup.pinRequest++
+      popup.promotionPending = false
+      popup.promotionSnapshot = null
+      popup.promotionWindow = null
       popup.readingAnchor = null
       anchorRelease.stop()
       centerModel.clear()
@@ -1098,16 +1183,68 @@ PopupWindow {
       closeAnim.stop()
       popup.closePending = false
       popup.expandedGroupKey = ""
-      content.opacity = 1
+      content.opacity = 0
       content.y = 0
     }
   }
 
-  Item {
+  FocusScope {
     id: content
 
-    width: parent.width
-    height: parent.height
+    readonly property var nativeWindow: Window.window
+    parent: pinnedPopup.visible ? pinnedPopup.contentItem : preview.contentItem
+    width: popup.width
+    height: popup.height
+    focus: popup.pinned
+    Keys.onEscapePressed: popup.requestClose()
+
+    Controls.Menu {
+      id: headerMenu
+      x: Math.max(0, content.width - width - Design.panel.padding)
+      y: Design.panel.padding + 40
+      width: Math.min(280, popup.width - Design.panel.padding * 2)
+      padding: 6
+      background: Rectangle {
+        color: popup.controller.controlSurface
+        border.color: popup.controller.controlSurfaceBorder
+        radius: 10
+      }
+      delegate: Controls.MenuItem {
+        id: menuItem
+        implicitHeight: Math.max(36, contentItem.implicitHeight + 16)
+        contentItem: Text {
+          text: menuItem.text
+          textFormat: Text.PlainText
+          wrapMode: Text.Wrap
+          color: menuItem.enabled ? popup.controller.controlPrimaryText : popup.controller.controlSecondaryText
+          font.family: popup.controller.fontFamily
+          font.pixelSize: 12
+        }
+        background: Rectangle {
+          radius: 7
+          color: menuItem.highlighted ? popup.controller.controlHover : "transparent"
+          border.width: menuItem.activeFocus ? 1 : 0
+          border.color: popup.controller.controlActiveIcon
+        }
+      }
+      Controls.Action {
+        text: "Do Not Disturb: " + (popup.controller.doNotDisturb ? "on" : "off")
+        onTriggered: popup.controller.toggleDoNotDisturb()
+      }
+      Controls.Action {
+        text: "Notification sounds: " + (popup.service.notificationSoundsMuted ? "muted" : "on")
+        onTriggered: popup.service.setNotificationSoundsMuted(!popup.service.notificationSoundsMuted)
+      }
+      Controls.Action {
+        text: "Notification settings"
+        onTriggered: popup.controller.openSystemSettings(popup.panel.screen, "notifications")
+      }
+      Controls.Action {
+        text: "Clear all notifications"
+        enabled: popup.service.history.length > 0 && !clearAllAnimation.running && !groupDismissTimer.running
+        onTriggered: popup.clearAll()
+      }
+    }
 
     HoverHandler {
       onHoveredChanged: {
@@ -1139,7 +1276,7 @@ PopupWindow {
 
           anchors.verticalCenter: parent.verticalCenter
           anchors.left: parent.left
-          anchors.right: clearButton.visible ? clearButton.left : settingsButton.left
+          anchors.right: popup.compactHeader ? overflowButton.left : clearButton.visible ? clearButton.left : settingsButton.left
           anchors.rightMargin: 8
           color: popup.controller.controlPrimaryText
           font.family: popup.controller.fontFamily
@@ -1149,12 +1286,34 @@ PopupWindow {
         }
 
         HeaderIconButton {
+          id: modeButton
+          anchors.right: parent.right
+          anchors.verticalCenter: parent.verticalCenter
+          iconName: popup.pinned ? "x" : "keyboard"
+          description: popup.pinned ? "Close notifications" : "Pin notifications for keyboard interaction"
+          onClicked: popup.pinned ? popup.requestClose() : popup.requestOpen(true)
+        }
+
+        HeaderIconButton {
+          id: overflowButton
+          visible: popup.compactHeader
+          anchors.right: modeButton.left
+          anchors.rightMargin: 8
+          anchors.verticalCenter: parent.verticalCenter
+          text: "…"
+          description: "More notification controls"
+          onClicked: popup.openOverflow()
+        }
+
+        HeaderIconButton {
           id: dndButton
+          visible: !popup.compactHeader
 
           active: popup.controller.doNotDisturb
           activeColor: popup.controller.controlActiveIcon
           anchors {
-            right: parent.right
+            right: modeButton.left
+            rightMargin: 8
             verticalCenter: parent.verticalCenter
           }
           iconName: popup.controller.doNotDisturb ? "bell-off" : "bell"
@@ -1173,6 +1332,7 @@ PopupWindow {
 
         HeaderIconButton {
           id: soundButton
+          visible: !popup.compactHeader
 
           active: popup.service.notificationSoundsMuted
           activeColor: popup.controller.controlActiveIcon
@@ -1194,6 +1354,7 @@ PopupWindow {
 
         HeaderIconButton {
           id: settingsButton
+          visible: !popup.compactHeader
           anchors.right: soundButton.left
           anchors.rightMargin: 8
           anchors.verticalCenter: parent.verticalCenter
@@ -1215,17 +1376,41 @@ PopupWindow {
           label: "Clear all"
           description: "Clear notification history"
           enabled: !clearAllAnimation.running && !groupDismissTimer.running
-          onClicked: {
-            popup.clearingRecords = popup.service.history.slice()
-            popup.startClearAllDismissals()
-            clearAllAnimation.start()
-          }
-          visible: popup.service.history.length > 0
+          onClicked: popup.clearAll()
+          visible: !popup.compactHeader && popup.service.history.length > 0
         }
       }
 
       Item {
-        height: parent.height - 44
+        id: undoBanner
+        width: parent.width
+        visible: popup.service.clearedHistory.length > 0
+        height: visible ? Math.max(undoLabel.implicitHeight, undoButton.height) : 0
+        Text {
+          id: undoLabel
+          width: Math.max(1, parent.width - undoButton.width - 12)
+          anchors.verticalCenter: parent.verticalCenter
+          text: popup.service.clearedHistory.length + " notifications cleared.\nUndo restores history only, not app actions."
+          textFormat: Text.PlainText
+          wrapMode: Text.Wrap
+          color: popup.controller.controlSecondaryText
+          font.family: popup.controller.fontFamily
+          font.pixelSize: 11
+        }
+        NotificationButton {
+          id: undoButton
+          controller: popup.controller
+          anchors.right: parent.right
+          anchors.verticalCenter: parent.verticalCenter
+          keyboardEnabled: popup.pinned
+          text: "Undo"
+          description: "Restore cleared notification history"
+          onClicked: popup.service.undoClearHistory()
+        }
+      }
+
+      Item {
+        height: Math.max(0, parent.height - 44 - (undoBanner.visible ? undoBanner.height + 12 : 0))
         width: parent.width
 
         Flickable {

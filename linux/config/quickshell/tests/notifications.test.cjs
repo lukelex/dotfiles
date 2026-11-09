@@ -25,6 +25,8 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
     liveRevision: 0,
     historyLimit: 100,
     activationPendingId: null,
+    clearedHistory: [],
+    clearUndoTimer: { restart() { this.running = true; }, stop() { this.running = false; } },
     tagMap: {},
     hovered: {},
     popupLimit: 5,
@@ -55,10 +57,58 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
     const functionSource = name === 'bluetoothConnectedBody' ? match[0].replace('): string', ')') : match[0];
     service[name] = vm.runInContext(`(${functionSource})`, context);
   }
+  for (const name of ['clearHistoryWithUndo', 'undoClearHistory']) {
+    const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
+    service[name] = vm.runInContext(`(${match[0]})`, context);
+  }
   const retry = source.match(/  function refreshBluetoothNotificationBatteries\([^]*?\n  \}/);
   service.refreshBluetoothNotificationBatteries = vm.runInContext(`(${retry[0]})`, context);
   return { service, removed, settings, Bluetooth };
 }
+
+test('clear undo restores sanitized history without native actions, popups or later arrivals being lost', () => {
+  const { service } = serviceForTest();
+  const old = { id: 'old', appName: 'Chat', time: 1, urgency: 'normal', nativeId: 7,
+    image: 'image://qsimage/gone', actions: [{ sourceIndex: 0, text: 'Reply' }] };
+  const newer = { id: 'new', appName: 'Other', time: 2, urgency: 'normal', actions: [] };
+  service.history = [old];
+  const snapshot = service.history.slice();
+  service.history.unshift(newer);
+  let dismissed = 0;
+  service.live.old = { dismiss() { dismissed++; } };
+  service.clearHistoryWithUndo(snapshot);
+  assert.equal(dismissed, 1);
+  assert.deepEqual(Array.from(service.history, record => record.id), ['new']);
+  assert.equal(service.clearUndoTimer.running, true);
+  service.syncPopup = () => assert.fail('Undo must not replay popups');
+  service.undoClearHistory();
+  assert.deepEqual(Array.from(service.history, record => record.id), ['new', 'old']);
+  const restored = service.history[1];
+  assert.equal(restored.nativeId, undefined);
+  assert.equal(restored.image, '');
+  assert.equal(restored.actions.length, 0);
+  assert.equal(service.live.old, undefined);
+  assert.equal(service.clearUndoTimer.running, false);
+  service.undoClearHistory();
+  assert.equal(service.history.length, 2);
+});
+
+test('repeated clears replace the undo snapshot and restoration respects identities and history limit', () => {
+  const { service } = serviceForTest();
+  const record = (id, time) => ({ id, time, appName: 'App', urgency: 'normal', actions: [] });
+  service.history = [record('first', 1)];
+  service.clearHistoryWithUndo(service.history.slice());
+  service.history = [record('second', 2)];
+  service.clearHistoryWithUndo(service.history.slice());
+  service.history = [record('latest', 3)];
+  service.historyLimit = 2;
+  service.undoClearHistory();
+  assert.deepEqual(Array.from(service.history, record => record.id), ['latest', 'second']);
+  service.clearedHistory = [record('latest', 0), record('older', 0)];
+  service.undoClearHistory();
+  assert.deepEqual(Array.from(service.history, record => record.id), ['latest', 'second']);
+  assert.equal(service.history[0].time, 3);
+});
 
 test('Bluetooth connected notifications include the matching device battery level', () => {
   const { service, Bluetooth } = serviceForTest();

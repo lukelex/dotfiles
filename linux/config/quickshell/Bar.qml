@@ -1321,13 +1321,13 @@ Scope {
       }
 
       function toggleNotifications() {
-        if (notificationCenter.visible && !notificationCenter.closePending)
+        if (notificationCenter.visible && notificationCenter.pinned && !notificationCenter.closePending)
           notificationCenter.requestClose()
         else
-          panel.showNotifications()
+          panel.showNotifications(true)
       }
 
-      function showNotifications() {
+      function showNotifications(pin = false) {
         root.cancelHoverClose()
         if (root.notificationCenterTarget !== notificationCenter)
           root.closeNotifications()
@@ -1337,7 +1337,7 @@ Scope {
         root.closeDateTime()
         root.closeGitHubReviewCenter()
         controlCenter.requestClose()
-        notificationCenter.requestOpen()
+        notificationCenter.requestOpen(pin)
       }
 
       function openDateTime(pin = false) {

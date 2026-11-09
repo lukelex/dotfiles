@@ -54,6 +54,7 @@ function fixture(ids = ['old', 'middle', 'new'], expanded = true) {
   const expiryAnimation = { start() { this.running = true; }, stop() { this.running = false; } };
   const stackedExpiryTimer = { restart() { this.running = true; }, stop() { this.running = false; } };
   const globals = {
+    popup: { preserveReadingPosition() {} },
     stack, recordModel, expandedCards, expandedColumn, expiryAnimation, stackedExpiryTimer,
     expiryTranslate: { x: 0 }, latestToast: { dismissing: false }, stackHover: { hovered: false },
     reflowTimer: { restart() {} }, Qt: { callLater(callback) { pending.add(callback); } },
@@ -73,7 +74,7 @@ test('replacement updates the existing delegate even when another application ar
   const original = f.cards[1];
   const replacement = { ...original.record, summary: 'Updated', height: 150 };
   let appended = false;
-  const popup = { popupStacks: { count: 2, itemAt: index => index === 0 ? f.stack : {
+  const popup = { preserveReadingPosition() {}, popupStacks: { count: 2, itemAt: index => index === 0 ? f.stack : {
     updateRecord: () => false,
     canAddRecord: () => true,
     addRecord() { appended = true; },
@@ -166,7 +167,8 @@ test('dismissal reconciles both screen models without a second local exit', () =
 test('activation keeps the toast and history for failure, pending work and success', () => {
   for (const result of [false, true]) {
     let activations = 0;
-    const toast = { dismissing: false, record: { id: 'target' }, service: {
+    const toast = { dismissing: false, canActivate: true, record: { id: 'target' }, service: {
+      activationPendingId: null,
       activateRecord(id) { assert.equal(id, 'target'); activations++; return result; },
       dismissRecord() { assert.fail('Opening must not delete history'); },
     } };
@@ -187,4 +189,47 @@ test('reusing a toast resets dismissal independently from its expansion fade', (
   assert.equal(dismissTranslate.x, 0);
   assert.equal(toast.dismissalOpacity, 1);
   assert.equal(toast.presentationOpacity, 0.4);
+});
+
+test('unavailable, departing and competing activations are ignored', () => {
+  for (const state of [{ canActivate: false }, { dismissing: true }, { pending: 'other' }]) {
+    const toast = { canActivate: true, dismissing: false, ...state, service: {
+      activationPendingId: state.pending || null,
+      activateRecord() { assert.fail('Unavailable action invoked'); },
+    } };
+    load('activate', { toast })();
+  }
+});
+
+test('reading anchor survives resize and removal above it, clamps and yields to scrolling', () => {
+  let entries = [{ id: 'a', y: 0, height: 80 }, { id: 'b', y: 90, height: 120 }];
+  const popup = { visible: true, readingAnchor: null, readingEntries: () => entries };
+  const popupView = { moving: false, contentY: 100, contentHeight: 800, height: 200 };
+  const popupScrollBar = { pressed: false };
+  const globals = { popup, popupView, popupScrollBar, anchorRelease: { restart() {} } };
+  const preserve = load('preserveReadingPosition', globals, 2);
+  const restore = load('restoreReadingPosition', globals, 2);
+  preserve();
+  assert.equal(popup.readingAnchor.id, 'b');
+  entries[1].y = 150;
+  restore();
+  assert.equal(popupView.contentY, 160);
+  preserve(['a']);
+  entries = [{ id: 'b', y: 0, height: 120 }];
+  restore();
+  assert.equal(popupView.contentY, 10);
+  popupView.contentHeight = 120;
+  restore();
+  assert.equal(popupView.contentY, 0);
+  popupView.contentY = 20;
+  popupView.moving = true;
+  restore();
+  assert.equal(popup.readingAnchor, null);
+  assert.equal(popupView.contentY, 20);
+  preserve();
+  assert.equal(popup.readingAnchor, null);
+  popupView.moving = false;
+  popupScrollBar.pressed = true;
+  preserve();
+  assert.equal(popup.readingAnchor, null);
 });

@@ -88,7 +88,7 @@ FIELDS = [
 NOTIFICATIONS = {
   "soundFilePath": (str, None), "popupCorner": (str, ["top-right", "top-left", "bottom-right", "bottom-left"]),
   "popupDurationSeconds": (int, [0, 5, 10, 20, 30, 60]), "popupMonitor": (str, None),
-  "popupPreviews": (bool, None), "lockScreenPrivacy": (str, ["show", "redact", "hide"]),
+  "popupPreviews": (bool, None), "reduceMotion": (bool, None), "lockScreenPrivacy": (str, ["show", "redact", "hide"]),
   "historyRetentionDays": (int, [0, 1, 7, 30]), "doNotDisturb": (bool, None),
   "dndScheduleEnabled": (bool, None), "dndStartMinutes": (int, range(1440)),
   "dndEndMinutes": (int, range(1440)), "dndScheduleDays": (int, range(1, 128)),

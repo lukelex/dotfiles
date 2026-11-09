@@ -66,6 +66,11 @@ QtObject {
   property var activationErrorId: null
   property string activationError: ""
   property string activationOutput: ""
+  property var clearedHistory: []
+  property Timer clearUndoTimer: Timer {
+    interval: 8000
+    onTriggered: service.clearedHistory = []
+  }
 
   property Process windowFocus: Process {
     command: []
@@ -146,6 +151,7 @@ QtObject {
   readonly property int popupDurationSeconds: settings.popupDurationSeconds
   readonly property string popupMonitor: settings.popupMonitor
   readonly property bool popupPreviews: settings.popupPreviews
+  readonly property bool reduceMotion: settings.reduceMotion
   readonly property string lockScreenPrivacy: settings.lockScreenPrivacy
   readonly property int historyRetentionDays: settings.historyRetentionDays
   property bool historyBeingRead: false
@@ -165,6 +171,7 @@ QtObject {
     property int popupDurationSeconds: 20
     property string popupMonitor: "all"
     property bool popupPreviews: true
+    property bool reduceMotion: false
     property string lockScreenPrivacy: "show"
     property int historyRetentionDays: 0
     property bool doNotDisturb: false
@@ -184,7 +191,7 @@ QtObject {
   property var preferences: null
   property bool importingPreferences: false
   property string importedNotifications: ""
-  readonly property var portableKeys: ["soundFilePath", "popupCorner", "popupDurationSeconds", "popupMonitor", "popupPreviews", "lockScreenPrivacy", "historyRetentionDays", "doNotDisturb", "dndScheduleEnabled", "dndStartMinutes", "dndEndMinutes", "dndScheduleDays", "notificationSoundsMuted", "allowCriticalDuringDnd"]
+  readonly property var portableKeys: ["soundFilePath", "popupCorner", "popupDurationSeconds", "popupMonitor", "popupPreviews", "reduceMotion", "lockScreenPrivacy", "historyRetentionDays", "doNotDisturb", "dndScheduleEnabled", "dndStartMinutes", "dndEndMinutes", "dndScheduleDays", "notificationSoundsMuted", "allowCriticalDuringDnd"]
   property Connections portableReader: Connections {
     target: service.preferences
     function onDataChanged() { service.importPreferences() }
@@ -250,6 +257,7 @@ QtObject {
     function onPopupDurationSecondsChanged() { service.savePortablePreferences() }
     function onPopupMonitorChanged() { service.savePortablePreferences() }
     function onPopupPreviewsChanged() { service.savePortablePreferences() }
+    function onReduceMotionChanged() { service.savePortablePreferences() }
     function onLockScreenPrivacyChanged() { service.savePortablePreferences() }
     function onHistoryRetentionDaysChanged() { service.savePortablePreferences() }
     function onDoNotDisturbChanged() { service.savePortablePreferences() }
@@ -649,6 +657,11 @@ QtObject {
       settings.popupPreviews = enabled
   }
 
+  function setReduceMotion(enabled) {
+    if (typeof enabled === "boolean")
+      settings.reduceMotion = enabled
+  }
+
   function setLockScreenPrivacy(mode) {
     if (["show", "redact", "hide"].includes(mode)) {
       settings.lockScreenPrivacy = mode
@@ -1018,6 +1031,8 @@ QtObject {
   }
 
   function clearHistory() {
+    service.clearedHistory = []
+    service.clearUndoTimer.stop()
     for (const id of Object.keys(service.live)) {
       const notification = service.live[id]
       if (notification)
@@ -1054,6 +1069,28 @@ QtObject {
     service.osdTimer.stop()
     service.osd = null
     service.syncPopup()
+  }
+
+  function clearHistoryWithUndo(records) {
+    const ids = new Set(records.map(record => record.id))
+    const removed = service.history.filter(record => ids.has(record.id))
+    if (removed.length === 0)
+      return
+    service.clearedHistory = removed.map(record => Object.assign(service.sanitizeRecord(record), { actions: [] }))
+    service.dismissRecords(removed)
+    service.clearUndoTimer.restart()
+  }
+
+  function undoClearHistory() {
+    const ids = new Set(service.history.map(record => record.id))
+    const restored = service.clearedHistory.filter(record => !ids.has(record.id))
+    service.clearedHistory = []
+    service.clearUndoTimer.stop()
+    if (restored.length === 0)
+      return
+    service.history = service.history.concat(restored).sort((a, b) => b.time - a.time).slice(0, service.historyLimit)
+    service.historyGroups = service.groupHistory(service.history)
+    service.saveHistory()
   }
 
   function setNotificationSoundsMuted(enabled) {
@@ -1243,7 +1280,7 @@ QtObject {
     }
     service.activationErrorId = service.activationPendingId
     service.activationPendingId = null
-    service.activationError = succeeded ? "" : "Could not open the application. It may no longer be running."
+    service.activationError = service.activationError || (succeeded ? "" : "Could not open the application. It may no longer be running.")
   }
 
   function isGithubReview(record) {
@@ -1304,6 +1341,10 @@ QtObject {
   }
 
   function invokeAction(recordId, index) {
+    if (service.activationPendingId !== null)
+      return false
+    service.activationErrorId = recordId
+    service.activationError = ""
     const notification = service.live[recordId]
     const record = service.history.find(entry => entry.id === recordId)
     const action = record && (record.actions || []).find(entry => entry.sourceIndex === index)
@@ -1311,14 +1352,22 @@ QtObject {
       service.lowerPowerProfile.command = [Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts/battery", "lower-profile"]
       service.lowerPowerProfile.startDetached()
       service.dismissRecord(recordId)
-      return
+      return true
     }
 
     if (notification && index >= 0 && index < notification.actions.length) {
-      service.focusRecord(record)
-      notification.actions[index].invoke()
-      service.dismissRecord(recordId)
+      try {
+        service.focusRecord(record)
+        notification.actions[index].invoke()
+        service.dismissRecord(recordId)
+        return true
+      } catch (error) {
+        service.activationError = "This notification's action is no longer available."
+        return false
+      }
     }
+    service.activationError = "This notification's action is no longer available."
+    return false
   }
 
   function timeAgo(record) {

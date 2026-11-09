@@ -4,6 +4,7 @@ import Quickshell
 import QtQuick
 import "DesignTokens.js" as Design
 import QtQml
+import QtQuick.Controls.Basic as Controls
 
 PopupWindow {
   id: popup
@@ -12,7 +13,7 @@ PopupWindow {
   required property var panel
   required property var service
 
-  property int wiggleMargin: 6
+  readonly property int viewportMargin: 6
   readonly property bool leftAligned: service.popupCorner.endsWith("left")
   readonly property bool bottomAligned: service.popupCorner.startsWith("bottom")
   readonly property bool selectedScreen: {
@@ -20,6 +21,48 @@ PopupWindow {
     return service.popupScreenMatches(panel.screen.name, Quickshell.screens, focused ? focused.screen.name : "")
   }
   property var popupStacks: null
+  property var readingAnchor: null
+  readonly property bool reducedMotion: service.reduceMotion
+
+  function readingEntries() {
+    let entries = []
+    for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
+      const stack = popup.popupStacks.itemAt(index)
+      if (stack)
+        entries = entries.concat(stack.readingEntries())
+    }
+    return entries.sort((a, b) => a.y - b.y)
+  }
+
+  function preserveReadingPosition(excludedIds = []) {
+    if (!popup.visible || popupView.moving || popupScrollBar.pressed)
+      return
+    const entries = popup.readingEntries().filter(entry => !excludedIds.includes(entry.id))
+    if (popup.readingAnchor && entries.some(entry => entry.id === popup.readingAnchor.id))
+      return
+    const anchor = entries.find(entry => entry.y + entry.height > popupView.contentY) || entries[entries.length - 1]
+    popup.readingAnchor = anchor ? { id: anchor.id, offset: anchor.y - popupView.contentY } : null
+    anchorRelease.restart()
+  }
+
+  function restoreReadingPosition() {
+    if (popupView.moving || popupScrollBar.pressed) {
+      popup.readingAnchor = null
+      return
+    }
+    const entry = popup.readingAnchor && popup.readingEntries().find(entry => entry.id === popup.readingAnchor.id)
+    if (entry)
+      popupView.contentY = Math.max(0, Math.min(entry.y - popup.readingAnchor.offset, popupView.contentHeight - popupView.height))
+  }
+
+  Timer {
+    id: anchorRelease
+    interval: 300
+    onTriggered: {
+      popup.restoreReadingPosition()
+      popup.readingAnchor = null
+    }
+  }
   readonly property var emptyRecord: ({
     id: "",
     appName: "",
@@ -31,11 +74,11 @@ PopupWindow {
   })
 
   anchor.window: panel
-  anchor.rect.x: leftAligned ? 12 - wiggleMargin : Math.max(0, panel.width - width - 12 + wiggleMargin)
+  anchor.rect.x: leftAligned ? 12 - viewportMargin : Math.max(0, panel.width - width - 12 + viewportMargin)
   anchor.rect.y: bottomAligned ? Math.max(panel.height + 12, panel.screen.height - height - 12) : panel.height + 12
   color: "transparent"
-  implicitWidth: Math.min(Design.notification.width, panel.screen.width - Design.panel.gap * 2) + wiggleMargin * 2
-  implicitHeight: column.height
+  implicitWidth: Math.min(Design.notification.width, panel.screen.width - Design.panel.gap * 2) + viewportMargin * 2
+  implicitHeight: Math.min(column.height, Math.max(1, panel.screen.height - panel.height - Design.panel.gap * 2))
   surfaceFormat.opaque: false
 
   visible: popupGroupModel.count > 0 && !controller.notificationCenterOpen && selectedScreen
@@ -47,6 +90,7 @@ PopupWindow {
   }
 
   function addPopupRecord(record) {
+    popup.preserveReadingPosition()
     for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
       const stack = popup.popupStacks.itemAt(index)
       if (stack && stack.updateRecord(record))
@@ -73,6 +117,7 @@ PopupWindow {
   }
 
   function removeStack(stack) {
+    popup.preserveReadingPosition(stack.records.map(record => record.id))
     for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
       if (popup.popupStacks.itemAt(index) === stack) {
         popupGroupModel.remove(index)
@@ -98,6 +143,7 @@ PopupWindow {
     }
 
     function onPopupRecordsCleared() {
+      popup.readingAnchor = null
       popupGroupModel.clear()
     }
   }
@@ -110,7 +156,6 @@ PopupWindow {
     required property var service
 
     property string countLabel: ""
-    property real bellAngle: 0
     property bool dismissing: false
     property var dismissingRecordId: null
     property bool interactive: true
@@ -145,6 +190,8 @@ PopupWindow {
     readonly property var displayRecord: service.popupDisplayRecord(toast.record)
     readonly property var icon: service.iconFor(toast.displayRecord)
     readonly property string body: service.displayBody(toast.displayRecord)
+    readonly property bool canActivate: service.canActivate(toast.record)
+    readonly property bool activationPending: service.activationPendingId === toast.record.id
 
     transform: [
       Translate {
@@ -166,15 +213,23 @@ PopupWindow {
       enabled: toast.animateReflow
 
       YAnimator {
-        duration: 180
+        duration: popup.reducedMotion ? 0 : 180
         easing.type: Easing.OutCubic
       }
     }
 
     function activate() {
-      if (toast.dismissing)
+      if (toast.dismissing || !toast.canActivate || toast.service.activationPendingId !== null)
         return
       toast.service.activateRecord(toast.record.id)
+    }
+
+    function startDismiss() {
+      if (toast.dismissing)
+        return
+      toast.dismissing = true
+      toast.dismissingRecordId = toast.record.id
+      dismissAnimation.start()
     }
 
     ParallelAnimation {
@@ -184,14 +239,14 @@ PopupWindow {
         target: dismissTranslate
         property: "x"
         to: popup.leftAligned ? -popup.width : popup.width
-        duration: 240
+        duration: popup.reducedMotion ? 0 : 240
         easing.type: Easing.InCubic
       }
       NumberAnimation {
         target: toast
         property: "dismissalOpacity"
         to: 0
-        duration: 180
+        duration: popup.reducedMotion ? 0 : 180
         easing.type: Easing.InQuad
       }
       onFinished: {
@@ -208,7 +263,7 @@ PopupWindow {
       target: toast
       property: "reflowOffset"
       to: 0
-      duration: 180
+      duration: popup.reducedMotion ? 0 : 180
       easing.type: Easing.OutCubic
     }
 
@@ -234,7 +289,7 @@ PopupWindow {
       target: entryTranslate
       property: "x"
       to: 0
-      duration: 280
+      duration: popup.reducedMotion ? 0 : 280
       easing.type: Easing.OutCubic
     }
 
@@ -252,33 +307,31 @@ PopupWindow {
       id: urgentBreath
 
       anchors.fill: parent
-      color: Qt.rgba(toast.controller.urgent.r, toast.controller.urgent.g, toast.controller.urgent.b, toast.urgentAttention ? 0.22 : 0.12)
+      color: Qt.rgba(toast.controller.urgent.r, toast.controller.urgent.g, toast.controller.urgent.b, 0.12)
       opacity: 0.18
       radius: Design.notification.radius
       visible: toast.record.urgency === "critical" || toast.urgentAttention
 
       SequentialAnimation {
         loops: 1
-        running: urgentBreath.visible
+        running: urgentBreath.visible && !popup.reducedMotion
 
         NumberAnimation {
           target: urgentBreath
           property: "opacity"
           from: 0.18
-          to: toast.urgentAttention ? 0.95 : 0.85
-          duration: 1100
+          to: 0.85
+          duration: 180
           easing.type: Easing.InOutSine
         }
-        PauseAnimation { duration: 150 }
         NumberAnimation {
           target: urgentBreath
           property: "opacity"
-          from: toast.urgentAttention ? 0.95 : 0.85
+          from: 0.85
           to: 0.18
-          duration: 1100
+          duration: 420
           easing.type: Easing.InOutSine
         }
-        PauseAnimation { duration: 450 }
       }
     }
 
@@ -311,14 +364,6 @@ PopupWindow {
         source: toast.icon.kind === "lucide" ? toast.controller.icon(toast.icon.source) : ""
         visible: toast.icon.kind === "lucide"
         width: 20
-
-        transform: Rotation {
-          id: bellRotation
-
-          angle: toast.icon.kind === "lucide" && toast.icon.source === "bell" ? toast.bellAngle : 0
-          origin.x: notificationIcon.width / 2
-          origin.y: 0
-        }
       }
     }
 
@@ -336,21 +381,24 @@ PopupWindow {
       spacing: 3
 
       Row {
-        height: 12
+        height: 28
         spacing: 4
         width: parent.width
 
         Text {
+          anchors.verticalCenter: parent.verticalCenter
           color: toast.controller.controlSecondaryText
           elide: Text.ElideRight
           font.family: toast.controller.fontFamily
           font.pixelSize: 10
-          text: toast.record.appName
-          width: parent.width - timeLabel.width - countLabelText.width - parent.spacing * 2
+          text: (toast.record.urgency === "critical" ? "Critical · " : "") + toast.record.appName
+          textFormat: Text.PlainText
+          width: Math.max(0, parent.width - timeLabel.width - countLabelText.width - dismissButton.width - parent.spacing * 3)
         }
 
         Text {
           id: countLabelText
+          anchors.verticalCenter: parent.verticalCenter
 
           color: toast.controller.controlSecondaryText
           font.family: toast.controller.fontFamily
@@ -362,11 +410,22 @@ PopupWindow {
 
         Text {
           id: timeLabel
+          anchors.verticalCenter: parent.verticalCenter
 
           color: toast.controller.controlSecondaryText
           font.family: toast.controller.fontFamily
           font.pixelSize: 10
           text: popup.service.timeAgo(toast.record)
+        }
+
+        NotificationButton {
+          id: dismissButton
+          controller: toast.controller
+          iconName: "x"
+          description: "Dismiss notification"
+          keyboardEnabled: false
+          enabled: toast.interactive && !toast.dismissing
+          onClicked: toast.startDismiss()
         }
       }
 
@@ -376,6 +435,7 @@ PopupWindow {
         font.family: toast.controller.fontFamily
         font.pixelSize: 12
         text: toast.displayRecord.summary
+        textFormat: Text.PlainText
         width: parent.width
       }
 
@@ -386,6 +446,7 @@ PopupWindow {
         font.pixelSize: 11
         maximumLineCount: 2
         text: toast.body
+        textFormat: Text.PlainText
         visible: toast.body.length > 0
         width: parent.width
         wrapMode: Text.Wrap
@@ -412,45 +473,27 @@ PopupWindow {
         width: parent.width * Math.min(1, Math.max(0, toast.displayRecord.value / 100))
       }
 
-      Row {
-        height: 26
+      Flow {
         spacing: 8
         visible: toast.displayRecord.actions.length > 0
+        enabled: toast.interactive && !toast.dismissing
         width: parent.width
 
         Repeater {
           model: toast.displayRecord.actions
 
-          delegate: Item {
+          delegate: NotificationButton {
             id: actionDelegate
 
             required property var modelData
             required property int index
 
-            height: 26
-            width: buttonLabel.implicitWidth + 20
-
-            Rectangle {
-              anchors.fill: parent
-              color: toast.controller.controlBackground
-              radius: 8
-            }
-
-            Text {
-              id: buttonLabel
-
-              anchors.centerIn: parent
-              color: toast.controller.controlPrimaryText
-              font.family: toast.controller.fontFamily
-              font.pixelSize: 11
-              text: actionDelegate.modelData.text
-            }
-
-            MouseArea {
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              onClicked: popup.service.invokeAction(toast.record.id, actionDelegate.modelData.sourceIndex)
-            }
+            controller: toast.controller
+            maximumWidth: textColumn.width
+            text: actionDelegate.modelData.text
+            keyboardEnabled: false
+            enabled: toast.service.activationPendingId === null
+            onClicked: popup.service.invokeAction(toast.record.id, actionDelegate.modelData.sourceIndex)
           }
         }
       }
@@ -461,16 +504,12 @@ PopupWindow {
     MouseArea {
       anchors.fill: parent
       acceptedButtons: Qt.LeftButton | Qt.RightButton
-      cursorShape: Qt.PointingHandCursor
+      cursorShape: toast.activationPending ? Qt.BusyCursor : toast.canActivate ? Qt.PointingHandCursor : Qt.ArrowCursor
       enabled: toast.interactive
       hoverEnabled: true
       onClicked: mouse => {
         if (mouse.button === Qt.RightButton) {
-          if (toast.dismissing)
-            return
-          toast.dismissing = true
-          toast.dismissingRecordId = toast.record.id
-          dismissAnimation.start()
+          toast.startDismiss()
         } else {
           toast.activate()
         }
@@ -497,7 +536,7 @@ PopupWindow {
     readonly property bool grouped: records.length > 1
     readonly property bool showingExpanded: expanded && records.length > 0
     readonly property bool hasCritical: records.some(record => record.urgency === "critical")
-    property real bellAngle: 0
+    readonly property bool hoverProtected: stackHover.hovered || (popupView.interactive && viewportHover.hovered)
     property bool expanded: false
     property bool expiring: false
     property int expiringLayerIndex: -1
@@ -506,6 +545,16 @@ PopupWindow {
     property real expandedHeight: 0
     property bool reflowing: false
     property var reflowPositions: null
+
+    function readingEntries() {
+      return stack.records.slice().reverse().map((record, index) => {
+        const item = stack.showingExpanded ? expandedCards.itemAt(index) : latestToast
+        return { id: record.id, y: item ? item.mapToItem(column, 0, 0).y : stack.y, height: item ? item.height : stack.height }
+      })
+    }
+
+    onHeightChanged: Qt.callLater(popup.restoreReadingPosition)
+    onYChanged: Qt.callLater(popup.restoreReadingPosition)
 
     ListModel {
       id: recordModel
@@ -518,9 +567,6 @@ PopupWindow {
         id: entryTranslate
       },
       Translate {
-        id: stackTranslate
-      },
-      Translate {
         id: expiryTranslate
       }
     ]
@@ -530,12 +576,12 @@ PopupWindow {
     width: parent ? parent.width : 0
 
     Behavior on height {
-      NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+      NumberAnimation { duration: popup.reducedMotion ? 0 : 240; easing.type: Easing.OutCubic }
     }
 
     Behavior on y {
-      YAnimator {
-        duration: 180
+      NumberAnimation {
+        duration: popup.reducedMotion ? 0 : 180
         easing.type: Easing.OutCubic
       }
     }
@@ -553,46 +599,18 @@ PopupWindow {
       property: "x"
       from: popup.leftAligned ? -popup.width : popup.width
       to: 0
-      duration: 280
+      duration: popup.reducedMotion ? 0 : 280
       easing.type: Easing.OutCubic
     }
 
     ParallelAnimation {
       id: expiryAnimation
 
-      NumberAnimation { target: expiryTranslate; property: "x"; to: popup.leftAligned ? -popup.width : popup.width; duration: 240; easing.type: Easing.InCubic }
-      OpacityAnimator { target: stack; to: 0; duration: 180; easing.type: Easing.InQuad }
+      NumberAnimation { target: expiryTranslate; property: "x"; to: popup.leftAligned ? -popup.width : popup.width; duration: popup.reducedMotion ? 0 : 240; easing.type: Easing.InCubic }
+      OpacityAnimator { target: stack; to: 0; duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.InQuad }
       onFinished: {
         if (stack.expiring && stack.removeHandler)
           stack.removeHandler(stack)
-      }
-    }
-
-    SequentialAnimation {
-      loops: 1
-      running: stack.hasCritical
-
-      PauseAnimation { duration: 1800 }
-      ParallelAnimation {
-        NumberAnimation { target: stackTranslate; property: "x"; to: 5; duration: 70; easing.type: Easing.OutQuad }
-        NumberAnimation { target: stack; property: "bellAngle"; to: -12; duration: 70; easing.type: Easing.OutQuad }
-      }
-      ParallelAnimation {
-        NumberAnimation { target: stackTranslate; property: "x"; to: -5; duration: 110; easing.type: Easing.InOutSine }
-        NumberAnimation { target: stack; property: "bellAngle"; to: 10; duration: 110; easing.type: Easing.InOutSine }
-      }
-      ParallelAnimation {
-        NumberAnimation { target: stackTranslate; property: "x"; to: 3; duration: 90; easing.type: Easing.InOutSine }
-        NumberAnimation { target: stack; property: "bellAngle"; to: -6; duration: 90; easing.type: Easing.InOutSine }
-      }
-      ParallelAnimation {
-        NumberAnimation { target: stackTranslate; property: "x"; to: 0; duration: 100; easing.type: Easing.OutQuad }
-        NumberAnimation { target: stack; property: "bellAngle"; to: 0; duration: 100; easing.type: Easing.OutQuad }
-      }
-
-      onStopped: {
-        stackTranslate.x = 0
-        stack.bellAngle = 0
       }
     }
 
@@ -601,6 +619,7 @@ PopupWindow {
 
       interval: 250
       onTriggered: {
+        popup.preserveReadingPosition()
         stack.expanded = false
         stack.expandedHeight = 0
       }
@@ -609,30 +628,32 @@ PopupWindow {
     Timer {
       id: reflowTimer
 
-      interval: 180
+      interval: popup.reducedMotion ? 0 : 180
       onTriggered: stack.reflowing = false
     }
 
     Timer {
       id: stackedExpiryTimer
 
-      interval: 180
+      interval: popup.reducedMotion ? 0 : 180
       onTriggered: stack.finishStackExpiry()
+    }
+
+    onHoverProtectedChanged: {
+      stack.service.setRecordsHovered(stack.records, stack.hoverProtected)
+      if (stack.hoverProtected)
+        collapseTimer.stop()
+      else
+        collapseTimer.restart()
     }
 
     HoverHandler {
       id: stackHover
       onHoveredChanged: {
-        if (hovered) {
-          collapseTimer.stop()
-          if (!stack.expanded && stack.grouped)
-            stack.expandedHeight = expandedColumn.contentHeight
-          if (stack.grouped)
-            stack.expanded = true
-          stack.service.setRecordsHovered(stack.records, true)
-        } else {
-          stack.service.setRecordsHovered(stack.records, false)
-          collapseTimer.restart()
+        if (hovered && !stack.expanded && stack.grouped) {
+          popup.preserveReadingPosition()
+          stack.expandedHeight = expandedColumn.contentHeight
+          stack.expanded = true
         }
       }
     }
@@ -657,15 +678,15 @@ PopupWindow {
         y: index * stack.collapsedLayerOffset - (index === stack.expiringLayerIndex ? 6 : 0)
 
         Behavior on opacity {
-          NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+          NumberAnimation { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic }
         }
 
         Behavior on scale {
-          NumberAnimation { duration: 180; easing.type: Easing.InQuad }
+          NumberAnimation { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.InQuad }
         }
 
         Behavior on y {
-          YAnimator { duration: 180; easing.type: Easing.InQuad }
+          YAnimator { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.InQuad }
         }
       }
     }
@@ -674,7 +695,6 @@ PopupWindow {
       id: latestToast
 
       controller: stack.controller
-      bellAngle: stack.bellAngle
       countLabel: stack.records.length > 1 ? "+" + (stack.records.length - 1) : ""
       interactive: !stack.showingExpanded
       record: stack.latestRecord || popup.emptyRecord
@@ -687,7 +707,7 @@ PopupWindow {
       z: 3
 
       Behavior on presentationOpacity {
-        NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic }
       }
     }
 
@@ -717,14 +737,9 @@ PopupWindow {
 
       height: stack.showingExpanded ? stack.expandedHeight : contentHeight
       enabled: stack.showingExpanded
-      opacity: stack.showingExpanded ? 1 : 0
       visible: stack.records.length > 0
       width: parent.width
       z: 4
-
-      Behavior on opacity {
-        NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
-      }
 
       Repeater {
         id: expandedCards
@@ -738,7 +753,6 @@ PopupWindow {
           required property var notification
 
           controller: stack.controller
-          bellAngle: stack.bellAngle
           enterFromRight: notification && notification.entering === true
           interactive: stack.showingExpanded
           presentationOpacity: stack.showingExpanded ? 1 : 0
@@ -752,18 +766,20 @@ PopupWindow {
             if (stack.showingExpanded)
               Qt.callLater(stack.updateExpandedHeight)
           }
+          onYChanged: Qt.callLater(popup.restoreReadingPosition)
+          onReflowOffsetChanged: Qt.callLater(popup.restoreReadingPosition)
 
           Behavior on unfoldOffset {
             NumberAnimation {
-              duration: 360 + Math.max(0, expandedCard.index) * 70
+              duration: popup.reducedMotion ? 0 : 240
               easing.type: Easing.OutCubic
             }
           }
 
           Behavior on presentationOpacity {
             SequentialAnimation {
-              PauseAnimation { duration: stack.expanded ? Math.max(0, expandedCard.index) * 140 : 0 }
-              NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
+              PauseAnimation { duration: stack.expanded && !popup.reducedMotion ? Math.min(100, Math.max(0, expandedCard.index) * 25) : 0 }
+              NumberAnimation { duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic }
             }
           }
         }
@@ -779,6 +795,7 @@ PopupWindow {
     function removeRecords(ids) {
       if (!stack.records.some(record => ids.includes(record.id)))
         return
+      popup.preserveReadingPosition(ids)
       if (stack.showingExpanded && !stack.reflowPositions) {
         const positions = {}
         for (let index = 0; index < expandedCards.count; index++) {
@@ -834,7 +851,7 @@ PopupWindow {
       }
       stack.records = stack.records.map(entry => entry.id === record.id ? record : entry)
       recordModel.setProperty(recordModel.count - index - 1, "notification", record)
-      if (stackHover.hovered)
+      if (stack.hoverProtected)
         stack.service.setHovered(record.id, true)
       if (stack.showingExpanded)
         Qt.callLater(stack.updateExpandedHeight)
@@ -856,7 +873,7 @@ PopupWindow {
         return
 
       stack.records = stack.records.concat([record])
-      if (stackHover.hovered)
+      if (stack.hoverProtected)
         stack.service.setHovered(record.id, true)
       recordModel.insert(0, { notification: Object.assign({}, record, { entering: true }) })
 
@@ -911,19 +928,48 @@ PopupWindow {
 
   }
 
-  Column {
-    id: column
+  Flickable {
+    id: popupView
 
-    anchors {
-      horizontalCenter: parent.horizontalCenter
-      top: parent.top
+    anchors.fill: parent
+    contentHeight: column.height
+    contentWidth: width
+    clip: true
+    boundsBehavior: Flickable.StopAtBounds
+    flickableDirection: Flickable.VerticalFlick
+    interactive: contentHeight > height
+    onMovementStarted: popup.readingAnchor = null
+    onContentHeightChanged: {
+      if (popup.readingAnchor) {
+        Qt.callLater(popup.restoreReadingPosition)
+        anchorRelease.restart()
+      } else {
+        contentY = Math.max(0, Math.min(contentY, contentHeight - height))
+      }
     }
-    spacing: 10
-    width: parent.width - popup.wiggleMargin * 2
+    HoverHandler { id: viewportHover }
+    Controls.ScrollBar.vertical: Controls.ScrollBar {
+      id: popupScrollBar
+      width: popup.viewportMargin
+      policy: Controls.ScrollBar.AsNeeded
+      active: popupView.interactive
+      onPressedChanged: { if (pressed) popup.readingAnchor = null }
+    }
 
-    Component.onCompleted: popup.popupStacks = stackRepeater
+    Column {
+      id: column
 
-    Repeater {
+      anchors {
+        horizontalCenter: parent.horizontalCenter
+        top: parent.top
+      }
+      spacing: 10
+      width: popupView.width - popup.viewportMargin * 2
+      onPositioningComplete: popup.restoreReadingPosition()
+
+      Component.onCompleted: popup.popupStacks = stackRepeater
+
+      Repeater {
         id: stackRepeater
 
         model: popupGroupModel
@@ -934,5 +980,6 @@ PopupWindow {
           service: popup.service
         }
       }
+    }
   }
 }

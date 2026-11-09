@@ -18,6 +18,15 @@ function preferences(names, values = {}, globals = {}) {
   return { service, settings };
 }
 
+test('reduced motion accepts only boolean preferences', () => {
+  const { service, settings } = preferences(['setReduceMotion']);
+  service.setReduceMotion(true);
+  for (const value of ['false', 0, null, undefined]) service.setReduceMotion(value);
+  assert.equal(settings.reduceMotion, true);
+  service.setReduceMotion(false);
+  assert.equal(settings.reduceMotion, false);
+});
+
 test('popup placement selects named/focused monitors and falls back after hot unplug', () => {
   const { service, settings } = preferences(['setPopupCorner', 'setPopupMonitor', 'popupScreenMatches']);
   const screens = [{ name: 'DP-1' }, { name: 'eDP-1' }];

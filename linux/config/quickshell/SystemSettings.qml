@@ -1801,6 +1801,14 @@ FloatingWindow {
       description: "When off, popups show the app name and New notification, hiding message text, images and action labels. Full content remains in history."
       onClicked: window.service.setPopupPreviews(!window.service.popupPreviews)
     }
+    Toggle {
+      Layout.fillWidth: true
+      text: "Reduce notification motion"
+      iconName: "bell"
+      checked: window.service.reduceMotion
+      description: "Show notification changes immediately, without slides, staggered expansion or attention pulses. Applies to popups and notification history."
+      onClicked: window.service.setReduceMotion(!window.service.reduceMotion)
+    }
     }
   }
 
