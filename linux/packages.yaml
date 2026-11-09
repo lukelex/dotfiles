@@ -302,8 +302,8 @@ resources:
     - name: grill-me
       repository: mattpocock/skills
       paths:
-        - skills/grill-me
-        - skills/grilling
+        - skills/productivity/grill-me
+        - skills/productivity/grilling
         - LICENSE
       target: $HOME/.local/share/dotpkg/opencode-skills
   configs:

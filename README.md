@@ -111,7 +111,7 @@ transaction.
 
 OpenCode's global config is linked by dotpkg on desktop and server profiles.
 It loads repository skills from `~/dotfiles/.opencode/skills` and declares a
-remote file bundle for `skills/grill-me`, `skills/grilling`, and `LICENSE` from
+remote file bundle for `skills/productivity/grill-me`, `skills/productivity/grilling`, and `LICENSE` from
 `mattpocock/skills`. dotpkg copies those requested paths into
 `~/.local/share/dotpkg/opencode-skills` without running them. Invoke the skill
 with `@grill-me`. Every full `sync --resources` checks the upstream default
