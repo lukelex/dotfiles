@@ -1,4 +1,22 @@
-# Neovim tabline regression checks
+# Neovim diagnostics and regression checks
+
+## Memory diagnostics
+
+`:NvimMemory` opens an asynchronous Linux `/proc` snapshot for this editor and
+its descendants, including the separate Neovim TUI, LSP servers and their workers.
+Use `r` to refresh and `q` to close. The report shows PSS, private RAM, RSS, and
+proportional swap in MiB. Prefer PSS totals: summing RSS counts shared pages more
+than once. Unavailable measurements are shown as `?`, with totals marked partial.
+The snapshot helper itself and other Neovim sessions are excluded. Remote or
+detached servers outside the process tree cannot be measured this way. Active
+LSP workspace names are listed separately; they are not guessed from process IDs.
+
+```sh
+python3 -B linux/config/nvim/tests/memory-snapshot.py
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/memory.lua
+```
+
+## Tabline tests
 
 Run from the repository root with Neovim and the configured Tabby plugin installed:
 

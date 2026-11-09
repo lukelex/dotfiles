@@ -22,6 +22,9 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.opt.complete:append("kspell")
 
 -- Define user commands
+vim.api.nvim_create_user_command("NvimMemory", function()
+  require("core.memory").open()
+end, { desc = "Show Neovim and child-process RAM and swap usage" })
 vim.api.nvim_create_user_command("PrettyPrintJSON", "%!python -m json.tool", {})
 vim.api.nvim_create_user_command("PrettyPrintHTML", "!tidy -mi -html -wrap 0 %", {})
 vim.api.nvim_create_user_command("PrettyPrintXML", "!tidy -mi -xml -wrap 0 %", {})
