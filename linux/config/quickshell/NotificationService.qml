@@ -561,6 +561,19 @@ QtObject {
         service.releaseLive(id, notification)
         Qt.callLater(service.syncPopup)
       })
+      // Native replacements mutate this object without emitting server.notification.
+      // Coalesce its property signals so snapshots see the complete replacement.
+      const refresh = () => {
+        if (service.live[id] === notification)
+          service.handleNotification(notification)
+      }
+      const scheduleRefresh = () => Qt.callLater(refresh)
+      for (const property of ["expireTimeout", "appName", "appIcon", "summary", "body",
+          "urgency", "actions", "desktopEntry", "image", "hints"]) {
+        const changed = notification[property + "Changed"]
+        if (changed)
+          changed.connect(scheduleRefresh)
+      }
     }
 
     const record = service.buildRecord(notification, tag, value, id)

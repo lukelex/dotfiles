@@ -9,7 +9,7 @@ const popupSource = fs.readFileSync(path.join(__dirname, '../NotificationPopup.q
 const defaultsSource = fs.readFileSync(path.join(__dirname, '../NotificationDefaults.js'), 'utf8');
 const NotificationDefaults = vm.runInNewContext(defaultsSource.replace(/^\.pragma library\s*/, '') + '\n;({ applications })');
 
-function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', doNotDisturb: false }) {
+function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', doNotDisturb: false }, callLater = callback => callback()) {
   const service = {
     history: [],
     popup: [],
@@ -47,7 +47,7 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
   const Bluetooth = { devices: { values: [] } };
   const context = vm.createContext({ service, Date, settings, NotificationDefaults, Bluetooth,
     historyGroupTimer: { start() {} }, popupUpdateTimer: { start() {} },
-    Qt: { callLater: callback => callback() }, NotificationUrgency: { Critical: 2, Low: 0 },
+    Qt: { callLater }, NotificationUrgency: { Critical: 2, Low: 0 },
   });
   for (const name of ['isDndSuppressed', 'suppressDndRecords', 'applyDoNotDisturb', 'migrateApplicationDefaults', 'loadApplications', 'trackApplication', 'setApplicationPreference', 'appKey', 'groupHistory', 'groupPopup', 'computeExpiry', 'effectiveUrgency', 'isTeamsNotification', 'isTeamsUrgent', 'syncPopup', 'dismissRecords', 'dismissRecord', 'dismissTag', 'expireDue', 'releaseLive', 'restoreHistory', 'sanitizeRecord', 'isLiveOnlySource', 'isEphemeralSource', 'activateRecord', 'launchActivation', 'finishActivation', 'restoredId', 'newHistoryId', 'loadInitial', 'handleNotification', 'buildRecord', 'bluetoothConnectedBody', 'buildActions', 'isBrowserIcon', 'displayBody', 'isSystemOsd', 'addHistory', 'isGithubReview', 'setHovered', 'setRecordsHovered', 'isGithubReviewSeen']) {
     const match = source.match(new RegExp(`  function ${name}\\([^]*?\\n  \\}`));
@@ -317,6 +317,43 @@ function nativeNotification(id, overrides = {}) {
     ...overrides,
   };
 }
+
+test('native replacement signals coalesce into one complete update and ignore closed objects', () => {
+  const pending = new Set();
+  const { service } = serviceForTest(undefined, callback => pending.add(callback));
+  const signal = () => {
+    const callbacks = [];
+    return { connect(callback) { callbacks.push(callback); }, emit() { callbacks.forEach(callback => callback()); }, callbacks };
+  };
+  const notification = nativeNotification(1, {
+    summaryChanged: signal(), bodyChanged: signal(), hintsChanged: signal(),
+  });
+  service.handleNotification(notification);
+  const id = service.history[0].id;
+  service.pendingPopupRecords = [];
+  notification.summary = 'Updated summary';
+  notification.summaryChanged.emit();
+  notification.body = 'Updated body';
+  notification.bodyChanged.emit();
+  notification.hints = { value: 80 };
+  notification.hintsChanged.emit();
+  assert.equal(pending.size, 1);
+  assert.equal(service.history[0].summary, 'A message');
+  const flush = () => { const callbacks = [...pending]; pending.clear(); callbacks.forEach(callback => callback()); };
+  flush();
+  assert.equal(service.history.length, 1);
+  assert.equal(service.history[0].id, id);
+  assert.equal(service.history[0].summary, 'Updated summary');
+  assert.equal(service.history[0].body, 'Updated body');
+  assert.equal(service.history[0].value, 80);
+  assert.equal(service.pendingPopupRecords.length, 1);
+  assert.equal(notification.summaryChanged.callbacks.length, 1);
+  notification.summaryChanged.emit();
+  service.dismissRecord(id);
+  flush();
+  assert.equal(service.history.length, 0);
+  assert.equal(service.live[id], undefined);
+});
 
 test('legacy history and GitHub seen IDs migrate idempotently, including a partially migrated save', () => {
   const settings = {
