@@ -9,6 +9,8 @@ return {
       { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" }
     },
     config = function()
+      local budget = require("core.treesitter-budget")
+      budget.setup()
       vim.opt.smartindent = true
       local languages = { "ruby", "javascript", "typescript", "svelte", "yaml", "markdown", "css", "html", "vim", "bash", "yuck" }
 
@@ -19,9 +21,11 @@ return {
 
       vim.api.nvim_create_autocmd("FileType", {
         pattern = languages,
-        callback = function()
-          vim.treesitter.start()
-          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        callback = function(event)
+          if budget.protect(event.buf) then return end
+          vim.b[event.buf].treesitter_size_limit = nil
+          vim.treesitter.start(event.buf)
+          vim.bo[event.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end,
       })
 
@@ -34,6 +38,7 @@ return {
       local select = require("nvim-treesitter-textobjects.select")
       local function textobject(lhs, query, desc)
         vim.keymap.set({ "x", "o" }, lhs, function()
+          if budget.protect(vim.api.nvim_get_current_buf()) then return end
           select.select_textobject(query, "textobjects")
         end, { desc = desc })
       end

@@ -41,6 +41,7 @@ jobs:
           nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-recovery.lua
           nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-outage.lua
           nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-roots.lua
+          nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/treesitter-budget.lua
 
   node-tests:
     runs-on: ubuntu-latest

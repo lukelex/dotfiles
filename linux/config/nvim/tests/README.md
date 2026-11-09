@@ -131,3 +131,33 @@ call exceeded 10 ms. There was no repeat of the multi-second post-open freeze.
 The Tree-sitter difference was small relative to run-to-run variation, so the
 configured parsing mode was retained. Session restoration accounted for most
 startup work, rather than delayed LSP watcher registration.
+
+## Large-file Tree-sitter budget
+
+```sh
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/treesitter-budget.lua
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/scripts/benchmark-treesitter.lua
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/scripts/benchmark-treesitter.lua --guarded
+# Or measure an existing source file:
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/scripts/benchmark-treesitter.lua path/to/source.ts
+```
+
+The benchmark uses installed parsers and scratch buffers. It measures synchronous
+initial and incremental parsing, not total editor/UI latency. On 2026-11-09:
+
+| Fixture | Initial parse | Incremental parse |
+| --- | --- | --- |
+| Normal 173 KB JavaScript locale file | 10 ms | 3 ms |
+| 10,000 generated TypeScript/Ruby/YAML lines | 93–101 ms | <1–50 ms |
+| 30,000 generated TypeScript/Ruby/YAML lines | 258–310 ms | <1–142 ms |
+| One-line 600 KB JavaScript | 164 ms | 80 ms |
+
+With `--guarded`, those large fixtures skip parsing; protection took 0.04–0.30 ms.
+
+Buffers at least 512 KiB or 10,000 lines skip automatic Tree-sitter highlighting,
+indentation, endwise, and configured textobjects. Regex syntax highlighting is
+also disabled for these buffers. The check uses in-memory buffer metadata and
+runs on file load/filetype changes and edits, so growth is covered. The reason
+is available in `b:treesitter_size_limit`. After shrinking a file, reload it or
+reapply its filetype to reenable automatic features. Ordinary files retain the
+existing synchronous parsing behavior. The guard test runs in CI without parsers.
