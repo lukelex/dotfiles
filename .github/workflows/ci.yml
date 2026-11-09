@@ -9,6 +9,38 @@ on:
       - master
 
 jobs:
+  nvim-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LSPCONFIG_NVIM_PATH: ${{ runner.temp }}/nvim-lspconfig
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install watcher dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fd-find inotify-tools
+          mkdir -p "$RUNNER_TEMP/bin"
+          ln -s "$(command -v fdfind)" "$RUNNER_TEMP/bin/fd"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Install Neovim 0.12.6
+        run: |
+          curl -fL https://github.com/neovim/neovim/releases/download/v0.12.6/nvim-linux-x86_64.tar.gz -o "$RUNNER_TEMP/nvim.tar.gz"
+          echo "474430d53e6264f6d6dd18db42d6dc9df3a1b56ca9e88a325bbf860e1a811d87  $RUNNER_TEMP/nvim.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/nvim.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/nvim-linux-x86_64/bin" >> "$GITHUB_PATH"
+      - name: Load locked LSP definitions
+        run: |
+          revision="$(python3 -c 'import json; print(json.load(open("linux/config/nvim/lazy-lock.json"))["nvim-lspconfig"]["commit"])')"
+          git init "$LSPCONFIG_NVIM_PATH"
+          git -C "$LSPCONFIG_NVIM_PATH" fetch --depth=1 https://github.com/neovim/nvim-lspconfig.git "$revision"
+          git -C "$LSPCONFIG_NVIM_PATH" checkout --detach FETCH_HEAD
+      - name: Run LSP regression tests
+        run: |
+          nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch.lua
+          nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-recovery.lua
+          nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-roots.lua
+
   node-tests:
     runs-on: ubuntu-latest
     steps:

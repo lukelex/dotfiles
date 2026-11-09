@@ -74,3 +74,6 @@ nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-roots.lua
 Requires the configured `nvim-lspconfig` plugin (or `LSPCONFIG_NVIM_PATH`). Checks
 Tailwind v3/v4, nested packages, Git boundaries, and Solargraph's Gemfile root.
 No language servers are started or installed.
+
+The `nvim-tests` CI job runs all three LSP suites on Ubuntu with Neovim 0.12.6,
+`fd`, `inotify-tools`, and the `nvim-lspconfig` revision from `lazy-lock.json`.
