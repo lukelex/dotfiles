@@ -24,10 +24,19 @@ local function start(path, callback)
     end)
   end
 
-  local function stop(watcher)
+  local function clear_deadline(job)
+    if job.deadline and not job.deadline:is_closing() then
+      job.deadline:stop()
+      job.deadline:close()
+    end
+    job.deadline = nil
+  end
+
+  local function stop(watcher, signal)
     if watcher and not watcher.stopped then
       watcher.stopped = true
-      if watcher.process then watcher.process:kill(2) end
+      clear_deadline(watcher)
+      if watcher.process then watcher.process:kill(signal or 2) end
     end
   end
 
@@ -53,7 +62,7 @@ local function start(path, callback)
     end, delay)
   end
 
-  local function failed(watcher, message)
+  local function failed(watcher, message, signal)
     if cancelled or watcher.stopped then return end
     -- A ready process must remain healthy for a while before resetting the
     -- retry budget, otherwise rapid start/crash loops would retry forever.
@@ -61,7 +70,7 @@ local function start(path, callback)
       failures = 0
     end
     recovering = true
-    stop(watcher)
+    stop(watcher, signal)
     vim.schedule(function()
       if cancelled then return end
       if replacement == watcher then replacement = nil end
@@ -146,6 +155,7 @@ local function start(path, callback)
             vim.schedule(function()
               if cancelled or watcher.stopped then return end
               local previous = active
+              clear_deadline(watcher)
               watcher.ready_at = vim.uv.hrtime()
               active, replacement = watcher, nil
               stop(previous)
@@ -168,6 +178,11 @@ local function start(path, callback)
     end)
     if spawned then
       watcher.process = process
+      watcher.deadline = vim.defer_fn(function()
+        if not watcher.ready_at then
+          failed(watcher, "watcher readiness timed out after 30s", 9)
+        end
+      end, 30000)
     else
       failed(watcher, "could not start watcher: " .. tostring(process))
     end
@@ -233,10 +248,14 @@ local function start(path, callback)
       "--prune", "--absolute-path", "--print0", "^(tmp|\\.git)$",
     }
     vim.list_extend(args, scan)
+    local job = {}
+    discovery = job
     local spawned, process = pcall(vim.system, args, {}, function(result)
       vim.schedule(function()
+        if cancelled or discovery ~= job or job.stopped then return end
+        clear_deadline(job)
+        job.stopped = true
         discovery = nil
-        if cancelled then return end
         if result.code ~= 0 then
           retry("directory discovery failed: " .. result.stderr)
         else
@@ -245,8 +264,15 @@ local function start(path, callback)
       end)
     end)
     if spawned then
-      discovery = process
+      job.process = process
+      job.deadline = vim.defer_fn(function()
+        if cancelled or discovery ~= job or job.stopped then return end
+        stop(job, 9)
+        discovery = nil
+        retry("directory discovery timed out after 30s")
+      end, 30000)
     else
+      discovery = nil
       retry("could not start discovery: " .. tostring(process))
     end
   end
@@ -259,7 +285,7 @@ local function start(path, callback)
         timer:stop()
         timer:close()
       end
-      if discovery then discovery:kill(2) end
+      stop(discovery)
       stop(active)
       stop(replacement)
     end

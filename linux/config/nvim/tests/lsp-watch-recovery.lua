@@ -25,8 +25,15 @@ local function drain()
   vim.schedule(function() vim.schedule(function() done = true end) end)
   assert(vim.wait(1000, function() return done end, 1))
 end
-local function tick()
-  local timer = table.remove(timers, 1)
+local function tick(delay)
+  local selected
+  for index, timer in ipairs(timers) do
+    if not timer.closed and (not delay or timer.delay == delay)
+      and (not selected or timer.delay < timers[selected].delay) then
+      selected = index
+    end
+  end
+  local timer = selected and table.remove(timers, selected)
   assert(timer, "missing retry timer")
   if not timer.closed then timer.closed = true; timer.callback() end
   drain()
@@ -83,7 +90,7 @@ local ok, err = xpcall(function()
     drain()
     if attempt < 4 then assert(tick() == ({ 250, 1000, 4000 })[attempt]) end
   end
-  assert(#timers == 0, "retry loop was not bounded")
+  assert(not vim.iter(timers):any(function(timer) return not timer.closed end), "retry loop was not bounded")
   assert(messages[#messages]:find("recovery exhausted", 1, true))
   cancel()
 
@@ -105,9 +112,48 @@ local ok, err = xpcall(function()
   throw_command = "fd"
   cancel = subscribe()
   throw_command = nil
+  local retry_timer = timers[#timers]
   cancel()
-  tick()
+  retry_timer.callback()
   assert(#jobs == 0, "cancelled recovery spawned a process")
+
+  -- A living process that never completes must consume the same retry budget.
+  timers, jobs = {}, {}
+  cancel = subscribe()
+  local hung_discovery = jobs[#jobs]
+  assert(tick(30000) == 30000)
+  assert(hung_discovery.killed, "hung discovery was not killed")
+  assert(tick() == 250)
+  local next_discovery = jobs[#jobs]
+  hung_discovery.done({ code = 0, stdout = "", stderr = "" })
+  drain()
+  assert(jobs[#jobs] == next_discovery, "late discovery spawned a stale watcher")
+  local healthy = discovered()
+  ready(healthy)
+  healthy.options.stdout(nil, "/test/workspace/tmp\0CREATE,ISDIR\0")
+  drain()
+  tick(100)
+  local hung_replacement = jobs[#jobs]
+  assert(hung_replacement.command[1] == "inotifywait")
+  tick(30000)
+  assert(hung_replacement.killed and not healthy.killed, "deadline interrupted healthy active watcher")
+  ready(hung_replacement)
+  assert(not healthy.killed, "late readiness retired the healthy watcher")
+  assert(tick() == 1000)
+  local resumed = discovered("/test/workspace/tmp\0")
+  ready(resumed)
+  assert(healthy.killed, "recovered replacement did not take over")
+  cancel()
+
+  timers, jobs = {}, {}
+  cancel = subscribe()
+  local deadline = timers[#timers]
+  local stopped = jobs[#jobs]
+  cancel()
+  deadline.callback()
+  stopped.done({ code = 0, stdout = "", stderr = "" })
+  drain()
+  assert(#jobs == 1, "cancelled deadline restarted discovery")
 end, debug.traceback)
 for _, cancel in ipairs(cancels) do pcall(cancel) end
 vim.system, vim.defer_fn, vim.notify = system, defer, notify

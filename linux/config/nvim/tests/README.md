@@ -64,6 +64,9 @@ needs no scan, and moved-out exclusions are removed from the cache.
 The recovery test injects process failures and advances retry timers deterministically.
 It checks recovery, bounded backoff, preserving a healthy watcher during failed
 handoff, and cancellation of pending retries.
+Discovery and watcher readiness each have a 30-second deadline. A timeout kills
+the hung process and uses the existing bounded retries. Tests also deliver late
+completion/readiness callbacks to ensure timed-out processes cannot take over.
 
 ## LSP root regression checks
 
