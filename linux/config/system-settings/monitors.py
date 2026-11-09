@@ -10,6 +10,7 @@ import math
 import os
 from pathlib import Path
 import re
+import shlex
 import signal
 import subprocess
 import sys
@@ -84,6 +85,8 @@ def validate_outputs(outputs):
         raise ValueError('Display positions must be whole numbers')
     if o.get('rotation') not in ROTATIONS:
       raise ValueError('Invalid display orientation')
+    if 'bitDepth' in o and (type(o['bitDepth']) is not int or o['bitDepth'] not in (8, 10)):
+      raise ValueError('Display color depth must be 8 or 10 bits')
   if not any(o['enabled'] for o in outputs):
     raise ValueError('At least one display must remain enabled')
   if sum(o['primary'] and o['enabled'] for o in outputs) > 1:
@@ -170,6 +173,10 @@ def discover():
         x=raw.get('x', 0), y=raw.get('y', 0), description=raw.get('description', raw['name']), modes=available)
       if not o['enabled'] and available:
         o.update(available[0])
+      depth = format_depth(raw.get('currentFormat'))
+      if depth is not None:
+        o['bitDepth'] = depth
+      o.update(color_capability(raw['name'], depth))
       result.append(o)
     if result:
       min_x = min(0, *(o['x'] for o in result))
@@ -207,7 +214,7 @@ def discover():
 
 def clean(outputs):
   keys = list(base_output(''))
-  return [{key: o[key] for key in keys} for o in outputs]
+  return [{key: o[key] for key in keys + (['bitDepth'] if 'bitDepth' in o else [])} for o in outputs]
 
 
 def topology(outputs):
@@ -227,6 +234,15 @@ def resolve(outputs, connected, exact=True):
         raise ValueError(f"Display unavailable or ambiguous: {saved['connector']}")
       continue
     o = dict(saved, connector=matches[0]['connector'], identity=matches[0]['identity'])
+    actual = matches[0]
+    if SESSION == 'wayland' and 'bitDepth' not in o and 'bitDepth' in actual:
+      o['bitDepth'] = actual['bitDepth']
+    if exact and 'bitDepth' in o:
+      if SESSION != 'wayland':
+        raise ValueError('Per-display color depth is only supported on Hyprland')
+      if o['enabled'] and o['bitDepth'] != actual.get('bitDepth'):
+        if actual.get('bitDepth') is None or o['bitDepth'] == 10 and not actual.get('tenBitAvailable'):
+          raise ValueError(actual.get('colorDepthReason', 'Color depth capability is unknown'))
     used.add(o['connector'])
     if o['enabled'] and exact and not any(m['mode'] == o['mode'] and abs(m['rate'] - o['rate']) < 0.15 for m in matches[0]['modes']):
       raise ValueError(f"Unsupported mode for {o['connector']}: {o['mode']} @ {o['rate']} Hz")
@@ -272,6 +288,9 @@ def kanshi_config(profiles):
       else:
         line += ' disable'
       lines.append(line)
+    if any('bitDepth' in o for o in profile['outputs']):
+      args = [sys.executable, str(HERE / 'monitors.py'), 'profile-color', profile['name']]
+      lines.append('  exec ' + shlex.join(args))
     lines.append('}')
   return '\n'.join(lines) + '\n'
 
@@ -282,9 +301,17 @@ def apply_layout(outputs):
     # Enable first so transitions never intentionally disable the final active display.
     rules = []
     for o in sorted(outputs, key=lambda item: not item['enabled']):
-      rule = f"{o['connector']},{o['mode']}@{o['rate']},{o['x']}x{o['y']},{o['scale']},transform,{TRANSFORMS[o['rotation']]}" if o['enabled'] else o['connector'] + ',disable'
-      rules.append('keyword monitor ' + rule)
-    response = command(['hyprctl', '--batch', '; '.join(rules)])
+      fields = ['output = ' + json.dumps(o['connector'])]
+      if o['enabled']:
+        fields += ['mode = ' + json.dumps(f"{o['mode']}@{o['rate']}"),
+          'position = ' + json.dumps(f"{o['x']}x{o['y']}"), f"scale = {o['scale']}",
+          f"transform = {TRANSFORMS[o['rotation']]}"]
+        if 'bitDepth' in o:
+          fields.append(f"bitdepth = {o['bitDepth']}")
+      else:
+        fields.append('disabled = true')
+      rules.append('hl.monitor({' + ', '.join(fields) + '})')
+    response = command(['hyprctl', 'eval', '; '.join(rules)])
     if not response.strip() or any(line.strip() != 'ok' for line in response.splitlines() if line.strip()):
       raise RuntimeError(response.strip() or 'Hyprland rejected the monitor configuration')
   else:
@@ -345,6 +372,8 @@ def restore(pending):
       o.update(enabled=index == 0, primary=index == 0, x=0, y=0, scale=1, rotation='normal')
       if outputs[index]['modes']:
         o.update(outputs[index]['modes'][0])
+      if 'bitDepth' in o:
+        o['bitDepth'] = 8
     apply_layout(fallback)
   write_json(RUNTIME / 'hold', topology(outputs))
   (RUNTIME / 'pending').unlink(missing_ok=True)
@@ -450,6 +479,7 @@ def layout_equal(expected, actual):
       return False
     if wanted['enabled'] and (any(wanted[k] != current[k] for k in ['mode', 'x', 'y', 'rotation'])
         or abs(wanted['rate'] - current['rate']) > 0.15 or abs(wanted['scale'] - current['scale']) > 0.01
+        or 'bitDepth' in wanted and wanted['bitDepth'] != current.get('bitDepth')
         or SESSION == 'x11' and wanted['primary'] != current['primary']):
       return False
   return True
@@ -476,9 +506,13 @@ def snapshot():
 
 
 def edid_details(data):
-  result = {'monitorName': '', 'maxTmdsMHz': None}
+  result = {'monitorName': '', 'maxTmdsMHz': None, 'tenBit': None}
   if len(data) < 128 or data[:8] != bytes.fromhex('00ffffffffffff00'):
     return result
+  if sum(data[:128]) % 256 == 0 and data[18] == 1 and data[19] >= 4 and data[20] & 0x80:
+    depth_code = (data[20] >> 4) & 7
+    if 1 <= depth_code <= 6:
+      result['tenBit'] = depth_code >= 3
   for offset in range(54, 126, 18):
     if data[offset:offset + 4] == b'\x00\x00\x00\xfc':
       result['monitorName'] = data[offset + 5:offset + 18].decode('ascii', errors='replace').strip()
@@ -495,12 +529,56 @@ def edid_details(data):
       rate = 0
       if tag == 3 and len(payload) >= 7 and payload[:3] == bytes.fromhex('030c00'):
         rate = payload[6] * 5
+      if tag == 3 and len(payload) >= 6 and payload[:3] == bytes.fromhex('030c00') and sum(block) % 256 == 0:
+        result['tenBit'] = bool(payload[5] & 0x10)
       if tag == 3 and len(payload) >= 5 and payload[:3] == bytes.fromhex('d85dc4'):
         rate = payload[4] * 5
       if rate:
         result['maxTmdsMHz'] = max(result['maxTmdsMHz'] or 0, rate)
       pos += length + 1
   return result
+
+
+def format_depth(value):
+  if value in ('XRGB2101010', 'ARGB2101010', 'XBGR2101010', 'ABGR2101010'):
+    return 10
+  if value in ('XRGB8888', 'ARGB8888', 'XBGR8888', 'ABGR8888'):
+    return 8
+  return None
+
+
+def color_capability(connector, depth):
+  advertised = None
+  candidates = list(Path('/sys/class/drm').glob('card*-' + connector))
+  if len(candidates) == 1:
+    try:
+      advertised = edid_details((candidates[0] / 'edid').read_bytes())['tenBit']
+    except OSError:
+      pass
+  available = depth == 10 or depth == 8 and advertised is True
+  reason = ('10-bit output is active. Changes still require Apply and Keep.' if depth == 10
+    else 'Monitor advertises 10-bit color. Apply tests this mode and connection; Keep requires confirmed 10-bit output.' if available
+    else 'Current color depth is unknown.' if depth is None
+    else 'Monitor does not advertise 10-bit color.' if advertised is False
+    else '10-bit support could not be determined from this connection.')
+  return dict(tenBitAvailable=available, colorDepthReason=reason)
+
+
+def profile_color(name):
+  # Kanshi has no color-depth field. Apply it after its native layout succeeds.
+  with locked():
+    if SESSION != 'wayland' or read_state('pending') or read_state('hold') is not None:
+      return
+    store = load()
+    if not store['automatic']:
+      return
+    profile = next((p for p in store['profiles'] if p['name'] == name and p['session'] == 'wayland'), None)
+    if profile is None:
+      return
+    connected = discover()
+    outputs = resolve(profile['outputs'], connected)
+    if not layout_equal(outputs, connected):
+      apply_layout(outputs)
 
 
 def link_details(connector):
@@ -673,7 +751,7 @@ def import_autorandr(directory):
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument('command', choices=['snapshot', 'details', 'validate', 'apply', 'keep', 'revert', 'guard', 'save', 'delete', 'rename', 'automatic', 'import', 'import-autorandr', 'watch', 'start'])
+  parser.add_argument('command', choices=['snapshot', 'details', 'validate', 'apply', 'keep', 'revert', 'guard', 'save', 'delete', 'rename', 'automatic', 'import', 'import-autorandr', 'watch', 'start', 'profile-color'])
   parser.add_argument('value', nargs='?')
   parser.add_argument('extra', nargs='?', default='')
   args = parser.parse_args()
@@ -681,6 +759,12 @@ def main():
     print(json.dumps(snapshot()))
   elif args.command == 'details':
     print(json.dumps(link_details(args.value)))
+  elif args.command == 'profile-color':
+    try:
+      profile_color(args.value)
+    except (OSError, ValueError, RuntimeError) as error:
+      write_json(RUNTIME / 'automation-error', 'Could not restore profile color depth: ' + str(error))
+      raise
   elif args.command == 'validate':
     load()
   elif args.command == 'apply':

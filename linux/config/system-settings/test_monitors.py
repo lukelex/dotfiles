@@ -36,6 +36,98 @@ class MonitorTests(unittest.TestCase):
     with self.assertRaises(ValueError):
       m.validate_outputs([output(), output()])
 
+  def test_color_depth_validation_and_legacy_profiles(self):
+    for depth in [True, 12, '10', None]:
+      with self.assertRaises(ValueError):
+        m.validate_outputs([output(bitDepth=depth)])
+    with patch.object(m, 'SESSION', 'wayland'):
+      current = output(bitDepth=10, tenBitAvailable=True)
+      self.assertEqual(m.resolve([output()], [current])[0]['bitDepth'], 10)
+      self.assertEqual(m.clean([current])[0]['bitDepth'], 10)
+      self.assertNotIn('tenBitAvailable', m.clean([current])[0])
+      for current in [output(bitDepth=8, tenBitAvailable=False), output()]:
+        with self.assertRaises(ValueError):
+          m.resolve([output(bitDepth=10)], [current])
+    with self.assertRaisesRegex(ValueError, 'Hyprland'):
+      m.resolve([output(bitDepth=10)], [output()])
+
+  def test_ten_bit_capability_requires_edid_or_observed_ten_bit(self):
+    connector = self.root / 'card1-DP-1'
+    connector.mkdir()
+    edid = bytearray(128)
+    edid[:8] = bytes.fromhex('00ffffffffffff00')
+    edid[18:21] = bytes([1, 4, 0xb0])
+    edid[127] = -sum(edid[:127]) % 256
+    (connector / 'edid').write_bytes(edid)
+    with patch.object(m.Path, 'glob', return_value=[connector]):
+      self.assertTrue(m.color_capability('DP-1', 8)['tenBitAvailable'])
+      self.assertFalse(m.color_capability('DP-1', None)['tenBitAvailable'])
+      edid[20] = 0xa0
+      edid[127] = -sum(edid[:127]) % 256
+      (connector / 'edid').write_bytes(edid)
+      self.assertFalse(m.color_capability('DP-1', 8)['tenBitAvailable'])
+    with patch.object(m.Path, 'glob', return_value=[]):
+      self.assertFalse(m.color_capability('DP-1', 8)['tenBitAvailable'])
+      self.assertTrue(m.color_capability('DP-1', 10)['tenBitAvailable'])
+    self.assertIsNone(m.format_depth('unknown'))
+    self.assertEqual(m.format_depth('XRGB2101010'), 10)
+    self.assertEqual(m.format_depth('XRGB8888'), 8)
+
+  def test_hdmi_deep_color_flag_and_checksum(self):
+    edid = bytearray(256)
+    edid[:8] = bytes.fromhex('00ffffffffffff00')
+    edid[128:132] = bytes([2, 3, 11, 0])
+    edid[132:139] = bytes([0x66, 3, 12, 0, 0, 0, 0x10])
+    edid[255] = -sum(edid[128:255]) % 256
+    self.assertTrue(m.edid_details(edid)['tenBit'])
+    edid[138] = 0
+    self.assertIsNone(m.edid_details(edid)['tenBit'])
+    edid[255] = -sum(edid[128:255]) % 256
+    self.assertFalse(m.edid_details(edid)['tenBit'])
+
+  def test_hyprland_applies_depth_and_rejects_silent_eight_bit_fallback_on_keep(self):
+    self.enterContext(patch.object(m, 'SESSION', 'wayland'))
+    with patch.object(m, 'command', return_value='ok\n') as command:
+      m.apply_layout([output(bitDepth=10)])
+      self.assertEqual(command.call_args.args[0][:2], ['hyprctl', 'eval'])
+      self.assertIn('bitdepth = 10', command.call_args.args[0][-1])
+    before, after = output(bitDepth=8), output(bitDepth=10)
+    pending = dict(token='color', monotonicDeadline=time.monotonic() + 20,
+      before=m.clean([before]), after=m.clean([after]), topology=m.topology([before]))
+    m.write_json(m.RUNTIME / 'pending', pending)
+    with patch.object(m, 'discover', return_value=[before]), patch.object(m, 'apply_layout') as apply:
+      with self.assertRaisesRegex(ValueError, 'did not match'):
+        m.confirm('color', True)
+      self.assertEqual(apply.call_args.args[0][0]['bitDepth'], 8)
+    self.assertFalse(m.layout_equal([after], [before]))
+
+  def test_kanshi_color_hook_restores_saved_depth_and_respects_trials(self):
+    self.enterContext(patch.object(m, 'SESSION', 'wayland'))
+    profile = dict(name='Desk color', session='wayland', preferred=True,
+      outputs=m.clean([output(bitDepth=10)]))
+    m.save_profile(profile)
+    self.assertIn("profile-color 'Desk color'", m.kanshi_config([profile]))
+    with patch.object(m, 'discover', return_value=[output(bitDepth=8, tenBitAvailable=True)]), patch.object(m, 'apply_layout') as apply:
+      m.profile_color('Desk color')
+      self.assertEqual(apply.call_args.args[0][0]['bitDepth'], 10)
+      apply.reset_mock()
+      m.write_json(m.RUNTIME / 'pending', {'token': 'trial'})
+      m.profile_color('Desk color')
+      apply.assert_not_called()
+
+  def test_lua_monitor_adapter_enables_before_disabling_and_rejects_ipc_errors(self):
+    self.enterContext(patch.object(m, 'SESSION', 'wayland'))
+    outputs = [output(name='eDP-1', identity='', enabled=False),
+      output(bitDepth=10, mode='2560x1440', rate=59.94, x=100, y=200, scale=1.25, rotation='left')]
+    with patch.object(m, 'command', return_value='ok\n') as command:
+      m.apply_layout(outputs)
+      self.assertEqual(command.call_args.args[0], ['hyprctl', 'eval',
+        'hl.monitor({output = "DP-1", mode = "2560x1440@59.94", position = "100x200", scale = 1.25, transform = 1, bitdepth = 10}); '
+        'hl.monitor({output = "eDP-1", disabled = true})'])
+    for response in ['unknown request', 'Lua error: invalid monitor', '']:
+      with patch.object(m, 'command', return_value=response), self.assertRaises(RuntimeError):
+        m.apply_layout(outputs)
+
   def test_identity_matches_a_new_connector_and_rejects_missing_or_extra_hardware(self):
     saved = [output()]
     connected = [output(name='DP-3')]

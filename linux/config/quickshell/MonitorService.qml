@@ -117,7 +117,8 @@ QtObject {
   function save(name, replaceName, preferred) {
     run("save", JSON.stringify({ name: name.trim(), session: snapshot.session, preferred: preferred,
       outputs: draft.map(o => ({ connector: o.connector, identity: o.identity, enabled: o.enabled,
-        mode: o.mode, rate: o.rate, scale: o.scale, rotation: o.rotation, x: o.x, y: o.y, primary: o.primary })) }), replaceName)
+        mode: o.mode, rate: o.rate, scale: o.scale, rotation: o.rotation, x: o.x, y: o.y, primary: o.primary,
+        bitDepth: o.bitDepth })) }), replaceName)
   }
 
   property Process reader: Process {

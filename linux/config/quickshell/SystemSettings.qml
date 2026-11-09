@@ -877,7 +877,29 @@ FloatingWindow {
           enabled: monitors.output?.enabled ?? false
           onClicked: monitors.edit("primary", !monitors.output.primary)
         }
+        Toggle {
+          Layout.fillWidth: true
+          visible: monitors.snapshot.session === "wayland"
+          text: "10-bit color"
+          checked: (monitors.output?.bitDepth ?? monitors.connectedOutput?.bitDepth) === 10
+          enabled: (monitors.output?.enabled ?? false) && (monitors.connectedOutput?.tenBitAvailable ?? false)
+            && !monitors.busy && !monitors.pending
+          onClicked: monitors.edit("bitDepth", (monitors.output?.bitDepth ?? monitors.connectedOutput?.bitDepth) === 10 ? 8 : 10)
+        }
+        Label {
+          Layout.fillWidth: true
+          visible: monitors.snapshot.session === "wayland"
+          text: "Current output: " + (monitors.connectedOutput?.bitDepth ? monitors.connectedOutput.bitDepth + "-bit" : "Unknown")
+            + "\n" + (monitors.connectedOutput?.colorDepthReason || "Display disconnected.")
+          color: window.controller.controlSecondaryText
+        }
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
+        Label {
+          Layout.fillWidth: true
+          visible: monitors.error !== ""
+          text: monitors.error
+          color: window.controller.controlWarningText
+        }
         RowLayout {
           Layout.fillWidth: true
           SoundButton { text: "Reload current"; iconName: "refresh-cw"; onClicked: { monitors.resetAfterRead = true; monitors.refresh() } }

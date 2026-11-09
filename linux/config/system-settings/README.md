@@ -135,6 +135,15 @@ after reconnects. Device IDs remain runtime-only. Without Quickshell, run
 - **Display:** day/night temperature, sunrise/sunset coordinates, brightness-key
   step, and volume/brightness/layout OSD duration. The night-light on/off action
   remains in Control Center; editing warmth doesn't enable an inactive service.
+  Hyprland display properties also offer per-monitor 10-bit color. The toggle is
+  grayed out when support or current depth cannot be determined, or the monitor
+  does not advertise support. Advertised support does not guarantee link bandwidth
+  at the selected mode: Apply uses the existing rollback trial, and Keep verifies
+  the actual output depth. Save a confirmed layout to retain its color depth in
+  the monitor profile. Older profiles preserve current depth; X11 does not expose
+  this control. Kanshi reapplies saved depth through the monitor helper after
+  applying the layout. Monitor changes and rollback use Hyprland's Lua
+  `hl.monitor` API via `hyprctl eval`, matching the desktop configuration.
 - **Lock & idle:** Hyprland dim/lock/display-off delays; i3 lock/display-off delays;
   existing fullscreen deferral and Hyprland microphone/camera deferral. A zero
   dim/display-off delay disables that timer. Lock delays remain positive; i3
