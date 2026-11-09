@@ -69,7 +69,7 @@ hl.config({
     border_size = 6,
     ["col.active_border"] = "0xffcc7833",
     ["col.inactive_border"] = "0xff2b2b2b",
-    resize_on_border = true,
+    resize_on_border = false,
     hover_icon_on_border = true,
     no_focus_fallback = true,
   },
