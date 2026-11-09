@@ -6,7 +6,7 @@ local jobs, timers, messages = {}, {}, {}
 local throw_command
 vim.system = function(command, options, done)
   if command[1] == throw_command then error("injected spawn failure") end
-  local job = { command = command, options = options, done = done }
+  local job = { command = command, options = options, done = done, pid = 1000 + #jobs }
   job.kill = function() job.killed = true end
   table.insert(jobs, job)
   return job
@@ -55,11 +55,28 @@ local function subscribe()
   return cancel
 end
 local ok, err = xpcall(function()
+  local watch = require("core.lsp-watch")
+  watch.setup()
+  local empty = vim.api.nvim_exec2("LspWatchStatus", { output = true }).output
+  assert(empty:find("No active custom watcher roots.", 1, true))
   local cancel = subscribe()
+  local state = watch.status().roots[1]
+  assert(state.phase == "discovering" and state.discovery_pid == jobs[1].pid and state.subscribers == 1)
+  assert(state.startup_deadline_seconds == 30)
   local active = discovered()
+  assert(watch.status().roots[1].phase == "starting")
   ready(active)
+  state = watch.status().roots[1]
+  assert(state.phase == "watching" and state.active_pid == active.pid)
+  local before_jobs = #jobs
+  local display = vim.api.nvim_exec2("LspWatchStatus", { output = true }).output
+  assert(display:find("/test/workspace", 1, true) and display:find(tostring(active.pid), 1, true))
+  assert(#jobs == before_jobs, "status command changed watcher lifecycle")
   active.done({ code = 9 })
   drain()
+  state = watch.status().roots[1]
+  assert(state.phase == "retrying" and state.coverage_lost and state.total_retries == 1)
+  assert(state.last_error:find("retry 1/3", 1, true) and state.last_error_at)
   assert(tick() == 250)
   local recovered = discovered()
   ready(recovered)
@@ -92,7 +109,9 @@ local ok, err = xpcall(function()
   end
   assert(not vim.iter(timers):any(function(timer) return not timer.closed end), "retry loop was not bounded")
   assert(messages[#messages]:find("recovery exhausted", 1, true))
+  assert(watch.status().roots[1].phase == "failed" and watch.status().roots[1].exhausted)
   cancel()
+  assert(#watch.status().roots == 0, "cancelled root stayed in status")
 
   -- Discovery failures and synchronous spawn errors use the same bounded path.
   timers, jobs = {}, {}

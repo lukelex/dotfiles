@@ -79,6 +79,16 @@ This was also reproduced with the installed Tailwind server: changing a v4
 theme color during an outage left hover showing the old color after watcher-only
 recovery. Reinitialization refreshes that state.
 
+### Watcher diagnostics
+
+`:LspWatchStatus` shows the backend and each root's lifecycle phase, subscriber
+count, process IDs, exclusions, retry budget/total, lost-coverage flag, and most
+recent error with its timestamp. It is read-only and does not restart anything.
+The command prints up to eight exclusions per root; the complete structured
+snapshot is available with `:lua vim.print(require('core.lsp-watch').status())`.
+Cancelled roots disappear from the snapshot. Error history belongs to the current
+root instance, so reinitializing its clients may create a fresh instance.
+
 ## LSP root regression checks
 
 ```sh

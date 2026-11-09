@@ -55,10 +55,13 @@ local function start(path, callback)
   local changed_dirs, cached_exclusions = {}, nil
   local failures, recovering, exhausted = 0, false, false
   local lost_coverage = false
+  local total_retries = 0
+  local last_error, last_error_at
   local retry_delays = { 250, 1000, 4000 }
   local refresh
   local prefix = path:gsub("/$", "") .. "/"
   local function report(message)
+    last_error, last_error_at = message, os.date("!%Y-%m-%dT%H:%M:%SZ")
     vim.schedule(function()
       if not cancelled then
         vim.notify("LSP inotifywait: " .. message, vim.log.levels.ERROR)
@@ -96,6 +99,7 @@ local function start(path, callback)
       return
     end
     recovering = true
+    total_retries = total_retries + 1
     report(message .. "; retry " .. failures .. "/" .. #retry_delays)
     timer = vim.defer_fn(function()
       timer = nil
@@ -336,6 +340,25 @@ local function start(path, callback)
       stop(active)
       stop(replacement)
     end
+  end, function()
+    local phase = "idle"
+    if exhausted then phase = active and "degraded" or "failed"
+    elseif recovering then phase = "retrying"
+    elseif discovery then phase = active and "refreshing" or "discovering"
+    elseif replacement then phase = active and "handoff" or "starting"
+    elseif timer then phase = "refresh pending"
+    elseif active then phase = "watching" end
+    local function pid(job) return job and job.process and job.process.pid end
+    local exclusions = vim.tbl_keys(cached_exclusions or {})
+    table.sort(exclusions)
+    return {
+      phase = phase,
+      active_pid = pid(active), discovery_pid = pid(discovery), replacement_pid = pid(replacement),
+      exclusions = exclusions, retry_budget_used = math.min(failures, #retry_delays),
+      retry_budget = #retry_delays, total_retries = total_retries, exhausted = exhausted,
+      coverage_lost = lost_coverage, last_error = last_error, last_error_at = last_error_at,
+      startup_deadline_seconds = (discovery or replacement) and 30 or nil,
+    }
   end
 end
 
@@ -348,7 +371,7 @@ function M.watch(path, opts, callback)
   if not root then
     root = { listeners = {} }
     roots[path] = root
-    root.cancel = start(path, function(fullpath, kind)
+    root.cancel, root.inspect = start(path, function(fullpath, kind)
       for subscriber in pairs(root.listeners) do
         local filters = subscriber.opts
         if (not filters.include_pattern or filters.include_pattern:match(fullpath))
@@ -373,7 +396,46 @@ function M.watch(path, opts, callback)
   end
 end
 
+function M.status()
+  local native = package.loaded["vim.lsp._watchfiles"]
+  local result = {
+    backend = native and native._watchfunc == M.watch and "custom inotifywait" or "Neovim default/other",
+    roots = {},
+  }
+  for path, root in pairs(roots) do
+    local state = root.inspect()
+    state.path = path
+    state.subscribers = vim.tbl_count(root.listeners)
+    table.insert(result.roots, state)
+  end
+  table.sort(result.roots, function(a, b) return a.path < b.path end)
+  return result
+end
+
+function M.format_status(status)
+  local lines = { "LSP watcher backend: " .. status.backend }
+  if #status.roots == 0 then table.insert(lines, "No active custom watcher roots.") end
+  for _, root in ipairs(status.roots) do
+    table.insert(lines, ("%s — %s (%d subscribers)"):format(root.path, root.phase, root.subscribers))
+    table.insert(lines, ("  PIDs: active=%s discovery=%s replacement=%s"):format(
+      root.active_pid or "—", root.discovery_pid or "—", root.replacement_pid or "—"))
+    table.insert(lines, ("  Retry budget: %d/%d; total retries: %d; lost coverage: %s"):format(
+      root.retry_budget_used, root.retry_budget, root.total_retries, tostring(root.coverage_lost)))
+    if root.startup_deadline_seconds then
+      table.insert(lines, "  Startup stages have a " .. root.startup_deadline_seconds .. "s deadline")
+    end
+    table.insert(lines, "  Exclusions: " .. #root.exclusions)
+    for i = 1, math.min(#root.exclusions, 8) do table.insert(lines, "    " .. root.exclusions[i]) end
+    if #root.exclusions > 8 then table.insert(lines, "    … use require('core.lsp-watch').status() for all exclusions") end
+    if root.last_error then table.insert(lines, "  Last error (" .. root.last_error_at .. "): " .. root.last_error) end
+  end
+  return table.concat(lines, "\n")
+end
+
 function M.setup()
+  vim.api.nvim_create_user_command("LspWatchStatus", function()
+    vim.api.nvim_echo({ { M.format_status(M.status()) } }, true, {})
+  end, { desc = "Show LSP watcher roots, processes, exclusions and recovery state" })
   if vim.fn.has("linux") == 1 and vim.fn.executable("inotifywait") == 1
     and vim.fn.executable("fd") == 1 then
     -- Private API: recheck this override when upgrading Neovim's watcher backend.
