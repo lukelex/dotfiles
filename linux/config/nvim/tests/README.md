@@ -54,7 +54,8 @@ nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch.lua
 The watcher test uses real background processes and temporary directories. It
 checks exclusions under `/tmp` (including regex characters in workspace names),
 shared watchers, independent subscriber filters, filenames containing whitespace,
-and cancellation both during discovery and after startup. It does not load the
+automatic pruning of new/moved-in tmp trees, continuous events during watcher
+handoff, and cancellation both during discovery and after startup. It does not load the
 editor's plugins or modify saved sessions.
 
 ## LSP root regression checks
