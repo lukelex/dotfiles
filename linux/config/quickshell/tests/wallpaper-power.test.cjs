@@ -57,7 +57,9 @@ test('wallpaper file picker URLs decode safely and Wayland uses the existing nat
   const image = path.join(f.root, 'my photo.png');
   fs.writeFileSync(image, 'photo');
   f.env.XDG_SESSION_TYPE = 'wayland';
-  assert.equal(f.run('wallpaper.py', 'choose', `file://${image.replace(/ /g, '%20')}`).status, 0);
+  const chosen = f.run('wallpaper.py', 'choose', `file://${image.replace(/ /g, '%20')}`);
+  assert.equal(chosen.status, 0);
+  assert.equal(chosen.stdout.trim(), image);
   assert.match(f.actions(), /awww\nimg/);
   assert.notEqual(f.run('wallpaper.py', 'choose', 'file://remote/photo.png').status, 0);
 });
@@ -91,7 +93,9 @@ done
 exit "$status"
 `, { mode: 0o755 });
   f.env.XDG_SESSION_TYPE = 'wayland';
-  assert.equal(f.run('wallpaper.py', 'random', folder).status, 0);
+  const selected = f.run('wallpaper.py', 'random', folder);
+  assert.equal(selected.status, 0);
+  assert.equal(selected.stdout.trim(), path.join(nested, 'wide.jpg'));
   assert.equal(fs.readFileSync(path.join(f.root, 'wallpaper.png'), 'utf8'), 'wide.jpg');
   assert.equal(fs.readFileSync(path.join(f.root, 'identify-calls'), 'utf8'), 'call\n', 'one identify process for the pool');
   fs.unlinkSync(path.join(nested, 'wide.jpg'));

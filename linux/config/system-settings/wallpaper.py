@@ -152,7 +152,7 @@ def random_wallpaper(folder):
   for image in candidates:
     try:
       if choose(image, skip_current=True):
-        return
+        return image
     except OSError as error:
       # SeaDrive can expose an image's header but fail while reading the full
       # file. Try another candidate, without hiding local write/backend errors.
@@ -174,10 +174,13 @@ def main():
     if not args.path:
       raise ValueError('Choose requires an image path')
     choose(args.path)
+    selected = local_path(args.path)
   elif args.action == 'restore' or args.action == 'startup' and preferences['startupMode'] == 'restore':
     restore()
+    selected = Path.home() / 'wallpaper.png'
   else:
-    random_wallpaper(args.path or preferences['folder'])
+    selected = random_wallpaper(args.path or preferences['folder'])
+  print(selected)
 
 
 if __name__ == '__main__':
