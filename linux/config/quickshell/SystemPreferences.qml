@@ -10,6 +10,8 @@ QtObject {
   property var fields: []
   property bool ready: false
   property string error: ""
+  property var errorKeys: []
+  property var activeKeys: []
   property var queue: []
   property bool busy: false
   property var x11Input: ({ devices: [], keys: [], error: "Detecting X11 pointing devices…" })
@@ -69,6 +71,8 @@ QtObject {
       return
     busy = true
     writer.command = ["python3", helper].concat(queue.shift())
+    activeKeys = writer.command[2] === "patch" ? Object.keys(JSON.parse(writer.command[3]))
+      : writer.command[2] === "apply" ? [writer.command[3]] : ["input"]
     writer.running = true
   }
 
@@ -109,18 +113,29 @@ QtObject {
               && (initial || JSON.stringify(previous.input) !== JSON.stringify(result.data.input)))
             preferences.queue.push(["apply-x11-input"])
         } catch (_) {
+          preferences.errorKeys = []
           preferences.error = "Could not load preferences. Check preferences.json and run settings.py validate."
         }
       }
     }
-    stderr: StdioCollector { onStreamFinished: { if (text.trim()) preferences.error = text.trim() } }
+    stderr: StdioCollector { onStreamFinished: {
+      if (text.trim()) {
+        preferences.errorKeys = []
+        preferences.error = text.trim()
+      }
+    } }
     onExited: {
       preferences.busy = false
       preferences.runNext()
     }
   }
   property Process writer: Process {
-    stderr: StdioCollector { onStreamFinished: { if (text.trim()) preferences.error = text.trim() } }
+    stderr: StdioCollector { onStreamFinished: {
+      if (text.trim()) {
+        preferences.errorKeys = preferences.activeKeys.slice()
+        preferences.error = text.trim()
+      }
+    } }
     onExited: code => {
       preferences.busy = false
       if (code === 0)

@@ -151,6 +151,18 @@ Use `SettingsSection` rather than recreating subsection cards. Supply
 Keep labels and compact editors inline when they fit, stacking at narrow widths.
 Use disclosure only for secondary material. Preserve focus and scroll position.
 
+Use `SettingsButton`, `SettingsToggle`, `SettingsChoice`, `SettingsTextField` and
+`SettingsHint` for settings controls, including embedded Wi-Fi and audio views.
+Inputs and ordinary action targets are 36px high; header actions retain their
+32px targets. Help is available on hover and keyboard focus. Password fields
+never reveal their contents through a tooltip.
+
+`SettingsGrid` lays out alternating label/editor pairs using their measured
+widths and stacks the same items when space is tight. `SettingsScrollView`
+resets on page entry and preserves the reading position across disclosures.
+Show neutral pending text and warning-colored failures beside their controls;
+section-wide preference failures appear once at the top of the relevant page.
+
 ### Notifications
 
 Toast width is at most 396px with 12px screen clearance. The extra animation

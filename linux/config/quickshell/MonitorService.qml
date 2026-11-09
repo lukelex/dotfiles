@@ -8,6 +8,7 @@ QtObject {
   property bool visible: false
   property bool busy: false
   property string error: ""
+  property string action: ""
   property var linkDetails: null
   property var snapshot: ({ outputs: [], profiles: [], automatic: true, pending: null, session: Quickshell.env("XDG_SESSION_TYPE") })
   property var draft: []
@@ -58,6 +59,7 @@ QtObject {
       return
     const profile = snapshot.profiles.find(p => p.name === name)
     if (!profile || !profile.available || profile.session !== snapshot.session) {
+      action = "apply"
       error = profile?.reason || "This profile's displays are not detected."
       return
     }
@@ -104,6 +106,7 @@ QtObject {
     if (busy || writer.running)
       return
     error = ""
+    service.action = action
     busy = true
     queuedCommand = ["python3", helper, action, value, extra]
     writer.action = action
@@ -128,8 +131,10 @@ QtObject {
         try {
           const next = JSON.parse(text)
           const topology = JSON.stringify(next.outputs.map(o => o.identity || o.connector).sort())
-          if (service.dirty && service.previousTopology && topology !== service.previousTopology)
+          if (service.dirty && service.previousTopology && topology !== service.previousTopology) {
+            service.action = ""
             service.error = "Connected displays changed. Reload the current layout before applying."
+          }
           const ended = service.snapshot.pending && !next.pending
           if (JSON.stringify(service.snapshot.outputs) !== JSON.stringify(next.outputs))
             service.linkDetails = null
@@ -141,11 +146,19 @@ QtObject {
           service.resetAfterRead = false
           service.preserveProfileAfterRead = false
         } catch (_) {
-          if (!service.error) service.error = "Could not read monitor configuration."
+          if (!service.error) {
+            service.action = ""
+            service.error = "Could not read monitor configuration."
+          }
         }
       }
     }
-    stderr: StdioCollector { onStreamFinished: { if (text.trim()) service.error = text.trim() } }
+    stderr: StdioCollector { onStreamFinished: {
+      if (text.trim()) {
+        service.action = ""
+        service.error = text.trim()
+      }
+    } }
     onExited: {
       if (service.queuedCommand) {
         service.writer.command = service.queuedCommand

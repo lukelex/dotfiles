@@ -14,6 +14,8 @@ Rectangle {
   property bool collapsible: false
   property bool expanded: true
   property bool framed: true
+  property string statusText: ""
+  property bool statusError: false
   default property alias contents: subsectionBody.data
   signal toggled()
   implicitHeight: subsectionContent.implicitHeight + Design.spacing.card * 2
@@ -83,6 +85,16 @@ Rectangle {
       Layout.fillWidth: true
       visible: subsection.expanded
       spacing: Design.spacing.row
+    }
+    Text {
+      Layout.fillWidth: true
+      visible: subsection.statusText !== ""
+      text: subsection.statusText
+      textFormat: Text.PlainText
+      wrapMode: Text.Wrap
+      font.family: subsection.controller.fontFamily
+      font.pixelSize: Design.typography.body
+      color: subsection.statusError ? subsection.controller.controlWarningText : subsection.controller.controlSecondaryText
     }
   }
 }

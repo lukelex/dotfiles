@@ -15,6 +15,7 @@ ColumnLayout {
   property string actionKey: ""
   property string actionName: ""
   property bool unavailableExpanded: false
+  signal disclosureToggled()
   readonly property bool radioReady: service.wifiAvailable && service.wifiEnabled && service.wifiHardwareEnabled
   readonly property bool multipleAdapters: service._wifiDevices.length > 1
   readonly property var currentNetworks: service.knownNetworks.filter(network => network && network.connected)
@@ -107,54 +108,12 @@ ColumnLayout {
     wrapMode: Text.Wrap
   }
 
-  component Hint: Controls.ToolTip {
-    id: hint
-    delay: 500
-    implicitWidth: Math.min(300, contentItem.implicitWidth + 20)
-    contentItem: Label { text: hint.text; color: page.controller.controlPrimaryText }
-    background: Rectangle { radius: 8; color: page.controller.controlSurface; border.color: page.controller.controlSurfaceBorder }
+  component Hint: SettingsHint {
+    controller: page.controller
   }
 
-  component Button: Controls.Button {
-    id: button
-    property string iconName: ""
-    property string description: text
-    property bool quiet: false
-    implicitWidth: text ? Math.max(76, buttonText.implicitWidth + (iconName ? 44 : 24)) : 36
-    implicitHeight: 36
-    focusPolicy: Qt.StrongFocus
-    Accessible.name: description
-    opacity: enabled ? 1 : 0.5
-    background: Rectangle {
-      radius: 8
-      color: button.down || button.hovered ? page.controller.controlHover
-        : button.quiet ? "transparent" : page.controller.controlSurface
-      border.width: button.activeFocus ? 2 : button.quiet ? 0 : 1
-      border.color: button.activeFocus ? page.controller.controlActiveIcon : page.controller.controlSurfaceBorder
-    }
-    contentItem: Item {
-      LucideIcon {
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        width: 16
-        height: 16
-        visible: button.iconName !== ""
-        source: button.iconName ? page.controller.icon(button.iconName) : ""
-        color: page.controller.controlSecondaryText
-      }
-      Label {
-        id: buttonText
-        anchors.fill: parent
-        anchors.leftMargin: button.iconName ? 24 : 0
-        text: button.text
-        color: page.controller.controlPrimaryText
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: button.iconName ? Text.AlignLeft : Text.AlignHCenter
-        elide: Text.ElideRight
-        wrapMode: Text.NoWrap
-      }
-    }
-    Hint { text: button.description; visible: button.hovered || button.activeFocus }
+  component Button: SettingsButton {
+    controller: page.controller
   }
 
   component NetworkRow: ColumnLayout {
@@ -257,7 +216,7 @@ ColumnLayout {
         Button {
           id: overflow
           visible: row.details.known
-          text: "⋯"
+          iconName: "ellipsis"
           implicitWidth: 36
           quiet: true
           description: "Manage " + row.details.name
@@ -300,8 +259,9 @@ ColumnLayout {
       visible: row.network !== null && page.pendingPassphraseNetwork === row.network
       onVisibleChanged: { if (!visible) passphrase.clear() }
       spacing: 8
-      Controls.TextField {
+      SettingsTextField {
         id: passphrase
+        controller: page.controller
         Layout.fillWidth: true
         placeholderText: "Wi-Fi password"
         echoMode: TextInput.Password
@@ -309,10 +269,8 @@ ColumnLayout {
         selectionColor: page.controller.controlActive
         selectedTextColor: page.controller.controlPrimaryText
         font.family: page.controller.fontFamily
-        padding: 10
         Accessible.name: "Password for " + row.details.name
         onAccepted: { if (connectButton.enabled) connectButton.clicked() }
-        background: Rectangle { radius: 8; color: page.controller.controlBackground; border.color: passphrase.activeFocus ? page.controller.controlActiveIcon : page.controller.controlSurfaceBorder }
       }
       RowLayout {
         Layout.fillWidth: true
@@ -412,52 +370,24 @@ ColumnLayout {
     iconName: "wifi"
   RowLayout {
     Layout.fillWidth: true
-    Label { Layout.fillWidth: true; text: "Wi-Fi radio"; color: page.controller.controlPrimaryText }
-    Button {
-      text: "ⓘ"
-      implicitWidth: 32
-      quiet: true
-      description: "Passwords go directly to NetworkManager. Saved networks and credentials are managed by NetworkManager, not stored in dotfiles."
-    }
-    Controls.Switch {
-      id: radio
-      text: page.service.wifiEnabled ? "On" : "Off"
+    SettingsToggle {
+      Layout.fillWidth: true
+      controller: page.controller
+      text: "Wi-Fi radio"
+      description: page.service.wifiEnabled ? "Wi-Fi is on" : "Wi-Fi is off"
       checked: page.service.wifiEnabled
       enabled: page.service.wifiAvailable && (page.service.wifiEnabled || page.service.wifiHardwareEnabled)
       Accessible.name: "Wi-Fi"
-      palette.windowText: page.controller.controlPrimaryText
-      palette.highlight: page.controller.controlActiveIcon
-      font.family: page.controller.fontFamily
-      spacing: 8
-      indicator: Rectangle {
-        x: radio.leftPadding
-        y: (radio.height - height) / 2
-        implicitWidth: 40
-        implicitHeight: 24
-        radius: 12
-        color: radio.checked ? page.controller.controlActive : page.controller.controlSliderTrack
-        border.color: radio.activeFocus ? page.controller.controlActiveIcon : page.controller.controlSurfaceBorder
-        border.width: radio.activeFocus ? 2 : 1
-        Rectangle {
-          x: radio.checked ? parent.width - width - 3 : 3
-          y: 3
-          width: 18
-          height: 18
-          radius: 9
-          color: radio.checked ? page.controller.controlActiveIcon : page.controller.controlSecondaryText
-        }
-      }
-      contentItem: Label {
-        leftPadding: radio.indicator.width + radio.spacing
-        text: radio.text
-        color: page.controller.controlPrimaryText
-        verticalAlignment: Text.AlignVCenter
-      }
       onClicked: {
         page.actionKey = ""
         page.service.clearErrors()
         page.service.setWifiEnabled(!page.service.wifiEnabled)
       }
+    }
+    Button {
+      iconName: "info"
+      quiet: true
+      description: "Passwords go directly to NetworkManager. Saved networks and credentials are managed by NetworkManager, not stored in dotfiles."
     }
   }
 
@@ -522,7 +452,10 @@ ColumnLayout {
     iconName: "wifi-off"
     collapsible: true
     expanded: page.unavailableExpanded
-    onToggled: page.unavailableExpanded = !page.unavailableExpanded
+    onToggled: {
+      page.disclosureToggled()
+      page.unavailableExpanded = !page.unavailableExpanded
+    }
     NetworkGroup {
       Layout.fillWidth: true
       entries: page.unavailableSaved

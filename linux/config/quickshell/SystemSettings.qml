@@ -24,14 +24,14 @@ FloatingWindow {
   readonly property var sections: [
     { key: "system", label: "System information", icon: "cpu" },
     { key: "notifications", label: "Notifications", icon: "bell" },
-    { key: "display", label: "Display", icon: "sun" },
-    { key: "monitors", label: "Monitors", icon: "monitor" },
-    { key: "wallpaper", label: "Wallpaper", icon: "monitor" },
+    { key: "display", label: "Brightness & color", icon: "sun" },
+    { key: "monitors", label: "Monitor layout", icon: "monitor" },
+    { key: "wallpaper", label: "Wallpaper", icon: "gallery-horizontal-end" },
     { key: "power", label: "Power & battery", icon: "battery" },
     { key: "connectivity", label: "Connectivity", icon: "wifi" },
-    { key: "idle", label: "Lock & idle", icon: "lock" },
+    { key: "idle", label: "Lock & idle", icon: "clock" },
     { key: "lockScreen", label: "Session & lock screen", icon: "lock" },
-    { key: "input", label: "Keyboard, Mouse & Trackpad", icon: "keyboard" },
+    { key: "input", label: "Keyboard, mouse & trackpad", icon: "keyboard" },
     { key: "audio", label: "Audio", icon: "volume-2" },
     { key: "weather", label: "Date & weather", icon: "calendar" },
     { key: "desktop", label: "Desktop & bar", icon: "settings" }
@@ -75,191 +75,37 @@ FloatingWindow {
     color: window.controller.controlPrimaryText
     font.family: window.controller.fontFamily
     font.pixelSize: 12
+    font.underline: activeFocus
     textFormat: Text.PlainText
     wrapMode: Text.Wrap
   }
 
-  component Hint: Controls.ToolTip {
-    id: hint
-    delay: 500
-    padding: 8
-    implicitWidth: Math.min(320, window.width - 32, contentItem.implicitWidth + 16)
-    contentItem: Label {
-      text: hint.text
-      font.pixelSize: 11
-    }
-    background: Rectangle {
-      radius: 7
-      color: window.controller.controlSurface
-      border.color: window.controller.controlSurfaceBorder
-    }
+  component Hint: SettingsHint {
+    controller: window.controller
   }
 
-  component Toggle: Controls.Switch {
-    id: toggle
-    property string description: ""
-    property bool showHint: true
-    property string iconName: ""
-    Accessible.description: description
-    hoverEnabled: true
-    Hint {
-      text: toggle.description
-      visible: toggle.showHint && text.length > 0 && toggle.hovered
-    }
-    implicitHeight: 36
-    spacing: 8
-    padding: 0
-    opacity: enabled ? 1 : 0.45
-    indicator: Rectangle {
-      x: toggle.width - width
-      y: (toggle.height - height) / 2
-      width: 36
-      height: 20
-      radius: 10
-      color: toggle.checked ? window.controller.controlActive : window.controller.controlSliderTrack
-      border.width: toggle.activeFocus ? 2 : 1
-      border.color: toggle.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
-      Rectangle {
-        x: toggle.checked ? 18 : 2
-        y: 2
-        width: 16
-        height: 16
-        radius: 8
-        color: window.controller.controlPrimaryText
-      }
-    }
-    contentItem: Label {
-      text: toggle.text
-      leftPadding: toggle.iconName ? 28 : 0
-      rightPadding: 44
-      verticalAlignment: Text.AlignVCenter
-      LucideIcon {
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        width: 18
-        height: 18
-        visible: toggle.iconName !== ""
-        source: toggle.iconName ? window.controller.icon(toggle.iconName) : ""
-        color: toggle.checked ? window.controller.controlPrimaryText : window.controller.controlSecondaryText
-      }
-    }
+  component Toggle: SettingsToggle {
+    controller: window.controller
   }
 
-  component SoundButton: Controls.Button {
-    id: button
-    property string iconName: ""
-    property string description: text
-    property bool showHint: text === "" || description !== text
-    implicitHeight: 32
-    implicitWidth: implicitContentWidth + leftPadding + rightPadding
-    padding: 8
-    opacity: enabled ? 1 : 0.45
-    Accessible.name: description
-    contentItem: RowLayout {
-      spacing: 6
-      LucideIcon {
-        Layout.preferredWidth: 16
-        Layout.preferredHeight: 16
-        visible: button.iconName !== ""
-        source: button.iconName ? window.controller.icon(button.iconName) : ""
-        color: window.controller.controlPrimaryText
-      }
-      Label {
-        Layout.fillWidth: true
-        Layout.minimumWidth: 0
-        visible: button.text !== ""
-        text: button.text
-        wrapMode: Text.NoWrap
-        elide: Text.ElideRight
-      }
-    }
-    background: Rectangle {
-      radius: 8
-      color: button.hovered ? window.controller.controlHover : window.controller.controlSurface
-      border.color: button.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
-    }
-    Hint {
-      text: button.description
-      visible: button.showHint && button.hovered
-    }
+  component SoundButton: SettingsButton {
+    controller: window.controller
   }
 
-  component Choice: Controls.ComboBox {
+  component Choice: SettingsChoice {
     id: choice
+    controller: window.controller
     property var selectedValue
     signal chosen(var value)
     textRole: "label"
     valueRole: "value"
     currentIndex: model.findIndex(entry => entry.value === selectedValue)
     onActivated: chosen(currentValue)
-    implicitHeight: 36
-    font.family: window.controller.fontFamily
-    font.pixelSize: 12
-    palette.button: window.controller.controlSurface
-    palette.buttonText: window.controller.controlPrimaryText
-    palette.base: window.controller.controlSurface
-    palette.text: window.controller.controlPrimaryText
-    palette.highlight: window.controller.controlActive
-    palette.highlightedText: window.controller.controlPrimaryText
-    delegate: Controls.ItemDelegate {
-      id: option
-      required property int index
-      width: choice.width - 8
-      implicitHeight: 36
-      padding: 8
-      highlighted: choice.highlightedIndex === index
-      Accessible.name: choice.textAt(index)
-      contentItem: RowLayout {
-        spacing: 8
-        Label {
-          Layout.fillWidth: true
-          text: choice.textAt(option.index)
-          elide: Text.ElideRight
-          maximumLineCount: 1
-          color: window.controller.controlPrimaryText
-        }
-        LucideIcon {
-          Layout.preferredWidth: 16
-          Layout.preferredHeight: 16
-          source: window.controller.icon("circle-check")
-          visible: choice.currentIndex === option.index
-          color: window.controller.controlPrimaryText
-        }
-      }
-      background: Rectangle {
-        radius: 6
-        color: choice.currentIndex === option.index ? window.controller.controlActive
-          : option.highlighted || option.hovered ? window.controller.controlHover : window.controller.controlSurface
-      }
-    }
-    popup: Controls.Popup {
-      y: choice.height + 4
-      width: choice.width
-      padding: 4
-      implicitHeight: Math.min(contentItem.implicitHeight + 8, 240, window.height - 80)
-      contentItem: ListView {
-        clip: true
-        implicitHeight: contentHeight
-        model: choice.popup.visible ? choice.delegateModel : null
-        currentIndex: choice.highlightedIndex
-        boundsBehavior: Flickable.StopAtBounds
-        Controls.ScrollIndicator.vertical: Controls.ScrollIndicator {}
-      }
-      background: Rectangle {
-        radius: 8
-        color: window.controller.controlSurface
-        border.color: window.controller.controlBorder
-      }
-    }
-    background: Rectangle {
-      radius: 8
-      color: choice.hovered ? window.controller.controlHover : window.controller.controlSurface
-      border.color: choice.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
-    }
   }
 
-  component ScheduleTime: Controls.TextField {
+  component ScheduleTime: SettingsTextField {
     id: timeInput
+    controller: window.controller
     required property int minutesValue
     signal edited(int minutes)
     text: window.service.formatScheduleTime(minutesValue)
@@ -283,11 +129,6 @@ FloatingWindow {
     onActiveFocusChanged: {
       if (!activeFocus && !acceptableInput)
         text = Qt.binding(() => window.service.formatScheduleTime(timeInput.minutesValue))
-    }
-    background: Rectangle {
-      radius: 8
-      color: window.controller.controlSurface
-      border.color: timeInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
     }
   }
 
@@ -456,9 +297,10 @@ FloatingWindow {
               Accessible.name: text
               Accessible.selected: window.section === modelData.key
               onClicked: window.section = modelData.key
-              Controls.ToolTip.visible: sidebar.compact && hovered
-              Controls.ToolTip.text: text
-              Controls.ToolTip.delay: 500
+              Hint {
+                visible: sidebar.compact && (sectionButton.hovered || sectionButton.activeFocus)
+                text: sectionButton.text
+              }
               background: Rectangle {
                 radius: 8
                 color: window.section === sectionButton.modelData.key ? window.controller.controlActive
@@ -510,34 +352,29 @@ FloatingWindow {
         Layout.fillHeight: true
       }
     }
-    Label {
-      Layout.fillWidth: true
-      text: window.controller.preferences.error
-      visible: text.length > 0
-      color: window.controller.controlWarningText
-    }
   }
 
   component MonitorsPage: ColumnLayout {
     id: monitorPage
     property bool editing: false
     spacing: 10
+    Connections {
+      target: window
+      function onVisibleChanged() { if (window.visible) monitorScroll.resetPosition() }
+    }
+    Connections {
+      target: monitors
+      function onLinkDetailsChanged() { monitorScroll.preservePosition() }
+    }
     RowLayout {
       Layout.fillWidth: true
-      Label { Layout.fillWidth: true; text: "Monitors"; font.pixelSize: 16; font.bold: true }
+      Label { Layout.fillWidth: true; text: "Monitor layout"; font.pixelSize: 16; font.bold: true }
       SoundButton { text: "Identify"; iconName: "monitor"; onClicked: monitorIdentify.identify() }
     }
-    Controls.ScrollView {
+    SettingsScrollView {
       id: monitorScroll
       Layout.fillWidth: true
       Layout.fillHeight: true
-      contentWidth: availableWidth
-      clip: true
-      Binding {
-        target: monitorScroll.contentItem
-        property: "boundsBehavior"
-        value: Flickable.StopAtBounds
-      }
       ColumnLayout {
         width: monitorScroll.availableWidth
         spacing: 16
@@ -595,6 +432,7 @@ FloatingWindow {
               }
             }
           }
+        MonitorSettingsStatus { controller: window.controller; service: monitors; actions: [""] }
         }
         SettingsSubsection {
           id: savedProfiles
@@ -684,6 +522,13 @@ FloatingWindow {
           description: "Use matching saved profiles when displays connect or disconnect. A kept manual layout remains until the connected hardware changes."
           onClicked: monitors.run("automatic", JSON.stringify(!monitors.snapshot.automatic))
         }
+        MonitorSettingsStatus { controller: window.controller; service: monitors; actions: monitorPage.editing ? ["automatic"] : ["automatic", "apply", "keep", "revert"] }
+        Label {
+          Layout.fillWidth: true
+          visible: text !== ""
+          text: monitors.snapshot.automationError || ""
+          color: window.controller.controlWarningText
+        }
         }
         SettingsSubsection {
           Layout.fillWidth: true
@@ -691,7 +536,10 @@ FloatingWindow {
           iconName: "settings"
           collapsible: true
           expanded: monitorPage.editing
-          onToggled: monitorPage.editing = !monitorPage.editing
+          onToggled: {
+            monitorScroll.preservePosition()
+            monitorPage.editing = !monitorPage.editing
+          }
           Choice {
             Layout.fillWidth: true
             Accessible.name: "Profile to edit"
@@ -789,9 +637,9 @@ FloatingWindow {
           enabled: monitors.output !== null
           onClicked: monitors.edit("enabled", !monitors.output.enabled)
         }
-        GridLayout {
+        SettingsGrid {
+          id: displayProperties
           Layout.fillWidth: true
-          columns: 2
           columnSpacing: 12
           rowSpacing: 10
           enabled: monitors.output?.enabled ?? false
@@ -823,9 +671,10 @@ FloatingWindow {
           }
           Label {
             text: "Scale"
+            activeFocusOnTab: true
             HoverHandler { id: scaleHover }
             Hint {
-              visible: scaleHover.hovered
+              visible: scaleHover.hovered || scaleHover.parent.activeFocus
               text: monitors.snapshot.session === "x11" ? "X11 scales the output using resampling; application DPI remains session-wide. Hyprland uses native per-display scaling." : "Native per-display scale. Some modes only support particular scale factors."
             }
           }
@@ -846,16 +695,21 @@ FloatingWindow {
             selectedValue: monitors.output?.rotation ?? "normal"
             onChosen: value => monitors.edit("rotation", value)
           }
+        }
           Repeater {
             model: ["x", "y"]
-            delegate: RowLayout {
+            delegate: SettingsGrid {
               id: positionRow
               required property string modelData
-              Layout.columnSpan: 2
               Layout.fillWidth: true
+              enabled: monitors.output?.enabled ?? false
               Label { text: positionRow.modelData.toUpperCase() + " position"; Layout.fillWidth: true }
-              Controls.TextField {
+              SettingsTextField {
+                controller: window.controller
+                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: !positionRow.inlineEditors
                 Layout.preferredWidth: 120
+                implicitWidth: 120
                 text: String(monitors.output?.[positionRow.modelData] ?? 0)
                 color: window.controller.controlPrimaryText
                 validator: IntValidator { bottom: 0; top: 65535 }
@@ -864,11 +718,9 @@ FloatingWindow {
                   if (acceptableInput) monitors.edit(positionRow.modelData, Number(text))
                   text = Qt.binding(() => String(monitors.output?.[positionRow.modelData] ?? 0))
                 }
-                background: Rectangle { color: window.controller.controlSurface; radius: 8; border.color: window.controller.controlSurfaceBorder }
               }
             }
           }
-        }
         Toggle {
           Layout.fillWidth: true
           visible: monitors.snapshot.session === "x11"
@@ -894,12 +746,7 @@ FloatingWindow {
           color: window.controller.controlSecondaryText
         }
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-        Label {
-          Layout.fillWidth: true
-          visible: monitors.error !== ""
-          text: monitors.error
-          color: window.controller.controlWarningText
-        }
+        MonitorSettingsStatus { controller: window.controller; service: monitors; actions: ["apply", "keep", "revert"] }
         RowLayout {
           Layout.fillWidth: true
           SoundButton { text: "Reload current"; iconName: "refresh-cw"; onClicked: { monitors.resetAfterRead = true; monitors.refresh() } }
@@ -912,10 +759,13 @@ FloatingWindow {
           visible: monitorPage.editing
           title: "Connection details"
           iconName: "gauge"
+          statusText: monitors.action === "details" ? monitors.error || (monitors.busy ? "Loading connection details…" : "") : ""
+          statusError: monitors.error !== ""
           collapsible: true
           expanded: monitors.linkDetails !== null
           enabled: monitors.connectedOutput !== null && monitors.connectedOutput !== undefined
           onToggled: {
+            monitorScroll.preservePosition()
             if (monitors.linkDetails) monitors.linkDetails = null
             else monitors.run("details", monitors.connectedOutput.connector)
           }
@@ -934,8 +784,9 @@ FloatingWindow {
               + "\nActive color depth / DSC: Not exposed"
           }
           HoverHandler { id: linkHintHover }
+          activeFocusOnTab: true
           Hint {
-            visible: linkHintHover.hovered
+            visible: linkHintHover.hovered || linkHintHover.parent.activeFocus
             text: "These describe the current applied layout, not the draft. The estimate assumes uncompressed 8-bit RGB. EDID limits describe the monitor's HDMI capability, not the negotiated GPU/cable/dock link. max bpc is a limit, not active color depth."
           }
         }
@@ -945,15 +796,14 @@ FloatingWindow {
           visible: monitorPage.editing
           title: "Save & manage profiles"
           iconName: "boxes"
-        Controls.TextField {
+        SettingsTextField {
           id: profileName
+          controller: window.controller
           Layout.fillWidth: true
           placeholderText: "Profile name"
           color: window.controller.controlPrimaryText
           placeholderTextColor: window.controller.controlSecondaryText
           Accessible.name: "Profile name"
-          padding: 10
-          background: Rectangle { color: window.controller.controlSurface; radius: 8; border.color: window.controller.controlSurfaceBorder }
         }
         Toggle {
           id: preferredProfile
@@ -993,11 +843,12 @@ FloatingWindow {
             onClicked: monitors.run("import")
           }
         }
-        }
+        MonitorSettingsStatus { controller: window.controller; service: monitors; actions: ["save", "rename", "delete", "import"] }
         Label {
           Layout.fillWidth: true
-          text: monitors.error || monitors.snapshot.automationError || (monitors.dirty ? "Draft changes · apply and keep before saving." : "Saved in system-settings/monitor-profiles.json")
-          color: monitors.error || monitors.snapshot.automationError ? window.controller.controlWarningText : window.controller.controlSecondaryText
+          text: monitors.dirty ? "Draft changes · apply and keep before saving." : "Saved in system-settings/monitor-profiles.json"
+          color: window.controller.controlSecondaryText
+        }
         }
       }
     }
@@ -1006,6 +857,7 @@ FloatingWindow {
   component PreferencesPage: ColumnLayout {
     spacing: 12
     Label {
+      Layout.fillWidth: true
       text: window.sections.find(entry => entry.key === window.section)?.label || ""
       font.pixelSize: 16
       font.bold: true
@@ -1053,32 +905,36 @@ FloatingWindow {
         }
       }
     }
-    Controls.ScrollView {
+    SettingsScrollView {
       id: preferenceScroll
       Layout.fillWidth: true
       Layout.fillHeight: true
-      contentWidth: availableWidth
-      clip: true
-      Binding {
-        target: preferenceScroll.contentItem
-        property: "boundsBehavior"
-        value: Flickable.StopAtBounds
-      }
       Connections {
         target: window
-        function onSectionChanged() {
-          if (window.section === "connectivity" || window.section === "audio")
-            preferenceScroll.contentItem.contentY = 0
-        }
+        function onSectionChanged() { preferenceScroll.resetPosition() }
         function onVisibleChanged() {
-          if (window.visible && (window.section === "connectivity" || window.section === "audio"))
-            preferenceScroll.contentItem.contentY = 0
+          if (window.visible) preferenceScroll.resetPosition()
         }
-        function onConnectivityTabChanged() { preferenceScroll.contentItem.contentY = 0 }
+        function onConnectivityTabChanged() { preferenceScroll.resetPosition() }
       }
       ColumnLayout {
         width: preferenceScroll.availableWidth
         spacing: 16
+        SettingsSubsection {
+          id: preferenceStatus
+          readonly property var preferences: window.controller.preferences
+          readonly property bool failed: preferences.error !== "" && (preferences.errorKeys.length === 0 || preferences.errorKeys.includes(window.section))
+          readonly property bool pending: preferences.busy && preferences.activeKeys.includes(window.section)
+          Layout.fillWidth: true
+          visible: failed || pending
+          title: "Preferences"
+          iconName: "settings"
+          Label {
+            Layout.fillWidth: true
+            text: preferenceStatus.failed ? preferenceStatus.preferences.error : "Applying changes…"
+            color: preferenceStatus.failed ? window.controller.controlWarningText : window.controller.controlSecondaryText
+          }
+        }
         Label {
           Layout.fillWidth: true
           visible: window.section === "lockScreen"
@@ -1143,13 +999,17 @@ FloatingWindow {
                 !window.controller.preferences.value(batteryWarning.enabledKey, true))
             }
             Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
-            RowLayout {
+            SettingsGrid {
+              id: thresholdLayout
               Layout.fillWidth: true
-              spacing: 12
               Label { Layout.fillWidth: true; text: "Battery threshold (%)" }
-              Controls.TextField {
+              SettingsTextField {
                 id: batteryThreshold
+                controller: window.controller
+                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: !thresholdLayout.inlineEditors
                 Layout.preferredWidth: 80
+                implicitWidth: 80
                 text: String(batteryWarning.threshold)
                 Accessible.name: batteryWarning.modelData.title + " threshold (%)"
                 horizontalAlignment: Text.AlignHCenter
@@ -1158,20 +1018,15 @@ FloatingWindow {
                 selectedTextColor: window.controller.controlPrimaryText
                 font.family: window.controller.fontFamily
                 font.pixelSize: 12
-                padding: 10
                 onEditingFinished: {
                   const value = Number(text)
                   if (value !== batteryWarning.threshold)
                     window.controller.preferences.setValue(batteryWarning.thresholdKey, value)
                   text = Qt.binding(() => String(batteryWarning.threshold))
                 }
-                background: Rectangle {
-                  radius: 8
-                  color: window.controller.controlSurface
-                  border.color: batteryThreshold.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
-                }
               }
             }
+            PreferenceStatus { controller: window.controller; preferences: window.controller.preferences; keys: [batteryWarning.enabledKey, batteryWarning.thresholdKey] }
           }
         }
         SoundMixerControls {
@@ -1180,6 +1035,7 @@ FloatingWindow {
           controller: window.controller
           mixer: window.controller.audioService.mixer
           keyboardEnabled: true
+          onDisclosureToggled: preferenceScroll.preservePosition()
         }
         SettingsSubsection {
           Layout.fillWidth: true
@@ -1225,6 +1081,7 @@ FloatingWindow {
             description: "Warn once per connected device below the threshold. Alerts rearm after disconnecting or recovering."
             onClicked: window.controller.preferences.setValue("connectivity.bluetoothBatteryAlerts", !window.controller.preferences.value("connectivity.bluetoothBatteryAlerts", true))
           }
+          PreferenceStatus { controller: window.controller; preferences: window.controller.preferences; keys: ["connectivity.wifiSuggestions", "connectivity.bluetoothBatteryAlerts"] }
         }
         SettingsSubsection {
           Layout.fillWidth: true
@@ -1233,7 +1090,10 @@ FloatingWindow {
           iconName: "sliders"
           collapsible: true
           expanded: window.connectivityAdvanced
-          onToggled: window.connectivityAdvanced = !window.connectivityAdvanced
+          onToggled: {
+            preferenceScroll.preservePosition()
+            window.connectivityAdvanced = !window.connectivityAdvanced
+          }
           Label {
             Layout.fillWidth: true
             text: "Thresholds and timing are saved in preferences.json. Suggestions never switch networks automatically."
@@ -1361,7 +1221,7 @@ FloatingWindow {
             Layout.fillWidth: true
             visible: text !== ""
             text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
-            color: window.controller.controlWarningText
+            color: wallpaperAction.error ? window.controller.controlWarningText : window.controller.controlSecondaryText
           }
         }
         WifiSettings {
@@ -1369,6 +1229,7 @@ FloatingWindow {
           visible: window.section === "connectivity" && window.connectivityTab === "networks"
           controller: window.controller
           service: window.connectivity
+          onDisclosureToggled: preferenceScroll.preservePosition()
         }
         SettingsSubsection {
           Layout.fillWidth: true
@@ -1453,8 +1314,9 @@ FloatingWindow {
       Accessible.name: preferenceRow.modelData.label
       onChosen: value => window.controller.preferences.setValue(preferenceRow.modelData.key, value)
     }
-    Controls.TextField {
+    SettingsTextField {
       id: preferenceInput
+      controller: window.controller
       Layout.fillWidth: !fieldLayout.inlineEditor
       Layout.preferredWidth: fieldLayout.inlineEditor ? fieldLayout.editorWidth : -1
       Layout.alignment: Qt.AlignRight
@@ -1465,18 +1327,12 @@ FloatingWindow {
       selectedTextColor: window.controller.controlPrimaryText
       font.family: window.controller.fontFamily
       font.pixelSize: 12
-      padding: 10
       Accessible.name: preferenceRow.modelData.label
       onEditingFinished: {
         const value = preferenceRow.modelData.kind === "number" ? Number(text) : text.trim()
         if (value !== preferenceRow.currentValue)
           window.controller.preferences.setValue(preferenceRow.modelData.key, value)
         text = Qt.binding(() => String(preferenceRow.currentValue))
-      }
-      background: Rectangle {
-        radius: 8
-        color: window.controller.controlSurface
-        border.color: preferenceInput.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
       }
     }
     }
@@ -1522,6 +1378,7 @@ FloatingWindow {
         border.color: window.controller.controlActiveIcon
       }
     }
+    PreferenceStatus { controller: window.controller; preferences: window.controller.preferences; keys: [preferenceRow.modelData.key] }
   }
 
   component SettingsSubsection: SettingsSection {
@@ -1582,10 +1439,9 @@ FloatingWindow {
       onClicked: window.service.setDndSchedule(!window.service.dndScheduleEnabled, window.service.dndStartMinutes,
         window.service.dndEndMinutes, window.service.dndScheduleDays)
     }
-    GridLayout {
+    SettingsGrid {
       visible: window.service.dndScheduleEnabled
       Layout.fillWidth: true
-      columns: 2
       columnSpacing: 12
       rowSpacing: 12
       Label { text: "Quiet hours" }
@@ -1625,7 +1481,7 @@ FloatingWindow {
       Layout.fillWidth: true
       visible: text !== ""
       text: window.service.dndScheduleError || window.service.dndScheduleStatus
-      color: window.controller.controlSecondaryText
+      color: window.service.dndScheduleError ? window.controller.controlWarningText : window.controller.controlSecondaryText
     }
     Toggle {
       Layout.fillWidth: true
@@ -1654,13 +1510,14 @@ FloatingWindow {
         Layout.fillWidth: true
         Layout.minimumWidth: 0
         text: window.service.notificationSoundName
+        activeFocusOnTab: true
         maximumLineCount: 1
         elide: Text.ElideMiddle
         Accessible.name: "Notification sound: " + text
         HoverHandler { id: soundNameHover }
         Hint {
           text: window.service.notificationSoundPath
-          visible: soundNameHover.hovered
+          visible: soundNameHover.hovered || soundNameHover.parent.activeFocus
         }
       }
       SoundButton {
@@ -1687,7 +1544,7 @@ FloatingWindow {
       Layout.fillWidth: true
       visible: text !== ""
       text: window.service.soundSelectionError
-      color: window.controller.controlPrimaryText
+      color: window.controller.controlWarningText
     }
     }
     SettingsSubsection {
@@ -1698,9 +1555,8 @@ FloatingWindow {
       collapsible: true
       expanded: notificationOptions.presentationExpanded
       onToggled: notificationOptions.toggleDetails("presentationExpanded")
-    GridLayout {
+    SettingsGrid {
       Layout.fillWidth: true
-      columns: 2
       columnSpacing: 12
       rowSpacing: 12
       Label { text: "Popup monitor" }
@@ -1714,10 +1570,11 @@ FloatingWindow {
       }
       Label {
         text: "Lock screen"
+        activeFocusOnTab: true
         HoverHandler { id: lockPrivacyHover }
         Hint {
           text: "Controls the lock-screen notification panel. Message bodies are always hidden; choose whether titles or app names are shown."
-          visible: lockPrivacyHover.hovered
+          visible: lockPrivacyHover.hovered || lockPrivacyHover.parent.activeFocus
         }
       }
       Choice {
@@ -1748,10 +1605,11 @@ FloatingWindow {
       }
       Label {
         text: "Popup duration"
+        activeFocusOnTab: true
         HoverHandler { id: durationHover }
         Hint {
           text: "Default lifetime for new notifications. Explicit app timeouts and critical alerts keep their own lifetime. Hover pauses expiry; history remains after expiry."
-          visible: durationHover.hovered
+          visible: durationHover.hovered || durationHover.parent.activeFocus
         }
       }
       Choice {
@@ -1772,10 +1630,11 @@ FloatingWindow {
       }
       Label {
         text: "Keep history"
+        activeFocusOnTab: true
         HoverHandler { id: retentionHover }
         Hint {
           text: "Removes older inactive notifications, up to the existing 100-entry limit. Live notifications are kept; cleanup pauses while history is open. App preferences are kept."
-          visible: retentionHover.hovered
+          visible: retentionHover.hovered || retentionHover.parent.activeFocus
         }
       }
       Choice {
@@ -1838,6 +1697,10 @@ FloatingWindow {
         }
       }
       Component.onCompleted: restoreHeaderOffset(0)
+      Connections {
+        target: window
+        function onVisibleChanged() { if (window.visible) applicationList.restoreHeaderOffset(0) }
+      }
       onVisibleChanged: {
         if (visible) restoreHeaderOffset(0)
       }

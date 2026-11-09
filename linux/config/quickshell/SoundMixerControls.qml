@@ -10,6 +10,7 @@ Column {
   required property var mixer
   required property bool keyboardEnabled
   signal interacted()
+  signal disclosureToggled()
   spacing: 16
   property bool deviceDetails: false
   readonly property var audio: controller.audioService
@@ -23,35 +24,11 @@ Column {
     wrapMode: Text.Wrap
   }
 
-  component Button: Controls.Button {
-    id: button
-    property string description: text
-    property bool quiet: false
+  component Button: SettingsButton {
+    controller: view.controller
     width: parent.width
-    height: 36
     focusPolicy: view.keyboardEnabled ? Qt.StrongFocus : Qt.NoFocus
     onPressed: view.interacted()
-    Accessible.name: description
-    Controls.ToolTip {
-      visible: button.hovered || button.activeFocus
-      delay: 500
-      implicitWidth: Math.min(320, contentItem.implicitWidth + 20)
-      contentItem: Label { text: button.description; color: view.controller.controlPrimaryText }
-      background: Rectangle { radius: 8; color: view.controller.controlSurface; border.color: view.controller.controlSurfaceBorder }
-    }
-    background: Rectangle {
-      radius: 10
-      color: button.down || button.hovered ? view.controller.controlHover : button.quiet ? "transparent" : view.controller.controlSurface
-      border.width: button.activeFocus ? 2 : button.quiet ? 0 : 1
-      border.color: button.activeFocus ? view.controller.controlActiveIcon : view.controller.controlSurfaceBorder
-    }
-    contentItem: Label {
-      text: button.text
-      color: button.enabled ? view.controller.controlPrimaryText : view.controller.controlSecondaryText
-      verticalAlignment: Text.AlignVCenter
-      elide: Text.ElideRight
-      wrapMode: Text.NoWrap
-    }
   }
 
   component Choice: SoundChoice {
@@ -314,6 +291,7 @@ Column {
     expanded: view.deviceDetails
     onToggled: {
       view.interacted()
+      view.disclosureToggled()
       view.deviceDetails = !view.deviceDetails
     }
     Column {
