@@ -11,7 +11,7 @@ return {
     vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "InsertLeave" }, {
       group = vim.api.nvim_create_augroup("nvim-lint", { clear = true }),
       callback = function(args)
-        if vim.bo[args.buf].filetype == "yaml.ghaction" then
+        if vim.bo[args.buf].filetype == "yaml.ghaction" and vim.fn.executable("actionlint") == 1 then
           lint.try_lint("actionlint")
         end
       end,
