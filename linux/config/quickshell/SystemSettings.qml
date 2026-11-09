@@ -270,9 +270,11 @@ FloatingWindow {
     font.pixelSize: 12
     color: window.controller.controlPrimaryText
     selectByMouse: true
-    validator: RegularExpressionValidator { regularExpression: /([01][0-9]|2[0-3]):[0-5][0-9]/ }
+    // Permit intermediate values (e.g. "1" or "19:") while typing; the
+    // complete value is still checked before it is committed.
+    validator: RegularExpressionValidator { regularExpression: /([01]?[0-9]|2[0-3])?:?[0-5]?[0-9]?/ }
     onEditingFinished: {
-      if (acceptableInput) {
+      if (/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(text)) {
         const parts = text.split(":")
         edited(Number(parts[0]) * 60 + Number(parts[1]))
       }
