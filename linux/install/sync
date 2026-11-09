@@ -68,6 +68,7 @@ if [ "$refresh_manifest" -eq 1 ]; then
 fi
 
 if [ "$PACKAGES_ONLY" -eq 0 ]; then
+  bash "$install_dir/openeffects-state" "$@"
   dotpkg_args+=(--resources --root "$DOTFILES")
   [ "$replace" -eq 1 ] && dotpkg_args+=(--replace)
   [ "$restart_services" -eq 1 ] && dotpkg_args+=(--restart-services)

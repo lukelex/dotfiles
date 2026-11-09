@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$install_dir/../.." && pwd)"
+source_file="$repo_root/linux/config/openeffects/state.toml"
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+state_file="$config_home/openeffects/state.toml"
+
+if [ ! -L "$state_file" ]; then
+  exit 0
+fi
+
+linked_file="$(readlink -f "$state_file" || true)"
+if [ "$linked_file" != "$source_file" ]; then
+  exit 0
+fi
+
+for arg in "$@"; do
+  if [ "$arg" = --dry-run ]; then
+    printf 'dry-run: copy linked OpenEffects state to %s before unlinking it\n' "$state_file"
+    exit 0
+  fi
+done
+
+temporary="$(mktemp "$config_home/openeffects/.state.toml.XXXXXX")"
+trap 'rm -f "$temporary"' EXIT
+if [ -f "$source_file" ]; then
+  cp -- "$source_file" "$temporary"
+  chmod --reference="$source_file" "$temporary"
+else
+  # The tracked source may already have been removed by an update while the
+  # old config symlink remains. Recover the last committed version if possible.
+  if ! git -C "$repo_root" show HEAD:linux/config/openeffects/state.toml > "$temporary"; then
+    printf 'OpenEffects state link is dangling and no tracked copy can be recovered: %s\n' "$state_file" >&2
+    exit 1
+  fi
+fi
+mv -fT -- "$temporary" "$state_file"
+trap - EXIT
+printf 'OpenEffects state is now local to this machine: %s\n' "$state_file"

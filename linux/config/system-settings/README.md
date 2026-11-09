@@ -153,6 +153,13 @@ after reconnects. Device IDs remain runtime-only. Without Quickshell, run
 Custom notification audio paths refer to files; cloning a path does not copy an
 external audio file. Keep shared sounds in the repository when portability matters.
 
+OpenEffects state (effect enabled/bypass state and selected camera) is stored only
+at `$XDG_CONFIG_HOME/openeffects/state.toml`. It is not managed by dotpkg or
+tracked in Git because it describes machine-local hardware and runtime state.
+Run `./linux/install/sync --refresh-manifest` once after updating; sync detaches
+existing links to the former tracked state file by copying their current contents
+into the local config before reconciling resources.
+
 Validation: `node --test linux/config/quickshell/tests/*.test.cjs` exercises the
 store with temporary files and mocked backends, never changing live preferences.
 

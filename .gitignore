@@ -6,3 +6,6 @@ linux/vendor/dotpkg/
 
 # opencode app-managed credential (written by the desktop app; keep out of git)
 linux/config/opencode/service.json
+
+# OpenEffects state is per-machine runtime configuration
+linux/config/openeffects/state.toml

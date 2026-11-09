@@ -296,10 +296,6 @@ profiles:
 resources:
   configs:
     - linux/config/opencode:$XDG_CONFIG_HOME/opencode
-    - source: linux/config/openeffects/state.toml
-      target: $XDG_CONFIG_HOME/openeffects/state.toml
-      profiles:
-        - desktop
     - source: linux/config/openeffects/openeffectsd.service.d/autostart.conf
       target: $XDG_CONFIG_HOME/systemd/user/openeffectsd.service.d/autostart.conf
       profiles:
