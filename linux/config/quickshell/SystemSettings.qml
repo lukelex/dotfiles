@@ -22,19 +22,19 @@ FloatingWindow {
     connectivityAdvanced = false
   }
   readonly property var sections: [
-    { key: "system", label: "System information", icon: "cpu" },
-    { key: "notifications", label: "Notifications", icon: "bell" },
-    { key: "display", label: "Brightness & color", icon: "sun" },
-    { key: "monitors", label: "Monitor layout", icon: "monitor" },
-    { key: "wallpaper", label: "Wallpaper", icon: "gallery-horizontal-end" },
-    { key: "power", label: "Power & battery", icon: "battery" },
-    { key: "connectivity", label: "Connectivity", icon: "wifi" },
-    { key: "idle", label: "Lock & idle", icon: "clock" },
-    { key: "lockScreen", label: "Session & lock screen", icon: "lock" },
-    { key: "input", label: "Keyboard, mouse & trackpad", icon: "keyboard" },
-    { key: "audio", label: "Audio", icon: "volume-2" },
-    { key: "weather", label: "Date & weather", icon: "calendar" },
-    { key: "desktop", label: "Desktop & bar", icon: "settings" }
+    { key: "system", label: "System information", icon: "cpu", group: "System" },
+    { key: "power", label: "Power & battery", icon: "battery", group: "System" },
+    { key: "connectivity", label: "Wi-Fi & connectivity", icon: "wifi", group: "Devices & connections" },
+    { key: "monitors", label: "Monitor layout", icon: "monitor", group: "Devices & connections" },
+    { key: "display", label: "Brightness & night color", icon: "sun", group: "Devices & connections" },
+    { key: "audio", label: "Sound", icon: "volume-2", group: "Devices & connections" },
+    { key: "input", label: "Keyboard & pointer", icon: "keyboard", group: "Devices & connections" },
+    { key: "desktop", label: "Desktop & bar", icon: "settings", group: "Desktop & appearance" },
+    { key: "wallpaper", label: "Wallpaper", icon: "gallery-horizontal-end", group: "Desktop & appearance" },
+    { key: "lockScreen", label: "Lock screen appearance", icon: "lock", group: "Desktop & appearance" },
+    { key: "notifications", label: "Notifications", icon: "bell", group: "Behavior" },
+    { key: "idle", label: "Idle & locking", icon: "clock", group: "Behavior" },
+    { key: "weather", label: "Clock & weather", icon: "calendar", group: "Behavior" }
   ]
 
   title: "Quickshell System Settings"
@@ -286,9 +286,39 @@ FloatingWindow {
           spacing: 4
           Repeater {
             model: window.sections
-            delegate: Controls.Button {
-              id: sectionButton
+            delegate: Column {
+              id: sectionEntry
               required property var modelData
+              required property int index
+              readonly property bool startsGroup: index === 0 || window.sections[index - 1].group !== modelData.group
+              width: sidebar.width - 12
+              spacing: 4
+              Label {
+                visible: sectionEntry.startsGroup && !sidebar.compact
+                width: parent.width
+                topPadding: sectionEntry.index === 0 ? 6 : 14
+                bottomPadding: 4
+                leftPadding: 10
+                rightPadding: 10
+                text: sectionEntry.modelData.group
+                font.pixelSize: 11
+                font.bold: true
+                color: window.controller.controlSecondaryText
+              }
+              Item {
+                visible: sectionEntry.startsGroup && sectionEntry.index > 0 && sidebar.compact
+                width: parent.width
+                height: 13
+                Rectangle {
+                  anchors.centerIn: parent
+                  width: parent.width - 12
+                  height: 1
+                  color: window.controller.controlSurfaceBorder
+                }
+              }
+              Controls.Button {
+              id: sectionButton
+              readonly property var modelData: sectionEntry.modelData
               width: sidebar.width - 12
               height: Math.max(40, contentItem.implicitHeight + 20)
               padding: 10
@@ -322,6 +352,7 @@ FloatingWindow {
                   text: sectionButton.text
                   font.bold: window.section === sectionButton.modelData.key
                 }
+              }
               }
             }
           }
@@ -867,7 +898,7 @@ FloatingWindow {
       visible: window.section === "connectivity"
       spacing: 4
       Repeater {
-        model: [{ key: "networks", label: "Wi-Fi networks", icon: "wifi" }, { key: "preferences", label: "Preferences", icon: "settings" }]
+        model: [{ key: "networks", label: "Wi-Fi networks", icon: "wifi" }, { key: "preferences", label: "Suggestions & alerts", icon: "bell" }]
         delegate: Controls.Button {
           id: connectivityTabButton
           required property var modelData
@@ -939,8 +970,8 @@ FloatingWindow {
           Layout.fillWidth: true
           visible: window.section === "lockScreen"
           text: Quickshell.env("XDG_SESSION_TYPE") === "wayland"
-            ? "Hyprlock presentation · changes apply the next time you lock. Idle locking is configured in Lock & idle; notification privacy is in Notifications."
-            : "These presentation controls apply to Hyprlock on Wayland. Your X11 locker remains unchanged. Idle locking is configured in Lock & idle."
+            ? "Hyprlock appearance · changes apply the next time you lock."
+            : "These appearance controls apply to Hyprlock on Wayland. Your X11 locker remains unchanged."
           color: window.controller.controlSecondaryText
         }
         SettingsSubsection {
@@ -1129,21 +1160,42 @@ FloatingWindow {
           text: "Pointer sensitivity and acceleration apply to both mouse and trackpad. Scrolling and tap settings are configured separately."
           color: window.controller.controlSecondaryText
         }
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "wallpaper"
+          title: "Choose wallpaper"
+          iconName: "gallery-horizontal-end"
+          Flow {
+            Layout.fillWidth: true
+            spacing: 8
+            enabled: !wallpaperAction.process.running
+            SoundButton { text: "Choose image…"; onClicked: wallpaperFileDialog.open() }
+            SoundButton { text: "Choose folder…"; onClicked: wallpaperFolderDialog.open() }
+            SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
+            SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
+          }
+          Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
+            color: wallpaperAction.error ? window.controller.controlWarningText : window.controller.controlSecondaryText
+          }
+        }
         Repeater {
           model: {
             const groups = {
               display: [
-                { title: "Color temperature", icon: "moon", keys: ["display.dayTemperature", "display.nightTemperature"] },
-                { title: "Sunrise & sunset", icon: "globe", keys: ["display.latitude", "display.longitude"] },
                 { title: "Brightness controls", icon: "sun", keys: ["display.linkBrightness", "display.brightnessStep", "display.lockBrightness"] },
+                { title: "Night color", icon: "moon", keys: ["display.dayTemperature", "display.nightTemperature"] },
+                { title: "Sunrise & sunset", icon: "globe", keys: ["display.latitude", "display.longitude"] },
                 { title: "On-screen indicators", icon: "monitor", keys: ["display.osdDurationMs"] }
               ],
               wallpaper: [
                 { title: "Wallpaper at login", icon: "monitor", keys: ["wallpaper.startupMode", "wallpaper.folder"] }
               ],
               idle: [
-                { title: "Idle timers", icon: "clock", keys: ["idle.dimSeconds", "idle.lockSeconds", "idle.screenOffSeconds", "idle.x11LockSeconds", "idle.x11ScreenOffSeconds"] },
-                { title: "Defer locking", icon: "lock", keys: ["idle.deferFullscreen", "idle.deferMicrophone", "idle.deferCamera"] }
+                { title: "Dim, lock & screen-off timers", icon: "clock", keys: ["idle.dimSeconds", "idle.lockSeconds", "idle.screenOffSeconds", "idle.x11LockSeconds", "idle.x11ScreenOffSeconds"] },
+                { title: "Postpone locking", icon: "lock", keys: ["idle.deferFullscreen", "idle.deferMicrophone", "idle.deferCamera"] }
               ],
               lockScreen: [
                 { title: "Greeting & daily content", icon: "user", keys: ["lockScreen.showGreeting", "lockScreen.showQuote", "lockScreen.showWeather"] },
@@ -1159,7 +1211,7 @@ FloatingWindow {
                 { title: "Trackpad", icon: "laptop", keys: ["input.touchpadNaturalScroll", "input.tapToClick", "input.disableWhileTyping"] }
               ],
               weather: [
-                { title: "Date & time", icon: "calendar", keys: ["clock.hourFormat", "clock.dateFormat", "clock.firstDay"] },
+                { title: "Clock & calendar", icon: "calendar", keys: ["clock.hourFormat", "clock.dateFormat", "clock.firstDay"] },
                 { title: "Weather", icon: "cloud-sun", keys: ["weather.locationMode", "weather.city", "weather.units"] }
               ],
               desktop: [
@@ -1203,25 +1255,30 @@ FloatingWindow {
             }
           }
         }
-        SettingsSubsection {
+        Flow {
           Layout.fillWidth: true
-          visible: window.section === "wallpaper"
-          title: "Wallpaper actions"
-          iconName: "refresh-cw"
-          Flow {
-            Layout.fillWidth: true
-            spacing: 8
-            enabled: !wallpaperAction.process.running
-            SoundButton { text: "Choose image…"; onClicked: wallpaperFileDialog.open() }
-            SoundButton { text: "Choose folder…"; onClicked: wallpaperFolderDialog.open() }
-            SoundButton { text: "Random now"; onClicked: wallpaperAction.run("random") }
-            SoundButton { text: "Restore saved"; onClicked: wallpaperAction.run("restore") }
+          visible: ["lockScreen", "idle", "display"].includes(window.section)
+          spacing: 8
+          SoundButton {
+            visible: window.section === "lockScreen"
+            text: "Idle & locking…"
+            onClicked: window.section = "idle"
           }
-          Label {
-            Layout.fillWidth: true
-            visible: text !== ""
-            text: wallpaperAction.process.running ? "Applying wallpaper…" : wallpaperAction.error
-            color: wallpaperAction.error ? window.controller.controlWarningText : window.controller.controlSecondaryText
+          SoundButton {
+            visible: window.section === "lockScreen"
+            text: "Notifications…"
+            description: "Configure notification popups, privacy and history"
+            onClicked: window.section = "notifications"
+          }
+          SoundButton {
+            visible: window.section === "idle"
+            text: "Lock screen appearance…"
+            onClicked: window.section = "lockScreen"
+          }
+          SoundButton {
+            visible: window.section === "display"
+            text: "Monitor layout…"
+            onClicked: window.section = "monitors"
           }
         }
         WifiSettings {
