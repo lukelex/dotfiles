@@ -30,6 +30,7 @@ return {
     { "mason-org/mason.nvim", opts = {} },
   },
   config = function()
+    require("core.lsp-watch").setup()
     require("mason").setup()
     require("mason-lspconfig").setup({
       automatic_enable = false,
