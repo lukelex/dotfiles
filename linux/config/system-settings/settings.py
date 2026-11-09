@@ -173,6 +173,11 @@ def update(changes):
     data = load()
     for key, value in changes.items():
       section, name = key.split('.', 1)
+      if key == 'wallpaper.folder' and isinstance(value, str):
+        value = value.replace('\\ ', ' ')
+        home = str(Path.home())
+        if value == home or value.startswith(home + '/'):
+          value = '~' + value[len(home):]
       data[section][name] = value
     validate(data)
     atomic_write(PREFERENCES, json.dumps(data, indent=2, ensure_ascii=False) + '\n')

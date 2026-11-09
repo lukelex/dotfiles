@@ -33,6 +33,23 @@ fi
   return { root, file, data, save, env, run, actions };
 }
 
+test('wallpaper folder writes normalize shell-escaped spaces and home paths', t => {
+  const f = fixture(t);
+  for (const command of ['set', 'patch']) {
+    const folder = `${f.root}/SeaDrive/My\\ Libraries/My\\ Library/wallpapers`;
+    const args = command === 'set'
+      ? ['wallpaper.folder', JSON.stringify(folder)]
+      : [JSON.stringify({ 'wallpaper.folder': folder })];
+    const result = f.run('settings.py', command, ...args);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(fs.readFileSync(f.file)).wallpaper.folder,
+      '~/SeaDrive/My Libraries/My Library/wallpapers');
+  }
+  const result = f.run('settings.py', 'set', 'wallpaper.folder', JSON.stringify('~/images with spaces'));
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(fs.readFileSync(f.file)).wallpaper.folder, '~/images with spaces');
+});
+
 test('wallpaper folder choices ignore non-images and startup restore uses the saved wallpaper', t => {
   const f = fixture(t);
   const folder = path.join(f.root, 'images with spaces');

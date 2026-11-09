@@ -4,11 +4,14 @@ set -eu
 
 helper="$(dirname "$(readlink -f "$0")")/../config/system-settings/wallpaper.py"
 
-case $1 in
+case ${1:-random} in
   load)
     exec python3 "$helper" restore ;;
   update|change)
-    exec python3 "$helper" choose "$2" ;;
+    if [[ -n ${2:-} ]]; then
+      exec python3 "$helper" choose "$2"
+    fi
+    exec python3 "$helper" random ;;
   random)
     exec python3 "$helper" random "${2:-}" ;;
   startup)
