@@ -1,7 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
-  "skills": ["~/dotfiles/.opencode/skills"],
+  "skills": [
+    "~/dotfiles/.opencode/skills",
+    "~/.local/share/dotpkg/opencode-skills",
+  ],
 
   "provider": {
     "ollama": {

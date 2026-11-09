@@ -86,10 +86,10 @@ machine, pass a committed host overlay, for example:
 <details>
 <summary><strong>How installation works</strong></summary>
 
-`sync` reconciles packages, groups, config links, and services from the selected
-profile using the pinned `dotpkg` binary. On first use, it seeds
-`$XDG_CONFIG_HOME/dotpkg/package.yaml` from `linux/packages.yaml`; dotpkg stores
-its state beside that manifest.
+`sync` reconciles packages, groups, config links, services, and remote bundles
+from the selected profile using the pinned `dotpkg` binary. On first use, it
+seeds `$XDG_CONFIG_HOME/dotpkg/package.yaml` from `linux/packages.yaml`; dotpkg
+stores its state beside that manifest.
 
 Preview the reconciliation with:
 
@@ -104,9 +104,26 @@ it). Config conflicts are preserved unless `--replace` is passed. Use
 `./linux/install/all` to include system setup, post-install steps, and
 verification, or `./linux/install/verify` to check an existing setup.
 
-For package and resource maintenance, see `dotpkg --help`. `dotpkg clean` only
-removes stale managed packages; `dotpkg recover` handles an interrupted
+For package and resource maintenance, see `dotpkg --help`.
+`dotpkg clean --resources` removes stale, unchanged managed bundles and other
+stale managed resources; `dotpkg recover` handles an interrupted package
 transaction.
+
+OpenCode's global config is linked by dotpkg on desktop and server profiles.
+It loads repository skills from `~/dotfiles/.opencode/skills` and declares a
+remote file bundle for `skills/grill-me`, `skills/grilling`, and `LICENSE` from
+`mattpocock/skills`. dotpkg copies those requested paths into
+`~/.local/share/dotpkg/opencode-skills` without running them. Invoke the skill
+with `@grill-me`. Every full `sync --resources` checks the upstream default
+branch and updates the managed directory only if its commit or content changed;
+an optional 40-character `commit` in `resources.remote_bundles` freezes it.
+An unavailable upstream is an error, not a no-op. `--packages-only` skips
+remote bundles. On existing machines, run
+`./linux/install/sync --refresh-manifest` to adopt the declaration in the local
+manifest; pulling repository edits alone does not refresh it. Keep the vendored
+copies until the pinned dotpkg release is updated and the managed installation
+is verified, then remove them to avoid duplicate skill IDs. The declaration is
+not active with the current pinned binary until that release update lands.
 
 ### Webcam reactions
 
