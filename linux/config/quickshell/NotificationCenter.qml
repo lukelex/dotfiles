@@ -570,9 +570,9 @@ PopupWindow {
 
       XAnimator {
         target: surface
-        to: -card.width
+        to: card.width
         duration: 260
-        easing.type: Easing.OutCubic
+        easing.type: Easing.InCubic
       }
       OpacityAnimator {
         target: surface
