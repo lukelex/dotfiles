@@ -37,6 +37,8 @@ common:
             target: $HOME/.local/bin/hunk-render
           - source: share/hunk/delta.gitconfig
             target: $HOME/.local/share/hunk/delta.gitconfig
+      # Neovim uses inotifywait to set up LSP file watchers off the UI thread.
+      inotify-tools:
       jq:
       man-db:
       neovim:
