@@ -50,6 +50,7 @@ Run from the repository root on Linux with Neovim 0.12+, `fd`, and
 ```sh
 nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch.lua
 nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-recovery.lua
+nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-outage.lua
 ```
 
 The watcher test uses real background processes and temporary directories. It
@@ -68,6 +69,16 @@ Discovery and watcher readiness each have a 30-second deadline. A timeout kills
 the hung process and uses the existing bounded retries. Tests also deliver late
 completion/readiness callbacks to ensure timed-out processes cannot take over.
 
+The outage test uses two real LSP fixture subprocesses. It changes an unopened
+file during a watcher outage, observes the stale server cache, then verifies
+reinitialization reads the missed change and reattaches unsaved buffer text.
+Unrelated workspaces are retained. Clients overlapping the recovered root are
+restarted because LSP has no standard full-workspace rescan request; a failed
+replacement with a still-healthy active watcher does not require a restart.
+This was also reproduced with the installed Tailwind server: changing a v4
+theme color during an outage left hover showing the old color after watcher-only
+recovery. Reinitialization refreshes that state.
+
 ## LSP root regression checks
 
 ```sh
@@ -78,7 +89,7 @@ Requires the configured `nvim-lspconfig` plugin (or `LSPCONFIG_NVIM_PATH`). Chec
 Tailwind v3/v4, nested packages, Git boundaries, and Solargraph's Gemfile root.
 No language servers are started or installed.
 
-The `nvim-tests` CI job runs all three LSP suites on Ubuntu with Neovim 0.12.6,
+The `nvim-tests` CI job runs the LSP suites on Ubuntu with Neovim 0.12.6,
 `fd`, `inotify-tools`, and the `nvim-lspconfig` revision from `lazy-lock.json`.
 
 ## Full-session startup profiling

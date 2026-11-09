@@ -1,5 +1,46 @@
 local M = {}
 local roots = {}
+local restarting = {}
+
+local function overlaps(a, b)
+  a, b = a:gsub("/$", ""), b:gsub("/$", "")
+  return a == b or vim.startswith(a, b .. "/") or vim.startswith(b, a .. "/")
+end
+
+local function resync_clients(path)
+  -- LSP has no portable full-workspace invalidation request. After lost coverage,
+  -- reinitialize overlapping clients so deleted/changed unopened files are reread.
+  for _, client in ipairs(vim.lsp.get_clients()) do
+    local affected = client.config.root_dir and overlaps(path, client.config.root_dir)
+    for _, folder in ipairs(client.workspace_folders or {}) do
+      affected = affected or overlaps(path, vim.uri_to_fname(folder.uri))
+    end
+    if affected and not restarting[client.id] then
+      restarting[client.id] = true
+      vim.schedule(function()
+        restarting[client.id] = nil
+        if client:is_stopped() then return end
+        local buffers = vim.tbl_keys(client.attached_buffers)
+        local config = vim.deepcopy(client.config)
+        client:stop(true)
+        local ok, id = pcall(vim.lsp.start, config, {
+          attach = false,
+          reuse_client = function() return false end,
+        })
+        if not ok or not id then
+          vim.notify("LSP watcher recovered but could not restart " .. client.name, vim.log.levels.ERROR)
+          return
+        end
+        for _, buf in ipairs(buffers) do
+          if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_is_loaded(buf) then
+            -- didOpen sends the live buffer, including unsaved edits.
+            vim.lsp.buf_attach_client(buf, id)
+          end
+        end
+      end)
+    end
+  end
+end
 
 local function regex_escape(value)
   return (value:gsub("[\\%^%$%.%|%?%*%+%(%)%[%]%{%}]", "\\%0"))
@@ -13,6 +54,7 @@ local function start(path, callback)
   local dirty = false
   local changed_dirs, cached_exclusions = {}, nil
   local failures, recovering, exhausted = 0, false, false
+  local lost_coverage = false
   local retry_delays = { 250, 1000, 4000 }
   local refresh
   local prefix = path:gsub("/$", "") .. "/"
@@ -64,6 +106,7 @@ local function start(path, callback)
 
   local function failed(watcher, message, signal)
     if cancelled or watcher.stopped then return end
+    if active == watcher then lost_coverage = true end
     -- A ready process must remain healthy for a while before resetting the
     -- retry budget, otherwise rapid start/crash loops would retry forever.
     if watcher.ready_at and vim.uv.hrtime() - watcher.ready_at >= 30e9 then
@@ -165,6 +208,10 @@ local function start(path, callback)
                 timer = nil
               end
               recovering = false
+              if lost_coverage then
+                lost_coverage = false
+                resync_clients(path)
+              end
               if dirty then request_refresh() end
             end)
           elseif line ~= "" and not line:match("^Setting up watches%.")
@@ -174,7 +221,7 @@ local function start(path, callback)
         end
       end,
     }, function(result)
-      failed(watcher, "watcher exited with status " .. result.code)
+      failed(watcher, ("watcher exited (code %s, signal %s)"):format(result.code, result.signal or 0))
     end)
     if spawned then
       watcher.process = process

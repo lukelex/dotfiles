@@ -39,6 +39,7 @@ jobs:
         run: |
           nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch.lua
           nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-recovery.lua
+          nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-watch-outage.lua
           nvim --headless -u NONE -i NONE -n -l linux/config/nvim/tests/lsp-roots.lua
 
   node-tests:
