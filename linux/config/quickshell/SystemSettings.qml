@@ -271,6 +271,27 @@ FloatingWindow {
         radius: 12
         color: window.controller.controlSurface
 
+        function revealSelection() {
+          if (!window.visible) return
+          const index = window.sections.findIndex(entry => entry.key === window.sidebarSection)
+          const entry = sectionEntries.itemAt(index)
+          const flick = sidebarScroll.contentItem as Flickable
+          if (!entry || !flick || flick.moving) return
+          const top = entry.y
+          const bottom = top + entry.height
+          if (top < flick.contentY)
+            flick.contentY = top
+          else if (bottom > flick.contentY + flick.height)
+            flick.contentY = bottom - flick.height
+          flick.returnToBounds()
+        }
+        onCompactChanged: Qt.callLater(revealSelection)
+        onHeightChanged: Qt.callLater(revealSelection)
+        Connections {
+          target: window
+          function onSidebarSectionChanged() { Qt.callLater(sidebar.revealSelection) }
+          function onVisibleChanged() { if (window.visible) Qt.callLater(sidebar.revealSelection) }
+        }
         Controls.ScrollView {
           id: sidebarScroll
           anchors.fill: parent
@@ -286,6 +307,7 @@ FloatingWindow {
           width: sidebar.width - 12
           spacing: 4
           Repeater {
+            id: sectionEntries
             model: window.sections
             delegate: Column {
               id: sectionEntry
