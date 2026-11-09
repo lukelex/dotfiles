@@ -14,6 +14,8 @@ FloatingWindow {
   required property var service
   required property var connectivity
   property string section: "system"
+  readonly property bool displayPage: section === "monitors" || section === "display"
+  readonly property string sidebarSection: displayPage ? "monitors" : section
   property string connectivityTab: "networks"
   property bool connectivityAdvanced: false
   readonly property bool wifiDiscoveryActive: visible && section === "connectivity" && connectivityTab === "networks"
@@ -25,8 +27,7 @@ FloatingWindow {
     { key: "system", label: "System information", icon: "cpu", group: "System" },
     { key: "power", label: "Power & battery", icon: "battery", group: "System" },
     { key: "connectivity", label: "Wi-Fi & connectivity", icon: "wifi", group: "Devices & connections" },
-    { key: "monitors", label: "Monitor layout", icon: "monitor", group: "Devices & connections" },
-    { key: "display", label: "Brightness & night color", icon: "sun", group: "Devices & connections" },
+    { key: "monitors", label: "Displays", icon: "monitor", group: "Devices & connections" },
     { key: "audio", label: "Sound", icon: "volume-2", group: "Devices & connections" },
     { key: "input", label: "Keyboard & pointer", icon: "keyboard", group: "Devices & connections" },
     { key: "desktop", label: "Desktop & bar", icon: "settings", group: "Desktop & appearance" },
@@ -325,7 +326,7 @@ FloatingWindow {
               text: modelData.label
               Accessible.role: Accessible.PageTab
               Accessible.name: text
-              Accessible.selected: window.section === modelData.key
+              Accessible.selected: window.sidebarSection === modelData.key
               onClicked: window.section = modelData.key
               Hint {
                 visible: sidebar.compact && (sectionButton.hovered || sectionButton.activeFocus)
@@ -333,7 +334,7 @@ FloatingWindow {
               }
               background: Rectangle {
                 radius: 8
-                color: window.section === sectionButton.modelData.key ? window.controller.controlActive
+                color: window.sidebarSection === sectionButton.modelData.key ? window.controller.controlActive
                   : sectionButton.hovered ? window.controller.controlHover : "transparent"
                 border.width: sectionButton.activeFocus ? 1 : 0
                 border.color: window.controller.controlActiveIcon
@@ -344,13 +345,13 @@ FloatingWindow {
                   Layout.preferredWidth: 16
                   Layout.preferredHeight: 16
                   source: window.controller.icon(sectionButton.modelData.icon)
-                  color: window.section === sectionButton.modelData.key ? window.controller.controlActiveIcon : window.controller.controlSecondaryText
+                  color: window.sidebarSection === sectionButton.modelData.key ? window.controller.controlActiveIcon : window.controller.controlSecondaryText
                 }
                 Label {
                   visible: !sidebar.compact
                   Layout.fillWidth: true
                   text: sectionButton.text
-                  font.bold: window.section === sectionButton.modelData.key
+                  font.bold: window.sidebarSection === sectionButton.modelData.key
                 }
               }
               }
@@ -360,6 +361,51 @@ FloatingWindow {
         }
       }
 
+      ColumnLayout {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        spacing: 12
+        Label {
+          visible: window.displayPage
+          Layout.fillWidth: true
+          text: "Displays"
+          font.pixelSize: 16
+          font.bold: true
+        }
+        RowLayout {
+          visible: window.displayPage
+          Layout.fillWidth: true
+          spacing: 8
+          Repeater {
+            model: [
+              { key: "monitors", label: "Arrangement & resolution" },
+              { key: "display", label: "Brightness & night color" }
+            ]
+            delegate: SoundButton {
+              id: displayTab
+              required property var modelData
+              Layout.fillWidth: true
+              Layout.preferredWidth: 1
+              text: modelData.label
+              implicitHeight: Math.max(36, contentItem.implicitHeight + 16)
+              Accessible.role: Accessible.PageTab
+              Accessible.selected: window.section === modelData.key
+              onClicked: window.section = modelData.key
+              contentItem: Label {
+                text: displayTab.text
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+              }
+              background: Rectangle {
+                radius: 8
+                color: window.section === displayTab.modelData.key ? window.controller.controlActive
+                  : displayTab.hovered ? window.controller.controlHover : window.controller.controlSurface
+                border.width: displayTab.activeFocus ? 2 : 1
+                border.color: displayTab.activeFocus ? window.controller.controlActiveIcon : window.controller.controlSurfaceBorder
+              }
+            }
+          }
+        }
       NotificationsPage {
         visible: window.section === "notifications"
         Layout.fillWidth: true
@@ -382,6 +428,7 @@ FloatingWindow {
         Layout.fillWidth: true
         Layout.fillHeight: true
       }
+      }
     }
   }
 
@@ -399,7 +446,7 @@ FloatingWindow {
     }
     RowLayout {
       Layout.fillWidth: true
-      Label { Layout.fillWidth: true; text: "Monitor layout"; font.pixelSize: 16; font.bold: true }
+      Item { Layout.fillWidth: true }
       SoundButton { text: "Identify"; iconName: "monitor"; onClicked: monitorIdentify.identify() }
     }
     SettingsScrollView {
@@ -889,6 +936,7 @@ FloatingWindow {
     spacing: 12
     Label {
       Layout.fillWidth: true
+      visible: !window.displayPage
       text: window.sections.find(entry => entry.key === window.section)?.label || ""
       font.pixelSize: 16
       font.bold: true
@@ -1003,33 +1051,47 @@ FloatingWindow {
           text: "Configure battery warnings. Power-profile selection stays in Control Center."
           color: window.controller.controlSecondaryText
         }
-        Repeater {
+        SettingsSubsection {
+          Layout.fillWidth: true
+          visible: window.section === "power"
+          title: "Battery warnings"
+          iconName: "battery-warning"
+          Label {
+            Layout.fillWidth: true
+            text: "Warn once per level in a discharge episode. Critical, urgent and final levels use critical urgency; notification policies still apply."
+            color: window.controller.controlSecondaryText
+          }
+          Repeater {
           model: window.section === "power" ? [
             { key: "low", title: "Low battery", icon: "battery-low" },
             { key: "critical", title: "Critical battery", icon: "battery-warning" },
             { key: "urgent", title: "Urgent battery", icon: "battery-warning" },
             { key: "final", title: "Final warning", icon: "battery" }
           ] : []
-          delegate: SettingsSubsection {
+          delegate: ColumnLayout {
             id: batteryWarning
             required property var modelData
+            required property int index
             readonly property string enabledKey: "power." + modelData.key + "WarningEnabled"
             readonly property string thresholdKey: "power." + modelData.key + "Threshold"
             readonly property var threshold: window.controller.preferences.value(thresholdKey, "")
             Layout.fillWidth: true
-            title: modelData.title
-            iconName: modelData.icon
+            spacing: 12
             enabled: window.controller.preferences.ready && !window.controller.preferences.busy
+            Rectangle {
+              Layout.fillWidth: true
+              implicitHeight: 1
+              visible: batteryWarning.index > 0
+              color: window.controller.controlSurfaceBorder
+            }
             Toggle {
               Layout.fillWidth: true
-              text: "Enable warning"
+              text: batteryWarning.modelData.title
               Accessible.name: batteryWarning.modelData.title + " warning enabled"
               checked: window.controller.preferences.value(batteryWarning.enabledKey, true)
-              description: "Warns once per level in a discharge episode. Critical, urgent and final levels use critical urgency; notification policies still apply."
               onClicked: window.controller.preferences.setValue(batteryWarning.enabledKey,
                 !window.controller.preferences.value(batteryWarning.enabledKey, true))
             }
-            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.controller.controlSurfaceBorder }
             SettingsGrid {
               id: thresholdLayout
               Layout.fillWidth: true
@@ -1058,6 +1120,7 @@ FloatingWindow {
               }
             }
             PreferenceStatus { controller: window.controller; preferences: window.controller.preferences; keys: [batteryWarning.enabledKey, batteryWarning.thresholdKey] }
+          }
           }
         }
         SoundMixerControls {
@@ -1257,7 +1320,7 @@ FloatingWindow {
         }
         Flow {
           Layout.fillWidth: true
-          visible: ["lockScreen", "idle", "display"].includes(window.section)
+          visible: ["lockScreen", "idle"].includes(window.section)
           spacing: 8
           SoundButton {
             visible: window.section === "lockScreen"
@@ -1274,11 +1337,6 @@ FloatingWindow {
             visible: window.section === "idle"
             text: "Lock screen appearance…"
             onClicked: window.section = "lockScreen"
-          }
-          SoundButton {
-            visible: window.section === "display"
-            text: "Monitor layout…"
-            onClicked: window.section = "monitors"
           }
         }
         WifiSettings {
