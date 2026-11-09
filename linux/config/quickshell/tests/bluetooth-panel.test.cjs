@@ -54,6 +54,5 @@ test('Bluetooth-only presentation excludes network controls and network side eff
   assert.match(center, /title: "Bluetooth"\s+visible: popup.bluetoothOnly/);
   assert.match(center, /entries: popup.bluetoothOnly \? popup.service.connectedBluetoothDevices : \[\]/);
   assert.match(center, /entries: popup.bluetoothOnly \? \[\] : popup.service.savedNetworks/);
-  assert.match(center, /options: popup.bluetoothOnly \? \[\] : \[[^]*?"Network settings"/);
-  assert.match(center, /onActivated: popup.controller.openSystemSettings\(popup.panel.screen, "bluetooth"\)/);
+  assert.match(center, /onActivated: popup.controller.openSystemSettings\(popup.panel.screen, popup.bluetoothOnly \? "bluetooth" : "wifi"\)/);
 });

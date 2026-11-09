@@ -498,15 +498,10 @@ Scope {
         }
         HeaderSettingsButton {
           controller: popup.controller
-          description: popup.bluetoothOnly ? "Bluetooth settings" : "Network settings"
+          description: popup.bluetoothOnly ? "Bluetooth settings" : "Wi-Fi settings"
           keyboardEnabled: popup.pinned
           anchors.verticalCenter: parent.verticalCenter
-          onOpening: { if (!popup.bluetoothOnly) popup.requestOpen(true) }
-          onActivated: popup.controller.openSystemSettings(popup.panel.screen, "bluetooth")
-          options: popup.bluetoothOnly ? [] : [
-            { text: "Wi-Fi settings", run: () => popup.controller.openSystemSettings(popup.panel.screen, "connectivity") },
-            { text: "Network settings", run: () => { popup.requestClose(true); Quickshell.execDetached(["nm-connection-editor"]) } }
-          ]
+          onActivated: popup.controller.openSystemSettings(popup.panel.screen, popup.bluetoothOnly ? "bluetooth" : "wifi")
         }
         Item {
           id: closeButton

@@ -44,13 +44,19 @@ test('audio and control settings are in headers, not large footer actions', () =
   assert.match(read('NotificationCenter.qml'), /openSystemSettings\(popup.panel.screen, "notifications"\)/);
 });
 
-test('Bluetooth gear opens its page directly while network gear retains its menu', () => {
+test('connectivity gears open their Bluetooth or Wi-Fi page directly', () => {
   const source = read('ConnectivityCenter.qml');
-  assert.match(source, /HeaderSettingsButton \{[^]*?onOpening: \{ if \(!popup.bluetoothOnly\) popup.requestOpen\(true\) \}/);
-  assert.match(source, /options: popup.bluetoothOnly \? \[\] : \[/);
-  assert.match(source, /text: "Wi-Fi settings"[^\n]*openSystemSettings\(popup.panel.screen, "connectivity"\)/);
-  assert.match(source, /onActivated: popup.controller.openSystemSettings\(popup.panel.screen, "bluetooth"\)/);
-  assert.match(source, /text: "Network settings"[^\n]*requestClose\(true\)[^\n]*nm-connection-editor/);
+  const header = source.match(/HeaderSettingsButton \{([^]*?)\n        \}/)[1];
+  assert.doesNotMatch(header, /options:|onOpening:/);
+  const action = header.match(/onActivated: ([^\n]+)/)[1];
+  for (const bluetoothOnly of [false, true]) {
+    const calls = [];
+    vm.runInNewContext(action, { popup: {
+      bluetoothOnly, panel: { screen: 'current-screen' },
+      controller: { openSystemSettings: (...args) => calls.push(args) },
+    } });
+    assert.deepEqual(calls, [['current-screen', bluetoothOnly ? 'bluetooth' : 'wifi']]);
+  }
   assert.match(read('SystemSettings.qml'), /text: "Advanced Bluetooth settings…"[^\n]*blueman-manager/);
   assert.doesNotMatch(source, /title: "(?:Network|Bluetooth) settings"/);
 });
