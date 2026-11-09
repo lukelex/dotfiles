@@ -1,4 +1,6 @@
 source: aur
+self_update:
+  origin: github
 common:
   packages:
     headless:

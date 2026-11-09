@@ -46,9 +46,7 @@ fi
 
 printf '%s\n' "$expected  $binary" | sha256sum --check --status
 
-# dotpkg owns the user-facing manifest and state locations. Seed the new
-# per-user manifest from this repository once, and migrate the previous shared
-# state without overwriting an existing user configuration.
+# Keep package declarations in git and machine state in the user config directory.
 dotpkg_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 dotpkg_config_dir="$dotpkg_config_home/dotpkg"
 dotpkg_manifest="$dotpkg_config_dir/package.yaml"
@@ -62,20 +60,23 @@ state_missing=0
 if [ "$manifest_missing" -eq 1 ] || [ "$state_missing" -eq 1 ]; then
   "$binary" init >/dev/null
 fi
-if [ "$manifest_missing" -eq 1 ]; then
-  cp "$dotfiles/linux/packages.yaml" "$dotpkg_manifest"
-  chmod 0600 "$dotpkg_manifest"
+if [ "$(readlink "$dotpkg_manifest" 2>/dev/null || true)" != "$dotfiles/linux/packages.yaml" ]; then
+  if [ "$manifest_missing" -eq 0 ]; then
+    mv "$dotpkg_manifest" "$dotpkg_manifest.bak.$(date +%Y%m%d%H%M%S%N)"
+  fi
+  ln -sfn "$dotfiles/linux/packages.yaml" "$dotpkg_manifest"
 fi
 if [ "$state_missing" -eq 1 ] && [ -f "$legacy_state" ]; then
   cp "$legacy_state" "$dotpkg_state"
   chmod 0600 "$dotpkg_state"
 fi
 
-# Expose the pinned dotpkg binary on the user's PATH.
+# Expose the pinned binary unless a separate user installation already exists.
 user_bin="$HOME/.local/bin"
 mkdir -p "$user_bin"
 link="$user_bin/dotpkg"
-if [ "$(readlink "$link" 2>/dev/null || true)" != "$binary" ]; then
+current_target="$(readlink "$link" 2>/dev/null || true)"
+if { [ ! -e "$link" ] && [ ! -L "$link" ]; } || [[ "$current_target" == "$dotfiles/linux/vendor/dotpkg/"* ]]; then
   ln -sfn "$binary" "$link"
 fi
 

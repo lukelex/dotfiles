@@ -87,9 +87,9 @@ machine, pass a committed host overlay, for example:
 <summary><strong>How installation works</strong></summary>
 
 `sync` reconciles packages, groups, config links, services, and remote bundles
-from the selected profile using the pinned `dotpkg` binary. On first use, it
-seeds `$XDG_CONFIG_HOME/dotpkg/package.yaml` from `linux/packages.yaml`; dotpkg
-stores its state beside that manifest.
+from the selected profile using the pinned `dotpkg` binary. It symlinks
+`$XDG_CONFIG_HOME/dotpkg/package.yaml` to the tracked `linux/packages.yaml`;
+dotpkg stores machine-local state beside that link.
 
 Preview the reconciliation with:
 
@@ -98,9 +98,9 @@ Preview the reconciliation with:
 ```
 
 The first run can still bootstrap `yay` and initialize dotpkg's local manifest
-and state. Existing installs keep their local manifest; use
-`--refresh-manifest` to adopt the repository version (a backup is saved beside
-it). Config conflicts are preserved unless `--replace` is passed. Use
+and state. Existing local manifests are backed up before linking to the
+repository version. Pulling repository changes updates the manifest on each
+linked machine. Config conflicts are preserved unless `--replace` is passed. Use
 `./linux/install/all` to include system setup, post-install steps, and
 verification, or `./linux/install/verify` to check an existing setup.
 
@@ -119,8 +119,8 @@ branch and updates the managed directory only if its commit or content changed;
 an optional 40-character `commit` in `resources.remote_bundles` freezes it.
 An unavailable upstream is an error, not a no-op. `--packages-only` skips
 remote bundles. On existing machines, run
-`./linux/install/sync --refresh-manifest` to adopt the declaration in the local
-manifest; pulling repository edits alone does not refresh it. Keep the vendored
+`./linux/install/sync` once to link the manifest; subsequent repository pulls
+update its declarations directly. Keep the vendored
 copies until the pinned dotpkg release is updated and the managed installation
 is verified, then remove them to avoid duplicate skill IDs. The declaration is
 not active with the current pinned binary until that release update lands.

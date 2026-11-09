@@ -10,7 +10,7 @@ Arch Linux dotfiles for a Hyprland + i3 desktop. This is a personal config repo;
 
 ## Install flow
 
-- Entrypoint: `./linux/install/sync` (also reached through `./linux/install/all`) reconciles the selected profile through dotpkg. The first run seeds `$XDG_CONFIG_HOME/dotpkg/package.yaml` from `linux/packages.yaml`; dotpkg keeps its state beside the manifest in `state.yaml`. Use committed `linux/hosts/<name>.yaml` overlays with `--host <name>` for machine-specific selections.
+- Entrypoint: `./linux/install/sync` (also reached through `./linux/install/all`) reconciles the selected profile through dotpkg. The installer symlinks `$XDG_CONFIG_HOME/dotpkg/package.yaml` to `linux/packages.yaml`, backing up an existing local manifest; dotpkg keeps machine-local state beside the link in `state.yaml`. Use committed `linux/hosts/<name>.yaml` overlays with `--host <name>` for machine-specific selections.
 - `linux/variables.env` defaults `DOTFILES` to `$HOME/dotfiles` and sets `XDG_CONFIG_HOME` and `DOT_CONFIG`. The installer requires the repo at `$HOME/dotfiles` and bootstraps `yay` if needed; dotpkg then reconciles the selected packages and resources. Use `--dry-run` to preview the reconciliation (dotpkg's local manifest may still be initialized).
 - On desktop syncs, `linux/install/binaries` links executable `linux/scripts/` helpers to `/usr/local/bin/u_<script>` (e.g. `u_audio`, `u_screenshot`). Most configs use those names; lock-screen helpers and some session startup commands use repo paths directly. Quickshell keeps its own helpers in `linux/config/quickshell/scripts/` and invokes them by absolute path. `binaries` prunes dangling `u_*` links it no longer owns.
 
