@@ -499,6 +499,7 @@ Scope {
       else {
         groupDismissAnimation.stop()
         card.groupDismissOffset = 0
+        surface.opacity = 1
       }
     }
 
@@ -506,12 +507,20 @@ Scope {
       id: groupDismissAnimation
 
       PauseAnimation { duration: popup.reducedMotion ? 0 : Math.max(0, card.groupDismissDelay) }
-      NumberAnimation {
-        target: card
-        property: "groupDismissOffset"
-        to: card.width
-        duration: popup.reducedMotion ? 0 : 260
-        easing.type: Easing.InCubic
+      ParallelAnimation {
+        NumberAnimation {
+          target: card
+          property: "groupDismissOffset"
+          to: card.width
+          duration: popup.reducedMotion ? 0 : 260
+          easing.type: Easing.InCubic
+        }
+        OpacityAnimator {
+          target: surface
+          to: 0
+          duration: popup.reducedMotion ? 0 : 200
+          easing.type: Easing.OutCubic
+        }
       }
     }
 
@@ -573,6 +582,7 @@ Scope {
       if (notificationGroup.dismissing && !groupDismissTimer.running) {
         notificationGroup.dismissing = false
         notificationGroup.headerDismissOffset = 0
+        groupHeader.opacity = 1
       }
       popup.reconcileModel(recordModel, records, "notification", "id")
     }
@@ -589,14 +599,22 @@ Scope {
       return entries
     }
 
-    NumberAnimation {
+    ParallelAnimation {
       id: headerDismissAnimation
 
-      target: notificationGroup
-      property: "headerDismissOffset"
-      to: notificationGroup.width
-      duration: popup.reducedMotion ? 0 : 260
-      easing.type: Easing.InCubic
+      NumberAnimation {
+        target: notificationGroup
+        property: "headerDismissOffset"
+        to: notificationGroup.width
+        duration: popup.reducedMotion ? 0 : 260
+        easing.type: Easing.InCubic
+      }
+      OpacityAnimator {
+        target: groupHeader
+        to: 0
+        duration: popup.reducedMotion ? 0 : 200
+        easing.type: Easing.OutCubic
+      }
     }
 
     function startClearAllDismiss() {
@@ -770,7 +788,7 @@ Scope {
 
       enabled: !notificationGroup.dismissing
       spacing: 10
-      width: parent.width - 12
+      width: parent.width - x
       x: notificationGroup.grouped ? 12 : 0
       y: notificationGroup.grouped ? groupHeader.height + 8 : 0
 
@@ -957,22 +975,14 @@ Scope {
       target: clearAllTranslate
       property: "x"
       to: popup.width
-      duration: popup.reducedMotion ? 0 : 240
+      duration: popup.reducedMotion ? 0 : 260
       easing.type: Easing.InCubic
-    }
-    NumberAnimation {
-      target: notificationList
-      property: "opacity"
-      to: 0
-      duration: popup.reducedMotion ? 0 : 180
-      easing.type: Easing.InQuad
     }
     onFinished: {
       popup.service.clearHistoryWithUndo(popup.clearingRecords)
       popup.clearingRecords = []
       popup.expandedGroupKey = ""
       clearAllTranslate.x = 0
-      notificationList.opacity = 1
       // All rendered rows belong to the snapshot; newer arrivals were deferred.
       centerModel.clear()
       Qt.callLater(popup.syncHistory)
