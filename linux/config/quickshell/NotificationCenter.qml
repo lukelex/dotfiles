@@ -256,28 +256,34 @@ Scope {
         spacing: 3
 
         Row {
-          height: 22
+          height: Math.max(dismissButton.height, summaryLabel.height)
           spacing: 6
           width: parent.width
 
           Text {
-            color: card.controller.controlSecondaryText
+            id: summaryLabel
+            anchors.verticalCenter: parent.verticalCenter
+            color: card.controller.controlPrimaryText
             elide: Text.ElideRight
             font.family: card.controller.fontFamily
-            font.pixelSize: 10
-            text: (card.record.urgency === "critical" ? "Critical · " : "") + card.record.appName
+            font.pixelSize: 12
+            text: (card.record.urgency === "critical" ? "Critical · " : "") + card.record.summary
             textFormat: Text.PlainText
-            width: parent.width - timeLabel.width - dismissButton.width - parent.spacing * 2
+            wrapMode: Text.Wrap
+            maximumLineCount: card.expanded ? 2147483647 : 1
+            width: Math.max(0, parent.width - timeLabel.width - dismissButton.width - parent.spacing * 2)
           }
 
           Text {
             id: timeLabel
 
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.baseline: summaryLabel.baseline
             color: card.controller.controlSecondaryText
             font.family: card.controller.fontFamily
             font.pixelSize: 10
             text: popup.service.timeAgo(card.record)
+            width: Math.max(28, implicitWidth)
+            horizontalAlignment: Text.AlignRight
             Accessible.name: popup.service.exactTime(card.record)
             HoverHandler { id: timeHover }
             Hint {
@@ -297,19 +303,6 @@ Scope {
             enabled: !card.dismissing && !card.groupDismissing
             onClicked: card.startDismiss()
           }
-        }
-
-        Text {
-          id: summaryLabel
-          color: card.controller.controlPrimaryText
-          elide: Text.ElideRight
-          font.family: card.controller.fontFamily
-          font.pixelSize: 12
-          text: card.record.summary
-          textFormat: Text.PlainText
-          wrapMode: Text.Wrap
-          maximumLineCount: card.expanded ? 2147483647 : 1
-          width: parent.width
         }
 
         Text {

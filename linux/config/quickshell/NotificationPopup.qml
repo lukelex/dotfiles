@@ -706,7 +706,7 @@ PopupWindow {
 
       controller: stack.controller
       countLabel: stack.records.length > 1 ? "+" + (stack.records.length - 1) : ""
-      titleInHeader: stack.records.length === 1
+      titleInHeader: true
       interactive: !stack.showingExpanded
       record: stack.latestRecord || popup.emptyRecord
       service: stack.service
