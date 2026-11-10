@@ -156,6 +156,7 @@ PopupWindow {
     required property var service
 
     property string countLabel: ""
+    property bool titleInHeader: false
     property bool dismissing: false
     property var dismissingRecordId: null
     property bool interactive: true
@@ -340,7 +341,7 @@ PopupWindow {
         left: parent.left
         leftMargin: 12
         top: parent.top
-        topMargin: 12
+        topMargin: 8
       }
       color: toast.record.urgency === "critical" ? toast.controller.urgent : toast.controller.controlActive
       height: 40
@@ -367,6 +368,23 @@ PopupWindow {
       }
     }
 
+    NotificationButton {
+      id: dismissButton
+
+      anchors {
+        right: parent.right
+        rightMargin: 14
+        top: parent.top
+        topMargin: 8
+      }
+      controller: toast.controller
+      iconName: "x"
+      description: "Dismiss notification"
+      keyboardEnabled: false
+      enabled: toast.interactive && !toast.dismissing
+      onClicked: toast.startDismiss()
+    }
+
     Column {
       id: textColumn
 
@@ -374,26 +392,27 @@ PopupWindow {
         left: parent.left
         leftMargin: 64
         right: parent.right
-        rightMargin: 14
+        rightMargin: 14 + dismissButton.width + 4
         top: parent.top
-        topMargin: 12
+        topMargin: 8
       }
       spacing: 3
 
       Row {
-        height: 28
+        height: 18
         spacing: 4
         width: parent.width
 
         Text {
           anchors.verticalCenter: parent.verticalCenter
-          color: toast.controller.controlSecondaryText
+          color: toast.titleInHeader ? toast.controller.controlPrimaryText : toast.controller.controlSecondaryText
           elide: Text.ElideRight
           font.family: toast.controller.fontFamily
-          font.pixelSize: 10
-          text: (toast.record.urgency === "critical" ? "Critical · " : "") + toast.record.appName
+          font.pixelSize: toast.titleInHeader ? 12 : 10
+          text: (toast.record.urgency === "critical" ? "Critical · " : "")
+            + (toast.titleInHeader ? toast.displayRecord.summary : toast.record.appName)
           textFormat: Text.PlainText
-          width: Math.max(0, parent.width - timeLabel.width - countLabelText.width - dismissButton.width - parent.spacing * 3)
+          width: Math.max(0, parent.width - timeLabel.width - countLabelText.width - parent.spacing * 2)
         }
 
         Text {
@@ -417,16 +436,6 @@ PopupWindow {
           font.pixelSize: 10
           text: popup.service.timeAgo(toast.record)
         }
-
-        NotificationButton {
-          id: dismissButton
-          controller: toast.controller
-          iconName: "x"
-          description: "Dismiss notification"
-          keyboardEnabled: false
-          enabled: toast.interactive && !toast.dismissing
-          onClicked: toast.startDismiss()
-        }
       }
 
       Text {
@@ -436,6 +445,7 @@ PopupWindow {
         font.pixelSize: 12
         text: toast.displayRecord.summary
         textFormat: Text.PlainText
+        visible: !toast.titleInHeader
         width: parent.width
       }
 
@@ -499,7 +509,7 @@ PopupWindow {
       }
     }
 
-    height: Math.max(textColumn.height + 24, 64)
+    height: Math.max(textColumn.height + 16, 64)
 
     MouseArea {
       anchors.fill: parent
@@ -696,6 +706,7 @@ PopupWindow {
 
       controller: stack.controller
       countLabel: stack.records.length > 1 ? "+" + (stack.records.length - 1) : ""
+      titleInHeader: stack.records.length === 1
       interactive: !stack.showingExpanded
       record: stack.latestRecord || popup.emptyRecord
       service: stack.service
