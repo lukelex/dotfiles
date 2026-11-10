@@ -54,15 +54,29 @@ test('uses login shell and separates hardware and session information', () => {
 
 test('groups shared Btrfs capacity without merging independent filesystems', () => {
   const info = normalize([{ type: 'Disk', result: [
-    { mountFrom: '/dev/a', mountpoint: '/', filesystem: 'btrfs', bytes: { used: 50, total: 100 } },
-    { mountFrom: '/dev/a', mountpoint: '/home', filesystem: 'btrfs', bytes: { used: 50, total: 100 } },
+    { mountFrom: '/dev/a', mountpoint: '/', filesystem: 'btrfs', bytes: { free: 50, total: 100 } },
+    { mountFrom: '/dev/a', mountpoint: '/home', filesystem: 'btrfs', bytes: { free: 50, total: 100 } },
     { mountFrom: '/dev/b', mountpoint: '/data', filesystem: 'ext4', bytes: { used: 25, total: 100 } }
   ] }]);
   const disks = info.groups.find(g => g.title === 'Storage').rows;
   assert.equal(disks.length, 2);
   assert.equal(disks[0].label, '/, /home');
   assert.equal(disks[0].usage, 0.5);
+  assert.equal(disks[0].value, '50 B / 100 B · 50% · btrfs');
   assert.equal(disks[1].usage, 0.25);
+});
+
+test('does not infer disk usage from missing or invalid free space', () => {
+  const info = normalize([{ type: 'Disk', result: [
+    { mountpoint: '/', bytes: { total: 100 } },
+    { mountpoint: '/data', bytes: { total: 100, free: 120 } },
+    { mountpoint: '/backup', bytes: { total: 100, free: -1 } }
+  ] }]);
+  const disks = info.groups.find(g => g.title === 'Storage').rows;
+  for (const disk of disks) {
+    assert.equal(disk.value, 'Unavailable');
+    assert.equal(disk.usage, -1);
+  }
 });
 
 test('handles missing modules, zero swap and legacy versus per-device swap', () => {

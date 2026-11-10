@@ -48,7 +48,11 @@ function normalize(data) {
       disks.get(key).label += ", " + disk.mountpoint;
       continue;
     }
-    const entry = metric("hard-drive", disk.mountpoint || "Storage", disk.bytes?.used, disk.bytes?.total);
+    const total = disk.bytes?.total;
+    const free = disk.bytes?.free;
+    const used = disk.bytes?.used ?? (Number.isFinite(total) && Number.isFinite(free)
+      && free >= 0 && free <= total ? total - free : undefined);
+    const entry = metric("hard-drive", disk.mountpoint || "Storage", used, total);
     entry.value += disk.filesystem ? " · " + disk.filesystem : "";
     disks.set(key, entry);
   }
