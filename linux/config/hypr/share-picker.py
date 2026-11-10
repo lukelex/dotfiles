@@ -70,11 +70,11 @@ class Captures:
         self.processes = set()
         self.stopped = threading.Event()
 
-    def run(self, args):
+    def run(self, args, scale=0.25):
         with self.lock:
             if self.stopped.is_set():
                 return None
-            process = subprocess.Popen(["grim", *args, "-s", "0.25", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(["grim", *args, "-s", str(scale), "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             self.processes.add(process)
         try:
             data, _ = process.communicate(timeout=3)
@@ -103,13 +103,13 @@ def window_capture_args(window, clients):
     return ("-T", stable_id) if stable_id else None
 
 
-def thumbnail(*args, stopped=None, captures=None):
+def thumbnail(*args, stopped=None, captures=None, scale=0.25):
     started = time.monotonic()
     for attempt in range(2):
         if stopped is not None and stopped.is_set():
             return None
         try:
-            data = captures.run(args) if captures else subprocess.check_output(["grim", *args, "-s", "0.25", "-"], stderr=subprocess.DEVNULL, timeout=3)
+            data = captures.run(args, scale) if captures else subprocess.check_output(["grim", *args, "-s", str(scale), "-"], stderr=subprocess.DEVNULL, timeout=3)
             if data:
                 log("capture", outcome="ok", attempt=attempt + 1, milliseconds=round((time.monotonic() - started) * 1000))
                 return data
@@ -153,194 +153,19 @@ def main():
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signum, lambda: app.quit() or False)
 
     def activate(application):
-        dialog = Gtk.ApplicationWindow(application=application, title="Select what to share")
-        active_dialog.append(dialog)
-        dialog.set_default_size(760, 795)
-        dialog.connect("close-request", lambda *_: application.quit() or False)
-        layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        layout.set_margin_top(18)
-        layout.set_margin_bottom(18)
-        layout.set_margin_start(18)
-        layout.set_margin_end(18)
-        dialog.set_child(layout)
-        heading = Gtk.Label(label="Select what to share", xalign=0)
-        heading.add_css_class("title-2")
-        layout.append(heading)
-        layout.append(Gtk.Label(label="Click a preview to start sharing. Close this window to cancel.", xalign=0))
-        notice = Gtk.Label(label="New windows require reopening the share dialog.", xalign=0)
-        layout.append(notice)
-        tabs = Gtk.Notebook()
-        tabs.set_vexpand(True)
-        layout.append(tabs)
-        refresh = Gtk.Button(label="Refresh previews")
-        layout.append(refresh)
-        tiles = []
-        generation = 0
-        pending = 0
-
-        def add_tab(label, entries):
-            scroll = Gtk.ScrolledWindow()
-            grid = Gtk.FlowBox()
-            grid.set_selection_mode(Gtk.SelectionMode.NONE)
-            grid.set_max_children_per_line(3)
-            grid.set_column_spacing(12)
-            grid.set_row_spacing(12)
-            grid.set_margin_top(12)
-            grid.set_margin_bottom(12)
-            scroll.set_child(grid)
-            tabs.append_page(scroll, Gtk.Label(label=label))
-            if not entries:
-                grid.append(Gtk.Label(label=f"No {label.lower()} available"))
-            return grid
-
-        def add_tile(grid, kind, identifier, title, capture_args, icon, window=None):
-            button = Gtk.Button()
-            button.set_tooltip_text(title)
-            content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-            content.set_size_request(210, 150)
-            preview = Gtk.Stack()
-            preview.set_size_request(210, 120)
-            if not Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).has_icon(icon):
-                icon = "application-x-executable"
-            image = Gtk.Image.new_from_icon_name(icon)
-            image.set_pixel_size(72)
-            preview.add_named(image, "icon")
-            picture = Gtk.Picture()
-            picture.set_content_fit(Gtk.ContentFit.CONTAIN)
-            preview.add_named(picture, "snapshot")
-            content.append(preview)
-            status = Gtk.Label(label="Loading preview…" if capture_args else "Preview unavailable")
-            status.add_css_class("dim-label")
-            content.append(status)
-            text = Gtk.Label(label=title, max_width_chars=27, ellipsize=3)
-            content.append(text)
-            details = Gtk.Label(label=window["class"] if window else "Screen", max_width_chars=27, ellipsize=3)
-            content.append(details)
-            button.set_child(content)
-
-            def select(*_):
-                try:
-                    if window:
-                        current = {int(c["address"], 16): c for c in hyprctl("clients")}
-                        valid = window_available(window, current)
-                    else:
-                        valid = identifier in {m["name"] for m in hyprctl("monitors")}
-                except RuntimeError:
-                    notice.set_label("Cannot verify this source. Retry or use the standard picker.")
-                    return
-                if not valid:
-                    button.set_sensitive(False)
-                    status.set_label("Source closed or disconnected")
-                    return
-                print(portal_selection(kind, identifier), flush=True)
-                application.quit()
-
-            button.connect("clicked", select)
-            grid.append(button)
-            tiles.append((capture_args, preview, picture, status))
-            sources.append((window, identifier, button, text, details, status))
-
-        def load_previews(*_):
-            nonlocal generation, pending
-            generation += 1
-            current_generation = generation
-            pending = sum(args is not None for args, *_ in tiles)
-            refresh.set_sensitive(pending == 0)
-
-            def deliver(future, preview, picture, status):
-                nonlocal pending
-                if stopped.is_set() or current_generation != generation:
-                    return False
-                try:
-                    data = future.result()
-                except Exception:
-                    log("capture-worker-error")
-                    data = None
-                if data:
-                    try:
-                        picture.set_paintable(Gdk.Texture.new_from_bytes(GLib.Bytes.new(data)))
-                        preview.set_visible_child_name("snapshot")
-                        status.set_label("")
-                    except GLib.Error:
-                        data = None
-                if not data:
-                    picture.set_paintable(None)
-                    preview.set_visible_child_name("icon")
-                    status.set_label("Preview unavailable")
-                pending -= 1
-                refresh.set_sensitive(pending == 0)
-                return False
-
-            for args, preview, picture, status in tiles:
-                if args is None:
-                    continue
-                status.set_label("Loading preview…")
-                future = executor.submit(thumbnail, *args, stopped=stopped, captures=captures)
-                future.add_done_callback(
-                    lambda result, p=preview, pic=picture, s=status:
-                    GLib.idle_add(deliver, result, p, pic, s) if not stopped.is_set() else None
-                )
-
-        sources = []
-        screen_grid = add_tab("Screens", outputs)
-        for name in outputs:
-            monitor = monitors.get(name, {})
-            title = monitor.get("description") or name
-            add_tile(screen_grid, "screen", name, title, ("-o", name), "video-display")
-
-        window_grid = add_tab("Windows", windows)
-        for window in windows:
-            add_tile(window_grid, "window", window["id"], window["title"] or window["class"], window_capture_args(window, clients), window["class"].lower() or "application-x-executable", window)
-
-        lifecycle_busy = False
-        def update_sources(future):
-            nonlocal lifecycle_busy
-            lifecycle_busy = False
-            if stopped.is_set():
-                return False
-            try:
-                current, screens = future.result()
-            except Exception:
-                notice.set_label("Hyprland unavailable. Retry or use the standard picker.")
-                return False
-            notice.set_label("New windows require reopening the share dialog.")
-            for window, identifier, button, text, details, status in sources:
-                valid = window_available(window, current) if window else identifier in screens
-                button.set_sensitive(valid)
-                if not valid:
-                    status.set_label("Source closed or disconnected")
-                elif window:
-                    client = current[window["address"]]
-                    text.set_label(client.get("title") or window["class"])
-                    button.set_tooltip_text(client.get("title") or window["class"])
-                    workspace = client.get("workspace", {}).get("name", "?")
-                    details.set_label(f'{window["class"]} · Workspace {workspace}')
-            return False
-
-        def poll_sources():
-            nonlocal lifecycle_busy
-            if stopped.is_set():
-                return False
-            if not lifecycle_busy:
-                lifecycle_busy = True
-                future = executor.submit(lambda: (
-                    {int(c["address"], 16): c for c in hyprctl("clients")},
-                    {m["name"] for m in hyprctl("monitors")},
-                ))
-                future.add_done_callback(lambda result: GLib.idle_add(update_sources, result) if not stopped.is_set() else None)
-            return True
-
-        standard = Gtk.Button(label="Use standard picker")
-        standard.connect("clicked", lambda *_: failed.append(True) or application.quit())
-        layout.append(standard)
-        GLib.timeout_add_seconds(2, poll_sources)
-        poll_sources()
-
-        if not outputs and windows:
-            tabs.set_current_page(1)
-        dialog.present()
-        refresh.connect("clicked", load_previews)
-        load_previews()
+        # Resolve alongside the real script even when launched through ~/.local/bin.
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+        from types import SimpleNamespace
+        from share_picker_ui import Picker
+        api = SimpleNamespace(hyprctl=hyprctl, thumbnail=thumbnail, log=log,
+                              window_available=window_available,
+                              window_capture_args=window_capture_args,
+                              portal_selection=portal_selection)
+        picker = Picker(application, windows, outputs, clients, monitors, executor,
+                        captures, api, lambda: failed.append(True))
+        active_dialog.append(picker)
+        picker.present()
 
     app.connect("activate", activate)
     try:
@@ -370,6 +195,10 @@ def check_dependencies():
     Gtk.init()
     if not hasattr(Gtk.Picture, "set_content_fit") or not Gdk.Display.get_default():
         raise RuntimeError("GTK 4.8+ and a graphical session are required")
+    directory = os.path.dirname(os.path.realpath(__file__))
+    for filename in ("share_picker_ui.py", "share-picker.css"):
+        if not os.access(os.path.join(directory, filename), os.R_OK):
+            raise RuntimeError(f"Missing presentation file: {filename}")
     result = subprocess.run(["grim", "-h"], capture_output=True, timeout=3)
     if b"-T" not in result.stdout + result.stderr:
         raise RuntimeError("grim lacks direct window capture (-T)")

@@ -6,6 +6,25 @@ GTK 4, python-gobject and grim are
 declared dependencies. Changes to the script apply to the next share request.
 Changes to `xdph.conf` require restarting `xdg-desktop-portal-hyprland.service`.
 
+## Choosing a source
+
+- Opens on **Windows**, grouped by workspace (current first, then numeric order).
+  Within each workspace, recent-focus order is captured once when opening.
+  Titles update in place; windows moving workspaces move to the appropriate group.
+- Type to search titles, applications and workspace names. Arrow keys navigate
+  previews. Clicking a tile only selects it; **Share** confirms the selection.
+  First Enter selects the focused result, second Enter confirms. Moving focus or
+  changing the search resets keyboard confirmation.
+- **Expand preview** shows the full title and requests a larger fresh snapshot.
+  Escape returns to the grid, then clears a search, then cancels the picker.
+- The footer names the selected source. Share is disabled without a selection;
+  closing or filtering out a selected source clears it rather than choosing another.
+- **Refresh** updates snapshots. Failed previews show the app icon and an explicit
+  status; selection still works. **Screens** is a separate tab.
+- The floating, centered window defaults to 760×795 logical pixels, capped to
+  the focused monitor. Columns adapt to its width. The slate/cool-blue stylesheet
+  is `share-picker.css`; the GTK presentation lives in `share_picker_ui.py`.
+
 ## Health check
 
 ```sh
@@ -61,7 +80,7 @@ Geometry/Unicode unit tests are not a substitute for those hardware tests.
 
 Quickshell's `ScreencopyView` supports native window snapshots and live previews.
 It is a future alternative if live previews are wanted; it would still need the
-portal-handle mapping, supervisor, cancellation and lifecycle guarantees above.
+  portal-handle mapping, supervisor, cancellation and lifecycle guarantees above.
 The current direct `grim -T` path is verified on this machine and avoids a UI
 rewrite. Coordinate crops, raising windows to capture them, and per-thumbnail
 portal requests are deliberately avoided. No persistent screenshot cache is used.

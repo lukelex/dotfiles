@@ -1,0 +1,33 @@
+/* Shared slate / cool-blue tokens from nwg-hello and hyprlock. */
+window.share-picker {
+  background: #202631;
+  color: #f8f9fb;
+  font-family: "Hack Nerd Font Mono", monospace;
+  font-size: 12px;
+}
+.share-picker .heading { font-size: 22px; font-weight: bold; }
+.share-picker .muted { color: #b7bec9; font-size: 11px; }
+.share-picker .section-heading { color: #8caed8; font-weight: bold; }
+.share-picker button, .share-picker entry {
+  background: #2b303e;
+  background-image: none;
+  color: #f8f9fb;
+  border: 1px solid #3e5978;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: none;
+}
+.share-picker button:hover { background: #34445a; }
+.share-picker button:checked { background: #3e5978; border-color: #8caed8; }
+.share-picker button:focus-visible, .share-picker entry:focus-within {
+  outline: 2px solid #8caed8;
+  outline-offset: 2px;
+}
+.share-picker button.source-card { border: 2px solid #3e4758; padding: 10px; }
+.share-picker button.source-card.selected { border-color: #8caed8; background: #303f53; }
+.share-picker .preview { background: #181e28; border-radius: 6px; }
+.share-picker .footer { border-top: 1px solid #3e4758; padding-top: 12px; }
+.share-picker button.primary { background: #8caed8; color: #172333; font-weight: bold; }
+.share-picker button.primary:hover { background: #aac7eb; }
+.share-picker button:disabled { opacity: 0.45; }
+.share-picker button.quiet { background: none; border-color: transparent; padding: 2px 0; color: #b7bec9; }

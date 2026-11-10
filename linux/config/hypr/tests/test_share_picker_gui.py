@@ -12,47 +12,106 @@ import tempfile
 
 PICKER = Path(__file__).resolve().parents[1] / "share-picker.py"
 DRIVER = r'''
-import importlib.util, sys
+import importlib.util, sys, io, contextlib
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GLib
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gtk, GLib, Gdk
+from pathlib import Path
+sys.path.insert(0, str(Path(sys.argv[1]).parent))
+from share_picker_ui import Picker
 spec = importlib.util.spec_from_file_location("picker", sys.argv[1])
 picker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(picker)
 mode = sys.argv[2]
-buttons = []
-original_connect = Gtk.Button.connect
-def connect(button, name, callback, *args):
-    if name == "clicked" and callback.__name__ == "select":
-        buttons.append(button)
-    return original_connect(button, name, callback, *args)
-Gtk.Button.connect = connect
-original_present = Gtk.ApplicationWindow.present
-def present(window):
-    original_present(window)
+output = io.StringIO()
+original_present = Picker.present
+def present(ui):
+    original_present(ui)
     def finish():
-        if mode in ("select", "unavailable"):
+        assert ui.kind == "window"
+        assert not ui.share.get_sensitive()
+        source = next(s for s in ui.sources if s.visible)
+        if mode == "lifecycle":
+            ui.select(source)
+            original_ipc = ui.api.hyprctl
+            def without_source(command):
+                values = original_ipc(command)
+                return [c for c in values if int(c["address"], 16) != source.window["address"]] if command == "clients" else values
+            ui.api.hyprctl = without_source
+            ui.poll_sources()
+            def check_closed():
+                assert ui.selected is None
+                assert not ui.share.get_sensitive()
+                assert not source.cell.get_visible()
+                assert "closed" in ui.notice.get_label()
+                assert output.getvalue() == ""
+                ui.quit()
+                return False
+            GLib.timeout_add(400, check_closed)
+        elif mode in ("select", "unavailable", "ux"):
             if mode == "unavailable":
-                def labels(widget):
-                    if isinstance(widget, Gtk.Label):
-                        yield widget.get_label()
-                    child = widget.get_first_child()
-                    while child:
-                        yield from labels(child)
-                        child = child.get_next_sibling()
-                assert "Preview unavailable" in list(labels(window))
-            buttons[0].emit("clicked")
+                assert source.status.get_label() == "Preview unavailable"
+            source.button.emit("clicked")
+            assert ui.selected is source and ui.share.get_sensitive()
+            assert output.getvalue() == "", "Selecting a tile must not share"
+            if mode == "ux":
+                ui.open_detail()
+                assert ui.pages.get_visible_child_name() == "detail"
+                ui.escape()
+                assert ui.pages.get_visible_child_name() == "browse"
+                ui.search.set_text("not-a-real-source-94182")
+                ui.filter_sources()
+                assert ui.selected is None and not ui.share.get_sensitive()
+                ui.escape()
+                assert not ui.search.get_text()
+                ui.search.grab_focus()
+                ui.key_pressed(None, Gdk.KEY_Return, 0, Gdk.ModifierType(0))
+                assert ui.selected is source and ui.armed
+                assert output.getvalue() == ""
+                ui.key_pressed(None, Gdk.KEY_Down, 0, Gdk.ModifierType(0))
+                assert not ui.armed
+                ui.key_pressed(None, Gdk.KEY_Return, 0, Gdk.ModifierType(0))
+                assert ui.armed and output.getvalue() == ""
+                ui.key_pressed(None, Gdk.KEY_Return, 0, Gdk.ModifierType(0))
+            else:
+                ui.share.emit("clicked")
         else:
-            window.close()
+            source.button.emit("clicked")
+            assert output.getvalue() == ""
+            ui.window.close()
         return False
     GLib.timeout_add(1200, finish)
-Gtk.ApplicationWindow.present = present
-sys.exit(picker.main())
+Picker.present = present
+with contextlib.redirect_stdout(output):
+    result = picker.main()
+sys.stdout.write(output.getvalue())
+sys.exit(result)
 '''
 
 
 @unittest.skipUnless(os.environ.get("SHARE_PICKER_GUI_TESTS") == "1", "requires a live Hyprland desktop")
 class SharePickerGuiTest(unittest.TestCase):
+    def test_closed_selection_is_removed_without_sharing(self):
+        clients = json.loads(subprocess.check_output(["hyprctl", "clients", "-j"]))
+        client = next(c for c in clients if c.get("stableId") and c.get("mapped"))
+        env = os.environ.copy()
+        env["XDPH_WINDOW_SHARING_LIST"] = f'123[HC>]{client["class"]}[HT>]Integration test[HE>]{int(client["address"], 16)}[HA>]'
+        env["XDPH_OUTPUT_SHARING_LIST"] = ""
+        result = subprocess.run([sys.executable, "-c", DRIVER, str(PICKER), "lifecycle"], env=env, capture_output=True, timeout=12)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(result.stdout, b"")
+
+    def test_search_confirmation_and_expanded_preview(self):
+        clients = json.loads(subprocess.check_output(["hyprctl", "clients", "-j"]))
+        client = next(c for c in clients if c.get("stableId") and c.get("mapped") and c["class"] != "xwaylandvideobridge")
+        env = os.environ.copy()
+        env["XDPH_WINDOW_SHARING_LIST"] = f'123[HC>]{client["class"]}[HT>]Integration test[HE>]{int(client["address"], 16)}[HA>]'
+        env["XDPH_OUTPUT_SHARING_LIST"] = ""
+        result = subprocess.run([sys.executable, "-c", DRIVER, str(PICKER), "ux"], env=env, capture_output=True, timeout=12)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(result.stdout, b"[SELECTION]r/window:123\n")
+
     def test_failed_previews_do_not_prevent_selection(self):
         clients = json.loads(subprocess.check_output(["hyprctl", "clients", "-j"]))
         client = next(c for c in clients if c.get("stableId") and c.get("mapped"))
