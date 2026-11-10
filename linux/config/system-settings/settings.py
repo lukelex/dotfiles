@@ -20,6 +20,7 @@ FIELDS = [
   ("audio.volumeStep", "Volume key step (%)", "number", [1, 25], ""),
   ("audio.microphoneStep", "Microphone key step (%)", "number", [1, 25], ""),
   ("display.linkBrightness", "Link display and keyboard brightness", "boolean", [], ""),
+  ("storage.usbAutomount", "Automatically mount USB storage", "boolean", [], ""),
   ("connectivity.bluetoothBatteryAlerts", "Bluetooth low-battery alerts", "boolean", [], ""),
   ("connectivity.bluetoothBatteryThreshold", "Bluetooth low-battery threshold (%)", "number", [1, 50], ""),
   ("lockScreen.showGreeting", "Greeting and username", "boolean", [], "wayland"),

@@ -50,6 +50,9 @@
     "lockBrightness": 5,
     "osdDurationMs": 1500
   },
+  "storage": {
+    "usbAutomount": true
+  },
   "idle": {
     "dimSeconds": 120,
     "lockSeconds": 300,

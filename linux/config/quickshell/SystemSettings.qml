@@ -28,6 +28,7 @@ FloatingWindow {
     { key: "power", label: "Power & battery", icon: "battery", group: "System" },
     { key: "connectivity", label: "Wi-Fi", icon: "wifi", group: "Devices & connections" },
     { key: "bluetooth", label: "Bluetooth", icon: "bluetooth", group: "Devices & connections" },
+    { key: "storage", label: "Storage & mounts", icon: "hard-drive", group: "Devices & connections" },
     { key: "monitors", label: "Displays", icon: "monitor", group: "Devices & connections" },
     { key: "audio", label: "Sound", icon: "volume-2", group: "Devices & connections" },
     { key: "input", label: "Keyboard & pointer", icon: "keyboard", group: "Devices & connections" },
@@ -192,6 +193,10 @@ FloatingWindow {
     MonitorService {
       id: monitors
       visible: window.visible && window.section === "monitors"
+    }
+    UsbStorageService {
+      id: usbStorage
+      visible: window.visible && window.section === "storage"
     }
     MonitorIdentify {
       id: monitorIdentify
@@ -1148,6 +1153,13 @@ FloatingWindow {
           controller: window.controller
           service: window.connectivity
           onDisclosureToggled: preferenceScroll.preservePosition()
+        }
+        UsbStorageSettings {
+          Layout.fillWidth: true
+          visible: window.section === "storage"
+          controller: window.controller
+          preferences: window.controller.preferences
+          service: usbStorage
         }
         SettingsSubsection {
           id: connectivityPreferences

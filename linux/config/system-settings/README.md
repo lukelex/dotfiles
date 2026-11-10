@@ -86,6 +86,13 @@ after reconnects. Device IDs remain runtime-only. Without Quickshell, run
   DDC displays. External-only controls and brightness key increments are unchanged.
   To carry an enabled legacy marker on another machine, set
   `python3 linux/config/system-settings/settings.py set display.linkBrightness true`.
+- **Storage & mounts:** System Settings lists connected USB storage volumes and
+  currently mounted non-system filesystems configured in fstab, including network
+  shares. USB mount/unmount actions use UDisks; fstab mounts use normal `umount`.
+  Neither action forces unmounting or powers off a device. `storage.usbAutomount`
+  persists the udiskie automount preference (enabled by default). Disabling it
+  affects future USB mounts without unmounting drives already in use; enabling it
+  also mounts connected USB volumes that are currently unmounted.
 
 - **Session & lock screen:** configure Hyprlock's greeting/username, daily quote,
   battery widgets, network/VPN/audio/DND status, capture activity, failed-unlock
