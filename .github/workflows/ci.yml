@@ -9,6 +9,13 @@ on:
       - master
 
 jobs:
+  share-picker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run screen-share picker regression tests
+        run: python3 -B -m unittest discover -s linux/config/hypr/tests -v
+
   nvim-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10

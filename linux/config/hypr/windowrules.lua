@@ -17,3 +17,11 @@ hl.window_rule({
   float = true,
   center = true,
 })
+
+hl.window_rule({
+  match = {
+    class = "^dev\\.dotfiles\\.hypr-share-picker$",
+  },
+  float = true,
+  center = true,
+})
