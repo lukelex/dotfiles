@@ -741,13 +741,6 @@ Scope {
           text: (notificationGroup.latest && notificationGroup.latest.urgency === "critical" ? "Critical · " : "")
             + recordModel.count + " notifications · " + popup.service.timeAgo(notificationGroup.latest)
           Accessible.name: text + "; " + popup.service.exactTime(notificationGroup.latest)
-          HoverHandler { id: groupTimeHover }
-          Hint {
-            parent: groupStatus
-            y: -implicitHeight - 6
-            text: groupStatus.text + "\n" + popup.service.exactTime(notificationGroup.latest)
-            visible: groupTimeHover.hovered || groupStatus.activeFocus
-          }
         }
       }
 
