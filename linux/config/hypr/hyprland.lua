@@ -105,6 +105,9 @@ hl.config({
     mouse_move_enables_dpms = true,
     vrr = 3,
   },
+  render = {
+    cm_auto_hdr = 0,
+  },
 })
 
 hl.animation({ leaf = "windows", enabled = true, speed = 4, bezier = "default", style = "popin" })
