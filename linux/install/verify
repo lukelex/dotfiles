@@ -55,7 +55,7 @@ if ! is_server; then
   done
 
   if has_selection hyprland; then
-    for command in hyprland kanshi wl-paste xwaylandvideobridge; do
+    for command in hyprland kanshi wl-paste xwaylandvideobridge satty; do
       check "Hyprland dependency $command is available" command -v "$command"
     done
   fi

@@ -1,48 +1,53 @@
 #!/usr/bin/bash
 
-# set -aeu
 set -euo pipefail
 
 OUTPUT_DIR="$HOME/screenshots"
 mkdir -p "$OUTPUT_DIR"
 
-GEOM="$(slurp -b '#ffffff20' -c '#00000040')" || exit 1
-[ -z "$GEOM" ] && exit 1
+capture_args=()
+case "${1:-region}" in
+  region)
+    geometry="$(slurp -b '#ffffff20' -c '#00000040')" || exit 1
+    [ -n "$geometry" ] || exit 1
+    capture_args=(-g "$geometry")
+    ;;
+  window)
+    geometry=$(hyprctl activewindow -j | jq -er '
+      select(.mapped == true and .hidden != true) |
+      "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
+    capture_args=(-g "$geometry")
+    ;;
+  output)
+    output=$(hyprctl monitors -j | jq -er '.[] | select(.focused) | .name')
+    [ -n "$output" ] || exit 1
+    capture_args=(-o "$output")
+    ;;
+  *) printf 'Usage: u_screenshot [region|window|output]\n' >&2; exit 2 ;;
+esac
 
-TMP_DIR="${XDG_RUNTIME_DIR:-/tmp}"
-TMPFILE="$(mktemp "$TMP_DIR/XXXXXX.png")"
+TMPFILE="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/screenshot-XXXXXX.png")"
 OUTFILE="$OUTPUT_DIR/$(date +%Y%m%d-%H%M%S-%N)-$$.png"
 trap 'rm -f "$TMPFILE"' EXIT
 
-audio_tick() {
-  play "$HOME/dotfiles/sounds/camera-shutter.ogg" vol 0.35 &> /dev/null &
-}
-
-take() {
-  # hyprshot --silent --mode "$1" --output-folder "$HOME/screenshots" 2&>/dev/null
-
-  # 1) Capture selection to a real PNG file
-  grim -g "$GEOM" "$TMPFILE"
-
-  # 2) Immediately copy that image to clipboard
-  wl-copy --type image/png < "$TMPFILE"
-
-  # 3) Open the same image in satty for optional editing / copying
-  satty \
-    --filename "$TMPFILE" \
-    --output-filename "$OUTFILE"
-
-  audio_tick
-
-  action=$(notify-send -a System \
-    -i "$LUCIDE_PATH/camera.svg" \
-    -t 10000 \
-    -A copy='Copy path' \
-    'Screenshot saved' "$OUTFILE" || true)
-
-  if [[ $action == copy ]]; then
-    printf '%s' "$OUTFILE" | wl-copy
+grim "${capture_args[@]}" "$TMPFILE"
+# Save the original before clipboard or editor work. Editor cancellation and
+# failures must never discard the capture or truncate its only saved copy.
+cp "$TMPFILE" "$OUTFILE"
+wl-copy --type image/png < "$TMPFILE" || true
+if command -v satty >/dev/null 2>&1; then
+  # Keep edits on the destination filesystem so promotion is an atomic rename,
+  # not a cross-filesystem copy which could truncate the original on failure.
+  edit_dir=$(mktemp -d "$OUTPUT_DIR/.edit-XXXXXX")
+  edited="$edit_dir/capture.png"
+  trap 'rm -f "$TMPFILE"; rm -rf "$edit_dir"' EXIT
+  if satty --filename "$TMPFILE" --output-filename "$edited" && [ -s "$edited" ]; then
+    mv "$edited" "$OUTFILE" || printf 'Screenshot edit could not be saved; original retained.\n' >&2
   fi
-}
-
-take "$1"
+fi
+play "$HOME/dotfiles/sounds/camera-shutter.ogg" vol 0.35 &> /dev/null &
+action=$(notify-send -a System -i "${LUCIDE_PATH:-}/camera.svg" -t 10000 \
+  -A copy='Copy path' 'Screenshot saved' "$OUTFILE" || true)
+if [[ $action == copy ]]; then
+  printf '%s' "$OUTFILE" | wl-copy || true
+fi
