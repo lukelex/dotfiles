@@ -2,44 +2,23 @@
 
 set -Eeuo pipefail
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
-source "$HOME/dotfiles/linux/variables.env"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh" "$@"
 
-repo_url="https://github.com/lukelex/kmonad-device-manager.git"
-repo_ref='main'
-repo_dir="$HOME/.local/share/kmonad-device-manager"
-service_link="$HOME/.config/systemd/user/kmonad-device-manager.service"
-
-if [ "$DRY_RUN" -eq 1 ]; then
-  printf 'dry-run: clone %s at %s to %s if needed\n' "$repo_url" "$repo_ref" "$repo_dir"
-  printf 'dry-run: install KMonad device manager with %s\n' "$DOT_CONFIG/kmonad"
+if is_server || [ "$PACKAGES_ONLY" -eq 1 ]; then
   exit 0
 fi
 
-mkdir -p "$(dirname "$repo_dir")"
-if [ -L "$service_link" ]; then
-  service_source="$(readlink -f "$service_link" || true)"
-  if [ -n "$service_source" ]; then
-    existing_repo="$(dirname "$(dirname "$service_source")")"
-    if [ -d "$existing_repo/.git" ] && [ -x "$existing_repo/install.sh" ]; then
-      repo_dir="$existing_repo"
-    fi
+# dotpkg owns the release files, group membership, config links and service.
+# Prepare device permissions before its resource stage starts the service.
+config_dir="$DOTFILES/linux/config/kmonad-device-manager"
+for group in input uinput; do
+  if ! getent group "$group" >/dev/null; then
+    run sudo groupadd --system "$group"
   fi
-fi
-
-if [ -d "$repo_dir/.git" ]; then
-  if [ -n "$(git -C "$repo_dir" status --porcelain)" ]; then
-    printf 'KMonad device manager checkout has local changes: %s\n' "$repo_dir" >&2
-    exit 1
-  fi
-  git -C "$repo_dir" fetch --depth 1 origin \
-    "+refs/heads/$repo_ref:refs/remotes/origin/$repo_ref"
-  git -C "$repo_dir" checkout --detach "origin/$repo_ref"
-elif [ -e "$repo_dir" ]; then
-  printf 'KMonad device manager path exists but is not a git repository: %s\n' "$repo_dir" >&2
-  exit 1
-else
-  git clone --branch "$repo_ref" --depth 1 "$repo_url" "$repo_dir"
-fi
-
-"$repo_dir/install.sh" --config-dir "$DOT_CONFIG/kmonad"
+done
+run sudo install -Dm644 "$config_dir/70-kmonad-uinput.rules" /etc/udev/rules.d/70-kmonad-uinput.rules
+run sudo install -Dm644 "$config_dir/uinput.conf" /etc/modules-load.d/uinput.conf
+run sudo modprobe uinput
+run sudo udevadm control --reload-rules
+run sudo udevadm trigger --action=add --subsystem-match=misc --sysname-match=uinput
+run sudo udevadm settle

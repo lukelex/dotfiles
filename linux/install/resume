@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+
+# Hyprland/i3 use our explicit autostart rather than a desktop XDG launcher.
+# The generic wizard also writes an XDG entry for desktops that support it.
+set -Eeuo pipefail
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+dotfiles="$(cd "$install_dir/../.." && pwd)"
+state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
+
+shopt -s nullglob
+for pending in "$state_home"/dotpkg/wizard-*/resume.json; do
+  root="$("$install_dir/yq" -r '.root' "$pending")"
+  [ "$root" = "$dotfiles" ] || continue
+  mapfile -t args < <("$install_dir/yq" -r '.args[]' "$pending")
+  [ "${#args[@]}" -gt 0 ] && [ -x "${args[0]}" ] || continue
+  if command -v kitty >/dev/null 2>&1; then
+    kitty --title 'Finish machine setup' -- "${args[@]}" &
+  elif command -v xterm >/dev/null 2>&1; then
+    xterm -T 'Finish machine setup' -e "${args[@]}" &
+  fi
+done

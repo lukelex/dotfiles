@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 dotfiles="$(cd "$install_dir/../.." && pwd)"
-source "$install_dir/common.sh"
+source "$install_dir/common.sh" "$@"
 
 failures=0
 
@@ -30,7 +30,7 @@ check "GitHub is reachable to download dotpkg" curl --fail --silent --show-error
 check "the AUR is reachable to bootstrap and resolve packages" curl --fail --silent --show-error --head --connect-timeout 5 --max-time 15 https://aur.archlinux.org
 check "repo root matches installer" test "$dotfiles" = "$DOTFILES"
 check "repo is installed at \$HOME/dotfiles" test "$dotfiles" = "$HOME/dotfiles"
-if ! is_server; then
+if ! is_server && [ "$PACKAGES_ONLY" -eq 0 ] && [[ " $* " != *" --base "* ]]; then
   check "fonts submodule checked out" test -d "$dotfiles/fonts/fa6/svgs"
   check "lucide svgs vendored" test -f "$dotfiles/linux/config/lucide/svg/monitor.svg"
 fi

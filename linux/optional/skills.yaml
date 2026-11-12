@@ -1,0 +1,15 @@
+source: aur
+profiles:
+  desktop:
+    packages: {}
+  server:
+    packages: {}
+resources:
+  remote_bundles:
+    - name: grill-me
+      repository: mattpocock/skills
+      paths:
+        - skills/productivity/grill-me
+        - skills/productivity/grilling
+        - LICENSE
+      target: $HOME/.local/share/dotpkg/opencode-skills

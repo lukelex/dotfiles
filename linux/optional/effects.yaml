@@ -1,0 +1,10 @@
+source: aur
+profiles:
+  desktop:
+    packages: {}
+resources:
+  configs:
+    - linux/config/openeffects/openeffectsd.service.d/autostart.conf:$XDG_CONFIG_HOME/systemd/user/openeffectsd.service.d/autostart.conf
+  services:
+    - name: openeffectsd.service
+      scope: user

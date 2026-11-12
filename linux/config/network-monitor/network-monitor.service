@@ -1,0 +1,13 @@
+[Unit]
+Description=Record network connectivity and dropout diagnostics
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/dotfiles/linux/config/network-monitor/monitor.py --https-target https://github.com/ --https-target https://files.lukelex.dev/api2/ping/
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

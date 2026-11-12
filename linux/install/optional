@@ -1,0 +1,45 @@
+#!/usr/bin/bash
+
+set -Eeuo pipefail
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+stage="${1:-}"
+case "$stage" in
+  skills|effects) shift ;;
+  *) printf 'Usage: linux/install/optional skills|effects [--dry-run] [--replace] [--restart-services] [--server]\n'; exit 2 ;;
+esac
+source "$install_dir/common.sh" "$@"
+if [ "$stage" = effects ] && is_server; then
+  printf 'OpenEffects requires the desktop profile.\n' >&2
+  exit 2
+fi
+if [ "$PACKAGES_ONLY" -eq 1 ]; then
+  printf 'Optional resources cannot run with --packages-only.\n' >&2
+  exit 2
+fi
+trap 'printf "Optional %s stage failed; completed steps are retained. Retry: linux/install/optional %s (with the same options).\n" "$stage" "$stage" >&2' ERR
+status=0
+python3 "$install_dir/optional-state.py" --check || status=$?
+if [ "$status" -eq 3 ] && [ "$DRY_RUN" -eq 1 ]; then exit 0; fi
+[ "$status" -eq 0 ] || exit "$status"
+binary="${DOTPKG_BIN:-}"
+[ -n "$binary" ] || binary="$("$install_dir/dotpkg" --binary-path)"
+if [ "$stage" = effects ]; then
+  bash "$install_dir/openeffects-state" "$@"
+  bash "$install_dir/openeffects" "$@"
+fi
+args=(sync --manifest "$DOTFILES/linux/optional/$stage.yaml"
+  --state-file "${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg/optional-$stage/state.yaml"
+  --profile "$INSTALL_PROFILE" --resources --root "$DOTFILES")
+# Empty desktop profiles still expose dotpkg's standard selection questions.
+# They own no packages; explicitly resolve those choices without user prompts.
+selections="$(mktemp)"
+trap 'rm -f "$selections"' EXIT
+printf '{"extras":false,"hyprland":false,"i3":false}\n' > "$selections"
+is_server || args+=(--selections "$selections" --require-selections)
+[ "$DRY_RUN" -eq 0 ] || args+=(--dry-run)
+[ "${DOTPKG_YES:-0}" != 1 ] || args+=(--yes)
+for arg in "$@"; do
+  case "$arg" in --replace|--restart-services) args+=("$arg") ;; esac
+done
+"$binary" "${args[@]}"
+printf 'Optional %s stage completed.\n' "$stage"

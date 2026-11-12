@@ -1,0 +1,38 @@
+[Unit]
+Description=KMonad device configuration manager
+Documentation=https://github.com/lukelex/kmonad-device-manager
+
+[Service]
+Type=notify
+NotifyAccess=main
+WatchdogSec=30s
+EnvironmentFile=-%h/.config/kmonad-device-manager/env
+ExecStart=/usr/bin/env %h/.local/bin/kmonad-device-manager
+KillMode=control-group
+TimeoutStopSec=15s
+ReadWritePaths=%t
+StateDirectory=kmonad-device-manager
+OOMPolicy=stop
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=no
+Delegate=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+TasksMax=512
+MemoryMax=512M
+CPUQuota=200%
+LimitNOFILE=4096
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=1000
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=1 2 127
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

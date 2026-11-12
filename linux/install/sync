@@ -8,7 +8,7 @@ usage() {
   cat <<'EOF'
 Usage: ./linux/install/sync [options]
 
-Reconcile the selected profile with the initialized dotpkg manifest. The
+Reconcile the selected profile with the repository's core manifest. The
 standalone binary handles packages, groups, config links, and services.
 
 Options:
@@ -16,7 +16,7 @@ Options:
   --server        Reconcile the headless server profile.
   --host NAME     Apply the committed linux/hosts/NAME.yaml overlay.
   --packages-only Reconcile packages only.
-  --refresh-manifest  Replace the local manifest with the repository version, preserving a backup.
+  --refresh-manifest  Refresh an existing local default manifest for direct dotpkg commands, preserving a backup.
   --dry-run       Print proposed changes without changing the system.
   --replace       Replace existing config paths when creating symlinks.
   --restart-services  Restart services backed by config links.
@@ -31,12 +31,28 @@ for arg in "$@"; do
 done
 
 source "$install_dir/common.sh" "$@"
-"$install_dir/preflight" "$@"
-"$install_dir/bootstrap-yay" "$@"
+# Removing optional declarations without explicitly moving their ownership
+# would make dotpkg delete their installed resources during reconciliation.
+migration_status=0
+python3 "$install_dir/optional-state.py" --check || migration_status=$?
+if [ "$migration_status" -eq 3 ] && [ "$DRY_RUN" -eq 1 ]; then exit 0; fi
+[ "$migration_status" -eq 0 ] || exit "$migration_status"
+if [ "$DRY_RUN" -eq 0 ]; then
+  "$install_dir/preflight" "$@"
+  "$install_dir/bootstrap-yay" "$@"
+fi
 
 dotpkg_bin="${DOTPKG_BIN:-}"
 if [ -z "$dotpkg_bin" ]; then
-  dotpkg_bin="$($install_dir/dotpkg --path)"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    dotpkg_bin="$("$install_dir/dotpkg" --binary-path || true)"
+    if [ -z "$dotpkg_bin" ]; then
+      printf 'Read-only preview: dotpkg is not installed on PATH; package resolution is unavailable. No tools were downloaded or state initialized.\n'
+      exit 0
+    fi
+  else
+    dotpkg_bin="$("$install_dir/dotpkg" --path)"
+  fi
 fi
 if [ ! -x "$dotpkg_bin" ]; then
   printf 'dotpkg: executable not found: %s\n' "$dotpkg_bin" >&2
@@ -47,6 +63,10 @@ dotpkg_args=(sync --profile "$INSTALL_PROFILE")
 [ -z "$INSTALL_HOST" ] || dotpkg_args+=(--host "$DOTFILES/linux/hosts/$INSTALL_HOST.yaml")
 [ "$DRY_RUN" -eq 0 ] || dotpkg_args+=(--dry-run)
 [ "${DOTPKG_YES:-0}" = 1 ] && dotpkg_args+=(--yes)
+dotpkg_args+=(--manifest "$DOTFILES/linux/packages.yaml" --state-file "${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg/state.yaml")
+if [ -n "${DOTPKG_SELECTIONS_FILE:-}" ]; then
+  dotpkg_args+=(--selections "$DOTPKG_SELECTIONS_FILE" --require-selections)
+fi
 
 replace=0
 restart_services=0
@@ -56,6 +76,15 @@ for arg in "$@"; do
   [ "$arg" = --restart-services ] && restart_services=1
   [ "$arg" = --refresh-manifest ] && refresh_manifest=1
 done
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  if [ "$PACKAGES_ONLY" -eq 0 ]; then
+    dotpkg_args+=(--resources --root "$DOTFILES")
+    [ "$replace" -eq 0 ] || dotpkg_args+=(--replace)
+    [ "$restart_services" -eq 0 ] || dotpkg_args+=(--restart-services)
+  fi
+  exec "$dotpkg_bin" "${dotpkg_args[@]}"
+fi
 
 if [ "$refresh_manifest" -eq 1 ]; then
   manifest_dir="${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg"
@@ -68,13 +97,16 @@ if [ "$refresh_manifest" -eq 1 ]; then
 fi
 
 if [ "$PACKAGES_ONLY" -eq 0 ]; then
-  bash "$install_dir/openeffects-state" "$@"
   dotpkg_args+=(--resources --root "$DOTFILES")
   [ "$replace" -eq 1 ] && dotpkg_args+=(--replace)
   [ "$restart_services" -eq 1 ] && dotpkg_args+=(--restart-services)
 fi
 
-bash "$install_dir/openeffects" "$@"
+if [ "$PACKAGES_ONLY" -eq 0 ]; then
+  if ! is_server; then
+    bash "$install_dir/kmonad-device-manager" "$@"
+  fi
+fi
 "$dotpkg_bin" "${dotpkg_args[@]}"
 
 if ! is_server && [ "$PACKAGES_ONLY" -eq 0 ]; then

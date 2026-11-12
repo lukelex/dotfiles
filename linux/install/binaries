@@ -3,16 +3,21 @@
 set -Eeuo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh" "$@"
-source "$DOTFILES/linux/variables.env"
+source "$INSTALL_DIR/managed-paths.sh" "$@"
 
-files=$(find "$DOTFILES/linux/scripts/" -maxdepth 1 -type f -perm 755)
-
-for script in $files; do
-  run sudo ln -fvs "$script" "/usr/local/bin/u_$(basename "$script")"
+for script in "$DOTFILES"/linux/scripts/*; do
+  [ -f "$script" ] && [ -x "$script" ] || continue
+  install_link "$script" "/usr/local/bin/u_$(basename "$script")"
 done
 
-# Drop stale u_ links whose scripts left linux/scripts.
+# Only an exact, installer-shaped link into this checkout proves ownership.
 shopt -s nullglob
 for link in /usr/local/bin/u_*; do
-  [ -e "$link" ] || run sudo rm -f "$link"
+  [ -L "$link" ] || continue
+  expected="$DOTFILES/linux/scripts/${link##*/u_}"
+  [ "$(readlink "$link")" = "$expected" ] || continue
+  if [ ! -f "$expected" ] || [ ! -x "$expected" ]; then
+    run sudo rm -- "$link"
+  fi
 done
+[ "$path_conflicts" -eq 0 ]

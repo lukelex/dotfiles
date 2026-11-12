@@ -30,6 +30,10 @@ desktop
 $temporary/linux/hosts/laptop.yaml
 --dry-run
 --yes
+--manifest
+$temporary/linux/packages.yaml
+--state-file
+$temporary/home/.config/dotpkg/state.yaml
 --resources
 --root
 $temporary
@@ -37,10 +41,10 @@ $temporary
 --restart-services
 EOF
 cmp "$temporary/expected-full" "$temporary/full-args"
-cmp <(printf 'binaries\n') "$temporary/helpers"
+[ ! -e "$temporary/helpers" ]
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
-  XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
+  XDG_CONFIG_HOME="$temporary/home/.config" XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
   DOTPKG_TEST_ARGS="$temporary/packages-args" DOTPKG_TEST_HELPERS="$temporary/helpers" \
   bash "$temporary/linux/install/sync" --server --packages-only --dry-run
 cat > "$temporary/expected-packages" <<EOF
@@ -48,15 +52,21 @@ sync
 --profile
 server
 --dry-run
+--manifest
+$temporary/linux/packages.yaml
+--state-file
+$temporary/home/.config/dotpkg/state.yaml
 EOF
 cmp "$temporary/expected-packages" "$temporary/packages-args"
-cmp <(printf 'binaries\n') "$temporary/helpers"
+[ ! -e "$temporary/helpers" ]
 
 PATH="$temporary/bin:$PATH" HOME="$temporary/home" DOTFILES="$temporary" \
   XDG_CONFIG_HOME="$temporary/home/.config" XDG_STATE_HOME="$temporary/state" DOTPKG_BIN="$temporary/bin/dotpkg" \
   DOTPKG_TEST_ARGS="$temporary/refresh-args" DOTPKG_TEST_HELPERS="$temporary/helpers" \
   bash "$temporary/linux/install/sync" --server --packages-only --refresh-manifest
 cmp "$temporary/linux/packages.yaml" "$temporary/home/.config/dotpkg/package.yaml"
-find "$temporary/home/.config/dotpkg" -name 'package.yaml.bak.*' -type f -print -quit | grep -q .
+grep -Fxq "$temporary/linux/packages.yaml" "$temporary/refresh-args"
+backup="$(find "$temporary/home/.config/dotpkg" -name 'package.yaml.bak.*' -type f -print -quit)"
+cmp <(printf 'local manifest\n') "$backup"
 
 printf 'sync command: ok\n'

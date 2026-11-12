@@ -36,10 +36,18 @@ if ! is_server; then
   run "$DOTFILES/linux/scripts/theme" init
   if_available update-desktop-database update-desktop-database "$HOME/.local/share/applications"
 
-  if_available xset xset dpms 1200 0 0
+  # A TTY install (or Wayland session with Xwayland) has no X11 DPMS setup.
+  if [ -n "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ] && [ "${XDG_SESSION_TYPE:-x11}" = x11 ]; then
+    if_available xset xset dpms 1200 0 0 || printf 'X11 DPMS could not be applied; retry from the desktop session.\n' >&2
+  fi
 fi
 
-answer="$(ask 'Set your login shell to zsh? [Y/n] ')"
+if [ "${DOTPKG_WIZARD:-0}" = 1 ]; then
+  answer=n
+  [ "${DOTPKG_INPUT_SHELL:-keep}" != zsh ] || answer=y
+else
+  answer="$(ask 'Set your login shell to zsh? [Y/n] ')"
+fi
 case $answer in
   [Yy]* | "")
     run chsh -s /usr/bin/zsh
@@ -51,7 +59,13 @@ run fc-cache -r
 if_available tldr tldr -u
 run sudo mandb
 
-answer="$(ask 'Set system timezone to CET? [Y/n] ')"
+if [ "${DOTPKG_WIZARD:-0}" = 1 ]; then
+  timezone="${DOTPKG_INPUT_TIMEZONE:?wizard timezone is required}"
+  run timedatectl set-timezone "$timezone"
+  answer=n
+else
+  answer="$(ask 'Set system timezone to CET? [Y/n] ')"
+fi
 case $answer in
   [Yy]* | "")
     run timedatectl set-timezone CET

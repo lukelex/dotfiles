@@ -4,6 +4,7 @@
 nm-applet &
 
 1password --silent &
+bash "$HOME/dotfiles/linux/install/resume" &
 dropbox start -i &
 playerctld daemon &
 python3 "$HOME/dotfiles/linux/config/system-settings/usb-storage.py" startup &

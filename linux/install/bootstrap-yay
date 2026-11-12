@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh" "$@"
 
 if command -v yay > /dev/null 2>&1; then
   exit 0

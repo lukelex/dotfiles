@@ -1,0 +1,25 @@
+#compdef kmonad-device-manager
+# From lukelex/kmonad-device-manager v1.2.1 (MIT; see LICENSE).
+
+_kmonad-device-manager() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[show usage]' \
+    '--json[emit machine-readable JSON]' \
+    '--idempotency-key[reuse a durable mutation key]:key:' \
+    '--doctor[show a dependency status report]' \
+    '--version[show version]' \
+    '--status[show manager status]' \
+    'devices[list known keyboard devices]' \
+    'snapshot[read authoritative manager state]' \
+    'manager[read public manager metadata]:action:(get)' \
+    'events[stream manager state events]:action:(subscribe)' \
+    'identify[run or inspect keyboard identification]:action:(start status cancel)' \
+    'inputscan[scan key capabilities or probe a named key]:action:(get probe status cancel)' \
+    'validate[preview a candidate without applying it]:source:(model file)' \
+    'apply[transactionally persist and activate a managed configuration]:model file:_files' \
+    'config[list, read, export, or manage configurations]:action:(list read export create update enable disable delete adopt)' \
+    '--completion[print completion for a shell]:shell:(bash zsh fish)' \
+    '1:command:(ps devices manager snapshot events identify inputscan validate apply config)'
+}
+
+_kmonad-device-manager "$@"

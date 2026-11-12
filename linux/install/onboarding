@@ -1,0 +1,106 @@
+#!/usr/bin/bash
+
+# Manifest-driven operations. Checks print no secrets and never install tools.
+set -Eeuo pipefail
+
+install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+dotfiles="$(cd "$install_dir/../.." && pwd)"
+operation="${1:?onboarding operation required}"
+shift
+
+profile="${INSTALL_PROFILE:-desktop}"
+args=("--$profile")
+[ -z "${INSTALL_HOST:-}" ] || args+=(--host "$INSTALL_HOST")
+
+ssh_key="${DOTPKG_INPUT_SSH_KEY:-$HOME/.ssh/id_ed25519}"
+ssh_key="${ssh_key/#\~/$HOME}"
+if [ -z "${SSH_AUTH_SOCK:-}" ]; then
+  agent_dir="${XDG_RUNTIME_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}}/dotpkg-ssh-agent"
+  export SSH_AUTH_SOCK="$agent_dir/socket"
+fi
+git_ssh() {
+  local command='ssh -o ConnectTimeout=10'
+  if [ -f "$ssh_key" ]; then
+    printf -v command '%s -i %q' "$command" "$ssh_key"
+  fi
+  if [ "${1:-}" = check ]; then
+    shift
+    command+=' -o BatchMode=yes -o StrictHostKeyChecking=yes'
+  fi
+  GIT_SSH_COMMAND="$command" git "$@"
+}
+
+case "$operation" in
+  prerequisites) exec "$install_dir/preflight" "${args[@]}" --base ;;
+  ssh-check) git_ssh check ls-remote git@github.com:lukelex/FontAwesome.git HEAD >/dev/null ;;
+  ssh-display)
+    if [ -f "$ssh_key.pub" ]; then
+      cat "$ssh_key.pub"
+    else
+      printf 'No public key at %s.pub. Run the action to create a key, or edit the SSH key path on the choices screen.\n' "$ssh_key"
+    fi
+    ;;
+  ssh-setup)
+    mkdir -p "$HOME/.ssh"
+    chmod 0700 "$HOME/.ssh"
+    if [ ! -e "$ssh_key" ] && [ ! -e "$ssh_key.pub" ]; then
+      ssh-keygen -t ed25519 -f "$ssh_key" -C "${USER}@$(hostname)"
+    elif [ ! -f "$ssh_key.pub" ]; then
+      printf 'Existing key has no .pub file. Recover its public key with ssh-keygen -y -f %q, then save it as %q.pub.\n' "$ssh_key" "$ssh_key"
+      exit 1
+    fi
+    if [ -n "${agent_dir:-}" ]; then
+      mkdir -p "$agent_dir"
+      chmod 0700 "$agent_dir"
+      agent_status=0
+      ssh-add -l >/dev/null 2>&1 || agent_status=$?
+      if [ "$agent_status" -eq 2 ]; then
+        [ ! -S "$SSH_AUTH_SOCK" ] || rm "$SSH_AUTH_SOCK"
+        ssh-agent -a "$SSH_AUTH_SOCK" >/dev/null
+      fi
+    fi
+    ssh-add -t 3600 "$ssh_key"
+    printf '\nRegister the public key shown by the wizard at https://github.com/settings/ssh/new\n'
+    printf 'If prompted about the GitHub host key, compare with https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints\n'
+    git_ssh ls-remote git@github.com:lukelex/FontAwesome.git HEAD >/dev/null
+    ;;
+  fonts-check) test -d "$dotfiles/fonts/fa6/svgs" ;;
+  fonts-fetch) git_ssh submodule update --init --recursive -- fonts ;;
+  sync|sync-unattended)
+    if [ "$operation" = sync-unattended ]; then
+      command -v yay >/dev/null || { printf 'Unattended setup requires yay to be installed first.\n' >&2; exit 2; }
+      sudo -n true || { printf 'Unattended setup needs non-interactive sudo access.\n' >&2; exit 2; }
+      export DOTPKG_NONINTERACTIVE=1
+    fi
+    # Pass choices through a supported interface, rather than modifying dotpkg state.
+    [ "${DOTPKG_PACKAGES_ONLY:-0}" != 1 ] || args+=(--packages-only)
+    [ "${DOTPKG_RESTART_SERVICES:-0}" != 1 ] || args+=(--restart-services)
+    config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg"
+    "$DOTPKG_BIN" init
+    if [ "$(readlink "$config_dir/package.yaml" || true)" != "$dotfiles/linux/packages.yaml" ]; then
+      mv "$config_dir/package.yaml" "$config_dir/package.yaml.bak.$(date +%Y%m%d%H%M%S%N)"
+      ln -s "$dotfiles/linux/packages.yaml" "$config_dir/package.yaml"
+    fi
+    exec "$install_dir/sync" "${args[@]}" "$@"
+    ;;
+  skills|effects)
+    exec bash "$install_dir/optional" "$operation" "${args[@]}"
+    ;;
+  system|icons|post|verify)
+    helper="$operation"
+    [ "$helper" != system ] || helper=configs-system
+    exec "$install_dir/$helper" "${args[@]}"
+    ;;
+  op-check)
+    command -v op >/dev/null
+    op whoami >/dev/null 2>&1
+    source "$dotfiles/linux/config/oprefs/op-run-args.sh"
+    op run "${OP_RUN_ARGS[@]}" -- true >/dev/null 2>&1
+    ;;
+  op-open)
+    1password >/dev/null 2>&1 &
+    disown
+    ;;
+  timezone) timedatectl show --property=Timezone --value ;;
+  *) printf 'Unknown onboarding operation: %s\n' "$operation" >&2; exit 2 ;;
+esac

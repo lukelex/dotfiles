@@ -3,49 +3,69 @@
 set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-usage() {
-  cat <<'EOF'
-Usage: ./linux/install/all [options]
-
-Install every active concern for this dotfiles profile: declarative manifest
-resources, system configuration, icons, KMonad management, post-setup, and
-post-install verification.
-
-Options:
-  --desktop    Install the desktop profile (default).
-  --server     Reconcile the headless server profile.
-  --host NAME  Apply the committed linux/hosts/NAME.yaml overlay.
-  --packages-only  Reconcile packages only, without resources or imperative setup.
-  --dry-run    Print actions without changing the system.
-  --replace    Replace existing config paths when creating symlinks.
-  --help       Show this help message.
-EOF
-}
+dotfiles="$(cd "$install_dir/../.." && pwd)"
 
 for arg in "$@"; do
-  case $arg in
-    --help|-h) usage; exit 0 ;;
+  case "$arg" in
+    --help|-h)
+      cat <<'EOF'
+Usage: ./linux/install/all [options]
+
+Full-screen guided installation, account setup, and recovery.
+  --desktop | --server   Initial profile (editable in the wizard).
+  --host NAME            Initial host overlay.
+  --packages-only        Only package-related stages.
+  --resume               Reuse choices and recheck pending setup.
+  --dry-run | --check    Read-only preview; never downloads or initializes state.
+  --plain --yes          Explicit unattended execution; unresolved input fails.
+  --selections PATH      JSON object of package choices for unattended execution.
+
+Uses dotpkg installed on PATH (or the explicit DOTPKG_BIN override).
+Direct reconciliation remains available through ./linux/install/sync.
+EOF
+      exit 0 ;;
   esac
 done
 
-source "$install_dir/common.sh" "$@"
+dry_run=0
+plain=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|--check) dry_run=1 ;;
+    --plain) plain=1 ;;
+  esac
+done
 
-"$install_dir/sync" "$@"
+binary="${DOTPKG_BIN:-}"
+if [ -z "$binary" ]; then
+  binary="$("$install_dir/dotpkg" --binary-path || true)"
+fi
 
-if [ "$PACKAGES_ONLY" -eq 1 ]; then
+if [ "$dry_run" -eq 1 ] && { [ -z "$binary" ] || ! "$binary" wizard --help >/dev/null 2>&1; }; then
+  printf 'Read-only installer preview\n\n'
+  "$install_dir/yq" -r '.onboarding.steps[] | .title + ": " + .description' "$dotfiles/linux/packages.yaml"
+  printf '\nThis lists all profiles. Detailed choices require a wizard-capable dotpkg binary. No downloads or state changes were performed.\n'
   exit 0
 fi
 
-if ! is_server; then
-  "$install_dir/configs-system" "$@"
-  "$install_dir/icons" "$@"
-  if [ "$DRY_RUN" -eq 1 ]; then
-    "$install_dir/kmonad-device-manager" --dry-run
-  else
-    "$install_dir/kmonad-device-manager"
-  fi
+if [ "$dry_run" -eq 0 ] && [ "$plain" -eq 0 ] && { [ ! -t 0 ] || [ ! -t 1 ]; }; then
+  printf 'A terminal is required. Use --dry-run, or --plain --yes with explicit selections and inputs.\n' >&2
+  exit 2
 fi
 
-"$install_dir/post" "$@"
-"$install_dir/verify" "$@"
+if [ -z "$binary" ]; then
+  printf 'Install dotpkg and add it to PATH before running the installer.\n' >&2
+  exit 2
+fi
+
+if ! "$binary" wizard --help >/dev/null 2>&1; then
+  printf 'This dotpkg binary has no wizard. Update the installed dotpkg version.\n' >&2
+  exit 2
+fi
+
+migration_status=0
+python3 "$install_dir/optional-state.py" --check || migration_status=$?
+if [ "$migration_status" -eq 3 ] && [ "$dry_run" -eq 1 ]; then exit 0; fi
+[ "$migration_status" -eq 0 ] || exit "$migration_status"
+exec "$binary" wizard --manifest "$dotfiles/linux/packages.yaml" --root "$dotfiles" \
+  --state-file "${XDG_CONFIG_HOME:-$HOME/.config}/dotpkg/state.yaml" "$@"

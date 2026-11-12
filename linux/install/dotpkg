@@ -4,47 +4,24 @@ set -Eeuo pipefail
 
 install_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 dotfiles="$(cd "$install_dir/../.." && pwd)"
-# shellcheck disable=SC1091
-source "$install_dir/dotpkg-release.env"
 
-if [ "${1:-}" != --path ] || [ "$#" -ne 1 ]; then
-  printf 'Usage: %s --path\n' "$0" >&2
+mode="${1:-}"
+if [[ "$mode" != --path && "$mode" != --binary-path && "$mode" != --cached-path ]] || [ "$#" -ne 1 ]; then
+  printf 'Usage: %s --path|--binary-path|--cached-path\n' "$0" >&2
   exit 2
 fi
 
-case "$(uname -m)" in
-  x86_64)
-    architecture=amd64
-    expected="$DOTPKG_SHA256_AMD64"
-    ;;
-  aarch64|arm64)
-    architecture=arm64
-    expected="$DOTPKG_SHA256_ARM64"
-    ;;
-  *)
-    printf 'Unsupported dotpkg architecture: %s\n' "$(uname -m)" >&2
-    exit 2
-    ;;
-esac
-
-vendor_dir="$dotfiles/linux/vendor/dotpkg/$DOTPKG_VERSION"
-binary="$vendor_dir/dotpkg-linux-$architecture"
-mkdir -p "$vendor_dir"
-
-if [ ! -f "$binary" ]; then
-  command -v curl >/dev/null || { printf 'curl is required to download dotpkg\n' >&2; exit 2; }
-  temporary="$binary.$$"
-  trap 'rm -f "$temporary"' EXIT
-  curl --fail --location --silent --show-error \
-    "https://github.com/lukelex/dotpkg/releases/download/$DOTPKG_VERSION/dotpkg-linux-$architecture" \
-    --output "$temporary"
-  printf '%s  %s\n' "$expected" "$temporary" | sha256sum --check --status
-  chmod 0755 "$temporary"
-  mv "$temporary" "$binary"
-  trap - EXIT
+binary="$(command -v "${DOTPKG_BIN:-dotpkg}" || true)"
+if [ -z "$binary" ] || [ ! -x "$binary" ]; then
+  printf 'dotpkg is not installed. Install dotpkg and add it to PATH.\n' >&2
+  exit 2
 fi
 
-printf '%s\n' "$expected  $binary" | sha256sum --check --status
+# Both lookup modes are read-only; --cached-path is kept for existing callers.
+if [ "$mode" != --path ]; then
+  printf '%s\n' "$binary"
+  exit 0
+fi
 
 # Keep package declarations in git and machine state in the user config directory.
 dotpkg_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -69,15 +46,6 @@ fi
 if [ "$state_missing" -eq 1 ] && [ -f "$legacy_state" ]; then
   cp "$legacy_state" "$dotpkg_state"
   chmod 0600 "$dotpkg_state"
-fi
-
-# Expose the pinned binary unless a separate user installation already exists.
-user_bin="$HOME/.local/bin"
-mkdir -p "$user_bin"
-link="$user_bin/dotpkg"
-current_target="$(readlink "$link" 2>/dev/null || true)"
-if { [ ! -e "$link" ] && [ ! -L "$link" ]; } || [[ "$current_target" == "$dotfiles/linux/vendor/dotpkg/"* ]]; then
-  ln -sfn "$binary" "$link"
 fi
 
 printf '%s\n' "$binary"

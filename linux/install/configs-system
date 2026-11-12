@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh" "$@"
 source "$DOTFILES/linux/variables.env"
+source "$INSTALL_DIR/managed-paths.sh" "$@"
 
 DOT_CONFIG="$DOTFILES/linux/config"
 
@@ -12,32 +13,38 @@ if ! getent group platform-profile >/dev/null; then
 fi
 run sudo usermod -aG platform-profile "$USER"
 
-run sudo ln -fvs "$DOT_CONFIG/tmpfiles.d/platform-profile.conf" "/etc/tmpfiles.d/platform-profile.conf"
-run sudo systemd-tmpfiles --create "/etc/tmpfiles.d/platform-profile.conf"
+install_link "$DOT_CONFIG/tmpfiles.d/platform-profile.conf" "/etc/tmpfiles.d/platform-profile.conf"
+if [ "$path_conflicts" -eq 0 ]; then
+  run sudo systemd-tmpfiles --create "/etc/tmpfiles.d/platform-profile.conf"
+fi
 
 run sudo mkdir -p "/etc/ly"
-run sudo ln -fvs "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
+install_link "$DOT_CONFIG/ly.ini" "/etc/ly/config.ini"
 
 # nwg-hello runs as the unprivileged greetd user, so install copies of its
 # theme rather than symlinks into the user's dotfiles (which may be private).
 run sudo install -d "/etc/nwg-hello"
-run sudo install -m 0644 "$DOT_CONFIG/nwg-hello/nwg-hello.json" "/etc/nwg-hello/nwg-hello.json"
-run sudo install -m 0644 "$DOT_CONFIG/nwg-hello/nwg-hello.css" "/etc/nwg-hello/nwg-hello.css"
+install_copy "$DOT_CONFIG/nwg-hello/nwg-hello.json" "/etc/nwg-hello/nwg-hello.json"
+install_copy "$DOT_CONFIG/nwg-hello/nwg-hello.css" "/etc/nwg-hello/nwg-hello.css"
 
-run sudo ln -fvs "$DOT_CONFIG/network-manager.conf" "/etc/NetworkManager/conf.d/wifi_backend.conf"
+# NetworkManager's default backend is preferred. Remove only our old override;
+# an administrator's file or differently targeted link remains theirs.
+wifi_override=/etc/NetworkManager/conf.d/wifi_backend.conf
+if [ -L "$wifi_override" ] && [ "$(readlink -m "$wifi_override")" = "$(readlink -m "$DOT_CONFIG/network-manager.conf")" ]; then
+  run sudo rm -- "$wifi_override"
+fi
 run sudo mkdir -p "/etc/systemd/system-sleep"
-run sudo ln -fvs "$DOTFILES/linux/system/system-sleep/90-bluetooth-resume" "/etc/systemd/system-sleep/90-bluetooth-resume"
+install_link "$DOTFILES/linux/system/system-sleep/90-bluetooth-resume" "/etc/systemd/system-sleep/90-bluetooth-resume"
 
-run sudo ln -fvs "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
+install_link "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"
 # sudo ln -fvs "$DOT_CONFIG/kernel_modules.conf" "/etc/modules-load.d/modules.conf"
 # sudo ln -fvs "$DOT_CONFIG/bluetooth.conf" "/etc/bluetooth/main.conf"
 
 run sudo mkdir -pv "/usr/share/fonts/OTF"
-run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Brands-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Brands-Regular-400.otf"
-run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Duotone-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Duotone-Solid-900.otf"
-run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Light-300.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Light-300.otf"
-run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Regular-400.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Regular-400.otf"
-run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Solid-900.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Solid-900.otf"
-run sudo ln -fvs "$DOTFILES/fonts/Font Awesome 6 Pro-Thin-100.otf" "/usr/share/fonts/OTF/Font Awesome 6 Pro-Thin-100.otf"
+for font in "$DOTFILES"/fonts/*.otf; do
+  [ -f "$font" ] || continue
+  install_link "$font" "/usr/share/fonts/OTF/$(basename "$font")"
+done
 
 run sudo rmmod pcspkr >/dev/null 2>&1 || true
+[ "$path_conflicts" -eq 0 ]

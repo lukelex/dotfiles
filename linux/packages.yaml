@@ -1,4 +1,225 @@
 source: aur
+onboarding:
+  version: 1
+  title: Set up this machine
+  description: >-
+    Install your Arch packages and dotfiles, configure system resources, and connect the accounts your daily tools need. Review the plan before applying it.
+  continue_on_login: true
+  inputs:
+    - id: shell
+      title: Login shell
+      description: Choose zsh, or keep your existing login shell. A shell change takes effect after a new login.
+      default: zsh
+      choices:
+        - zsh
+        - keep
+    - id: timezone
+      title: System timezone
+      description: Keep the detected timezone or enter an IANA timezone such as Europe/Copenhagen.
+      default: UTC
+      default_command:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - timezone
+    - id: ssh_key
+      title: SSH private key path
+      description: Reuse your existing key or choose where to create an Ed25519 key. Only its public key is displayed.
+      default: ~/.ssh/id_ed25519
+  steps:
+    - id: prerequisites
+      title: Check installation prerequisites
+      description: Check Arch Linux, sudo, repository location, and GitHub/AUR connectivity.
+      packages_only: true
+      check:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - prerequisites
+      instructions: >-
+        Use a non-root Arch user with sudo, git, and curl installed. Keep this checkout at $HOME/dotfiles. Initialize pacman databases and check your internet connection if this check fails. Press a for detailed diagnostics.
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - prerequisites
+    - id: ssh
+      title: Connect your SSH key to GitHub
+      description: Verify repository access; reuse your agent/key or generate a passphrase-protected Ed25519 key.
+      optional: true
+      check:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - ssh-check
+      display:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - ssh-display
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - ssh-setup
+      interactive: true
+      url: https://github.com/settings/ssh/new
+      instructions: >-
+        If needed, press a to create/load your chosen key. Copy the public key below (c), open GitHub (o), select Authentication Key, paste it and save. Your account needs access to lukelex/FontAwesome. Press Enter to check again. If host verification is missing, run the action and verify the fingerprint using GitHub's published SSH fingerprints. Never upload the private key. Desktop font installation requires this access.
+    - id: fonts
+      title: Fetch desktop fonts
+      description: Initialize the fonts Git submodule after GitHub access is ready.
+      profiles:
+        - desktop
+      depends_on:
+        - ssh
+      check:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - fonts-check
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - fonts-fetch
+      interactive: true
+      instructions: Press a to fetch the submodule. Git may ask for your SSH key passphrase.
+    - id: conflicts
+      title: Review existing config files
+      description: Inspect selected config targets; keep existing files or back them up before creating dotfiles links.
+      kind: config-conflicts
+    - id: packages
+      title: Install packages and reconcile resources
+      description: >-
+        Bootstrap yay if needed, install selected packages, reconcile config links, group membership and services, and install desktop helper links. Package tools and sudo temporarily use the terminal for their prompts.
+      packages_only: true
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - sync
+      unattended_action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - sync-unattended
+      interactive: true
+      log_output: true
+    - id: system
+      title: Configure desktop system resources
+      description: Install root-owned configs, platform-profile permissions, greeter themes, input settings, and fonts.
+      profiles:
+        - desktop
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - system
+      interactive: true
+      log_output: true
+    - id: icons
+      title: Link desktop icons
+      description: Install Font Awesome icon links used by the desktop.
+      profiles:
+        - desktop
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - icons
+      interactive: true
+      log_output: true
+    - id: post
+      title: Apply personal settings
+      description: Create personal directories, initialize themes, apply your shell/timezone choices, and refresh caches.
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - post
+      interactive: true
+      log_output: true
+    - id: verify
+      title: Verify installation
+      description: Verify required commands and config links. These checks do not prove account or service health.
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - verify
+    - id: skills
+      title: Install remote grill skills
+      description: Fetch the optional grill-me and grilling bundle. A network failure here does not block core maintenance; retry this stage or defer it.
+      optional: true
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - skills
+      interactive: true
+      log_output: true
+      instructions: Press a to install or update the bundle, or d to defer. Retry independently with linux/install/optional skills.
+    - id: effects
+      title: Install OpenEffects
+      description: Install checksum-verified native camera packages, then reconcile their config and user service. Completed steps are retained if a later step fails.
+      profiles:
+        - desktop
+      optional: true
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - effects
+      interactive: true
+      log_output: true
+      instructions: Press a to install or update OpenEffects, or d to defer. Retry independently with linux/install/optional effects.
+    - id: onepassword
+      title: Connect 1Password
+      description: Authenticate the desktop app and CLI, then verify shared secret references without displaying their values.
+      profiles:
+        - desktop
+      optional: true
+      graphical: true
+      check:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - op-check
+      action:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - op-open
+      url: https://developer.1password.com/docs/cli/app-integration/
+      instructions: >-
+        Log into your desktop first. Press a to open 1Password, sign in using your account's sign-in address, email and Secret Key from your Emergency Kit, and unlock it. In Settings > Developer enable Integrate with 1Password CLI. Ensure the vaults referenced by linux/config/oprefs/secrets.env are available. Press Enter to check account and secret-reference access.
+    - id: onepassword_server
+      title: Connect 1Password CLI
+      description: Verify CLI authentication and access to shared secret references.
+      profiles:
+        - server
+      optional: true
+      check:
+        - bash
+        - '${root}/linux/install/onboarding'
+        - op-check
+      url: https://developer.1password.com/docs/cli/sign-in-manually/
+      instructions: >-
+        In your shell use op account add and eval "$(op signin)" with the account details in your Emergency Kit, then rerun this installer with --resume from that authenticated shell. Never paste credentials into the wizard. Press d to defer if this machine does not need shared secrets.
+    - id: github_cli
+      title: Sign in to GitHub CLI
+      description: Authenticate gh for repository and pull-request workflows.
+      optional: true
+      check:
+        - gh
+        - auth
+        - status
+      action:
+        - gh
+        - auth
+        - login
+        - --hostname
+        - github.com
+        - --git-protocol
+        - ssh
+        - --web
+        - --skip-ssh-key
+      interactive: true
+      url: https://github.com/login/device
+      instructions: Press a to start browser/device authentication. Follow gh's displayed code and URL, then return to the wizard.
+    - id: desktop_finish
+      title: Finish desktop setup
+      description: Confirm your session, refreshed group permissions, and application-specific camera settings.
+      profiles:
+        - desktop
+      optional: true
+      graphical: true
+      manual: true
+      instructions: >-
+        Log out and back in after group or shell changes. Choose your installed Hyprland or i3 session at login. Fully restart Chrome/Edge, then select OpenEffects Virtual Camera in your calling app if you use it. Confirm these steps with Enter, or press d to defer. This is a manual confirmation, not an automatic test of the desktop or camera.
 self_update:
   origin: github
 common:
@@ -114,6 +335,33 @@ profiles:
           configs:
             - linux/config/kitty:$XDG_CONFIG_HOME/kitty
         kmonad:
+        kmonad-device-manager:
+          source: github
+          repo: lukelex/kmonad-device-manager
+          ref: v1.2.1
+          archive: kmonad-device-manager-1.2.1-linux-amd64.tar.gz
+          sha256: 29dbe463d91d8262e0714604ad2bb1fe1e32e8ac220f0ae7fc7a4be779ba9ed4
+          files:
+            - source: kmonad-device-manager
+              target: $HOME/.local/bin/kmonad-device-manager
+            - source: completions/kmonad-device-manager.bash
+              target: $HOME/.local/share/bash-completion/completions/kmonad-device-manager
+            - source: completions/kmonad-device-manager.fish
+              target: $HOME/.config/fish/completions/kmonad-device-manager.fish
+            - source: share/man/man1/kmonad-device-manager.1
+              target: $HOME/.local/share/man/man1/kmonad-device-manager.1
+            - source: LICENSE
+              target: $HOME/.local/share/licenses/kmonad-device-manager/LICENSE
+          groups:
+            - input
+            - uinput
+          configs:
+            - linux/config/kmonad:$XDG_CONFIG_HOME/kmonad
+            - linux/config/kmonad-device-manager/kmonad-device-manager.service:$XDG_CONFIG_HOME/systemd/user/kmonad-device-manager.service
+            - linux/config/kmonad-device-manager/_kmonad-device-manager:$HOME/.local/share/zsh/site-functions/_kmonad-device-manager
+          services:
+            user:
+              - kmonad-device-manager.service
         kvantum:
         light:
         lm_sensors: {}
@@ -304,24 +552,12 @@ profiles:
             system:
               - sshd
 resources:
-  remote_bundles:
-    - name: grill-me
-      repository: mattpocock/skills
-      paths:
-        - skills/productivity/grill-me
-        - skills/productivity/grilling
-        - LICENSE
-      target: $HOME/.local/share/dotpkg/opencode-skills
   configs:
     - source: linux/config/network-monitor/network-monitor.service
       target: $XDG_CONFIG_HOME/systemd/user/network-monitor.service
       profiles:
         - desktop
     - linux/config/opencode:$XDG_CONFIG_HOME/opencode
-    - source: linux/config/openeffects/openeffectsd.service.d/autostart.conf
-      target: $XDG_CONFIG_HOME/systemd/user/openeffectsd.service.d/autostart.conf
-      profiles:
-        - desktop
     - source: linux/config/github-review-notify/github-review-notify.service
       target: $XDG_CONFIG_HOME/systemd/user/github-review-notify.service
       profiles:
@@ -373,10 +609,6 @@ resources:
         - desktop
   services:
     - name: network-monitor.service
-      scope: user
-      profiles:
-        - desktop
-    - name: openeffectsd.service
       scope: user
       profiles:
         - desktop
