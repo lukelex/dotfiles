@@ -500,9 +500,6 @@ profiles:
         xautolock:
           configs:
             - linux/config/xautolock/xautolock.service:$XDG_CONFIG_HOME/systemd/user/xautolock.service
-          services:
-            user:
-              - xautolock.service
         xclip:
         xdotool:
         xfce4-power-manager:
@@ -553,6 +550,14 @@ profiles:
               - sshd
 resources:
   configs:
+    - source: linux/config/session/dotfiles-idle.service
+      target: $XDG_CONFIG_HOME/systemd/user/dotfiles-idle.service
+      profiles:
+        - desktop
+    - source: linux/config/session/dotfiles-lock.service
+      target: $XDG_CONFIG_HOME/systemd/user/dotfiles-lock.service
+      profiles:
+        - desktop
     - source: linux/config/network-monitor/network-monitor.service
       target: $XDG_CONFIG_HOME/systemd/user/network-monitor.service
       profiles:

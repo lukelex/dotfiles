@@ -1,13 +1,8 @@
 [Unit]
-Description=X11 Autolocker
-Documentation=https://man.archlinux.org/man/xautolock.1x.en
-After=graphical.target
-
-[Install]
-WantedBy=default.target
+Description=Retired idle owner (replaced by dotfiles-idle.service)
+# Existing default.target enablement must be harmless until reconciliation.
+ConditionPathExists=/nonexistent/dotfiles-retired-xautolock
 
 [Service]
-Type=simple
-ExecStart=/usr/bin/python3 %h/dotfiles/linux/config/system-settings/settings.py run-idle
-Restart=always
-RestartSec=5
+Type=oneshot
+ExecStart=/usr/bin/true

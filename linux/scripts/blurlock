@@ -7,7 +7,7 @@ SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 CACHE_FOLDER="${XDG_CACHE_HOME:-$HOME/.cache}/i3lock/img"
 DEFAULT_IMAGE="$HOME/wallpaper.png"
 
-mkdir -p "$CACHE_FOLDER"
+mkdir -p "$CACHE_FOLDER" || true
 
 arg_image=""
 dry_run=false
@@ -20,10 +20,6 @@ while getopts ":i:a:d:" opt; do
     \?) echo "Invalid option -$OPTARG" >&2; exit 2 ;;
   esac
 done
-
-lock_with_dim() {
-  "$SCRIPT_DIR/lock-with-dim" "$@"
-}
 
 if [[ -z "$arg_image" ]]; then
   if [[ -r "$DEFAULT_IMAGE" ]]; then
@@ -38,8 +34,7 @@ if (( ${#lock_args[@]} == 0 )); then
 fi
 
 lock_black() {
-  lock_with_dim i3lock --color 000000 "${lock_args[@]}"
-  play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
+  exec i3lock --color 000000 "${lock_args[@]}"
 }
 
 build_image() {
@@ -91,13 +86,15 @@ build_image() {
   printf '%s\n' "$output_img"
 }
 
-if output_img=$(build_image); then
+# Bound xrandr and ImageMagick as one process group, never the locker.
+export -f build_image
+export arg_image DISPLAY_RE CACHE_FOLDER
+if output_img=$(timeout -k 0.2 2 bash -c build_image); then
   if [[ "$dry_run" == true ]]; then
     exit 0
   fi
-  lock_with_dim i3lock --image "$output_img" "${lock_args[@]}"
-  play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
-  exit 0
+  exec i3lock --image "$output_img" "${lock_args[@]}"
 fi
 
+[[ "$dry_run" == false ]] || exit 1
 lock_black

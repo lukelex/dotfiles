@@ -49,7 +49,8 @@ if [[ "${1:-}" == --session-start ]]; then
   fi
   # Import only session plumbing, not the secrets loaded by the login profile.
   systemctl --user import-environment "${session_variables[@]}"
-  exec systemctl --user start quickshell.service
+  # start is a no-op for a lingering process connected to the previous display.
+  exec systemctl --user restart quickshell.service
 fi
 
 exec quickshell --path "$HOME/dotfiles/linux/config/quickshell/shell.qml" "$@"

@@ -1,0 +1,11 @@
+[Unit]
+Description=Active graphical session idle and sleep-lock owner
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecCondition=/usr/bin/python3 %h/dotfiles/linux/config/system-settings/session-idle.py check
+ExecStart=/usr/bin/python3 %h/dotfiles/linux/config/system-settings/session-idle.py run
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=3

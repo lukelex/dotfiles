@@ -1,40 +1,50 @@
 #!/usr/bin/bash
-
 set -Eeuo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 temporary="$(mktemp -d)"
 trap 'rm -rf "$temporary"' EXIT
+export HOME="$temporary/home" XDG_RUNTIME_DIR="$temporary/runtime"
+export XDG_CACHE_HOME="$temporary/cache" LOCK_ARGUMENTS="$temporary/arguments"
+mkdir -p "$HOME" "$XDG_RUNTIME_DIR" "$temporary/bin"
+ln -s "$repo_root" "$HOME/dotfiles"
+export PATH="$temporary/bin:/usr/bin:/bin"
 
-home="$temporary/home"
-bin="$temporary/bin"
-mkdir -p "$home" "$bin"
-ln -s "$repo_root" "$home/dotfiles"
-
-cat > "$bin/hyprlock" <<'EOF'
+cat > "$temporary/bin/hyprlock" <<'EOF'
+#!/usr/bin/bash
+printf '%s\n' "$@" >> "$LOCK_ARGUMENTS"
+cp "$2" "$LOCK_ARGUMENTS.config"
+EOF
+cat > "$temporary/bin/i3lock" <<'EOF'
 #!/usr/bin/bash
 printf '%s\n' "$@" > "$LOCK_ARGUMENTS"
 EOF
-cat > "$bin/u_music" <<'EOF'
+cat > "$temporary/bin/hyprctl" <<'EOF'
 #!/usr/bin/bash
-exit 0
+if [[ ${HANG_RENDER:-} == 1 ]]; then sleep 60; fi
+printf '[]\n'
 EOF
-cat > "$bin/qs" <<'EOF'
-#!/usr/bin/bash
-exit 0
-EOF
-chmod +x "$bin/hyprlock" "$bin/u_music" "$bin/qs"
+for command in fprintd-list magick qs; do
+  printf '#!/usr/bin/bash\nexit 1\n' > "$temporary/bin/$command"
+done
+chmod +x "$temporary/bin/"*
 
-LOCK_ARGUMENTS="$temporary/arguments" \
-  HOME="$home" \
-  XDG_SESSION_TYPE=wayland \
-  PATH="$bin:/usr/bin:/bin" \
-  bash "$repo_root/linux/scripts/exit" lock
+# A stalled compositor query is bounded as part of the full render budget.
+HANG_RENDER=1 timeout -k 1 5 "$repo_root/linux/scripts/hyprlock"
+grep -F 'placeholder_text = Password' "$LOCK_ARGUMENTS.config" > /dev/null
+grep -Fx -- '--grace' "$LOCK_ARGUMENTS" > /dev/null
 
-expected_config="$home/.cache/dotfiles/hyprlock.conf"
-[ -f "$expected_config" ] || { printf 'lock wrapper did not generate its config\n' >&2; exit 1; }
-grep -Fx -- '--config' "$temporary/arguments" > /dev/null
-grep -Fx -- "$expected_config" "$temporary/arguments" > /dev/null
-grep -F 'linux/scripts/lock-status' "$expected_config" > /dev/null
+# Rendering errors also use a standalone config with no external resources.
+printf '#!/usr/bin/bash\nexit 1\n' > "$temporary/bin/python3"
+chmod +x "$temporary/bin/python3"
+timeout -k 1 5 "$repo_root/linux/scripts/hyprlock"
+grep -F 'placeholder_text = Password' "$LOCK_ARGUMENTS.config" > /dev/null
 
+# X11 image generation cannot hold the actual locker behind a stuck xrandr.
+touch "$HOME/wallpaper.png"
+printf '#!/usr/bin/bash\nsleep 60\n' > "$temporary/bin/xrandr"
+chmod +x "$temporary/bin/xrandr"
+timeout -k 1 5 "$repo_root/linux/scripts/blurlock"
+grep -Fx -- '--color' "$LOCK_ARGUMENTS" > /dev/null
+grep -Fx -- '--nofork' "$LOCK_ARGUMENTS" > /dev/null
 printf 'lock launcher: ok\n'

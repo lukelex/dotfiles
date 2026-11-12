@@ -1,0 +1,11 @@
+[Unit]
+Description=Session locker with native readiness acknowledgement
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/usr/bin/python3 %h/dotfiles/linux/config/system-settings/session-lock.py serve
+TimeoutStartSec=15
+TimeoutStopSec=8
+# Never restart after a successful unlock.
+Restart=no

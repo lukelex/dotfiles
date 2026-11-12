@@ -16,10 +16,10 @@ function fixture(t, session = 'x11') {
   const bin = path.join(root, 'bin');
   fs.mkdirSync(bin);
   for (const command of ['xset', 'hyprctl', 'systemctl', 'gammastep', 'hypridle', 'xautolock', 'u_autolocking']) {
-    fs.writeFileSync(path.join(bin, command), `#!/bin/sh\nprintf '%s\\n' '${command}' "$@" >> "$HOME/commands"\n`, { mode: 0o755 });
+    fs.writeFileSync(path.join(bin, command), `#!/bin/sh\nprintf '%s\\n' '${command}' "$@" >> "$HOME/commands"\nif [ "$2" = show-environment ]; then echo XDG_SESSION_ID=test; fi\n`, { mode: 0o755 });
   }
   const env = { ...process.env, HOME: root, XDG_CACHE_HOME: path.join(root, 'cache'),
-    XDG_RUNTIME_DIR: root, XDG_SESSION_TYPE: session, DOTFILES_PREFERENCES: file, PATH: `${bin}:/usr/bin:/bin` };
+    XDG_RUNTIME_DIR: root, XDG_SESSION_ID: 'test', XDG_SESSION_TYPE: session, DOTFILES_PREFERENCES: file, PATH: `${bin}:/usr/bin:/bin` };
   const run = (...args) => spawnSync('python3', [helper, ...args], { env, encoding: 'utf8' });
   const data = () => JSON.parse(fs.readFileSync(file, 'utf8'));
   return { root, file, env, run, data };
@@ -91,6 +91,7 @@ test('Hyprland input and generated idle config use saved values, with disabled t
   assert.match(config, /timeout = 600/);
   assert.match(config, /timeout = 900/);
   assert.match(config, /before_sleep_cmd = u_lock-before-sleep/);
+  assert.match(config, /inhibit_sleep = 3/);
 });
 
 test('night-light startup renders temperature and coordinates from the portable store', t => {
@@ -103,9 +104,24 @@ test('night-light startup renders temperature and coordinates from the portable 
   assert.match(config, /lon=151.2/);
 });
 
-test('changing idle policy clears a deferred lock before restarting the idle backend', t => {
+for (const session of ['x11', 'wayland']) {
+  test(`${session} idle apply recovers a stopped owner and clears deferred locks`, t => {
+    const f = fixture(t, session);
+    assert.equal(f.run('apply', 'idle').status, 0);
+    const commands = fs.readFileSync(path.join(f.root, 'commands'), 'utf8');
+    assert.match(commands, /u_autolocking\nclear-warning\nsystemctl\n--user\ndaemon-reload/);
+    assert.match(commands, /reset-failed\ndotfiles-idle.service/);
+    assert.match(commands, /restart\ndotfiles-idle.service/);
+    assert.match(commands, /is-active\n--quiet\ndotfiles-idle.service/);
+    assert.doesNotMatch(commands, /try-restart|pgrep|pkill/);
+  });
+}
+
+test('idle apply refuses a lingering manager from another session', t => {
   const f = fixture(t);
-  assert.equal(f.run('apply', 'idle').status, 0);
-  const commands = fs.readFileSync(path.join(f.root, 'commands'), 'utf8');
-  assert.match(commands, /^u_autolocking\nclear-warning\nsystemctl\n--user\ndaemon-reload\nsystemctl\n--user\ntry-restart\nxautolock.service/);
+  f.env.XDG_SESSION_ID = 'another-session';
+  const result = f.run('apply', 'idle');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /session environment is not initialized/);
+  assert.doesNotMatch(fs.readFileSync(path.join(f.root, 'commands'), 'utf8'), /restart/);
 });

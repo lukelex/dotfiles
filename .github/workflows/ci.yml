@@ -73,7 +73,9 @@ jobs:
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f ! -name '*.py' -print0 | xargs -0 shellcheck -S error
       - name: Run lock-launcher regression test
-        run: bash linux/scripts/tests/lock-launcher.test.sh
+        run: |
+          bash linux/scripts/tests/lock-launcher.test.sh
+          python3 -B linux/scripts/tests/session-lock.test.py
       - name: Check zsh syntax
         run: find linux/config/zsh -type f -print0 | xargs -0 zsh -n
       - name: Test shell window titles

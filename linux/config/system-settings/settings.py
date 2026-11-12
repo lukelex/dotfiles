@@ -8,7 +8,6 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-import time
 import x11_input
 
 DIRECTORY = Path(__file__).resolve().parent
@@ -201,7 +200,7 @@ def night_config(data):
 def idle_config(data):
   d = data['idle']
   path = CACHE / 'hypridle.conf'
-  text = "general {\n  lock_cmd = u_exit lock\n  before_sleep_cmd = u_lock-before-sleep\n  after_sleep_cmd = hyprctl dispatch dpms on\n  ignore_dbus_inhibit = false\n}\n"
+  text = "general {\n  lock_cmd = u_exit lock\n  inhibit_sleep = 3\n  before_sleep_cmd = u_lock-before-sleep\n  after_sleep_cmd = hyprctl dispatch dpms on\n  ignore_dbus_inhibit = false\n}\n"
   listeners = [(d['dimSeconds'], 'u_backlight dim', 'u_backlight restore'),
     (d['lockSeconds'] - 60, 'u_autolocking warn 60', 'u_autolocking clear-warning'),
     (d['lockSeconds'] - 10, 'u_autolocking warn 10', 'u_autolocking clear-warning'),
@@ -239,26 +238,21 @@ def apply(data, section):
       run('xset', 'r', 'rate', str(d['repeatDelay']), str(d['repeatRate']))
   if section in ('all', 'idle'):
     if session in ('wayland', 'x11'):
+      manager = subprocess.run(['systemctl', '--user', 'show-environment'], capture_output=True,
+        text=True, check=True, timeout=15).stdout.splitlines()
+      session_id = os.environ.get('XDG_SESSION_ID')
+      if not session_id or f'XDG_SESSION_ID={session_id}' not in manager:
+        raise RuntimeError('Preferences saved, but the graphical session environment is not initialized.')
       # A pending deferred lock belongs to the previous idle period/policy.
       run('u_autolocking', 'clear-warning')
-    if session == 'wayland':
-      path = idle_config(data)
-      running = subprocess.run(['pgrep', '-u', str(os.getuid()), '-x', 'hypridle'], capture_output=True).returncode == 0
-      if running:
-        run('pkill', '-u', str(os.getuid()), '-x', 'hypridle')
-        for _ in range(40):
-          if subprocess.run(['pgrep', '-u', str(os.getuid()), '-x', 'hypridle'], capture_output=True).returncode != 0:
-            break
-          time.sleep(0.05)
-        else:
-          raise RuntimeError('Preferences saved, but hypridle did not stop. Restart the session to apply idle settings.')
-        process = subprocess.Popen(['hypridle', '-c', str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-        time.sleep(0.1)
-        if process.poll() is not None:
-          raise RuntimeError('Preferences saved, but hypridle failed to start.')
-    elif session == 'x11':
+    if session in ('wayland', 'x11'):
+      if session == 'wayland':
+        idle_config(data)
       run('systemctl', '--user', 'daemon-reload')
-      run('systemctl', '--user', 'try-restart', 'xautolock.service')
+      run('systemctl', '--user', 'reset-failed', 'dotfiles-idle.service')
+      run('systemctl', '--user', 'restart', 'dotfiles-idle.service')
+      run('systemctl', '--user', 'is-active', '--quiet', 'dotfiles-idle.service')
+    if session == 'x11':
       run('xset', 'dpms', str(data['idle']['x11ScreenOffSeconds']), '0', '0')
 
 
@@ -291,6 +285,8 @@ def main():
   elif args.command == 'run-idle':
     if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
       os.execvp('hypridle', ['hypridle', '-c', str(idle_config(data))])
+    if os.environ.get('XDG_SESSION_TYPE') != 'x11':
+      raise ValueError('Idle backend requires a graphical session')
     seconds = data['idle']['x11LockSeconds']
     run('xset', 'dpms', str(data['idle']['x11ScreenOffSeconds']), '0', '0')
     os.execvp('xautolock', ['xautolock', '-time', str(seconds // 60), '-locker', 'u_autolocking lock', '-detectsleep', '-corners', '----', '-notify', '10', '-notifier', 'u_autolocking warn 10'])

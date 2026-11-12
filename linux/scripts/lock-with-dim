@@ -1,61 +1,55 @@
 #!/usr/bin/bash
 
-# Brightness control is best-effort: failures must never prevent the locker
-# from starting. Keep unset-variable checking, but do not enable errexit.
 set -u
 
+# The supervisor starts this sidecar only after native lock readiness. Legacy
+# command callers bypass dimming instead of putting hardware I/O before locking.
+if [[ ${1:-} != --watch ]]; then
+  exec "$@"
+fi
+locker_pid=$2
+backlight_before_lock=
+external_brightness=()
+
+restore_brightness() {
+  local entry
+  if [[ -n "$backlight_before_lock" ]]; then
+    timeout -k 0.2 1 light -S "$backlight_before_lock" 2> /dev/null || true
+  fi
+  # One bounded restore per display; DDC fades can stall on broken I2C buses.
+  for entry in "${external_brightness[@]}"; do
+    timeout -k 0.2 1 ddcutil --bus="${entry%%:*}" setvcp 10 "${entry#*:}" > /dev/null 2>&1 || true
+  done
+}
+trap restore_brightness EXIT
+trap 'exit 0' TERM INT
+
 dotfiles="$HOME/dotfiles"
-lock_brightness=$(python3 "$dotfiles/linux/config/system-settings/settings.py" get display.lockBrightness 2> /dev/null || printf '5')
-lock_brightness=${lock_brightness//[^0-9]/}
+lock_brightness=$(timeout -k 0.2 1 python3 "$dotfiles/linux/config/system-settings/settings.py" get display.lockBrightness 2> /dev/null || printf '5')
 if [[ ! $lock_brightness =~ ^[0-9]+$ ]] || (( lock_brightness > 100 )); then
   lock_brightness=5
 fi
 
-backlight_was_dimmed=0
-backlight_before_lock=
-external_brightness=()
 if command -v light > /dev/null 2>&1; then
-  backlight_before_lock=$(light -G 2> /dev/null | cut -f1 -d . || true)
-  if [[ $backlight_before_lock =~ ^[0-9]+$ ]] && (( backlight_before_lock > lock_brightness )); then
-    backlight_was_dimmed=1
-    light -S "$lock_brightness" 2> /dev/null || backlight_was_dimmed=0
+  current=$(timeout -k 0.2 1 light -G 2> /dev/null | cut -f1 -d . || true)
+  if [[ $current =~ ^[0-9]+$ ]] && (( current > lock_brightness )); then
+    backlight_before_lock=$current
+    timeout -k 0.2 1 light -S "$lock_brightness" 2> /dev/null || true
   fi
 fi
 
-# Keep a separate starting value for each DDC/CI display; the aggregate monitor
-# brightness interface only reports an average, which is not enough to restore
-# displays that began at different levels.
 if command -v ddcutil > /dev/null 2>&1; then
   while IFS= read -r bus_path; do
     [[ $bus_path =~ /dev/i2c-([0-9]+) ]] || continue
     bus=${BASH_REMATCH[1]}
-    current=$(ddcutil --bus="$bus" getvcp 10 2> /dev/null \
+    kill -0 "$locker_pid" 2> /dev/null || break
+    current=$(timeout -k 0.2 1 ddcutil --bus="$bus" getvcp 10 2> /dev/null \
       | grep -oP 'current\s+value\s*=\s*\K\d+' | head -n 1 || true)
     if [[ $current =~ ^[0-9]+$ ]] && (( current > lock_brightness )); then
-      if ddcutil --bus="$bus" setvcp 10 "$lock_brightness" > /dev/null 2>&1; then
-        external_brightness+=("$bus:$current")
-      fi
+      external_brightness+=("$bus:$current")
+      timeout -k 0.2 1 ddcutil --bus="$bus" setvcp 10 "$lock_brightness" > /dev/null 2>&1 || true
     fi
-  done < <("$dotfiles/linux/scripts/monitors" brightness list 2> /dev/null || true)
+  done < <(timeout -k 0.2 1 "$dotfiles/linux/scripts/monitors" brightness list 2> /dev/null || true)
 fi
 
-restore_backlight() {
-  local step value entry bus original
-  (( backlight_was_dimmed )) || (( ${#external_brightness[@]} > 0 )) || return 0
-  for step in {1..15}; do
-    if (( backlight_was_dimmed )); then
-      value=$(( lock_brightness + (backlight_before_lock - lock_brightness) * step / 15 ))
-      light -S "$value" 2> /dev/null || true
-    fi
-    for entry in "${external_brightness[@]}"; do
-      bus=${entry%%:*}
-      original=${entry#*:}
-      value=$(( lock_brightness + (original - lock_brightness) * step / 15 ))
-      ddcutil --bus="$bus" setvcp 10 "$value" > /dev/null 2>&1 || true
-    done
-    sleep 0.1
-  done
-}
-trap restore_backlight EXIT
-
-"$@"
+while kill -0 "$locker_pid" 2> /dev/null; do sleep 0.2; done

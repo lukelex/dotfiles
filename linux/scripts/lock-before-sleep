@@ -1,20 +1,6 @@
 #!/usr/bin/bash
 
-set -Eeuo pipefail
-
-# Start the real locker in the background, then wait until the compositor has
-# installed a lock surface. Never hold suspend indefinitely if the locker fails.
-u_exit lock &
-locker_pid=$!
-
-for _ in {1..200}; do
-  if pgrep -x hyprlock > /dev/null 2>&1 || pgrep -x i3lock > /dev/null 2>&1; then
-    exit 0
-  fi
-  if ! kill -0 "$locker_pid" 2> /dev/null; then
-    exit 1
-  fi
-  sleep 0.05
-done
-
-exit 1
+# Type=notify completes only after a native lock-readiness acknowledgement.
+# Failure is fatal to explicit sleep requests; logind delay inhibitors have
+# their own finite deadline and cannot veto a lid/system sleep indefinitely.
+exec python3 "$HOME/dotfiles/linux/config/system-settings/session-lock.py" ready

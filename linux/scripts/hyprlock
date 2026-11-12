@@ -3,10 +3,23 @@
 set -Eeuo pipefail
 
 dotfiles="$HOME/dotfiles"
+if [[ ${1:-} != --render ]]; then
+  # Bound the entire optional render pipeline, including IPC and subprocesses.
+  config="$dotfiles/linux/config/hypr/hyprlock-minimal.conf"
+  generated=$(mktemp "${XDG_RUNTIME_DIR:-/run/user/$UID}/hyprlock.XXXXXX.conf" 2> /dev/null || true)
+  trap '[[ -z "$generated" ]] || rm -f "$generated"' EXIT
+  if [[ -n "$generated" ]] && timeout -k 0.2 2 "$0" --render "$generated"; then
+    config=$generated
+  fi
+  hyprlock --config "$config" --grace 0 --immediate-render "$@" && exit 0
+  # A rejected generated config must not leave the session unlocked.
+  hyprlock --config "$dotfiles/linux/config/hypr/hyprlock-minimal.conf" --grace 0 --immediate-render
+  exit $?
+fi
+config=$2
 template="$dotfiles/linux/config/hypr/hyprlock.conf"
 theme_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/color-scheme"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles"
-config="$cache_dir/hyprlock.conf"
 primary_monitor=$(hyprctl monitors -j 2> /dev/null | jq -r '.[] | select(.focused) | .name' 2> /dev/null | head -n 1 || true)
 monitor_size=$(hyprctl monitors -j 2> /dev/null \
   | jq -r '.[] | select(.focused) | "\(.width) \(.height)"' 2> /dev/null \
@@ -112,5 +125,3 @@ render_config | python3 "$dotfiles/linux/config/system-settings/lock-screen.py" 
 if ! "$HOME/dotfiles/linux/scripts/lock-notifications" > /dev/null; then
   rm -f "$HOME/.cache/dotfiles/lock-notifications.png" "$HOME/.cache/dotfiles/lock-notifications.svg"
 fi
-
-"$dotfiles/linux/scripts/lock-with-dim" hyprlock --config "$config" "$@"

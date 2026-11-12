@@ -160,7 +160,7 @@ for (const failure of ['nonzero', 'empty', 'stale', 'regular file']) {
   });
 }
 
-test('session startup imports only session environment before idempotent start, never restart', async t => {
+test('session startup imports only session environment before replacing a lingering shell', async t => {
   const f = await fixture(t);
   const XAUTHORITY = path.join(f.home, 'fake Xauthority');
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -174,7 +174,7 @@ test('session startup imports only session environment before idempotent start, 
     assert.deepEqual(commands(result), [
       ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XDG_SESSION_TYPE', 'XAUTHORITY'],
-      ['systemctl', '--user', 'start', 'quickshell.service'],
+      ['systemctl', '--user', 'restart', 'quickshell.service'],
     ]);
     for (const call of result.calls) {
       assert.equal(call.env.DISPLAY, ':987');
@@ -182,7 +182,7 @@ test('session startup imports only session environment before idempotent start, 
       assert.equal(call.env.XDG_SESSION_TYPE, 'x11');
       assert.equal(call.env.XAUTHORITY, XAUTHORITY);
     }
-    assert.equal(result.calls[2].pid, result.pid, 'systemctl start must replace Bash');
+    assert.equal(result.calls[2].pid, result.pid, 'systemctl restart must replace Bash');
   }
 });
 
@@ -196,7 +196,7 @@ test('unset or empty XAUTHORITY clears the manager value before importing the di
       ['systemctl', '--user', 'unset-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY'],
       ['systemctl', '--user', 'unset-environment', 'XAUTHORITY'],
       ['systemctl', '--user', 'import-environment', 'DISPLAY', 'I3SOCK', 'XDG_SESSION_TYPE'],
-      ['systemctl', '--user', 'start', 'quickshell.service'],
+      ['systemctl', '--user', 'restart', 'quickshell.service'],
     ]);
     assert.equal(result.calls[2].env.I3SOCK, f.socket);
     assert.equal(result.calls[2].env.XAUTHORITY, XAUTHORITY);
@@ -265,7 +265,7 @@ test('Hyprland startup clears i3 variables before importing Wayland plumbing', a
   assert.deepEqual(commands(result), [
     ['systemctl', '--user', 'unset-environment', 'DISPLAY', 'I3SOCK', 'XAUTHORITY'],
     ['systemctl', '--user', 'import-environment', 'HYPRLAND_INSTANCE_SIGNATURE', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR', 'XDG_SESSION_TYPE'],
-    ['systemctl', '--user', 'start', 'quickshell.service'],
+    ['systemctl', '--user', 'restart', 'quickshell.service'],
   ]);
   assert.equal(result.calls[1].env.XDG_SESSION_TYPE, 'wayland');
 });

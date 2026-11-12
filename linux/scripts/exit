@@ -2,35 +2,14 @@
 
 function reset_ui {
   # Cleanup IPC must not delay locking while the compositor is suspending.
-  u_music pause 2&> /dev/null &
-  qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible 2&> /dev/null || true
+  timeout -k 0.2 1 u_music pause &> /dev/null &
+  timeout -k 0.2 1 qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible &> /dev/null &
 }
 
 case "$1" in
   lock)
-    reset_ui
-    # Ensure Quickshell notifications are dismissed before launching the lock screen.
-    qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications dismissTag lock-warning 2> /dev/null || true
-    qs -p "$HOME/dotfiles/linux/config/quickshell/shell.qml" ipc call notifications clearVisible 2> /dev/null || true
-    play "$HOME/dotfiles/sounds/screen-lock-click.mp3" &> /dev/null &
-    session_type="${XDG_SESSION_TYPE:-}"
-    if [[ -z "$session_type" ]]; then
-      if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
-        session_type=wayland
-      elif [[ -n "${DISPLAY:-}" ]]; then
-        session_type=x11
-      fi
-    fi
-    case "$session_type" in
-      x11) u_blurlock ;;
-      # Use the repository path directly. A stale, removed u_hyprlock symlink
-      # can still be returned by a shell command hash, causing a failed lock.
-      wayland)
-        if "$HOME/dotfiles/linux/scripts/hyprlock"; then
-          play "$HOME/dotfiles/sounds/desktop-login2.ogg" &> /dev/null &
-        fi
-        ;;
-    esac ;;
+    # The client retains any xss-lock delay inhibitor until real readiness.
+    exec python3 "$HOME/dotfiles/linux/config/system-settings/session-lock.py" client ;;
   logout)
     case "$XDG_SESSION_DESKTOP" in
       i3|i3wm) i3-msg exit ;;
@@ -39,12 +18,12 @@ case "$1" in
     esac ;;
   sleep|suspend)
     reset_ui
-    u_lock-before-sleep
-    systemctl suspend ;;
+    "$HOME/dotfiles/linux/scripts/lock-before-sleep" || exit 1
+    exec systemctl suspend ;;
   hibernate)
     reset_ui
-    u_lock-before-sleep
-    systemctl hibernate ;;
+    "$HOME/dotfiles/linux/scripts/lock-before-sleep" || exit 1
+    exec systemctl hibernate ;;
   reboot|reset)
     systemctl reboot ;;
   shutdown|poweroff)

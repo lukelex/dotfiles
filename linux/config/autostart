@@ -3,6 +3,8 @@
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 nm-applet &
 
+python3 "$HOME/dotfiles/linux/config/system-settings/session-idle.py" start
+
 1password --silent &
 bash "$HOME/dotfiles/linux/install/resume" &
 dropbox start -i &
@@ -21,12 +23,9 @@ case "$XDG_SESSION_TYPE" in
     python3 "$HOME/dotfiles/linux/config/system-settings/monitors.py" watch &
     awww-daemon &
 
-    python3 "$HOME/dotfiles/linux/config/system-settings/settings.py" run-idle &
     ;;
   *)
     python3 "$HOME/dotfiles/linux/config/system-settings/monitors.py" watch &
-
-    xss-lock --transfer-sleep-lock -- u_exit lock &
 
     sxhkd -c "$HOME/dotfiles/linux/config/sxhkdrc" &
 

@@ -37,6 +37,9 @@ printf 'Post-install verification\n'
 check "dotpkg is available" command -v dotpkg
 
 if ! is_server; then
+  for unit in dotfiles-idle dotfiles-lock; do
+    check "$unit user service is linked" helper_matches "${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/$unit.service" "$DOTFILES/linux/config/session/$unit.service"
+  done
   check "Quickshell is available" command -v quickshell
   check "Quickshell user service is linked" test -e "${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/quickshell.service"
 
@@ -67,6 +70,8 @@ fi
 if [ "$session" -eq 1 ] && ! is_server; then
   check "desktop session is running" test -n "${WAYLAND_DISPLAY:-${DISPLAY:-}}"
   check "user service manager is reachable" systemctl --user show-environment
+  check "idle/sleep-lock owner is running" systemctl --user is-active dotfiles-idle.service
+  check "idle owner belongs to a live graphical session" python3 "$DOTFILES/linux/config/system-settings/session-idle.py" check
   check "Quickshell is running" systemctl --user is-active quickshell.service
 fi
 
