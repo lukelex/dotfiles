@@ -69,7 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck zsh
+        run: sudo apt-get update && sudo apt-get install -y shellcheck zsh jq
       - name: Lint shell scripts
         run: find linux/scripts linux/install linux/config/quickshell/scripts -type f ! -name '*.py' -print0 | xargs -0 shellcheck -S error
       - name: Run lock-launcher regression test
@@ -80,11 +80,13 @@ jobs:
         run: find linux/config/zsh -type f -print0 | xargs -0 zsh -n
       - name: Test shell window titles
         run: zsh linux/config/zsh/tests/window-title.test.zsh
+      - name: Test secret loading
+        run: zsh linux/config/zsh/tests/secrets.test.zsh
       - name: Guard 1Password refs against plaintext secrets
         run: |
           bad="$(grep -nEH '^[A-Za-z_][A-Za-z0-9_]*=' linux/config/oprefs/*.env 2>/dev/null | grep -vE 'op://' || true)"
           if [[ -n "$bad" ]]; then
-            echo "$bad"
+            printf '%s\n' "$bad" | cut -d: -f1-2
             echo "linux/config/oprefs/*.env must contain only op:// secret references, never plaintext values" >&2
             exit 1
           fi

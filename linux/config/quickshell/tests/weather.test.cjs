@@ -17,22 +17,44 @@ const current = { cod: 200, name: 'Test City', sys: { country: 'XX' }, timezone:
 function fixture(t, offset = 19800, credentials = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'weather-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  for (const dir of ['dotfiles/linux', 'bin', 'fixtures', 'cache/weather'])
+  for (const dir of ['dotfiles/linux/config/oprefs', 'bin', 'fixtures', 'cache/weather'])
     fs.mkdirSync(path.join(root, dir), { recursive: true });
   fs.writeFileSync(path.join(root, 'dotfiles/linux/variables.env'), '# No credentials in tests\n');
+  const oprefs = path.join(root, 'dotfiles/linux/config/oprefs');
+  if (!credentials.missingResolver) {
+    fs.copyFileSync(path.resolve(__dirname, '../../oprefs/op-run-args.sh'), path.join(oprefs, 'op-run-args.sh'));
+    fs.writeFileSync(path.join(oprefs, 'secrets.env'), '# Mock manifest; no real references\n');
+  }
+  fs.writeFileSync(path.join(root, 'bin/op'), `#!/bin/bash
+printf 'resolve\\n' >> "$HOME/resolutions"
+[[ $1 == run && $2 == --env-file && $3 == "$HOME/dotfiles/linux/config/oprefs/secrets.env" && $4 == --no-masking && $5 == -- ]] || exit 90
+if [[ -f $HOME/resolver-failed ]]; then
+  printf 'private-failed-key'; printf 'private-error' >&2; exit 1
+fi
+export OPEN_WEATHER_API_KEY="$WEATHER_TEST_RESOLVED_KEY"
+shift 5
+exec "$@"
+`, { mode: 0o755 });
+  fs.writeFileSync(path.join(root, 'bin/timeout'), `#!/bin/bash
+[[ $1 == --kill-after=1s && $2 == 5s ]] || exit 90
+exec /usr/bin/timeout "$@"
+`, { mode: 0o755 });
   const preferencesPath = path.join(root, 'preferences.json');
   const preferences = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../system-settings/preferences.json'), 'utf8'));
   preferences.weather = { locationMode: 'automatic', city: 'Copenhagen,DK', units: 'metric' };
   fs.writeFileSync(preferencesPath, JSON.stringify(preferences));
   if (credentials.localKey) {
     fs.mkdirSync(path.join(root, 'Dropbox'));
-    fs.writeFileSync(path.join(root, 'Dropbox/secrets.env'), `export OPEN_WEATHER_API_KEY=${credentials.localKey}\n`);
+    fs.writeFileSync(path.join(root, 'Dropbox/secrets.env'), `touch "$HOME/legacy-loaded"\nexport OPEN_WEATHER_API_KEY=${credentials.localKey}\n`);
   }
   fs.writeFileSync(path.join(root, 'bin/date'), `#!/bin/bash\nif [[ $1 == +%s ]]; then printf '%s\\n' ${now}; else /usr/bin/date "$@"; fi\n`, { mode: 0o755 });
   fs.writeFileSync(path.join(root, 'bin/curl'), `#!/bin/bash
 printf 'request\\n' >> "$HOME/requests"
 [[ $* == *--connect-timeout* && $* == *--max-time* ]] || exit 90
-[[ \${!#} == *ipwho.is || $* == *"appid=$WEATHER_TEST_EXPECTED_KEY"* ]] || exit 22
+if [[ \${!#} != *ipwho.is ]]; then
+  [[ $* == *'appid@-'* && $* != *"$WEATHER_TEST_EXPECTED_KEY"* ]] || exit 22
+  [[ $(/usr/bin/cat) == "$WEATHER_TEST_EXPECTED_KEY" ]] || exit 22
+fi
 [[ ! -f $HOME/offline ]] || exit 22
 if [[ -f $HOME/malformed ]]; then printf '{"cod":200,"main":{"temp":"bad"}}'; exit; fi
 if [[ -f $HOME/multiple ]]; then printf '{}\\n'; fi
@@ -60,30 +82,62 @@ esac
   const run = (...args) => {
     const result = spawnSync('bash', [script, ...args], {
        env: { ...process.env, HOME: root, XDG_CACHE_HOME: path.join(root, 'cache'), DOTFILES_PREFERENCES: preferencesPath,
+        DOTFILES: path.join(root, 'dotfiles'), OPREFS_DIR: oprefs, OP_RUN_BACKEND: 'refs', OP_ENVIRONMENT_ID: '',
         OPEN_WEATHER_API_KEY: credentials.inheritedKey ?? 'weather-test-key',
+        WEATHER_TEST_RESOLVED_KEY: credentials.resolvedKey ?? '',
         WEATHER_TEST_EXPECTED_KEY: credentials.expectedKey ?? 'weather-test-key',
         PATH: `${root}/bin:/usr/bin:/bin`, TZ: 'Pacific/Honolulu' }, encoding: 'utf8', timeout: 5000,
     });
     assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    for (const secret of ['private-failed-key', credentials.resolvedKey, credentials.inheritedKey].filter(Boolean)) {
+      assert.equal(result.stdout.includes(secret), false);
+      for (const file of fs.readdirSync(path.join(root, 'cache/weather')))
+        assert.equal(fs.readFileSync(path.join(root, 'cache/weather', file), 'utf8').includes(secret), false);
+    }
+    assert.equal(fs.existsSync(path.join(root, 'legacy-loaded')), false);
     return args[0] === 'snapshot' ? JSON.parse(result.stdout) : result.stdout.trim();
   };
   const requests = () => fs.readFileSync(path.join(root, 'requests'), 'utf8').trim().split('\n').length;
   return { root, run, requests, midnight, offset };
 }
 
-test('service environment without an inherited key loads the existing local secrets file', t => {
-  const f = fixture(t, 19800, { inheritedKey: '', localKey: 'weather-local-test-key', expectedKey: 'weather-local-test-key' });
+test('service resolves 1Password once for both weather requests and ignores legacy secrets', t => {
+  const f = fixture(t, 19800, { inheritedKey: '', localKey: 'legacy-key', resolvedKey: 'weather-op-test-key', expectedKey: 'weather-op-test-key' });
   const result = f.run('snapshot');
   assert.equal(result.available, true);
   assert.equal(result.stale, false);
   assert.equal(result.error, '');
   assert.equal(f.requests(), 3);
+  assert.equal(fs.readFileSync(path.join(f.root, 'resolutions'), 'utf8'), 'resolve\n');
 });
 
-test('explicit inherited weather key is not overwritten by local secrets', t => {
-  const f = fixture(t, 19800, { localKey: 'weather-other-test-key' });
+test('explicit inherited weather key skips 1Password and legacy secrets', t => {
+  const f = fixture(t, 19800, { localKey: 'weather-other-test-key', resolvedKey: 'unused-op-key' });
   assert.equal(f.run('snapshot').stale, false);
+  assert.equal(fs.existsSync(path.join(f.root, 'resolutions')), false);
 });
+
+for (const missingResolver of [true, false]) {
+  test(`${missingResolver ? 'missing' : 'failed'} resolver retains cached weather and ignores legacy secrets`, t => {
+    const credentials = { missingResolver, localKey: 'legacy-key' };
+    const f = fixture(t, 19800, credentials);
+    const previous = f.run('snapshot');
+    credentials.inheritedKey = '';
+    fs.writeFileSync(path.join(f.root, 'resolver-failed'), '');
+    const result = f.run('snapshot', '--refresh');
+    assert.equal(result.available, true);
+    assert.equal(result.stale, true);
+    assert.match(result.error, /API key is not configured/);
+    assert.equal(result.temperature, previous.temperature);
+    assert.deepEqual(result.forecast, previous.forecast);
+    assert.equal(result.updatedAt, previous.updatedAt);
+    assert.equal(f.requests(), 4, 'only location refreshes without a key');
+    assert.equal(fs.existsSync(path.join(f.root, 'resolutions')), !missingResolver);
+    if (!missingResolver)
+      assert.equal(fs.readFileSync(path.join(f.root, 'resolutions'), 'utf8'), 'resolve\n');
+  });
+}
 
 test('missing credentials are explicit and do not send unauthenticated provider requests', t => {
   const f = fixture(t, 19800, { inheritedKey: '' });

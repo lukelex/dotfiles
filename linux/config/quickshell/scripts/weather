@@ -4,9 +4,17 @@ set -eu
 
 source "$HOME/dotfiles/linux/variables.env"
 
-# The systemd-launched shell does not inherit the interactive profile's secrets.
-if [[ -z ${OPEN_WEATHER_API_KEY:-} && -r $HOME/Dropbox/secrets.env ]]; then
-  source "$HOME/Dropbox/secrets.env" >/dev/null 2>&1
+# Resolve once, privately in memory: systemd does not inherit interactive secrets.
+if [[ -z ${OPEN_WEATHER_API_KEY:-} ]]; then
+  OPEN_WEATHER_API_KEY=$(
+    exec 2>/dev/null
+    op_args="${DOTFILES:-$HOME/dotfiles}/linux/config/oprefs/op-run-args.sh"
+    [[ -r $op_args ]] && command -v op >/dev/null && command -v timeout >/dev/null || exit 1
+    source "$op_args"
+    [[ ${#OP_RUN_ARGS[@]} -gt 0 ]] || exit 1
+    timeout --kill-after=1s 5s op run "${OP_RUN_ARGS[@]}" --no-masking -- \
+      /usr/bin/bash -c 'printf "%s" "${OPEN_WEATHER_API_KEY:-}"'
+  ) || OPEN_WEATHER_API_KEY=""
 fi
 
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/weather"
@@ -121,19 +129,20 @@ else
 fi
 CITY=$(jq -r '.city // empty' <<< "$LOCATION_DATA")
 
-FORECAST=$(fetch_cached "$CACHE_DIR/current.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
+# Feed the key through stdin, never curl's command-line arguments.
+fetch_weather() {
+  printf '%s' "${OPEN_WEATHER_API_KEY:-}" | curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
     --data-urlencode "q=$CITY" \
     --data-urlencode "units=$SYSTEM" \
-    --data-urlencode "appid=${OPEN_WEATHER_API_KEY:-}" \
-    "https://api.openweathermap.org/data/2.5/weather")
+    --data-urlencode 'appid@-' \
+    "https://api.openweathermap.org/data/2.5/$1"
+}
+
+FORECAST=$(fetch_cached "$CACHE_DIR/current.json" fetch_weather weather)
 ICON=${ICON_LIST[$(jq -r '.weather[0].icon // "null"' <<< "${FORECAST:-null}")]}
 
 fetch_forecast() {
-  fetch_cached "$CACHE_DIR/forecast.json" curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --get \
-    --data-urlencode "q=$CITY" \
-    --data-urlencode "units=$SYSTEM" \
-    --data-urlencode "appid=${OPEN_WEATHER_API_KEY:-}" \
-    "https://api.openweathermap.org/data/2.5/forecast"
+  fetch_cached "$CACHE_DIR/forecast.json" fetch_weather forecast
 }
 
 snapshot() {

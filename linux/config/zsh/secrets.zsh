@@ -1,65 +1,37 @@
-# secrets.zsh — load shared environment variables from 1Password into the
-# interactive shell. The values come from 1Password (op:// references in
-# linux/config/oprefs/secrets.env); nothing secret is stored on this machine.
-#
-# Skips out quietly when: `op` is missing, NO_1PASSWORD=1 is set, or the vault
-# is locked. If it was locked at startup, the load is retried once on the next
-# prompt after unlocking (the desktop app unlocks at login, so this usually
-# happens within seconds).
-#
-# Debug: set OP_SECRETS_DEBUG=1 to see what this file decides to do.
-
+# Resolve only 1Password references. Failed loads never import partial output or
+# print resolver errors (which may contain sensitive data). Retry after unlocking
+# with `secrets-retry`; shell startup never waits indefinitely for authentication.
+[[ -n "${NO_1PASSWORD:-}" ]] && return 0
 source "$DOTFILES/linux/config/oprefs/op-run-args.sh" || return 0
 
-command -v op >/dev/null 2>&1 || {
-  [[ -n "${OP_SECRETS_DEBUG:-}" ]] && print -r -- "secrets: op not found, skipping" >&2
-  return 0
-}
-[[ -n "${NO_1PASSWORD:-}" ]] && {
-  [[ -n "${OP_SECRETS_DEBUG:-}" ]] && print -r -- "secrets: NO_1PASSWORD set, skipping" >&2
-  return 0
-}
-
-_op_secrets_load() {
+secrets-retry() {
   local -a keys
-  local k v f
-
-  # The refs files double as the manifest of which variables to load, kept in
-  # one place regardless of backend.
-  keys=()
+  local k v f pairs
+  command -v op >/dev/null 2>&1 || {
+    print -r -- 'secrets: 1Password CLI unavailable; install it, then run secrets-retry.' >&2
+    return 1
+  }
   for f in "${OP_REFS_FILES[@]}"; do
     [[ -f "$f" ]] || continue
     while IFS= read -r k; do
       [[ -n "$k" ]] && keys+=("$k")
-    done < <(grep -oE '^[A-Za-z_][A-Za-z0-9_]*' "$f" 2>/dev/null)
+    done < <(grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' "$f" | sed 's/=$//')
   done
   keys=("${(@u)keys}")
-  (( ${#keys[@]} )) || return 1
+  (( ${#keys[@]} )) || return 0
 
-  # `op run` resolves the references and exports the vars into its subprocess;
-  # print-pairs.zsh streams them back NUL-delimited so values with spaces,
-  # quotes, or newlines are imported without eval. NOTE: missing/unresolvable
-  # keys print an empty value here and are skipped.
+  # zsh preserves NUL bytes in command substitutions. Capture status before
+  # importing anything, keeping resolved values in memory rather than a file.
+  # This private pipe needs real values, not op's default concealed placeholders.
+  if ! pairs=$(timeout --kill-after=1s 3s op run --no-masking "${OP_RUN_ARGS[@]}" -- \
+      zsh "$OPREFS_DIR/print-pairs.zsh" "${keys[@]}" 2>/dev/null); then
+    print -r -- 'secrets: 1Password load failed or timed out; unlock it and run secrets-retry.' >&2
+    return 1
+  fi
   while IFS= read -r -d $'\0' k && IFS= read -r -d $'\0' v; do
     [[ -n "$v" ]] && export "$k=$v"
-  done < <(op run "${OP_RUN_ARGS[@]}" -- zsh "$OPREFS_DIR/print-pairs.zsh" "${keys[@]}" 2>/dev/null)
+  done < <(printf '%s' "$pairs")
+  return 0
 }
 
-_op_secrets_finish() {
-  unset -f _op_secrets_load _op_secrets_retry _op_secrets_finish
-}
-
-_op_secrets_retry() {
-  # Retry at most once: the desktop app has had a moment to unlock by now.
-  add-zsh-hook -d precmd _op_secrets_retry
-  _op_secrets_load && _op_secrets_finish
-}
-
-if op whoami >/dev/null 2>&1; then
-  [[ -n "${OP_SECRETS_DEBUG:-}" ]] && print -r -- "secrets: unlocked, loading" >&2
-  _op_secrets_load && _op_secrets_finish
-else
-  [[ -n "${OP_SECRETS_DEBUG:-}" ]] && print -r -- "secrets: locked, will retry on next prompt" >&2
-  autoload -Uz add-zsh-hook
-  add-zsh-hook precmd _op_secrets_retry
-fi
+secrets-retry || true
