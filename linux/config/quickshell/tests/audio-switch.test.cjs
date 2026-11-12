@@ -1,13 +1,14 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 
 const helper = path.join(__dirname, '..', 'scripts', 'audio-switch');
 
 function run(mode, failure) {
-  const dir = fs.mkdtempSync('/tmp/opencode/audio-switch-');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'audio-switch-'));
   fs.writeFileSync(path.join(dir, 'pactl'), `#!/usr/bin/bash
 printf '%s\n' "$*" >> "$TEST_DIR/calls"
 case "$1" in

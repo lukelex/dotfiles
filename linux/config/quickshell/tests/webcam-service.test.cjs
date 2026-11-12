@@ -123,7 +123,7 @@ from pathlib import Path
 scan = runpy.run_path(${JSON.stringify(script)})['in_use']
 apps = runpy.run_path(${JSON.stringify(script)})['applications']
 usage = runpy.run_path(${JSON.stringify(script)})['usage']
-with tempfile.TemporaryDirectory(prefix='webcam-test-', dir='/tmp/opencode') as root:
+with tempfile.TemporaryDirectory(prefix='webcam-test-') as root:
   root = Path(root)
   sysfs, proc = root / 'sys', root / 'proc'
   sysfs.mkdir()
