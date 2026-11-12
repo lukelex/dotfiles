@@ -60,7 +60,8 @@ def start():
   systemctl('unset-environment', *ENVIRONMENT)
   systemctl('import-environment', *(key for key in ENVIRONMENT if os.environ.get(key)))
   systemctl('daemon-reload')
-  systemctl('reset-failed', 'dotfiles-idle.service')
+  # StartLimitIntervalSec=0 makes reset-failed unnecessary; it also fails if
+  # systemd has garbage-collected the stopped unit on a fresh session.
   systemctl('start', 'dotfiles-idle.service')
 
 
