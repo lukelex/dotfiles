@@ -21,7 +21,7 @@ test('opening Bluetooth closes other panels and routes to the current screen ins
   const calls = [];
   const bluetoothCenter = { requestOpen: pin => calls.push(['bluetooth', pin]) };
   const root = { bluetoothTarget: null };
-  for (const method of ['cancelHoverClose', 'closeConnectivity', 'closeAudioOutput', 'closeDateTime', 'closeNotifications', 'closeGitHubReviewCenter', 'closeBluetooth'])
+  for (const method of ['cancelHoverClose', 'closeConnectivity', 'closeAudioOutput', 'closeDateTime', 'closeNotifications', 'closeBluetooth'])
     root[method] = (...args) => calls.push([method, ...args]);
   const match = bar.match(/      function openBluetooth\(pin = false\) \{([^]*?)\n      \}/);
   assert.ok(match);

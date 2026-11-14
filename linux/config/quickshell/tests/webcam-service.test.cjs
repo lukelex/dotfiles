@@ -108,8 +108,8 @@ test('microphone and webcam activity indicators lead the right-hand icon list', 
   const widgets = bar.slice(bar.indexOf('id: rightWidgets'));
   const microphone = widgets.indexOf('visible: root.audioService.microphoneInUse');
   const webcam = widgets.indexOf('visible: root.webcamService.inUse');
-  const reviews = widgets.indexOf('source: root.icon("message-square-quote")');
-  assert.ok(microphone > 0 && webcam > microphone && reviews > webcam);
+  const network = widgets.indexOf('Accessible.name: "Network connections"');
+  assert.ok(microphone > 0 && webcam > microphone && network > webcam);
   assert.equal((widgets.match(/visible: root.audioService.microphoneInUse/g) || []).length, 1);
   assert.equal((widgets.match(/visible: root.webcamService.inUse/g) || []).length, 1);
 });

@@ -16,11 +16,7 @@ Scope {
   NotificationService {
     id: notifications
     preferences: preferences
-    historyBeingRead: bar.notificationCenterOpen || bar.githubReviewCenterOpen
-  }
-
-  GitHubPrService {
-    id: githubPrs
+    historyBeingRead: bar.notificationCenterOpen
   }
 
   // One shared device snapshot backs the output picker on each screen.
@@ -39,7 +35,6 @@ Scope {
     id: bar
     preferences: preferences
     notificationService: notifications
-    githubPrService: githubPrs
     audioService: audioService
     webcamService: webcamService
     headsetService: headsets

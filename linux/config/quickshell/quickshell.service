@@ -8,3 +8,8 @@ Type=simple
 ExecStart=%h/dotfiles/linux/config/quickshell/scripts/quickshell
 Restart=always
 RestartSec=5
+# Bound the shell and its helpers; restart the whole unit if reclaim cannot keep up.
+MemoryHigh=768M
+MemoryMax=1G
+MemorySwapMax=128M
+OOMPolicy=kill

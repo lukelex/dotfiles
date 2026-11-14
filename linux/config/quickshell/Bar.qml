@@ -287,16 +287,13 @@ Scope {
   }
 
   required property var notificationService
-  required property var githubPrService
   required property var audioService
   required property var headsetService
   required property var webcamService
   required property var openEffectsService
   readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
-  property bool githubReviewCenterOpen: false
   property var controlCenterTarget: null
   property var notificationCenterTarget: null
-  property var githubReviewCenterTarget: null
   property var todayCenterTarget: null
   property var connectivityTarget: null
   property var bluetoothTarget: null
@@ -338,12 +335,6 @@ Scope {
   function closeDateTime() {
     if (root.todayCenterTarget)
       root.todayCenterTarget.requestClose()
-  }
-
-  function closeGitHubReviewCenter() {
-    if (root.githubReviewCenterTarget)
-      root.githubReviewCenterTarget.requestClose()
-    root.githubReviewCenterOpen = false
   }
 
   ConnectivityService {
@@ -824,7 +815,6 @@ Scope {
     root.closeConnectivity()
     root.closeAudioOutput()
     root.closeDateTime()
-    root.closeGitHubReviewCenter()
     for (const name of Object.keys(root.panelsByScreen))
       root.panelsByScreen[name].closeControlCenter()
     const panel = root.focusedPanel()
@@ -852,23 +842,6 @@ Scope {
       root.notificationCenterTarget.requestClose()
   }
 
-  function openGitHubReviewCenter() {
-    if (root.githubReviewCenterTarget === null)
-      return
-
-    root.cancelHoverClose()
-    root.closeConnectivity()
-    root.closeDateTime()
-    root.closeAudioOutput()
-    root.controlCenterTarget.requestClose()
-    root.closeNotifications()
-    if (root.githubReviewCenterOpen)
-      root.githubReviewCenterTarget.requestClose()
-    else
-      root.githubReviewCenterTarget.requestOpen()
-    root.githubReviewCenterOpen = !root.githubReviewCenterOpen
-  }
-
   function cancelHoverClose() {
     root.hoverCloseTimer.stop()
     root.hoverCloseCandidate = 0
@@ -883,8 +856,6 @@ Scope {
   function runHoverClose() {
     if (root.hoverCloseCandidate === 2) {
       root.controlCenterTarget.requestClose()
-    } else if (root.hoverCloseCandidate === 3) {
-      root.closeGitHubReviewCenter()
     }
     root.hoverCloseCandidate = 0
   }
@@ -1339,7 +1310,6 @@ Scope {
         root.closeConnectivity()
         root.closeAudioOutput()
         root.closeDateTime()
-        root.closeGitHubReviewCenter()
         controlCenter.requestClose()
         notificationCenter.requestOpen(pin)
       }
@@ -1353,7 +1323,6 @@ Scope {
         root.todayCenterTarget = todayCenter
         controlCenter.requestClose()
         root.closeNotifications()
-        root.closeGitHubReviewCenter()
         todayCenter.requestOpen(pin)
       }
 
@@ -1366,7 +1335,6 @@ Scope {
         root.connectivityTarget = connectivityCenter
         controlCenter.requestClose()
         root.closeNotifications()
-        root.closeGitHubReviewCenter()
         root.closeDateTime()
         connectivityCenter.requestOpen(pin)
       }
@@ -1377,7 +1345,6 @@ Scope {
         root.closeAudioOutput()
         root.closeDateTime()
         root.closeNotifications()
-        root.closeGitHubReviewCenter()
         controlCenter.requestClose()
         if (root.bluetoothTarget !== bluetoothCenter)
           root.closeBluetooth()
@@ -1390,7 +1357,6 @@ Scope {
         root.closeDateTime()
         root.closeAudioOutput()
         root.closeNotifications()
-        root.closeGitHubReviewCenter()
         controlCenter.requestOpen()
         systemStatus.running = true
         root.cancelHoverClose()
@@ -1402,25 +1368,10 @@ Scope {
         root.closeDateTime()
         controlCenter.requestClose()
         root.closeNotifications()
-        root.closeGitHubReviewCenter()
         if (root.audioOutputTarget !== audioOutputCenter)
           root.closeAudioOutput()
         root.audioOutputTarget = audioOutputCenter
         audioOutputCenter.requestOpen(pin)
-      }
-
-      function showGitHubReviewCenter() {
-        root.cancelHoverClose()
-        root.closeConnectivity()
-        root.closeDateTime()
-        root.closeAudioOutput()
-        controlCenter.requestClose()
-        root.closeNotifications()
-        if (root.githubReviewCenterTarget !== githubReviewCenter)
-          root.closeGitHubReviewCenter()
-        root.githubReviewCenterTarget = githubReviewCenter
-        root.githubReviewCenterOpen = true
-        githubReviewCenter.requestOpen()
       }
 
       ConnectivityCenter {
@@ -1476,14 +1427,6 @@ Scope {
         service: root.notificationService
       }
 
-      GitHubReviewCenter {
-        id: githubReviewCenter
-        controller: root
-        panel: panel
-        service: root.notificationService
-        prs: root.githubPrService
-      }
-
       NotificationPopup {
         id: notificationPopup
         controller: root
@@ -1509,7 +1452,6 @@ Scope {
         root.panelsByScreen[modelData.name] = panel
         if (root.controlCenterTarget === null || (modelData.x === 0 && modelData.y === 0)) {
           root.controlCenterTarget = controlCenter
-          root.githubReviewCenterTarget = githubReviewCenter
         }
       }
 
@@ -1971,45 +1913,6 @@ Scope {
             onClicked: root.openEffectsService.toggle()
           }
         }
-
-        Item {
-          height: root.barFontSize
-          width: root.barFontSize
-          visible: panel.width >= 720
-
-          LucideIcon {
-            anchors.fill: parent
-            color: root.foreground
-            source: root.icon("message-square-quote")
-          }
-
-          Rectangle {
-            anchors {
-              right: parent.right
-              top: parent.top
-            }
-            color: "transparent"
-            border.color: root.urgent
-            border.width: 2
-            height: 6
-            radius: 3
-            visible: root.githubPrService.prs.some(pr => ["review-needed", "changes-requested", "awaiting-review"].includes(pr.action))
-            width: 6
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            Accessible.role: Accessible.Button
-            Accessible.name: "GitHub review requests"
-            Accessible.onPressAction: panel.showGitHubReviewCenter()
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.showGitHubReviewCenter() }
-            onExited: root.requestHoverClose(3, 500)
-            onClicked: panel.showGitHubReviewCenter()
-          }
-        }
-
 
         Item {
           height: root.barFontSize

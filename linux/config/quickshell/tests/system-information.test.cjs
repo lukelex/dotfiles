@@ -15,7 +15,7 @@ test('generic opening resets the destination while contextual shortcuts retain t
   const settings = { section: 'audio', open() {} };
   const root = {
     cancelHoverClose() {}, closeNotifications() {}, closeConnectivity() {},
-    closeAudioOutput() {}, closeDateTime() {}, closeGitHubReviewCenter() {},
+    closeAudioOutput() {}, closeDateTime() {},
     panelsByScreen: {}, focusedPanel() { return null; }
   };
   const routing = vm.createContext({ root, systemSettings: settings });

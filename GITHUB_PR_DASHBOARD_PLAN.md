@@ -3,10 +3,9 @@
 ## Status
 
 This is a proposal for a future cross-platform application, not a description
-of the current desktop implementation. Today, Quickshell's
-`linux/config/quickshell/GitHubReviewCenter.qml` displays PRs from
-`GitHubPrService.qml` and `linux/config/quickshell/scripts/github-prs`; a
-separate `linux/config/github-review-notify/github-review-notify.timer` runs
+of the current desktop implementation. The Quickshell GitHub panel and its PR
+polling have been removed. The timer at
+`linux/config/github-review-notify/github-review-notify.timer` runs
 `linux/scripts/github-review-notify` for review notifications. The shared
 cross-platform core, PR-level read/snooze state, and macOS/Windows applications
 below are still proposed.
@@ -14,7 +13,7 @@ below are still proposed.
 ## Decision
 
 Build this as a cross-platform native application with a platform-neutral core.
-The existing Quickshell panel should become a Linux integration surface, not
+A future Quickshell integration should be a Linux integration surface, not
 the product boundary.
 
 The app must eventually support macOS and Windows, where Quickshell is not
