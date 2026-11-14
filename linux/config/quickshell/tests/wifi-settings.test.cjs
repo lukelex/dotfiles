@@ -107,7 +107,8 @@ test('connection errors remain beside the target and password flow focuses, clea
   assert.match(ui, /passphrase.forceActiveFocus\(\)/);
   assert.match(ui, /onAccepted: \{ if \(connectButton.enabled\) connectButton.clicked\(\) \}/);
   assert.match(ui, /onVisibleChanged: \{ if \(!visible\) passphrase.clear\(\) \}/);
-  assert.match(ui, /columns: row.narrow \? 2 : 3/);
+  assert.match(ui, /ConnectivityEntry \{[^]*?actionDelegate: Component/);
+  assert.match(read('ConnectivityEntry.qml'), /columns: narrow \? 2 : 3/);
   assert.match(ui, /visible: page.multipleAdapters/);
   assert.doesNotMatch(ui, /Flickable|ScrollView/);
 });

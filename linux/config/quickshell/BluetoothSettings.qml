@@ -69,12 +69,13 @@ ColumnLayout {
     }
     Label {
       Layout.fillWidth: true
+      visible: !page.service.bluetoothAvailable || page.service.bluetoothChanging || page.service.bluetoothBlocked
+        || !page.service.bluetoothEnabled || page.someAdaptersOff
       text: !page.service.bluetoothAvailable ? "No Bluetooth adapter detected."
         : page.service.bluetoothChanging ? "Updating Bluetooth…"
         : page.service.bluetoothBlocked ? "One or more adapters are hardware blocked. Check the physical switch or airplane mode."
         : !page.service.bluetoothEnabled ? "Bluetooth is off."
-        : page.someAdaptersOff ? "Some adapters are off. The switch turns all adapters off; turn it back on to enable all available adapters."
-        : "Bluetooth is on."
+        : "Some adapters are off. The switch turns all adapters off; turn it back on to enable all available adapters."
       color: page.controller.controlSecondaryText
     }
     Label {
@@ -198,57 +199,65 @@ ColumnLayout {
     onTargetChanged: confirmForget = false
     onVisibleChanged: { if (!visible) confirmForget = false }
     Rectangle { Layout.fillWidth: true; implicitHeight: 1; visible: row.divider; color: page.controller.controlSurfaceBorder }
-    Label { Layout.fillWidth: true; text: row.deviceName; font.bold: true }
-    Label {
+    ConnectivityEntry {
       Layout.fillWidth: true
-      text: (row.busy ? (manager.pendingAction === "pair" ? "Pairing…" : "Updating…")
-        : row.connected ? "Connected" : row.paired ? "Paired · not connected" : "Discovered in this scan")
-        + (row.target?.batteryAvailable && Number.isFinite(row.target.battery) && row.target.battery >= 0 && row.target.battery <= 1
-          ? " · " + Math.round(row.target.battery * 100) + "% battery" : "")
-        + (page.multipleAdapters ? " · " + (row.target?.adapter?.name || "Adapter unavailable") : "")
-      color: page.controller.controlSecondaryText
-    }
-    Label {
-      Layout.fillWidth: true
-      text: row.target?.address || ""
-      color: page.controller.controlSecondaryText
-    }
-    Flow {
-      Layout.fillWidth: true
-      spacing: 8
-      Button {
-        text: row.busy ? (manager.pendingAction === "pair" ? "Pairing…"
-          : manager.pendingAction === "connect" ? "Connecting…"
-          : manager.pendingAction === "disconnect" ? "Disconnecting…" : "Forgetting…")
-          : row.connected ? "Disconnect" : row.paired ? "Connect" : "Pair"
-        description: text + " " + row.deviceName
-        enabled: manager.ready && !manager.pendingPath && row.target !== null && (row.target?.adapter?.enabled || false)
-        onClicked: manager.run(row.connected ? "disconnect" : row.paired ? "connect" : "pair", row.identity)
+      controller: page.controller
+      title: row.deviceName
+      iconName: "bluetooth"
+      iconColor: row.connected ? page.controller.controlActiveIcon : page.controller.controlSecondaryText
+      current: row.connected
+      Flow {
+        Layout.fillWidth: true
+        spacing: 5
+        Label {
+          text: row.busy ? (manager.pendingAction === "pair" ? "Pairing…" : "Updating…")
+            : row.connected ? "Connected" : row.paired ? "Paired · not connected" : "Discovered in this scan"
+        }
+        Label {
+          visible: row.target?.batteryAvailable && Number.isFinite(row.target.battery) && row.target.battery >= 0 && row.target.battery <= 1
+          text: "· " + Math.round((row.target?.battery || 0) * 100) + "% battery"
+        }
+        Label { visible: page.multipleAdapters; text: "· " + (row.target?.adapter?.name || "Adapter unavailable") }
       }
-      Button {
-        visible: row.busy && manager.pendingAction === "pair" && !row.prompting
-        text: "Cancel pairing"
-        onClicked: manager.cancelPair()
-      }
-      Button {
-        id: more
-        visible: row.paired
-        iconName: "ellipsis"
-        quiet: true
-        description: "Manage " + row.deviceName
-        enabled: manager.ready && !manager.pendingPath
-        onClicked: manageMenu.popup()
-        Controls.Menu {
-          id: manageMenu
-          y: more.height
-          width: 180
-          background: Rectangle { radius: 10; color: page.controller.controlSurface; border.color: page.controller.controlSurfaceBorder }
-          Controls.MenuItem {
-            id: forgetItem
-            text: "Forget device…"
-            onTriggered: { row.confirmForget = true; page.disclosureToggled() }
-            contentItem: Label { text: forgetItem.text }
-            background: Rectangle { radius: 8; color: forgetItem.highlighted ? page.controller.controlHover : "transparent" }
+      Label { Layout.fillWidth: true; text: row.target?.address || ""; color: page.controller.controlSecondaryText }
+      actionDelegate: Component {
+        RowLayout {
+          spacing: 4
+          Button {
+            text: row.busy ? (manager.pendingAction === "pair" ? "Pairing…"
+              : manager.pendingAction === "connect" ? "Connecting…"
+              : manager.pendingAction === "disconnect" ? "Disconnecting…" : "Forgetting…")
+              : row.connected ? "Disconnect" : row.paired ? "Connect" : "Pair"
+            description: text + " " + row.deviceName
+            enabled: manager.ready && !manager.pendingPath && row.target !== null && (row.target?.adapter?.enabled || false)
+            onClicked: manager.run(row.connected ? "disconnect" : row.paired ? "connect" : "pair", row.identity)
+          }
+          Button {
+            visible: row.busy && manager.pendingAction === "pair" && !row.prompting
+            text: "Cancel pairing"
+            onClicked: manager.cancelPair()
+          }
+          Button {
+            id: more
+            visible: row.paired
+            iconName: "ellipsis"
+            quiet: true
+            description: "Manage " + row.deviceName
+            enabled: manager.ready && !manager.pendingPath
+            onClicked: manageMenu.popup()
+            Controls.Menu {
+              id: manageMenu
+              y: more.height
+              width: 180
+              background: Rectangle { radius: 10; color: page.controller.controlSurface; border.color: page.controller.controlSurfaceBorder }
+              Controls.MenuItem {
+                id: forgetItem
+                text: "Forget device…"
+                onTriggered: { row.confirmForget = true; page.disclosureToggled() }
+                contentItem: Label { text: forgetItem.text }
+                background: Rectangle { radius: 8; color: forgetItem.highlighted ? page.controller.controlHover : "transparent" }
+              }
+            }
           }
         }
       }

@@ -136,43 +136,16 @@ ColumnLayout {
     onNetworkChanged: { confirmForget = false; passphrase.clear() }
     onVisibleChanged: { if (!visible) confirmForget = false }
 
-    GridLayout {
+    ConnectivityEntry {
       Layout.fillWidth: true
-      columns: row.narrow ? 2 : 3
-      columnSpacing: 12
-      rowSpacing: 8
-      Item {
-        Layout.preferredWidth: 28
-        Layout.preferredHeight: 32
-        LucideIcon {
-          anchors.centerIn: parent
-          width: 22
-          height: 22
-          source: page.controller.icon(row.current ? "circle-check" : page.signalIcon(row.network))
-          color: row.current ? page.controller.controlActiveIcon : page.signalColor(row.network)
-        }
-        Rectangle {
-          visible: row.details.security !== WifiSecurityType.Open && !row.current
-          anchors.right: parent.right
-          anchors.bottom: parent.bottom
-          width: 14
-          height: 14
-          radius: 4
-          color: page.controller.controlSurface
-          LucideIcon { anchors.centerIn: parent; width: 10; height: 10; source: page.controller.icon("lock"); color: page.controller.controlSecondaryText }
-        }
-      }
+      controller: page.controller
+      title: row.details.name || "Hidden network"
+      iconName: page.signalIcon(row.network)
+      iconColor: page.signalColor(row.network)
+      current: row.current
+      locked: row.details.security !== WifiSecurityType.Open
       ColumnLayout {
         Layout.fillWidth: true
-        Layout.minimumWidth: 0
-        spacing: 4
-        Label {
-          Layout.fillWidth: true
-          text: row.details.name || "Hidden network"
-          color: page.controller.controlPrimaryText
-          font.pixelSize: row.current ? 14 : 12
-          font.bold: row.current
-        }
         Flow {
           Layout.fillWidth: true
           spacing: 5
@@ -190,12 +163,11 @@ ColumnLayout {
           text: row.details.name + "\n" + WifiSecurityType.toString(row.details.security) + " · " + (row.details.device?.name || "")
         }
       }
-      RowLayout {
-        Layout.columnSpan: row.narrow ? 2 : 1
-        Layout.alignment: Qt.AlignRight
-        visible: !row.current
-        spacing: 4
-        Button {
+      actionDelegate: Component {
+        RowLayout {
+          visible: !row.current
+          spacing: 4
+          Button {
           visible: !row.offline
           text: row.busy ? "Connecting…" : row.details.known || page.service.wifiCanConnectDiscovered(row.details) ? "Connect" : "Configure…"
           description: text + " " + (row.details.name || "hidden Wi-Fi")
@@ -249,6 +221,7 @@ ColumnLayout {
               contentItem: Label { text: forgetItem.text; color: page.controller.controlPrimaryText }
               background: Rectangle { color: forgetItem.highlighted ? page.controller.controlHover : "transparent"; radius: 8 }
             }
+          }
           }
         }
       }

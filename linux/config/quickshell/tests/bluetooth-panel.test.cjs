@@ -5,6 +5,8 @@ const vm = require('node:vm');
 const { test } = require('node:test');
 const bar = fs.readFileSync(path.resolve(__dirname, '../Bar.qml'), 'utf8');
 const center = fs.readFileSync(path.resolve(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+const bluetoothSettings = fs.readFileSync(path.resolve(__dirname, '../BluetoothSettings.qml'), 'utf8');
+const wifiSettings = fs.readFileSync(path.resolve(__dirname, '../WifiSettings.qml'), 'utf8');
 
 test('Bluetooth has its own bar target and independent hover/click/close lifecycle', () => {
   assert.match(bar, /property var bluetoothTarget: null/);
@@ -55,4 +57,10 @@ test('Bluetooth-only presentation excludes network controls and network side eff
   assert.match(center, /entries: popup.bluetoothOnly \? popup.service.connectedBluetoothDevices : \[\]/);
   assert.match(center, /entries: popup.bluetoothOnly \? \[\] : popup.service.savedNetworks/);
   assert.match(center, /onActivated: popup.controller.openSystemSettings\(popup.panel.screen, popup.bluetoothOnly \? "bluetooth" : "wifi"\)/);
+});
+
+test('Bluetooth and Wi-Fi devices share the same right-action entry layout', () => {
+  assert.match(wifiSettings, /ConnectivityEntry \{[^]*?actionDelegate: Component/);
+  assert.match(bluetoothSettings, /ConnectivityEntry \{[^]*?title: row\.deviceName[^]*?actionDelegate: Component/);
+  assert.match(bluetoothSettings, /row\.connected \? "Disconnect" : row\.paired \? "Connect" : "Pair"/);
 });
