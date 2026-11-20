@@ -20,6 +20,11 @@ PopupWindow {
     const focused = controller.focusedPanel()
     return service.popupScreenMatches(panel.screen.name, Quickshell.screens, focused ? focused.screen.name : "")
   }
+  readonly property bool presentationEnabled: !controller.notificationCenterOpen && selectedScreen
+  onPresentationEnabledChanged: {
+    if (popup.popupStacks)
+      popup.syncPresentation()
+  }
   property var popupStacks: null
   property var readingAnchor: null
   readonly property bool reducedMotion: service.reduceMotion
@@ -81,7 +86,7 @@ PopupWindow {
   implicitHeight: Math.min(column.height, Math.max(1, panel.screen.height - panel.height - Design.panel.gap * 2))
   surfaceFormat.opaque: false
 
-  visible: popupGroupModel.count > 0 && !controller.notificationCenterOpen && selectedScreen
+  visible: popupGroupModel.count > 0 && presentationEnabled
 
   ListModel {
     id: popupGroupModel
@@ -90,6 +95,8 @@ PopupWindow {
   }
 
   function addPopupRecord(record) {
+    if (!popup.presentationEnabled)
+      return
     popup.preserveReadingPosition()
     for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
       const stack = popup.popupStacks.itemAt(index)
@@ -126,10 +133,23 @@ PopupWindow {
     }
   }
 
-  Component.onCompleted: {
-    for (const group of service.popupGroups)
-      popupGroupModel.append({ popupGroup: group })
+  function syncPresentation() {
+    // Hidden windows cannot finish render-thread exit animations. Drop their
+    // delegates and rebuild from the bounded live snapshot when shown again.
+    for (let index = 0; popup.popupStacks && index < popup.popupStacks.count; index++) {
+      const stack = popup.popupStacks.itemAt(index)
+      if (stack && stack.hoverProtected)
+        popup.service.setRecordsHovered(stack.records, false)
+    }
+    popup.readingAnchor = null
+    popupGroupModel.clear()
+    if (popup.presentationEnabled) {
+      for (const group of popup.service.popupGroups)
+        popupGroupModel.append({ popupGroup: group })
+    }
   }
+
+  Component.onCompleted: popup.syncPresentation()
 
   Connections {
     target: popup.service
@@ -617,7 +637,8 @@ PopupWindow {
       id: expiryAnimation
 
       NumberAnimation { target: expiryTranslate; property: "x"; to: popup.leftAligned ? -popup.width : popup.width; duration: popup.reducedMotion ? 0 : 240; easing.type: Easing.InCubic }
-      OpacityAnimator { target: stack; to: 0; duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.InQuad }
+      // Expiry releases the model entry even if rendering stops mid-animation.
+      NumberAnimation { target: stack; property: "opacity"; to: 0; duration: popup.reducedMotion ? 0 : 180; easing.type: Easing.InQuad }
       onFinished: {
         if (stack.expiring && stack.removeHandler)
           stack.removeHandler(stack)

@@ -74,7 +74,7 @@ test('replacement updates the existing delegate even when another application ar
   const original = f.cards[1];
   const replacement = { ...original.record, summary: 'Updated', height: 150 };
   let appended = false;
-  const popup = { preserveReadingPosition() {}, popupStacks: { count: 2, itemAt: index => index === 0 ? f.stack : {
+  const popup = { presentationEnabled: true, preserveReadingPosition() {}, popupStacks: { count: 2, itemAt: index => index === 0 ? f.stack : {
     updateRecord: () => false,
     canAddRecord: () => true,
     addRecord() { appended = true; },
@@ -87,6 +87,53 @@ test('replacement updates the existing delegate even when another application ar
   assert.equal(f.cards[1], original);
   assert.equal(original.record.summary, 'Updated');
   assert.equal(f.stack.expandedHeight, 334);
+});
+
+test('hidden popups do not accumulate delegates for incoming notifications', () => {
+  const popup = {
+    presentationEnabled: false,
+    preserveReadingPosition() { assert.fail('Hidden presentation must not change reading state'); },
+  };
+  const add = load('addPopupRecord', {
+    popup,
+    popupGroupModel: { append() { assert.fail('Hidden popups must not create a stack'); } },
+  }, 2);
+  for (let index = 0; index < 200; index++)
+    add({ id: String(index) });
+});
+
+test('hiding releases departing stacks and reopening restores only current popup records', () => {
+  const rows = [{ popupGroup: { records: [{ id: 'expired' }] } }];
+  const liveGroup = { records: [{ id: 'live' }] };
+  const released = [];
+  const popup = {
+    presentationEnabled: false,
+    readingAnchor: { id: 'expired' },
+    popupStacks: {
+      get count() { return rows.length; },
+      itemAt: index => ({ records: rows[index].popupGroup.records, hoverProtected: true }),
+    },
+    service: {
+      popupGroups: [liveGroup],
+      setRecordsHovered(records, enabled) { released.push({ records, enabled }); },
+    },
+  };
+  const sync = load('syncPresentation', {
+    popup,
+    popupGroupModel: {
+      clear() { rows.length = 0; },
+      append(row) { rows.push(row); },
+    },
+  }, 2);
+  sync();
+  assert.equal(rows.length, 0);
+  assert.equal(popup.readingAnchor, null);
+  assert.deepEqual(released, [{ records: [{ id: 'expired' }], enabled: false }]);
+  popup.presentationEnabled = true;
+  sync();
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].popupGroup, liveGroup);
+  assert.deepEqual(popup.service.popupGroups, [liveGroup]);
 });
 
 test('a replacement cancels pending whole-stack expiry without removing the stack', () => {
