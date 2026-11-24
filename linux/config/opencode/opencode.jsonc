@@ -6,6 +6,9 @@
     "~/.local/share/dotpkg/opencode-skills",
   ],
 
+  // Local Whisper dictation for the terminal UI (F9 to start/stop recording).
+  "plugins": ["@juliuskb/opencode-voice@0.0.9"],
+
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",

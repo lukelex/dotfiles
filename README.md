@@ -115,6 +115,16 @@ requiring human interaction fail before actions run; `--yes` does not select
 every optional component. `./linux/install/sync` remains the direct maintenance
 entrypoint.
 
+### OpenCode voice input
+
+The shared OpenCode config pins a local Whisper dictation plugin for the
+terminal UI. After syncing a desktop, open `opencode` and press **F9** to choose
+and download a model (`small.en` for English, `small` for multilingual speech).
+Press **F9** to start recording and again to transcribe; review the draft before
+sending it. Model files live in `~/.local/share/opencode-voice/models/` and must
+be downloaded once per machine. The plugin does not add a microphone to the
+OpenCode desktop app.
+
 ## Repository guide
 
 - [`linux/packages.yaml`](linux/packages.yaml) — desktop and server package selections, config links, and services.

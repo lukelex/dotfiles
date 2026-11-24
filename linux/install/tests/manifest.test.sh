@@ -18,6 +18,8 @@ assert_equal "${desktop_level[*]}" 'packages options'
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.hyprland | has("nwg-hello")' "$repo_root/linux/packages.yaml" >/dev/null
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.hyprland | (has("kanshi") and has("wl-clipboard") and has("xwaylandvideobridge"))' "$repo_root/linux/packages.yaml" >/dev/null
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.desktop | has("sox")' "$repo_root/linux/packages.yaml" >/dev/null
+"$repo_root/linux/install/yq" -e '.profiles.desktop.packages.desktop | (has("alsa-utils") and has("bzip2") and has("pipewire-alsa"))' "$repo_root/linux/packages.yaml" >/dev/null
+grep -Fq '"plugins": ["@juliuskb/opencode-voice@0.0.9"]' "$repo_root/linux/config/opencode/opencode.jsonc"
 "$repo_root/linux/install/yq" -e '.profiles.desktop.packages.desktop."opencode-desktop".source == "appimage" and .profiles.desktop.packages.desktop."opencode-desktop".sha256 == "e5e59645631380f545449118c5dbb069a45d4c7a98a996e62b7ce42bfb661eb2"' "$repo_root/linux/packages.yaml" >/dev/null
 grep -Fq 'install_link "$DOTFILES/linux/devices/pointers.conf" "/etc/X11/xorg.conf.d/30-pointers.conf"' "$repo_root/linux/install/configs-system"
 grep -Fq 'Option "NaturalScrolling" "true"' "$repo_root/linux/devices/pointers.conf"

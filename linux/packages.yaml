@@ -285,6 +285,7 @@ profiles:
             system:
               - avahi-daemon
         bc:
+        bzip2:
         blueman:
           configs:
             - linux/config/bluetooth-notify/bluetooth-notify.service:$XDG_CONFIG_HOME/systemd/user/bluetooth-notify.service
