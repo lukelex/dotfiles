@@ -68,3 +68,79 @@ test('malformed or missing JSON payload clears the snapshot', () => {
   for (const text of ['', 'not json', 'null', '{}', '{"devices":{}}'])
     assert.equal(parse(text).length, 0);
 });
+
+const bluetooth = vm.runInNewContext(`(${source.match(/  function bluetoothHeadphones\([^]*?\n  \}/)[0]})`);
+const power = vm.runInNewContext(`(${source.match(/  function powerHeadphones\([^]*?\n  \}/)[0]})`, {
+  UPowerDeviceType: { Headset: 17, Headphones: 19 },
+  UPowerDeviceState: { Charging: 1, PendingCharge: 5 },
+});
+const merge = vm.runInNewContext(`(${source.match(/  function mergeDevices\([^]*?\n  \}/)[0]})`);
+const connected = (icon, battery, extra = {}) => ({
+  name: 'Wireless headphones', icon, connected: true, batteryAvailable: true, battery, ...extra,
+});
+
+test('connected Bluetooth headphones and headsets use native battery fractions', () => {
+  assert.deepEqual(JSON.parse(JSON.stringify(bluetooth([
+    connected('audio-headphones', 0), connected('audio-headset', 0.755), connected('audio-headphones', 1),
+  ]))), [
+    { name: 'Wireless headphones', percentage: 0, charging: false },
+    { name: 'Wireless headphones', percentage: 76, charging: false },
+    { name: 'Wireless headphones', percentage: 100, charging: false },
+  ]);
+});
+
+test('other Bluetooth devices, missing readings and disconnected headphones do not appear', () => {
+  assert.deepEqual(bluetooth([
+    connected('input-mouse', 0.4), connected('audio-speakers', 0.4),
+    connected('audio-headset', 0.4, { connected: false }),
+    connected('audio-headphones', 0.4, { batteryAvailable: false }),
+    ...[NaN, Infinity, -0.1, 1.1].map(value => connected('audio-headphones', value)),
+  ]), []);
+});
+
+test('UPower headphone and headset types report charging and filter absent devices', () => {
+  const device = { model: 'Wireless headphones', ready: true, isPresent: true, type: 19, percentage: 0.65, state: 1 };
+  assert.deepEqual(JSON.parse(JSON.stringify(power([
+    device, { ...device, type: 17, percentage: 0, state: 5 },
+    { ...device, type: 18 }, { ...device, ready: false }, { ...device, isPresent: false },
+    { ...device, percentage: 1.2 }, { ...device, percentage: NaN },
+  ]))), [
+    { name: 'Wireless headphones', percentage: 65, charging: true },
+    { name: 'Wireless headphones', percentage: 0, charging: true },
+  ]);
+});
+
+test('dongle and UPower readings take precedence over the same Bluetooth headset', () => {
+  const usb = [{ name: 'Wireless headphones', percentage: null, charging: true }];
+  const powerDevices = [{ name: 'Another headset', percentage: 86, charging: true }];
+  const others = [
+    { name: 'Wireless headphones', percentage: 40, charging: false },
+    { name: 'Another headset', percentage: 85, charging: false },
+    { name: 'Third headset', percentage: 10, charging: false },
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(merge(usb, powerDevices, others))), [usb[0], powerDevices[0], others[2]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(merge([], [], others))), others);
+});
+
+test('identically named physical headsets remain separate within and across sources', () => {
+  const usb = [{ name: 'Same model', percentage: 30, charging: false }];
+  const bluetoothDevices = [
+    { name: 'Same model', percentage: 30, charging: false },
+    { name: 'Same model', percentage: 80, charging: false },
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(merge(usb, [], bluetoothDevices))), [usb[0], bluetoothDevices[1]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(merge([], [], bluetoothDevices))), bluetoothDevices);
+});
+
+test('native Bluetooth watchers update the shared snapshot as devices and readings change', () => {
+  assert.match(source, /onBluetoothDevicesChanged: updateDevices\(\)/);
+  for (const event of ['Connected', 'Icon', 'Name', 'BatteryAvailable', 'Battery'])
+    assert.match(source, new RegExp(`on${event}Changed\\(\\) \\{ service\\.updateDevices\\(\\) \\}`));
+  assert.match(source, /onPowerDevicesChanged: updateDevices\(\)/);
+  for (const event of ['Ready', 'IsPresent', 'Type', 'Model', 'Percentage', 'State'])
+    assert.match(source, new RegExp(`on${event}Changed\\(\\) \\{ service\\.updateDevices\\(\\) \\}`));
+  assert.match(source, /service\.usbDevices = exitCode === 0 \? service\.parseDevices\(output\.text\) : \[\]/);
+  assert.match(source, /service\.updateDevices\(\)\n\s+\}\n\s+\}/);
+  const bar = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
+  assert.match(bar, /HeadphoneBatteryModule \{\s+controller: root\s+devices: root\.headsetService\.devices\s+\}[\s\S]*?id: volumeWidget/);
+});
