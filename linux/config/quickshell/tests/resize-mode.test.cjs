@@ -4,7 +4,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
+const source = ['Bar', 'I3Adapter', 'HyprlandAdapter'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
 
 function setup() {
   const root = {
@@ -22,6 +22,7 @@ function setup() {
   const Hyprland = { focusedMonitor: null, refreshMonitors() { this.refreshCount = (this.refreshCount || 0) + 1; } };
   const warnings = [];
   root.preferences = { applySection() {} };
+  root.controller = root;
   const context = vm.createContext({ root, i3BindingState, hyprlandSubmap, hyprlandLayout, Hyprland, console: { warn: (...args) => warnings.push(args) } });
   for (const name of [
     'handleI3ModeEvent', 'applyI3BindingState', 'refreshHyprlandSubmap',
@@ -115,7 +116,7 @@ test('Hyprland waits for native initialization and restores an already active re
   assert.equal(root.hyprlandModeInitialized, true);
   assert.match(source, /command: \["hyprctl", "-j", "submap"\]/);
   assert.match(source, /onStreamFinished: root\.applyHyprlandSubmap\(text, hyprlandSubmap\.revision\)/);
-  assert.match(source, /function onFocusedMonitorChanged\(\) \{\s+if \(!root\.hyprlandModeInitialized\)\s+root\.refreshHyprlandSubmap\(\)/);
+  assert.match(source, /function onFocusedMonitorChanged\(\) \{[^]*?if \(!root\.hyprlandModeInitialized\)\s+root\.refreshHyprlandSubmap\(\)/);
   assert.match(source, /Component\.onCompleted: \{\s+root\.refreshHyprlandSubmap\(\)/);
 });
 

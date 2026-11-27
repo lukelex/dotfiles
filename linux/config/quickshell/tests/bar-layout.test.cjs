@@ -4,7 +4,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
+const source = ['Bar', 'I3Adapter', 'HyprlandAdapter'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
 
 function setup() {
   const root = {
@@ -26,6 +26,7 @@ function setup() {
   const Hyprland = { focusedMonitor: null };
   const warnings = [];
   const osdCalls = [];
+  root.controller = root;
   const context = vm.createContext({
     root,
     hyprlandLayout,
@@ -115,7 +116,7 @@ test('Hyprland config reload and the bar IPC handler re-query the current layout
   root.handleHyprlandEvent({ name: 'configreloaded', data: '' });
   assert.equal(hyprlandLayout.running, true);
   assert.equal(hyprlandLayout.revision, 1);
-  assert.match(source, /function refreshLayout\(\) \{\n\s+root\.refreshHyprlandLayout\(\)\n\s+root\.refreshI3Layout\(\)\n\s+\}/);
+  assert.match(source, /function refreshLayout\(\) \{\n\s+root\.wm\?\.refreshLayout\(\)\n\s+\}/);
 });
 
 test('a stale layout query cannot overwrite a newer one', () => {

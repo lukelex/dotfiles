@@ -284,20 +284,25 @@ test('incomplete Hyprland environment fails without falling back to i3', async t
 
 test('bar selects the native workspace model for the active session', () => {
   const bar = fs.readFileSync(path.resolve(__dirname, '../Bar.qml'), 'utf8');
-  assert.match(bar, /^import Quickshell\.Hyprland$/m);
-  assert.match(bar, /^import Quickshell\.I3$/m);
-  assert.match(bar, /function onConnected\(\)[\s\S]*?I3\.refreshWorkspaces\(\)/);
+  const i3 = fs.readFileSync(path.resolve(__dirname, '../I3Adapter.qml'), 'utf8');
+  const hypr = fs.readFileSync(path.resolve(__dirname, '../HyprlandAdapter.qml'), 'utf8');
+  assert.doesNotMatch(bar, /^import Quickshell\.(I3|Hyprland)$/m);
+  assert.doesNotMatch(i3, /^import Quickshell\.Hyprland$/m);
+  assert.doesNotMatch(hypr, /^import Quickshell\.I3$/m);
+  assert.match(bar, /module: root.hyprlandSession \? "HyprlandAdapter.qml" : "I3Adapter.qml"/);
+  assert.match(i3, /^import Quickshell\.I3$/m);
+  assert.match(i3, /function onConnected\(\)[\s\S]*?I3\.refreshWorkspaces\(\)/);
   assert.match(bar, /hyprlandSession: !!Quickshell\.env\("HYPRLAND_INSTANCE_SIGNATURE"\)/);
   assert.match(bar, /workspaceNumbers: \[1, 2, 3, 4, 5, 6, 7, 8, 9, 10\]/);
   assert.match(bar, /model: panel\.width < 620 \? \[root\.focusedWorkspaceNumber\] : root\.workspaceNumbers/);
   assert.match(bar, /readonly property int focusedWorkspaceNumber/);
-  assert.match(bar, /function workspaceFor\(number\)/);
-  assert.match(bar, /function activateWorkspace\(number, workspace\)/);
-  assert.match(bar, /Hyprland\.dispatch\("workspace " \+ number\)/);
-  assert.match(bar, /I3\.dispatch\("workspace " \+ number\)/);
-  assert.match(bar, /event\.name === "activespecial" \|\| event\.name === "activespecialv2"/);
-  assert.match(bar, /readonly property bool occupied: !!workspace && \(root\.hyprlandSession/);
-  assert.match(bar, /workspace\.toplevels\.values\.length > 0/);
+  assert.match(i3, /function workspaceFor\(number\)/);
+  assert.match(i3, /function activateWorkspace\(number, workspace\)/);
+  assert.match(hypr, /Hyprland\.dispatch\("workspace " \+ number\)/);
+  assert.match(i3, /I3\.dispatch\("workspace " \+ number\)/);
+  assert.match(hypr, /event\.name === "activespecial" \|\| event\.name === "activespecialv2"/);
+  assert.match(bar, /readonly property bool occupied: !!workspace && root\.wm\.isOccupied\(workspace\)/);
+  assert.match(hypr, /workspace\.toplevels\.values\.length > 0/);
   assert.match(bar, /property real mouthAngle: 0\.42/);
   assert.match(bar, /id: biteAnimation/);
 });

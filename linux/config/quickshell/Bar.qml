@@ -1,12 +1,9 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.I3
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
-import Quickshell.Wayland
 import QtCore
 import QtQuick
 import "DesignTokens.js" as Design
@@ -15,276 +12,12 @@ import QtQuick.Controls as Controls
 Scope {
   id: root
 
-  Connections {
-    target: I3
-    function onConnected() {
-      if (!root.hyprlandSession)
-        I3.refreshWorkspaces()
-      root.refreshI3Layout()
-    }
-    function onRawEvent(event) {
-      if (root.hyprlandSession || !event)
-        return
-      // i3 emits workspace events on focus changes; layout toggles do not, so
-      // the binding pokes the bar through refreshLayout.
-      if (event.type === "workspace")
-        root.refreshI3Layout()
-    }
+  OptionalModule {
+    id: wmLoader
+    module: root.hyprlandSession ? "HyprlandAdapter.qml" : "I3Adapter.qml"
+    initialProperties: () => ({ controller: root })
   }
-
-  // I3.rawEvent only receives workspace/output events; the mode and binding
-  // subscriptions need their own listener.
-  I3IpcListener {
-    subscriptions: root.hyprlandSession ? [] : ["mode", "binding"]
-    onIpcEvent: event => {
-      root.handleI3ModeEvent(event)
-      root.handleI3BindingEvent(event)
-    }
-  }
-
-  function handleI3ModeEvent(event) {
-    if (root.hyprlandSession)
-      return
-    if (event.type === "subscribe") {
-      // Query only after subscribing; newer mode events take precedence over the result.
-      if (!i3BindingState.running) {
-        i3BindingState.revision = root.resizeModeRevision
-        i3BindingState.running = true
-      }
-    } else if (event.type === "mode") {
-      try {
-        const mode = JSON.parse(event.data).change
-        if (typeof mode === "string") {
-          root.resizeModeRevision++
-          root.resizeMode = mode === "resize"
-        }
-      } catch (error) {
-        console.warn("Invalid i3 mode event:", error)
-      }
-    }
-  }
-
-  // i3 fires the binding event the moment a configured keybinding starts
-  // running — long before the get_tree poll notices the new layout — so the
-  // OSD can flash immediately instead of waiting up to a second.
-  function handleI3BindingEvent(event) {
-    if (root.hyprlandSession || !event || event.type !== "binding")
-      return
-    try {
-      const payload = JSON.parse(event.data)
-      if (payload.change !== "run")
-        return
-      const command = payload.binding && payload.binding.command
-      if (typeof command !== "string")
-        return
-      const predicted = root.layoutFromBindingCommand(command)
-      if (predicted) {
-        root.maybeShowLayoutOsd(predicted)
-        root.refreshI3Layout()
-      }
-    } catch (error) {
-      console.warn("Invalid i3 binding event:", error)
-    }
-  }
-
-  function layoutFromBindingCommand(command) {
-    const cmd = String(command || "").trim()
-    if (cmd === "layout stacking" || cmd.startsWith("layout stacking,"))
-      return "stacked"
-    if (cmd === "layout tabbed" || cmd.startsWith("layout tabbed,"))
-      return "tabbed"
-    // Toggle-split only has a certain outcome when the current layout is a split.
-    if ((cmd === "layout toggle split" || cmd === "split toggle"
-         || cmd.startsWith("layout toggle split,") || cmd.startsWith("split toggle,"))
-        && (root.i3Layout === "splith" || root.i3Layout === "splitv"))
-      return root.i3Layout === "splitv" ? "splith" : "splitv"
-    return ""
-  }
-
-  function applyI3BindingState(data, revision) {
-    if (root.hyprlandSession || revision !== root.resizeModeRevision)
-      return
-    try {
-      const mode = JSON.parse(data).name
-      if (typeof mode === "string")
-        root.resizeMode = mode === "resize"
-    } catch (error) {
-      console.warn("Invalid i3 binding state:", error)
-    }
-  }
-
-  Process {
-    id: i3BindingState
-
-    property int revision: 0
-    command: ["i3-msg", "-t", "get_binding_state"]
-    stdout: StdioCollector {
-      onStreamFinished: root.applyI3BindingState(text, i3BindingState.revision)
-    }
-  }
-
-  function refreshHyprlandSubmap() {
-    // The first focused monitor arrives after native IPC initialization. On reload
-    // it already exists, so Component.onCompleted restores the current submap.
-    if (!root.hyprlandSession || !Hyprland.focusedMonitor || hyprlandSubmap.running)
-      return
-    hyprlandSubmap.revision = root.resizeModeRevision
-    hyprlandSubmap.running = true
-  }
-
-  function handleHyprlandEvent(event) {
-    if (!root.hyprlandSession)
-      return
-    if (event.name === "activespecial" || event.name === "activespecialv2") {
-      Hyprland.refreshMonitors()
-    } else if (event.name === "submap") {
-      root.resizeModeRevision++
-      root.resizeMode = String(event.data || "") === "resize"
-      root.hyprlandModeInitialized = true
-    } else if (event.name === "configreloaded") {
-      root.refreshHyprlandSubmap()
-      root.refreshHyprlandLayout()
-      root.preferences.applySection("input")
-    }
-  }
-
-  function applyHyprlandSubmap(data, revision) {
-    if (!root.hyprlandSession || revision !== root.resizeModeRevision)
-      return
-    try {
-      // hyprctl -j submap returns a JSON string, not an object.
-      const mode = JSON.parse(data)
-      if (typeof mode === "string") {
-        root.resizeMode = mode === "resize"
-        root.hyprlandModeInitialized = true
-      }
-    } catch (error) {
-      console.warn("Invalid Hyprland submap state:", error)
-    }
-  }
-
-  Process {
-    id: hyprlandSubmap
-
-    property int revision: 0
-    command: ["hyprctl", "-j", "submap"]
-    stdout: StdioCollector {
-      onStreamFinished: root.applyHyprlandSubmap(text, hyprlandSubmap.revision)
-    }
-  }
-
-  function refreshHyprlandLayout() {
-    // Like the submap query, wait for the first focused monitor, which arrives
-    // after native IPC initialization; config reloads and the IPC handler retry.
-    if (!root.hyprlandSession || !Hyprland.focusedMonitor || hyprlandLayout.running)
-      return
-    root.layoutRevision++
-    hyprlandLayout.revision = root.layoutRevision
-    hyprlandLayout.running = true
-  }
-
-  function applyHyprlandLayout(data, revision) {
-    if (!root.hyprlandSession || revision !== root.layoutRevision)
-      return
-    try {
-      const option = JSON.parse(data)
-      if (typeof option.str === "string" && option.str !== root.hyprlandLayout) {
-        root.hyprlandLayout = option.str
-        root.hyprlandLayoutInitialized = true
-        // general:layout only changes when a layout command runs, never on
-        // focus or workspace navigation, so every change is an active switch.
-        root.maybeShowLayoutOsd(option.str)
-      }
-    } catch (error) {
-      console.warn("Invalid Hyprland layout state:", error)
-    }
-  }
-
-  Process {
-    id: hyprlandLayout
-
-    property int revision: 0
-    command: ["hyprctl", "-j", "getoption", "general:layout"]
-    stdout: StdioCollector {
-      onStreamFinished: root.applyHyprlandLayout(text, hyprlandLayout.revision)
-    }
-  }
-
-  function refreshI3Layout() {
-    if (root.hyprlandSession || i3LayoutQuery.running)
-      return
-    root.i3LayoutRevision++
-    i3LayoutQuery.revision = root.i3LayoutRevision
-    i3LayoutQuery.running = true
-  }
-
-  function applyI3Layout(data, revision) {
-    if (root.hyprlandSession || revision !== root.i3LayoutRevision)
-      return
-    try {
-      const tree = JSON.parse(data)
-      const focused = root.i3FocusedNode(tree, null)
-      const layout = root.i3LayoutFromTree(tree)
-      const focusId = focused && focused.node.id !== undefined ? String(focused.node.id) : ""
-      const focusChanged = focusId !== root.i3LayoutFocusId
-      const layoutChanged = layout !== root.i3Layout
-      root.i3Layout = layout
-      root.i3LayoutFocusId = focusId
-      // The poll also picks up incidental layout differences when focus moves
-      // between windows, containers, or workspaces; only emit the OSD when the
-      // focused node is unchanged, i.e. an active layout command ran.
-      if (layoutChanged && !focusChanged)
-        root.maybeShowLayoutOsd(layout)
-      else
-        root.armLayoutOsd(layout)
-    } catch (error) {
-      console.warn("Invalid i3 layout tree:", error)
-    }
-  }
-
-  function i3FocusedNode(node, parent) {
-    if (node.focused)
-      return { node, parent }
-    for (const child of node.nodes || []) {
-      const found = root.i3FocusedNode(child, node)
-      if (found)
-        return found
-    }
-    return null
-  }
-
-  function i3LayoutFromTree(data) {
-    const tree = typeof data === "string" ? JSON.parse(data) : data
-    const focused = root.i3FocusedNode(tree, null)
-    if (!focused)
-      return ""
-    // i3 applies layout to the container holding the focused one; an empty
-    // focused workspace is itself the container.
-    const container = focused.node.type === "workspace" ? focused.node : focused.parent
-    return container && container.layout ? container.layout : ""
-  }
-
-  Process {
-    id: i3LayoutQuery
-
-    property int revision: 0
-    command: ["i3-msg", "-t", "get_tree"]
-    stdout: StdioCollector {
-      onStreamFinished: root.applyI3Layout(text, i3LayoutQuery.revision)
-    }
-  }
-
-  // i3 emits no layout event, so the icon is kept in sync with the user's own
-  // binds by a quiet poll; the binding event above only flashes the OSD early
-  // and re-queries. The poke and workspace events only speed up Hyprland and
-  // focus changes.
-  Timer {
-    id: i3LayoutPoll
-    interval: 1000
-    repeat: true
-    running: !root.hyprlandSession
-    onTriggered: root.refreshI3Layout()
-  }
+  readonly property var wm: wmLoader.item
 
   required property var notificationService
   required property var audioService
@@ -301,14 +34,7 @@ Scope {
   readonly property var systemSettings: settingsLoader.item
   readonly property bool wifiSettingsOpen: root.systemSettings?.wifiDiscoveryActive ?? false
   property var panelsByScreen: ({})
-  property bool resizeMode: false
-  property int resizeModeRevision: 0
-  property bool hyprlandModeInitialized: false
-  property string hyprlandLayout: ""
-  property int layoutRevision: 0
-  property bool hyprlandLayoutInitialized: false
-  property string i3Layout: ""
-  property int i3LayoutRevision: 0
+  readonly property bool resizeMode: root.wm?.resizeMode ?? false
 
   OptionalModule {
     id: weatherLoader
@@ -322,18 +48,6 @@ Scope {
 
   PwObjectTracker {
     objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource].filter(node => node !== null)
-  }
-
-  Connections {
-    target: Hyprland
-
-    function onRawEvent(event) { root.handleHyprlandEvent(event) }
-    function onFocusedMonitorChanged() {
-      if (!root.hyprlandModeInitialized)
-        root.refreshHyprlandSubmap()
-      if (!root.hyprlandLayoutInitialized)
-        root.refreshHyprlandLayout()
-    }
   }
 
   function closeDateTime() {
@@ -377,11 +91,7 @@ Scope {
   }
 
   function focusedPanel() {
-    let monitorName = ""
-    if (root.hyprlandSession && Hyprland.focusedMonitor)
-      monitorName = Hyprland.focusedMonitor.name
-    else if (!root.hyprlandSession && I3.focusedMonitor)
-      monitorName = I3.focusedMonitor.name
+    const monitorName = root.wm?.focusedMonitorName
     const panel = monitorName ? root.panelsByScreen[monitorName] : null
     if (panel) return panel
     const screens = Quickshell.screens
@@ -422,20 +132,11 @@ Scope {
   readonly property string quickshellScripts: Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts"
   readonly property bool hyprlandSession: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
   readonly property var workspaceNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-  readonly property var focusedWorkspace: {
-    const workspaces = root.hyprlandSession ? Hyprland.workspaces.values : I3.workspaces.values
-    return workspaces.find(workspace => workspace.focused) || null
-  }
-  readonly property int focusedWorkspaceNumber: root.focusedWorkspace
-    ? (root.hyprlandSession ? root.focusedWorkspace.id : root.focusedWorkspace.number)
-    : 1
-  readonly property string currentLayoutName: root.hyprlandSession
-    ? root.hyprlandLayout
-    : root.i3Layout
+  readonly property int focusedWorkspaceNumber: root.wm?.focusedWorkspaceNumber ?? 0
+  readonly property string currentLayoutName: root.wm?.currentLayoutName ?? ""
   readonly property string layoutIconName: root.layoutIconFor(root.currentLayoutName)
   property bool layoutOsdArmed: false
   property string lastLayoutOsdLayout: ""
-  property string i3LayoutFocusId: ""
   property int workspaceTransition: 0
 
   readonly property var defaultAudioSink: Pipewire.defaultAudioSink
@@ -676,27 +377,6 @@ Scope {
       return
     root.lastLayoutOsdLayout = layout
     root.notificationService.showOsd("Layout", 0, iconName, root.layoutDisplayName(layout))
-  }
-
-  function workspaceFor(number) {
-    const workspaces = root.hyprlandSession ? Hyprland.workspaces.values : I3.workspaces.values
-
-    for (const workspace of workspaces) {
-      if ((root.hyprlandSession ? workspace.id : workspace.number) === number)
-        return workspace
-    }
-
-    return null
-  }
-
-  function activateWorkspace(number, workspace) {
-    if (workspace) {
-      workspace.activate()
-    } else if (root.hyprlandSession) {
-      Hyprland.dispatch("workspace " + number)
-    } else {
-      I3.dispatch("workspace " + number)
-    }
   }
 
   function audioIcon() {
@@ -1117,9 +797,6 @@ Scope {
   }
 
   Component.onCompleted: {
-    root.refreshHyprlandSubmap()
-    root.refreshHyprlandLayout()
-    root.refreshI3Layout()
     root.updatePowerSource()
     root.checkBatteryWarnings()
   }
@@ -1268,8 +945,7 @@ Scope {
     function openAudioOutput() { root.openAudioOutputFromKeyboard() }
     function toggleDoNotDisturb() { root.toggleDoNotDisturbFromKeyboard() }
     function refreshLayout() {
-      root.refreshHyprlandLayout()
-      root.refreshI3Layout()
+      root.wm?.refreshLayout()
     }
   }
 
@@ -1408,9 +1084,10 @@ Scope {
         initialProperties: () => ({ controller: root, panel, service: root.audioService, trigger: volumeWidget })
       }
 
-      IdleInhibitor {
-        enabled: root.hyprlandSession && root.keepAwake
-        window: panel
+      OptionalModule {
+        active: root.hyprlandSession
+        module: "WaylandIdleInhibitor.qml"
+        initialProperties: () => ({ window: panel, enabled: Qt.binding(() => root.keepAwake) })
       }
 
       screen: modelData
@@ -1502,12 +1179,9 @@ Scope {
             required property int modelData
 
             readonly property int workspaceNumber: modelData
-            readonly property var workspace: root.workspaceFor(workspaceNumber)
+            readonly property var workspace: root.wm?.workspaceFor(workspaceNumber) ?? null
             readonly property bool selected: !!workspace && workspace.focused
-            readonly property bool occupied: !!workspace && (root.hyprlandSession
-              ? workspace.toplevels.values.length > 0
-              : !!workspace.lastIpcObject && ((!!workspace.lastIpcObject.nodes && workspace.lastIpcObject.nodes.length > 0)
-                || (!!workspace.lastIpcObject.floating_nodes && workspace.lastIpcObject.floating_nodes.length > 0)))
+            readonly property bool occupied: !!workspace && root.wm.isOccupied(workspace)
 
             height: 26
             width: 24
@@ -1649,9 +1323,9 @@ Scope {
               cursorShape: Qt.PointingHandCursor
               Accessible.role: Accessible.Button
               Accessible.name: "Workspace " + workspaceItem.workspaceNumber
-              Accessible.onPressAction: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
+              Accessible.onPressAction: root.wm?.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
               hoverEnabled: true
-              onClicked: root.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
+              onClicked: root.wm?.activateWorkspace(workspaceItem.workspaceNumber, workspaceItem.workspace)
             }
           }
         }
