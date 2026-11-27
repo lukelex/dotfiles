@@ -99,8 +99,8 @@ test('Control Center keeps tray content bounded and preserves hover menus', () =
   assert.match(source, /anchors.topMargin: header.y \+ header.height \+ 10/);
   assert.match(source, /contentHeight: sections\.implicitHeight/);
   assert.match(source, /TrayModule/);
-  assert.match(source, /else if \(!trayModule\.menuOpen\)/);
-  assert.match(source, /trayModule\.closeMenu\(\)/);
+  assert.match(source, /else if \(!trayLoader\.item\?\.menuOpen\)/);
+  assert.match(source, /trayLoader\.item\?\.closeMenu\(\)/);
 });
 
 test('tray module uses native icons and routes StatusNotifier actions', () => {

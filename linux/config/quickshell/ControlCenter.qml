@@ -382,7 +382,7 @@ PopupWindow {
     if (!popup.visible || closeAnim.running)
       return
     popup.closePending = true
-    trayModule.closeMenu()
+    trayLoader.item?.closeMenu()
     openAnim.stop()
     closeAnim.start()
   }
@@ -438,7 +438,7 @@ PopupWindow {
       onHoveredChanged: {
         if (hovered)
           popup.controller.cancelHoverClose()
-        else if (!trayModule.menuOpen)
+        else if (!trayLoader.item?.menuOpen)
           popup.controller.requestHoverClose(2)
       }
     }
@@ -793,14 +793,18 @@ PopupWindow {
           }
         }
 
-        TrayModule {
-          id: trayModule
-
-          controller: popup.controller
+        OptionalModule {
+          id: trayLoader
+          module: "TrayModule.qml"
           width: parent.width
-          onMenuClosed: {
-            if (popup.visible && !popup.closePending && !contentHover.hovered)
-              popup.controller.requestHoverClose(2)
+          visible: item?.available ?? false
+          initialProperties: () => ({ controller: popup.controller })
+          Connections {
+            target: trayLoader.item
+            function onMenuClosed() {
+              if (popup.visible && !popup.closePending && !contentHover.hovered)
+                popup.controller.requestHoverClose(2)
+            }
           }
         }
       }
