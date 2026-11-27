@@ -160,6 +160,7 @@ PopupWindow {
     required property string toggleIcon
     required property bool toggleActive
     property bool busy: false
+    property bool toggleAvailable: true
     property bool dragging: false
     property real previewValue: value
     signal valueChangedByUser(real value)
@@ -189,6 +190,7 @@ PopupWindow {
       anchors.right: parent.right
       height: 30
       width: 116
+      enabled: slider.toggleAvailable
       active: slider.toggleActive
       controller: slider.controller
       iconName: slider.toggleIcon
@@ -227,7 +229,7 @@ PopupWindow {
         color: slider.controller.controlSliderFill
         height: parent.height
         radius: parent.radius
-        width: parent.width * Math.max(0, Math.min(100, slider.previewValue)) / 100
+        width: Number.isFinite(slider.previewValue) ? parent.width * Math.max(0, Math.min(100, slider.previewValue)) / 100 : 0
       }
 
       MouseArea {
@@ -235,7 +237,7 @@ PopupWindow {
         anchors.topMargin: -12
         anchors.bottomMargin: -12
         cursorShape: slider.busy ? Qt.ArrowCursor : Qt.PointingHandCursor
-        enabled: !slider.busy
+        enabled: !slider.busy && Number.isFinite(slider.value)
         onPositionChanged: function(mouse) {
           if (pressed)
             slider.previewValue = Math.max(0, Math.min(100, mouse.x / width * 100))
@@ -267,8 +269,8 @@ PopupWindow {
       color: slider.controller.controlSecondaryText
       font.family: slider.controller.fontFamily
       font.pixelSize: 11
-      text: Math.round(slider.previewValue) + "%"
-      width: 44
+      text: Number.isFinite(slider.previewValue) ? Math.round(slider.previewValue) + "%" : "Unavailable"
+      width: Math.max(44, implicitWidth)
       horizontalAlignment: Text.AlignRight
     }
 
@@ -514,7 +516,8 @@ PopupWindow {
               controller: popup.controller
               title: "Brightness"
               iconName: "sun"
-              toggleTitle: popup.controller.nightModeEnabled ? "Night on" : "Night off"
+              toggleAvailable: popup.controller.nightModeAvailable
+              toggleTitle: !toggleAvailable ? "Night unavailable" : popup.controller.nightModeEnabled ? "Night on" : "Night off"
               toggleIcon: "moon-star"
               toggleActive: popup.controller.nightModeEnabled
               onToggleRequested: popup.controller.toggleNightMode()
@@ -561,6 +564,7 @@ PopupWindow {
 
             SystemUsage {
               controller: popup.controller
+              visible: popup.controller.cpuUsageAvailable
               iconName: "cpu"
               percentage: popup.controller.cpuUsage
               title: "CPU" + (popup.controller.cpuTemperatureAvailable
@@ -571,6 +575,7 @@ PopupWindow {
 
             SystemUsage {
               controller: popup.controller
+              visible: popup.controller.memoryAvailable
               iconName: "memory-stick"
               percentage: popup.controller.memoryPercentage
               title: "Memory"
@@ -582,13 +587,14 @@ PopupWindow {
               controller: popup.controller
               iconName: "microchip"
               percentage: popup.controller.gpuUsage
-              title: "GPU - " + Math.round(popup.controller.gpuTemperature) + "\u00b0C"
+              title: "GPU" + (popup.controller.gpuTemperatureAvailable ? " - " + Math.round(popup.controller.gpuTemperature) + "\u00b0C" : "")
               value: popup.controller.gpuUsage + "%"
-              visible: popup.controller.gpuTemperatureAvailable && popup.controller.gpuUsageAvailable
+              visible: popup.controller.gpuUsageAvailable
               width: parent.width
             }
 
             Row {
+              visible: Number.isFinite(popup.controller.loadAverage)
               height: 18
               spacing: 8
               width: parent.width

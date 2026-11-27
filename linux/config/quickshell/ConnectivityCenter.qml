@@ -26,7 +26,6 @@ Scope {
   signal shown()
   onShown: {
     if (!popup.bluetoothOnly) {
-      popup.controller.refreshControlStatus()
       popup.controller.vpnService?.refresh()
       popup.controller.vpnService?.refreshLocations()
     }

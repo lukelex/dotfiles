@@ -23,7 +23,13 @@ Scope {
   required property var webcamService
   required property var openEffectsService
   readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
-  property var controlCenterTarget: null
+  readonly property bool controlCenterVisible: Object.values(root.panelsByScreen).some(panel => panel?.controlCenter?.visible)
+  onControlCenterVisibleChanged: {
+    if (!controlCenterVisible) {
+      previousCpuTotal = -1
+      cpuUsageAvailable = false
+    }
+  }
   property var notificationCenterTarget: null
   property var todayCenterTarget: null
   property var connectivityTarget: null
@@ -282,9 +288,10 @@ Scope {
   property string idleLockStatus: ""
   readonly property bool doNotDisturb: root.notificationService?.doNotDisturb ?? false
   readonly property bool brightnessBusy: brightnessSet.running
-  property int brightness: 0
+  property real brightness: NaN
   property bool darkMode: true
   property bool nightModeEnabled: false
+  property bool nightModeAvailable: false
   property bool keepAwake: false
   readonly property var vpnService: vpnLoader.item
   OptionalModule {
@@ -292,12 +299,14 @@ Scope {
     module: "VpnService.qml"
     initialProperties: () => ({ monitoring: Qt.binding(() => root.connectivityTarget !== null && root.connectivityTarget.visible) })
   }
-  property bool systemStatsAvailable: false
+  property bool cpuUsageAvailable: false
+  property bool memoryAvailable: false
+  readonly property bool systemStatsAvailable: cpuUsageAvailable || memoryAvailable || gpuUsageAvailable || Number.isFinite(loadAverage)
   property int cpuUsage: 0
   property int memoryPercentage: 0
   property real memoryUsedGib: 0
   property real memoryTotalGib: 0
-  property real loadAverage: 0
+  property real loadAverage: NaN
   property bool cpuTemperatureAvailable: false
   property real cpuTemperature: 0
   property bool gpuTemperatureAvailable: false
@@ -402,7 +411,9 @@ Scope {
   }
 
   function refreshControlStatus() {
-    controlStatus.running = true
+    if (!root.controlCenterVisible) return
+    brightnessStatus.running = true
+    nightStatus.running = true
   }
 
   function sensorTemperature(sensors, chipPattern) {
@@ -465,7 +476,6 @@ Scope {
 
   function toggleNightMode() {
     nightModeToggle.running = true
-    controlRefreshTimer.restart()
   }
 
   function toggleAudio() {
@@ -491,7 +501,7 @@ Scope {
   }
 
   function setBrightness(value) {
-    if (root.brightnessBusy)
+    if (root.brightnessBusy || !Number.isFinite(root.brightness))
       return
 
     brightnessSet.value = Math.round(value)
@@ -534,20 +544,25 @@ Scope {
     onLoaded: root.syncTheme()
   }
 
-  Process {
-    id: controlStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$($HOME/dotfiles/linux/config/quickshell/scripts/nightmode get 2>/dev/null)\" \"$($HOME/dotfiles/linux/config/quickshell/scripts/brightness get 2>/dev/null)\""]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const output = this.text.replace(/\n$/, "").split("\n")
-        root.nightModeEnabled = output[0] === "true"
+  function readPercentage(text) {
+    if (!text?.trim()) return NaN
+    const value = Number(text)
+    return Number.isFinite(value) && value >= 0 && value <= 100 ? value : NaN
+  }
 
-        const brightness = Number(output[1])
-        if (!isNaN(brightness))
-          root.brightness = brightness
-
-      }
+  StatusProbe {
+    id: brightnessStatus
+    probeCommand: [root.quickshellScripts + "/brightness", "get"]
+    onSampled: text => root.brightness = root.readPercentage(text)
+  }
+  StatusProbe {
+    id: nightStatus
+    probeCommand: ["systemctl", "--user", "show", "gammastep", "--property=LoadState,ActiveState"]
+    onSampled: text => {
+      const fields = text.trim().split("\n")
+      const state = fields.find(field => field.startsWith("ActiveState="))?.slice(12)
+      root.nightModeAvailable = fields.includes("LoadState=loaded") && !!state
+      root.nightModeEnabled = root.nightModeAvailable && ["active", "activating", "reloading"].includes(state)
     }
   }
 
@@ -596,6 +611,7 @@ Scope {
   Process {
     id: nightModeToggle
     command: [root.quickshellScripts + "/nightmode", "toggle"]
+    onExited: root.refreshControlStatus()
   }
 
   Process {
@@ -631,8 +647,7 @@ Scope {
 
   Process {
     id: idleLockStatus
-    command: ["u_lock-status", "idle"]
-    running: true
+    command: ["timeout", "--kill-after=1s", "4s", "u_lock-status", "idle"]
     stdout: StdioCollector {
       onStreamFinished: root.idleLockStatus = this.text.trim()
     }
@@ -640,86 +655,92 @@ Scope {
 
   Process {
     id: systemStatus
-    command: ["sh", "-c", "awk '/^cpu / { total = 0; for (i = 2; i <= NF; i++) total += $i; print total, $5 + $6; exit }' /proc/stat; awk '/^MemTotal:/ { total = $2 } /^MemAvailable:/ { available = $2 } END { print total, available }' /proc/meminfo; awk '{ print $1 }' /proc/loadavg; gpu_usage=; for gpu_path in /sys/class/drm/card*/device/gpu_busy_percent; do [ -r \"$gpu_path\" ] || continue; read -r gpu_usage < \"$gpu_path\"; break; done; printf '%s\\n' \"$gpu_usage\"; sensors -j 2>/dev/null | tr -d '\\n'; printf '\\n'"]
-    running: true
+    // Keep a field for every source even when a file disappears between reads.
+    command: ["timeout", "--kill-after=1s", "4s", "sh", "-c",
+      "cpu=$(awk '/^cpu / { for (i=2;i<=NF;i++) total+=$i; print total, $5+$6; exit }' /proc/stat); "
+      + "mem=$(awk '/^MemTotal:/ { t=$2 } /^MemAvailable:/ { a=$2 } END { if (t && a!=\"\") print t,a }' /proc/meminfo); "
+      + "load=$(awk '{ print $1 }' /proc/loadavg); gpu=; "
+      + "for f in /sys/class/drm/card*/device/gpu_busy_percent; do [ -r \"$f\" ] && { read -r gpu < \"$f\"; break; }; done; "
+      + "printf '%s\\n' \"$cpu\" \"$mem\" \"$load\" \"$gpu\""]
     stdout: StdioCollector {
       onStreamFinished: {
-        const output = this.text.trim().split("\n")
+        if (!root.controlCenterVisible) return
+        const output = this.text.split("\n")
         const cpu = output[0]?.trim().split(/\s+/).map(Number)
         const memory = output[1]?.trim().split(/\s+/).map(Number)
-        const load = Number(output[2])
-        const gpuUsage = Number(output[3])
-        let sensors = {}
-
-        try {
-          sensors = JSON.parse(output[4] || "{}")
-        } catch (_) {
-          sensors = {}
-        }
-
+        const load = output[2]?.trim() ? Number(output[2]) : NaN
+        const gpuUsage = root.readPercentage(output[3])
+        root.cpuUsageAvailable = false
         if (cpu?.length === 2 && cpu.every(Number.isFinite)) {
           if (root.previousCpuTotal >= 0 && cpu[0] > root.previousCpuTotal) {
             const totalDelta = cpu[0] - root.previousCpuTotal
             const idleDelta = Math.max(0, cpu[1] - root.previousCpuIdle)
             root.cpuUsage = Math.round(Math.max(0, Math.min(100, (1 - idleDelta / totalDelta) * 100)))
-            root.systemStatsAvailable = true
+            root.cpuUsageAvailable = true
           }
           root.previousCpuTotal = cpu[0]
           root.previousCpuIdle = cpu[1]
         }
 
-        if (memory?.length === 2 && memory.every(Number.isFinite) && memory[0] > 0) {
+        root.memoryAvailable = memory?.length === 2 && memory.every(Number.isFinite) && memory[0] > 0
+          && memory[1] >= 0 && memory[1] <= memory[0]
+        if (root.memoryAvailable) {
           const used = Math.max(0, memory[0] - memory[1])
           root.memoryPercentage = Math.round(used / memory[0] * 100)
           root.memoryUsedGib = used / 1048576
           root.memoryTotalGib = memory[0] / 1048576
         }
 
-        if (Number.isFinite(load))
-          root.loadAverage = load
+        root.loadAverage = load
 
         root.gpuUsageAvailable = Number.isFinite(gpuUsage) && gpuUsage >= 0 && gpuUsage <= 100
         if (root.gpuUsageAvailable)
           root.gpuUsage = Math.round(gpuUsage)
-
-        const cpuTemperature = root.sensorTemperature(sensors, /^(k10temp|coretemp|zenpower|cpu_thermal)/i)
-        root.cpuTemperatureAvailable = Number.isFinite(cpuTemperature)
-        if (root.cpuTemperatureAvailable)
-          root.cpuTemperature = cpuTemperature
-
-        const gpuTemperature = root.sensorTemperature(sensors, /^(amdgpu|nouveau|nvidia)/i)
-        root.gpuTemperatureAvailable = Number.isFinite(gpuTemperature)
-        if (root.gpuTemperatureAvailable)
-          root.gpuTemperature = gpuTemperature
       }
+    }
+  }
+
+  StatusProbe {
+    id: temperatures
+    probeCommand: ["sensors", "-j"]
+    onSampled: text => {
+      let sensors = {}
+      try { sensors = JSON.parse(text) || {} } catch (_) {}
+      const cpuTemperature = root.sensorTemperature(sensors, /^(k10temp|coretemp|zenpower|cpu_thermal)/i)
+      root.cpuTemperatureAvailable = Number.isFinite(cpuTemperature)
+      if (root.cpuTemperatureAvailable)
+        root.cpuTemperature = cpuTemperature
+
+      const gpuTemperature = root.sensorTemperature(sensors, /^(amdgpu|nouveau|nvidia)/i)
+      root.gpuTemperatureAvailable = Number.isFinite(gpuTemperature)
+      if (root.gpuTemperatureAvailable)
+        root.gpuTemperature = gpuTemperature
     }
   }
 
   Timer {
     interval: 30000
-    running: true
+    running: root.controlCenterVisible
+    triggeredOnStart: true
     repeat: true
     onTriggered: idleLockStatus.running = true
   }
-
   Timer {
-    interval: root.controlCenterTarget && root.controlCenterTarget.visible ? 2000 : 30000
-    running: true
+    interval: 2000
+    running: root.controlCenterVisible
+    triggeredOnStart: true
     repeat: true
-    onTriggered: systemStatus.running = true
+    onTriggered: {
+      systemStatus.running = true
+      temperatures.running = true
+    }
   }
-
   Timer {
     interval: 5000
-    running: true
+    running: root.controlCenterVisible
+    triggeredOnStart: true
     repeat: true
-    onTriggered: controlStatus.running = true
-  }
-
-  Timer {
-    id: controlRefreshTimer
-    interval: 400
-    onTriggered: controlStatus.running = true
+    onTriggered: root.refreshControlStatus()
   }
 
   IpcHandler {
@@ -847,9 +868,7 @@ Scope {
         root.closeDateTime()
         root.closeAudioOutput()
         root.closeNotifications()
-        root.controlCenterTarget = controlCenter
         controlCenter.requestOpen()
-        systemStatus.running = true
         panel.cancelHoverClose()
       }
 
@@ -943,11 +962,14 @@ Scope {
       property string registeredScreen: ""
       Component.onCompleted: {
         registeredScreen = modelData.name
-        root.panelsByScreen[registeredScreen] = panel
+        root.panelsByScreen = Object.assign({}, root.panelsByScreen, { [registeredScreen]: panel })
       }
       Component.onDestruction: {
-        if (root.panelsByScreen[registeredScreen] === panel)
-          delete root.panelsByScreen[registeredScreen]
+        if (root.panelsByScreen[registeredScreen] === panel) {
+          const remaining = Object.assign({}, root.panelsByScreen)
+          delete remaining[registeredScreen]
+          root.panelsByScreen = remaining
+        }
       }
 
       Row {

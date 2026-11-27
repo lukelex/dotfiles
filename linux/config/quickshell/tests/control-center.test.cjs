@@ -60,9 +60,17 @@ test('brightness slider shows a spinner while the DDC command is running', () =>
 test('brightness slider previews its percentage while dragging and applies on release', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
   assert.match(source, /property real previewValue: value/);
-  assert.match(source, /text: Math\.round\(slider\.previewValue\) \+ "%"/);
+  assert.match(source, /Math\.round\(slider\.previewValue\) \+ "%"/);
   assert.match(source, /onPositionChanged: function\(mouse\)[^]*?slider\.previewValue =/);
   assert.match(source, /onReleased: \{[^]*?slider\.valueChangedByUser\(Math\.round\(slider\.previewValue\)\)/);
+});
+
+test('an unavailable brightness or GPU reading is distinct from an observed zero', () => {
+  const parse = loadFunction('Bar.qml', 'readPercentage', {});
+  for (const missing of [undefined, '', '  ', 'invalid', '-1', '101'])
+    assert.ok(Number.isNaN(parse(missing)));
+  assert.equal(parse('0\n'), 0);
+  assert.equal(parse('42.5'), 42.5);
 });
 
 test('sensor temperature selection only accepts matching chips with usable readings', () => {
@@ -81,9 +89,9 @@ test('sensor temperature selection only accepts matching chips with usable readi
 test('Control Center attaches temperature to each available processor label', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
   assert.match(source, /title: "CPU" \+ \(popup\.controller\.cpuTemperatureAvailable/);
-  assert.match(source, /title: "GPU - " \+ Math\.round\(popup\.controller\.gpuTemperature\)/);
+  assert.match(source, /title: "GPU" \+ \(popup\.controller\.gpuTemperatureAvailable \? " - " \+ Math\.round\(popup\.controller\.gpuTemperature\)/);
   assert.match(source, /percentage: popup\.controller\.gpuUsage/);
-  assert.match(source, /visible: popup\.controller\.gpuTemperatureAvailable && popup\.controller\.gpuUsageAvailable/);
+  assert.match(source, /visible: popup\.controller\.gpuUsageAvailable/);
 });
 
 test('hover centers do not grab focus from their bar triggers', () => {

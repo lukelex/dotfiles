@@ -67,7 +67,7 @@ test('network and Bluetooth can still open when Control Center failed to load', 
 });
 
 test('Bluetooth-only presentation excludes network controls and network side effects', () => {
-  assert.match(center, /if \(!popup.bluetoothOnly\) \{\s+popup.controller.refreshControlStatus\(\)/);
+  assert.match(center, /if \(!popup.bluetoothOnly\) \{\s+popup.controller.vpnService\?\.refresh\(\)/);
   assert.match(center, /text: popup.bluetoothOnly \? "Bluetooth" : "Network"/);
   const network = fs.readFileSync(path.resolve(__dirname, '../NetworkControls.qml'), 'utf8');
   const bluetooth = fs.readFileSync(path.resolve(__dirname, '../BluetoothControls.qml'), 'utf8');
