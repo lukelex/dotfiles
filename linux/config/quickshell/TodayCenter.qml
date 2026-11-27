@@ -188,8 +188,8 @@ Scope {
       popup.resetMonth()
       popup.detailsExpanded = false
       scroll.contentY = 0
-      popup.weather.refresh()
-      popup.quote.refresh()
+      popup.weather?.refresh()
+      popup.quote?.refresh()
     }
     if (pin || popup.pinned) {
       popup.pinned = true
@@ -532,7 +532,7 @@ Scope {
 
             Column {
               id: calendar
-              width: popup.stacked ? columns.width : (columns.width - columns.columnSpacing) * 0.57
+              width: popup.stacked || !popup.weather ? columns.width : (columns.width - columns.columnSpacing) * 0.57
               spacing: 10
 
               Row {
@@ -617,212 +617,218 @@ Scope {
               }
             }
 
-            Column {
-              id: weatherColumn
-              width: popup.stacked ? columns.width : columns.width - calendar.width - columns.columnSpacing
-              spacing: 8
+            Repeater {
+              model: popup.weather ? 1 : 0
+              delegate: Column {
+                id: weatherColumn
+                width: popup.stacked ? columns.width : columns.width - calendar.width - columns.columnSpacing
+                spacing: 8
 
-              Label {
-                text: "Weather"
-                font.pixelSize: 12
-              }
+                Label {
+                  text: "Weather"
+                  font.pixelSize: 12
+                }
 
-              Column {
-                width: parent.width
-                spacing: 7
-                visible: popup.weather.available
-                Row {
+                Column {
                   width: parent.width
-                  spacing: 10
-                  LucideIcon {
-                    width: 30
-                    height: 30
-                    source: popup.controller.icon(popup.weather.conditionIcon)
-                    color: popup.controller.controlActiveIcon
-                  }
-                  Label {
-                    width: parent.width - 40
-                    text: Math.round(popup.weather.temperature) + (popup.weather.units === "imperial" ? "\u00b0F" : "\u00b0C")
-                    font.pixelSize: 24
-                    color: popup.controller.controlPrimaryText
-                  }
-                }
-                Label {
-                  width: parent.width
-                  text: [popup.weather.city, popup.weather.country].filter(value => value !== "").join(", ")
-                  color: popup.controller.controlPrimaryText
-                  wrapMode: Text.Wrap
-                  elide: Text.ElideNone
-                }
-                Label {
-                  width: parent.width
-                  text: popup.weather.description
-                  wrapMode: Text.Wrap
-                  elide: Text.ElideNone
-                }
-                Label {
-                  width: parent.width
-                  text: "Feels like " + Math.round(popup.weather.feelsLike) + (popup.weather.units === "imperial" ? "\u00b0F" : "\u00b0C")
-                }
-              }
-
-              Column {
-                width: parent.width
-                spacing: 4
-                visible: popup.weather.available && popup.weather.forecast.length > 0
-                Label {
-                  text: "Forecast / low - high"
-                  font.pixelSize: 10
-                }
-                Repeater {
-                  model: popup.weather.available ? popup.weather.forecast.slice(0, 3) : []
-                  delegate: Row {
-                    id: forecastRow
-                    required property var modelData
-                    width: weatherColumn.width
-                    height: 28
-                    spacing: 8
-                    Accessible.role: Accessible.StaticText
-                    Accessible.name: Qt.formatDate(popup.forecastDate(modelData.date), "dddd") + ", " + modelData.condition + ", low " + modelData.low + ", high " + modelData.high
-                    Label {
-                      width: 32
-                      anchors.verticalCenter: parent.verticalCenter
-                      text: Qt.formatDate(popup.forecastDate(forecastRow.modelData.date), "ddd")
-                    }
+                  spacing: 7
+                  visible: popup.weather.available
+                  Row {
+                    width: parent.width
+                    spacing: 10
                     LucideIcon {
-                      width: 18
-                      height: 18
-                      anchors.verticalCenter: parent.verticalCenter
-                      source: popup.controller.icon(forecastRow.modelData.icon)
-                      color: popup.controller.controlSecondaryText
+                      width: 30
+                      height: 30
+                      source: popup.controller.icon(popup.weather.conditionIcon)
+                      color: popup.controller.controlActiveIcon
                     }
                     Label {
-                      width: parent.width - 66
-                      anchors.verticalCenter: parent.verticalCenter
-                      horizontalAlignment: Text.AlignRight
-                      text: Math.round(forecastRow.modelData.low) + "\u00b0 / " + Math.round(forecastRow.modelData.high) + "\u00b0"
+                      width: parent.width - 40
+                      text: Math.round(popup.weather.temperature) + (popup.weather.units === "imperial" ? "\u00b0F" : "\u00b0C")
+                      font.pixelSize: 24
                       color: popup.controller.controlPrimaryText
                     }
                   }
+                  Label {
+                    width: parent.width
+                    text: [popup.weather.city, popup.weather.country].filter(value => value !== "").join(", ")
+                    color: popup.controller.controlPrimaryText
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideNone
+                  }
+                  Label {
+                    width: parent.width
+                    text: popup.weather.description
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideNone
+                  }
+                  Label {
+                    width: parent.width
+                    text: "Feels like " + Math.round(popup.weather.feelsLike) + (popup.weather.units === "imperial" ? "\u00b0F" : "\u00b0C")
+                  }
                 }
-              }
 
-              Label {
-                width: parent.width
-                text: popup.weather.loading ? (popup.weather.available ? "Refreshing..." : "Loading weather...") : !popup.weather.available ? "No weather data" : popup.weather.stale ? "Stale weather data" : ""
-                visible: text !== ""
-                wrapMode: Text.Wrap
-                elide: Text.ElideNone
-              }
-              Label {
-                width: parent.width
-                text: popup.updatedText()
-                visible: text !== ""
-              }
-              Label {
-                width: parent.width
-                text: popup.weather.error
-                visible: text !== ""
-                color: popup.controller.urgent
-                wrapMode: Text.Wrap
-                elide: Text.ElideNone
-              }
-              Action {
-                text: popup.weather.loading ? "Refreshing..." : popup.weather.retryAfter > 0 ? "Retry in " + popup.weather.retryAfter + "s" : "Retry"
-                enabled: !popup.weather.loading && !(popup.weather.retryAfter > 0)
-                visible: !popup.weather.available || popup.weather.stale || popup.weather.error !== ""
-                onClicked: {
-                  popup.requestOpen(true)
-                  popup.weather.refresh(true)
+                Column {
+                  width: parent.width
+                  spacing: 4
+                  visible: popup.weather.available && popup.weather.forecast.length > 0
+                  Label {
+                    text: "Forecast / low - high"
+                    font.pixelSize: 10
+                  }
+                  Repeater {
+                    model: popup.weather.available ? popup.weather.forecast.slice(0, 3) : []
+                    delegate: Row {
+                      id: forecastRow
+                      required property var modelData
+                      width: weatherColumn.width
+                      height: 28
+                      spacing: 8
+                      Accessible.role: Accessible.StaticText
+                      Accessible.name: Qt.formatDate(popup.forecastDate(modelData.date), "dddd") + ", " + modelData.condition + ", low " + modelData.low + ", high " + modelData.high
+                      Label {
+                        width: 32
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Qt.formatDate(popup.forecastDate(forecastRow.modelData.date), "ddd")
+                      }
+                      LucideIcon {
+                        width: 18
+                        height: 18
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: popup.controller.icon(forecastRow.modelData.icon)
+                        color: popup.controller.controlSecondaryText
+                      }
+                      Label {
+                        width: parent.width - 66
+                        anchors.verticalCenter: parent.verticalCenter
+                        horizontalAlignment: Text.AlignRight
+                        text: Math.round(forecastRow.modelData.low) + "\u00b0 / " + Math.round(forecastRow.modelData.high) + "\u00b0"
+                        color: popup.controller.controlPrimaryText
+                      }
+                    }
+                  }
                 }
-              }
-              Action {
-                text: popup.detailsExpanded ? "Hide details" : "Details"
-                visible: popup.weather.available && (popup.weather.humidity !== null || popup.weather.wind !== null)
-                onClicked: {
-                  popup.requestOpen(true)
-                  popup.detailsExpanded = !popup.detailsExpanded
-                }
-              }
-              Column {
-                width: parent.width
-                spacing: 6
-                visible: popup.weather.available && popup.detailsExpanded
+
                 Label {
                   width: parent.width
-                  visible: popup.weather.humidity !== null
-                  text: "Humidity " + popup.weather.humidity + "%"
+                  text: popup.weather.loading ? (popup.weather.available ? "Refreshing..." : "Loading weather...") : !popup.weather.available ? "No weather data" : popup.weather.stale ? "Stale weather data" : ""
+                  visible: text !== ""
+                  wrapMode: Text.Wrap
+                  elide: Text.ElideNone
                 }
                 Label {
                   width: parent.width
-                  visible: popup.weather.wind !== null
-                  text: "Wind " + popup.weather.wind + (popup.weather.units === "imperial" ? " mph" : " m/s")
+                  text: popup.updatedText()
+                  visible: text !== ""
+                }
+                Label {
+                  width: parent.width
+                  text: popup.weather.error
+                  visible: text !== ""
+                  color: popup.controller.urgent
+                  wrapMode: Text.Wrap
+                  elide: Text.ElideNone
+                }
+                Action {
+                  text: popup.weather.loading ? "Refreshing..." : popup.weather.retryAfter > 0 ? "Retry in " + popup.weather.retryAfter + "s" : "Retry"
+                  enabled: !popup.weather.loading && !(popup.weather.retryAfter > 0)
+                  visible: !popup.weather.available || popup.weather.stale || popup.weather.error !== ""
+                  onClicked: {
+                    popup.requestOpen(true)
+                    popup.weather.refresh(true)
+                  }
+                }
+                Action {
+                  text: popup.detailsExpanded ? "Hide details" : "Details"
+                  visible: popup.weather.available && (popup.weather.humidity !== null || popup.weather.wind !== null)
+                  onClicked: {
+                    popup.requestOpen(true)
+                    popup.detailsExpanded = !popup.detailsExpanded
+                  }
+                }
+                Column {
+                  width: parent.width
+                  spacing: 6
+                  visible: popup.weather.available && popup.detailsExpanded
+                  Label {
+                    width: parent.width
+                    visible: popup.weather.humidity !== null
+                    text: "Humidity " + popup.weather.humidity + "%"
+                  }
+                  Label {
+                    width: parent.width
+                    visible: popup.weather.wind !== null
+                    text: "Wind " + popup.weather.wind + (popup.weather.units === "imperial" ? " mph" : " m/s")
+                  }
                 }
               }
             }
           }
         }
 
-        Rectangle {
-          width: parent.width
-          color: popup.controller.controlSurface
-          radius: 18
-          implicitHeight: quoteLayout.implicitHeight + 32
+        Repeater {
+          model: popup.quote ? 1 : 0
+          delegate: Rectangle {
+            width: parent.width
+            color: popup.controller.controlSurface
+            radius: 18
+            implicitHeight: quoteLayout.implicitHeight + 32
 
-          Grid {
-            id: quoteLayout
-            x: 16
-            y: 16
-            width: parent.width - 32
-            columns: width >= 460 ? 2 : 1
-            columnSpacing: 16
-            rowSpacing: 10
+            Grid {
+              id: quoteLayout
+              x: 16
+              y: 16
+              width: parent.width - 32
+              columns: width >= 460 ? 2 : 1
+              columnSpacing: 16
+              rowSpacing: 10
 
-            Row {
-              id: quoteHeading
-              width: quoteLayout.columns === 1 ? quoteLayout.width : 150
-              spacing: 8
-              LucideIcon {
-                width: 18
-                height: 18
-                source: popup.controller.icon("message-square-quote")
-                color: popup.controller.controlActiveIcon
+              Row {
+                id: quoteHeading
+                width: quoteLayout.columns === 1 ? quoteLayout.width : 150
+                spacing: 8
+                LucideIcon {
+                  width: 18
+                  height: 18
+                  source: popup.controller.icon("message-square-quote")
+                  color: popup.controller.controlActiveIcon
+                }
+                Label {
+                  text: "Quote of the day"
+                  color: popup.controller.controlSecondaryText
+                  font.pixelSize: 12
+                }
               }
-              Label {
-                text: "Quote of the day"
-                color: popup.controller.controlSecondaryText
-                font.pixelSize: 12
-              }
-            }
 
-            Column {
-              width: quoteLayout.columns === 1 ? quoteLayout.width : quoteLayout.width - quoteHeading.width - quoteLayout.columnSpacing
-              spacing: 8
+              Column {
+                width: quoteLayout.columns === 1 ? quoteLayout.width : quoteLayout.width - quoteHeading.width - quoteLayout.columnSpacing
+                spacing: 8
 
-              Label {
-                width: parent.width
-                text: popup.quote.loading ? "Loading quote..." : popup.quote.available ? "\u201c" + popup.quote.quote + "\u201d" : "No quote available"
-                wrapMode: Text.Wrap
-                elide: Text.ElideNone
-                horizontalAlignment: Text.AlignRight
-                color: popup.controller.controlPrimaryText
-                font.pixelSize: 15
-              }
-              Label {
-                width: parent.width
-                text: popup.quote.error
-                visible: text !== ""
-                wrapMode: Text.Wrap
-                horizontalAlignment: Text.AlignRight
-              }
-              Action {
-                anchors.right: parent.right
-                text: popup.quote.loading ? "Refreshing..." : "Retry"
-                enabled: !popup.quote.loading
-                visible: !popup.quote.available || popup.quote.error !== ""
-                onClicked: {
-                  popup.requestOpen(true)
-                  popup.quote.refresh(true)
+                Label {
+                  width: parent.width
+                  text: popup.quote.loading ? "Loading quote..." : popup.quote.available ? "\u201c" + popup.quote.quote + "\u201d" : "No quote available"
+                  wrapMode: Text.Wrap
+                  elide: Text.ElideNone
+                  horizontalAlignment: Text.AlignRight
+                  color: popup.controller.controlPrimaryText
+                  font.pixelSize: 15
+                }
+                Label {
+                  width: parent.width
+                  text: popup.quote.error
+                  visible: text !== ""
+                  wrapMode: Text.Wrap
+                  horizontalAlignment: Text.AlignRight
+                }
+                Action {
+                  anchors.right: parent.right
+                  text: popup.quote.loading ? "Refreshing..." : "Retry"
+                  enabled: !popup.quote.loading
+                  visible: !popup.quote.available || popup.quote.error !== ""
+                  onClicked: {
+                    popup.requestOpen(true)
+                    popup.quote.refresh(true)
+                  }
                 }
               }
             }

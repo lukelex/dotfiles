@@ -309,12 +309,15 @@ Scope {
   property string i3Layout: ""
   property int i3LayoutRevision: 0
 
-  WeatherService {
-    id: weatherService
-    preferences: root.preferences
-    panelVisible: root.todayCenterTarget !== null && root.todayCenterTarget.visible
+  OptionalModule {
+    id: weatherLoader
+    module: "WeatherService.qml"
+    initialProperties: () => ({
+      preferences: root.preferences,
+      panelVisible: Qt.binding(() => root.todayCenterTarget !== null && root.todayCenterTarget.visible)
+    })
   }
-  QuoteService { id: quoteService }
+  OptionalModule { id: quoteLoader; module: "QuoteService.qml" }
 
   PwObjectTracker {
     objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource].filter(node => node !== null)
@@ -1293,6 +1296,7 @@ Scope {
         id: panel
 
       required property var modelData
+      readonly property var todayCenter: todayLoader.item
 
       function closeControlCenter() {
         controlCenter.requestClose()
@@ -1318,6 +1322,7 @@ Scope {
       }
 
       function openDateTime(pin = false) {
+        if (!todayCenter) return
         root.cancelHoverClose()
         root.closeConnectivity()
         root.closeAudioOutput()
@@ -1443,12 +1448,11 @@ Scope {
         service: root.notificationService
       }
 
-      TodayCenter {
-        id: todayCenter
-        controller: root
-        panel: panel
-        weather: weatherService
-        quote: quoteService
+      OptionalModule {
+        id: todayLoader
+        module: "TodayCenter.qml"
+        initialProperties: () => ({ controller: root, panel,
+          weather: Qt.binding(() => weatherLoader.item), quote: Qt.binding(() => quoteLoader.item) })
       }
 
       Component.onCompleted: {
@@ -1746,7 +1750,7 @@ Scope {
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
               onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openDateTime() }
-              onExited: todayCenter.scheduleClose()
+              onExited: todayCenter?.scheduleClose()
               onClicked: panel.openDateTime(true)
             }
           }
@@ -1792,7 +1796,7 @@ Scope {
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
               onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openDateTime() }
-              onExited: todayCenter.scheduleClose()
+              onExited: todayCenter?.scheduleClose()
               onClicked: panel.openDateTime(true)
             }
           }
