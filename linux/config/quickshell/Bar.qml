@@ -1988,7 +1988,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openAudioOutput() }
-            onExited: audioOutputCenter?.scheduleClose()
+            onExited: panel.audioOutputCenter?.scheduleClose()
             onClicked: panel.openAudioOutput(true)
           }
         }
