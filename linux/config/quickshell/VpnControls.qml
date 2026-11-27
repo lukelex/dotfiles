@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 
 Column {
   id: vpn
@@ -46,7 +45,7 @@ Column {
 
   Row {
     width: parent.width
-    height: visible ? 32 : 0
+    height: visible ? vpnLocations.implicitHeight : 0
     spacing: 10
     visible: vpn.service.installed
 
@@ -56,31 +55,21 @@ Column {
       width: 80
     }
 
-    ComboBox {
+    SettingsChoice {
       id: vpnLocations
 
       anchors.verticalCenter: parent.verticalCenter
       enabled: !vpn.service.busy
-      font.family: vpn.popup.controller.fontFamily
-      font.pixelSize: 11
-      palette.base: vpn.popup.controller.controlSurface
-      palette.button: vpn.popup.controller.controlSurface
-      palette.text: vpn.popup.controller.controlPrimaryText
-      palette.buttonText: vpn.popup.controller.controlPrimaryText
-      palette.highlight: vpn.popup.controller.controlActive
-      palette.highlightedText: vpn.popup.controller.controlPrimaryText
-      palette.window: vpn.popup.controller.controlSurface
-      palette.windowText: vpn.popup.controller.controlPrimaryText
+      controller: vpn.popup.controller
+      focusPolicy: vpn.popup.pinned ? Qt.StrongFocus : Qt.NoFocus
       model: vpn.service.locationOptions
       textRole: "label"
       valueRole: "value"
       currentIndex: vpn.service.locationOptions.findIndex(option => option.value === vpn.service.selectedLocation)
       width: parent.width - 90 - (applyVpnLocation.visible ? applyVpnLocation.width + 10 : 0)
       Accessible.name: "VPN destination"
-      onActivated: function(index) {
-        vpn.popup.requestOpen(true)
-        vpn.service.selectLocation(model[index].value)
-      }
+      onPressedChanged: { if (pressed) vpn.popup.requestOpen(true) }
+      onActivated: index => vpn.service.selectLocation(model[index].value)
     }
 
     Action {
