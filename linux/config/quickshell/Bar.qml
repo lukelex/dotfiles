@@ -372,7 +372,10 @@ Scope {
     else if (!root.hyprlandSession && I3.focusedMonitor)
       monitorName = I3.focusedMonitor.name
     const panel = monitorName ? root.panelsByScreen[monitorName] : null
-    return panel || (root.controlCenterTarget ? root.controlCenterTarget.panel : null)
+    if (panel) return panel
+    const screens = Quickshell.screens
+    const primary = screens.find(screen => screen.x === 0 && screen.y === 0)
+    return (primary && root.panelsByScreen[primary.name]) || root.panelsByScreen[screens[0]?.name] || null
   }
 
   function openCalendarFromKeyboard() {
@@ -861,7 +864,7 @@ Scope {
 
   function runHoverClose() {
     if (root.hoverCloseCandidate === 2) {
-      root.controlCenterTarget.requestClose()
+      root.controlCenterTarget?.requestClose()
     }
     root.hoverCloseCandidate = 0
   }
@@ -1296,10 +1299,11 @@ Scope {
         id: panel
 
       required property var modelData
+      readonly property var controlCenter: controlLoader.item
       readonly property var todayCenter: todayLoader.item
 
       function closeControlCenter() {
-        controlCenter.requestClose()
+        controlCenter?.requestClose()
       }
 
       function toggleNotifications() {
@@ -1317,7 +1321,7 @@ Scope {
         root.closeConnectivity()
         root.closeAudioOutput()
         root.closeDateTime()
-        controlCenter.requestClose()
+        controlCenter?.requestClose()
         notificationCenter.requestOpen(pin)
       }
 
@@ -1329,7 +1333,7 @@ Scope {
         if (root.todayCenterTarget !== todayCenter)
           root.closeDateTime()
         root.todayCenterTarget = todayCenter
-        controlCenter.requestClose()
+        controlCenter?.requestClose()
         root.closeNotifications()
         todayCenter.requestOpen(pin)
       }
@@ -1341,7 +1345,7 @@ Scope {
         if (root.connectivityTarget !== connectivityCenter)
           root.closeConnectivity()
         root.connectivityTarget = connectivityCenter
-        controlCenter.requestClose()
+        controlCenter?.requestClose()
         root.closeNotifications()
         root.closeDateTime()
         connectivityCenter.requestOpen(pin)
@@ -1353,7 +1357,7 @@ Scope {
         root.closeAudioOutput()
         root.closeDateTime()
         root.closeNotifications()
-        controlCenter.requestClose()
+        controlCenter?.requestClose()
         if (root.bluetoothTarget !== bluetoothCenter)
           root.closeBluetooth()
         root.bluetoothTarget = bluetoothCenter
@@ -1361,10 +1365,12 @@ Scope {
       }
 
       function openControlCenter() {
+        if (!controlCenter) return
         root.closeConnectivity()
         root.closeDateTime()
         root.closeAudioOutput()
         root.closeNotifications()
+        root.controlCenterTarget = controlCenter
         controlCenter.requestOpen()
         systemStatus.running = true
         root.cancelHoverClose()
@@ -1374,7 +1380,7 @@ Scope {
         root.cancelHoverClose()
         root.closeConnectivity()
         root.closeDateTime()
-        controlCenter.requestClose()
+        controlCenter?.requestClose()
         root.closeNotifications()
         if (root.audioOutputTarget !== audioOutputCenter)
           root.closeAudioOutput()
@@ -1422,10 +1428,10 @@ Scope {
           top: true
         }
 
-      ControlCenter {
-        id: controlCenter
-        controller: root
-        panel: panel
+      OptionalModule {
+        id: controlLoader
+        module: "ControlCenter.qml"
+        initialProperties: () => ({ controller: root, panel })
       }
 
       NotificationCenter {
@@ -1457,9 +1463,6 @@ Scope {
 
       Component.onCompleted: {
         root.panelsByScreen[modelData.name] = panel
-        if (root.controlCenterTarget === null || (modelData.x === 0 && modelData.y === 0)) {
-          root.controlCenterTarget = controlCenter
-        }
       }
 
       Row {
@@ -2064,6 +2067,7 @@ Scope {
 
         LucideIcon {
           height: root.barFontSize
+          visible: !!panel.controlCenter
           source: root.icon("sliders")
           width: root.barFontSize
           color: root.foreground
