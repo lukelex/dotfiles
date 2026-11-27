@@ -1299,6 +1299,7 @@ Scope {
         id: panel
 
       required property var modelData
+      readonly property var notificationCenter: notificationLoader.item
       readonly property var audioOutputCenter: audioLoader.item
       readonly property var controlCenter: controlLoader.item
       readonly property var todayCenter: todayLoader.item
@@ -1308,6 +1309,7 @@ Scope {
       }
 
       function toggleNotifications() {
+        if (!notificationCenter) return
         if (notificationCenter.visible && notificationCenter.pinned && !notificationCenter.closePending)
           notificationCenter.requestClose()
         else
@@ -1315,6 +1317,7 @@ Scope {
       }
 
       function showNotifications(pin = false) {
+        if (!notificationCenter) return
         root.cancelHoverClose()
         if (root.notificationCenterTarget !== notificationCenter)
           root.closeNotifications()
@@ -1434,11 +1437,10 @@ Scope {
         initialProperties: () => ({ controller: root, panel })
       }
 
-      NotificationCenter {
-        id: notificationCenter
-        controller: root
-        panel: panel
-        service: root.notificationService
+      OptionalModule {
+        id: notificationLoader
+        module: "NotificationCenter.qml"
+        initialProperties: () => ({ controller: root, panel, service: root.notificationService })
       }
 
       NotificationPopup {
@@ -2029,7 +2031,7 @@ Scope {
             onEntered: {
               panel.showNotifications()
             }
-            onExited: notificationCenter.requestHoverClose()
+            onExited: notificationCenter?.requestHoverClose()
             onClicked: root.toggleDoNotDisturb()
           }
         }
