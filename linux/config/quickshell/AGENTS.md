@@ -67,6 +67,7 @@ Run appropriate checks from the repository root:
 
 ```sh
 node --test linux/config/quickshell/tests/*.test.cjs
+QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input linux/config/quickshell/tests/tst_OptionalModule.qml
 /usr/lib/qt6/bin/qmllint linux/config/quickshell/<changed-file>.qml
 git diff --check -- linux/config/quickshell linux/config/lucide
 quickshell list --all
