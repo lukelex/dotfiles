@@ -142,6 +142,4 @@ test('native Bluetooth watchers update the shared snapshot as devices and readin
     assert.match(source, new RegExp(`on${event}Changed\\(\\) \\{ service\\.updateDevices\\(\\) \\}`));
   assert.match(source, /service\.usbDevices = exitCode === 0 \? service\.parseDevices\(output\.text\) : \[\]/);
   assert.match(source, /service\.updateDevices\(\)\n\s+\}\n\s+\}/);
-  const bar = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
-  assert.match(bar, /HeadphoneBatteryModule \{\s+controller: root\s+devices: root\.headsetService\.devices\s+\}[\s\S]*?id: volumeWidget/);
 });

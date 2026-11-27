@@ -1976,9 +1976,12 @@ Scope {
             + (root.batteryTime ? ", " + root.batteryTime
               + (root.batteryState === "charging" ? " until full" : root.batteryState === "discharging" ? " remaining" : "") : "")
         }
-        HeadphoneBatteryModule {
-          controller: root
-          devices: root.headsetService.devices
+        OptionalModule {
+          module: "HeadphoneBatteryModule.qml"
+          initialProperties: () => ({
+            controller: root,
+            devices: Qt.binding(() => root.headsetService?.devices ?? [])
+          })
         }
 
         Item {
