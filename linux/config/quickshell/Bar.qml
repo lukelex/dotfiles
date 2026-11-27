@@ -341,12 +341,22 @@ Scope {
       root.todayCenterTarget.requestClose()
   }
 
-  ConnectivityService {
-    id: connectivity
-    preferences: root.preferences
-    wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
-    wifiDiscoveryEnabled: root.wifiSettingsOpen
-    trafficMonitoringEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible
+  readonly property var connectivity: networkLoader.item
+  readonly property var bluetooth: bluetoothLoader.item
+  OptionalModule {
+    id: networkLoader
+    module: "ConnectivityService.qml"
+    initialProperties: () => ({
+      preferences: root.preferences,
+      wifiScanningEnabled: Qt.binding(() => root.connectivityTarget !== null && root.connectivityTarget.visible),
+      wifiDiscoveryEnabled: Qt.binding(() => root.wifiSettingsOpen),
+      trafficMonitoringEnabled: Qt.binding(() => root.connectivityTarget !== null && root.connectivityTarget.visible)
+    })
+  }
+  OptionalModule {
+    id: bluetoothLoader
+    module: "BluetoothService.qml"
+    initialProperties: () => ({ preferences: root.preferences })
   }
 
   function closeBluetooth() {
@@ -836,7 +846,8 @@ Scope {
   OptionalModule {
     id: settingsLoader
     module: "SystemSettings.qml"
-    initialProperties: () => ({ controller: root, service: root.notificationService, connectivity })
+    initialProperties: () => ({ controller: root, service: root.notificationService,
+      connectivity: Qt.binding(() => root.connectivity), bluetooth: Qt.binding(() => root.bluetooth) })
   }
 
   function closeNotifications() {
@@ -1380,7 +1391,7 @@ Scope {
         id: connectivityCenter
         controller: root
         panel: panel
-        service: connectivity
+        service: root.connectivity
       }
 
       ConnectivityCenter {
@@ -1388,7 +1399,7 @@ Scope {
         bluetoothOnly: true
         controller: root
         panel: panel
-        service: connectivity
+        service: root.bluetooth
       }
 
       OptionalModule {
@@ -1888,12 +1899,12 @@ Scope {
           width: root.barFontSize
           LucideIcon {
             anchors.fill: parent
-            source: root.icon(!connectivity.wifiConnected && connectivity.ethernetConnected ? "ethernet-port"
+            source: root.icon(!root.connectivity ? "info" : !connectivity.wifiConnected && connectivity.ethernetConnected ? "ethernet-port"
               : !connectivity.wifiEnabled ? "wifi-off"
               : !connectivity.wifiConnected ? "wifi-zero"
               : connectivity.wifiStrength < 0.35 ? "wifi-low"
               : connectivity.wifiStrength < 0.7 ? "wifi-high" : "wifi")
-            color: connectivity.wifiConnected || connectivity.ethernetConnected ? root.foreground : root.muted
+            color: connectivity && (connectivity.wifiConnected || connectivity.ethernetConnected) ? root.foreground : root.muted
           }
 
           MouseArea {
@@ -1915,9 +1926,9 @@ Scope {
           width: root.barFontSize
           LucideIcon {
             anchors.fill: parent
-            source: root.icon(connectivity.bluetoothEnabled ? "bluetooth" : "bluetooth-off")
-            color: connectivity.connectedBluetoothDevices.some(device => device.batteryAvailable && device.battery <= 0.15)
-              ? root.urgent : connectivity.connectedBluetoothDevices.length > 0 ? root.foreground : root.muted
+            source: root.icon(!root.bluetooth ? "info" : root.bluetooth.bluetoothEnabled ? "bluetooth" : "bluetooth-off")
+            color: !root.bluetooth ? root.muted : root.bluetooth.connectedBluetoothDevices.some(device => device.batteryAvailable && device.battery <= 0.15)
+              ? root.urgent : root.bluetooth.connectedBluetoothDevices.length > 0 ? root.foreground : root.muted
           }
           MouseArea {
             anchors.fill: parent

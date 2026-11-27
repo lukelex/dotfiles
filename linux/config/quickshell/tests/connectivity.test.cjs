@@ -4,14 +4,14 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 
-const source = fs.readFileSync(path.join(__dirname, '../ConnectivityService.qml'), 'utf8');
+const source = ['ConnectivityService', 'BluetoothService'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
 const ConnectionState = { Disconnected: 0, Connecting: 1, Connected: 2 };
 const BluetoothAdapterState = { Blocked: 0 };
 const NetworkConnectivity = { Unknown: 0, None: 1, Portal: 2, Limited: 3, Full: 4 };
 const WifiSecurityType = { Open: 0, Owe: 1, WpaPsk: 2, Wpa2Psk: 3, Sae: 4, Wpa2Eap: 5 };
 
 test('Wi-Fi strength uses qualitative labels while Bluetooth batteries keep percentages', () => {
-  const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+  const panel = ['ConnectivityCenter', 'NetworkControls', 'BluetoothControls'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
   const functions = {};
   for (const name of ['strengthText', 'percentageText']) {
     const match = panel.match(new RegExp(`^( +)function ${name}\\([^]*?\\n\\1\\}`, 'm'));
@@ -25,13 +25,13 @@ test('Wi-Fi strength uses qualitative labels while Bluetooth batteries keep perc
     assert.equal(functions.strengthText(strength), label);
   }
   assert.equal(functions.percentageText(0.75), '75%');
-  assert.match(panel, /popup\.strengthText\(popup\.service\.wifiStrength\)/);
+  assert.match(panel, /popup\.strengthText\(controls\.popup\.service\.wifiStrength\)/);
   assert.match(panel, /popup\.strengthText\(modelData\.signalStrength\)/);
   assert.match(panel, /popup\.percentageText\(deviceRow\.modelData\.battery\)/);
 });
 
 test('Wi-Fi strength colors follow the label thresholds and theme tokens', () => {
-  const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+  const panel = ['ConnectivityCenter', 'NetworkControls', 'BluetoothControls'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
   const controller = {
     controlDownloadIcon: 'green', controlActiveIcon: 'blue',
     controlWarningText: 'amber', urgent: 'red',
@@ -48,12 +48,12 @@ test('Wi-Fi strength colors follow the label thresholds and theme tokens', () =>
   const action = fs.readFileSync(path.join(__dirname, '../ConnectivityAction.qml'), 'utf8');
   assert.match(action, /text: action\.qualityText\s+color: action\.qualityColor/);
   assert.match(action, /text: action\.qualityText \? action\.subtitle\.slice\(0, -action\.qualityText\.length\) : action\.subtitle/);
-  assert.match(panel, /popup\.strengthColor\(popup\.service\.wifiStrength\)/);
-  assert.match(panel, /modelData && !connecting\s*\? popup\.strengthColor\(modelData\.signalStrength\)/);
+  assert.match(panel, /popup\.strengthColor\(controls\.popup\.service\.wifiStrength\)/);
+  assert.match(panel, /modelData && !connecting\s*\? controls\.popup\.strengthColor\(modelData\.signalStrength\)/);
 });
 
 test('Bluetooth battery percentages use qualitative colors only when available', () => {
-  const panel = fs.readFileSync(path.join(__dirname, '../ConnectivityCenter.qml'), 'utf8');
+  const panel = ['ConnectivityCenter', 'NetworkControls', 'BluetoothControls'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
   const controller = {
     controlDownloadIcon: 'green', controlActiveIcon: 'blue',
     controlWarningText: 'amber', urgent: 'red', controlSecondaryText: 'neutral',
@@ -61,9 +61,9 @@ test('Bluetooth battery percentages use qualitative colors only when available',
   const match = panel.match(/^( +)function strengthColor\([^]*?\n\1\}/m);
   const popup = { controller };
   popup.strengthColor = vm.runInNewContext(`(${match[0]})`, { popup });
-  const binding = panel.match(/color: (deviceRow\.modelData && deviceRow\.modelData\.batteryAvailable\s*\? popup\.strengthColor\(deviceRow\.modelData\.battery\) : popup\.controller\.controlSecondaryText)/);
+  const binding = panel.match(/color: (deviceRow\.modelData && deviceRow\.modelData\.batteryAvailable\s*\? controls\.popup\.strengthColor\(deviceRow\.modelData\.battery\) : controls\.popup\.controller\.controlSecondaryText)/);
   assert.ok(binding);
-  const colorFor = modelData => vm.runInNewContext(binding[1], { popup, deviceRow: { modelData } });
+  const colorFor = modelData => vm.runInNewContext(binding[1], { controls: { popup }, deviceRow: { modelData } });
   for (const [battery, color] of [
     [0, 'red'], [0.24, 'red'], [0.25, 'amber'], [0.49, 'amber'],
     [0.5, 'blue'], [0.74, 'blue'], [0.75, 'green'], [1, 'green'],
@@ -240,8 +240,8 @@ test('rescan explicitly restarts the scanner only while discovery page and radio
 
 test('Wi-Fi discovery scanner is enabled only for a visible network panel, explicit discover page or weak suggestions', () => {
   const bar = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
-  assert.match(bar, /wifiScanningEnabled: root\.connectivityTarget !== null && root\.connectivityTarget\.visible/);
-  assert.match(bar, /wifiDiscoveryEnabled: root\.wifiSettingsOpen/);
+  assert.match(bar, /wifiScanningEnabled: Qt\.binding\(\(\) => root\.connectivityTarget !== null && root\.connectivityTarget\.visible/);
+  assert.match(bar, /wifiDiscoveryEnabled: Qt\.binding\(\(\) => root\.wifiSettingsOpen/);
   assert.match(source, /service\.wifiScanningEnabled \|\| service\.wifiDiscoveryEnabled \|\| service\.wifiSuggestionsEnabled && service\.wifiWeak/);
   assert.match(source, /service\.wifiEnabled && !service\.wifiRescanSuspended/);
 });
@@ -444,7 +444,7 @@ test('hardware blocked Wi-Fi cannot be powered on', () => {
 test('blocked Bluetooth adapters cannot be powered on', () => {
   const { service, calls } = serviceForTest();
   assert.equal(service.setBluetoothEnabled(true), false);
-  assert.equal(service._state.bluetoothError, 'A Bluetooth adapter is blocked.');
+  assert.equal(service.bluetoothError, 'A Bluetooth adapter is blocked.');
   assert.deepEqual(calls.power, []);
 });
 

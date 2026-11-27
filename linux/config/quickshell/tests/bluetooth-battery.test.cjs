@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 
-const source = fs.readFileSync(path.join(__dirname, '../ConnectivityService.qml'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../BluetoothService.qml'), 'utf8');
 
 function setup() {
   const commands = [];

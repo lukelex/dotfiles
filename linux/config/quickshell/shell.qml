@@ -16,6 +16,7 @@ Scope {
   NotificationService {
     id: notifications
     preferences: preferences
+    bluetoothDevices: bar.bluetooth?.connectedBluetoothDevices ?? []
     historyBeingRead: bar.notificationCenterOpen
   }
 

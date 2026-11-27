@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Services.Notifications
-import Quickshell.Bluetooth
 import Quickshell.Io
 import QtCore
 import QtQml
@@ -8,6 +7,7 @@ import "NotificationDefaults.js" as NotificationDefaults
 
 QtObject {
   id: service
+  property var bluetoothDevices: []
 
   property int historyLimit: 100
   property int popupLimit: 5
@@ -836,7 +836,7 @@ QtObject {
     if (notification.summary !== "Bluetooth device connected")
       return body
 
-    const connected = Bluetooth.devices.values.filter(device => device.connected
+    const connected = service.bluetoothDevices.filter(device => device.connected
       && device.batteryAvailable && Number.isFinite(device.battery)
       && device.battery >= 0 && device.battery <= 1)
     if (!connected.length)
@@ -844,7 +844,7 @@ QtObject {
 
     const text = String(notification.summary || "") + "\n" + body
     const matching = connected.filter(device => device.name && text.toLowerCase().includes(device.name.toLowerCase()))
-    const connectedDevices = Bluetooth.devices.values.filter(device => device.connected)
+    const connectedDevices = service.bluetoothDevices.filter(device => device.connected)
     // Never borrow another device's battery while this device's reading is pending.
     const device = matching.length === 1 ? matching[0]
       : !body && connectedDevices.length === 1 && connected.length === 1 ? connected[0] : null

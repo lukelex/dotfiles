@@ -67,7 +67,7 @@ test('clicking a control keeps the preview visible and does not replay its entra
 
 test('connection toggles stay in the anchored preview', () => {
   for (const title of ['Wi-Fi', 'Ethernet', 'NordVPN', 'Bluetooth']) {
-    const controls = title === 'NordVPN' ? fs.readFileSync(path.join(__dirname, '../VpnControls.qml'), 'utf8') : source;
+    const controls = fs.readFileSync(path.join(__dirname, `../${title === 'NordVPN' ? 'Vpn' : title === 'Bluetooth' ? 'Bluetooth' : 'Network'}Controls.qml`), 'utf8');
     const action = controls.match(new RegExp(`title:[^\\n]*"${title}"[\\s\\S]*?onActivated: \\{([\\s\\S]*?)\\n\\s+\\}`));
     assert.ok(action, `Missing ${title} action`);
     assert.match(action[1], /(?:vpn\.)?popup\.requestOpen\(\)/);

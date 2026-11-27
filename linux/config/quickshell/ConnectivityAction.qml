@@ -103,7 +103,7 @@ Rectangle {
       delegate: Row {
         id: trafficRate
         required property string modelData
-        readonly property string rate: action.host.service.formatSpeed(action.host.service.connectionSpeed(action.wiredTraffic, modelData, action.trafficDeviceName))
+        readonly property string rate: !action.showTraffic ? "" : action.host.service.formatSpeed(action.host.service.connectionSpeed(action.wiredTraffic, modelData, action.trafficDeviceName))
         width: trafficColumn.width
         height: 20
         spacing: 5

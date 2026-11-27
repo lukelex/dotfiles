@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import Quickshell
-import Quickshell.Networking
 import QtQuick
 import "DesignTokens.js" as Design
 import QtQuick.Controls
@@ -298,7 +297,7 @@ Scope {
           }
           Label {
             width: parent.width
-            text: popup.service.internetStatus
+            text: popup.bluetoothOnly ? "" : popup.service?.internetStatus ?? "Internet status unknown"
             visible: !popup.bluetoothOnly
             color: popup.controller.controlPrimaryText
             Accessible.name: "NetworkManager internet status: " + text
@@ -346,249 +345,16 @@ Scope {
         }
       }
 
-      Action {
-        width: parent.width
-        title: "Wi-Fi"
-        visible: !popup.bluetoothOnly
-        showTraffic: popup.service.wifiConnected
-        iconName: "wifi"
-        radioSwitch: true
-        active: popup.service.wifiEnabled
-        enabled: popup.service.wifiAvailable && (popup.service.wifiEnabled || popup.service.wifiHardwareEnabled)
-        subtitle: !popup.service.wifiAvailable ? "No Wi-Fi adapter"
-          : !popup.service.wifiHardwareEnabled ? "Hardware blocked"
-          : !popup.service.wifiEnabled ? "Off"
-          : popup.service.wifiConnected ? popup.service.wifiSsid + " / " + popup.strengthText(popup.service.wifiStrength)
-          : "On / Not connected"
-        qualityColor: popup.service.wifiConnected && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
-          ? popup.strengthColor(popup.service.wifiStrength) : popup.controller.controlSecondaryText
-        qualityText: popup.service.wifiConnected && popup.service.wifiAvailable && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
-          ? popup.strengthText(popup.service.wifiStrength) : ""
-        detail: title + "\n" + subtitle + (popup.service.activeNetwork ? "\nDevice: " + popup.service.activeNetwork.device.name : "")
-        onActivated: {
-          popup.requestOpen()
-          popup.service.setWifiEnabled(!popup.service.wifiEnabled)
-        }
-      }
-
-      Repeater {
-        model: popup.bluetoothOnly ? [] : popup.service._wiredDevices.length ? popup.service._wiredDevices : [null]
-        delegate: Action {
-          required property var modelData
-          width: sections.width
-          title: popup.service._wiredDevices.length > 1 ? "Ethernet / " + modelData.name : "Ethernet"
-          showTraffic: modelData !== null && modelData.connected
-          wiredTraffic: true
-          trafficDeviceName: modelData ? modelData.name : ""
-          iconName: "ethernet-port"
-          radioSwitch: true
-          active: modelData !== null && modelData.connected
-          enabled: modelData !== null && modelData.nmManaged && !popup.service.ethernetBusy
-            && modelData.state !== ConnectionState.Connecting
-          subtitle: popup.service.ethernetStatus(modelData)
-          detail: title + "\n" + subtitle + (modelData ? "\nDevice: " + modelData.name : "")
-          onActivated: {
-            popup.requestOpen()
-            popup.service.setEthernetEnabled(!modelData.connected, modelData)
-          }
-        }
-      }
-
       Label {
-        width: parent.width
-        visible: !popup.bluetoothOnly && text !== ""
-        text: popup.service.ethernetError
-        color: popup.controller.urgent
-        elide: Text.ElideNone
-        wrapMode: Text.Wrap
+        visible: !popup.service || controls.status === Loader.Error
+        text: popup.bluetoothOnly ? "Bluetooth controls unavailable" : "Network controls unavailable"
       }
-
-      Label {
-        width: parent.width
-        text: "Saved networks"
-        visible: !popup.bluetoothOnly
-        font.pixelSize: 12
-      }
-
-      Label {
-        width: parent.width
-        visible: !popup.bluetoothOnly && popup.service.wifiConnecting
-        text: popup.service.connectingNetwork ? "Connecting to " + popup.service.connectingNetwork.name + "..." : "Connecting..."
-      }
-
-      Label {
-        width: parent.width
-        visible: !popup.bluetoothOnly && text !== ""
-        text: popup.service.wifiError
-        color: popup.controller.urgent
-        elide: Text.ElideNone
-        wrapMode: Text.Wrap
-      }
-
-      ConnectionDeviceList {
-        id: wifiScroll
-        visible: !popup.bluetoothOnly
-        width: parent.width
-        entries: popup.bluetoothOnly ? [] : popup.service.savedNetworks
-        keyForEntry: network => JSON.stringify([network.device.name, network.name, network.security])
-        panelVisible: popup.visible && !popup.bluetoothOnly
-        keyboardEnabled: popup.pinned
-        focusFallback: closeButton
-        delegate: Action {
-          required property var entry
-          readonly property var modelData: entry
-          readonly property bool connecting: modelData && (modelData.state === ConnectionState.Connecting
-            || popup.service.connectingNetwork === modelData)
-          width: wifiScroll.rowWidth
-          height: 54
-          title: modelData ? modelData.name || "Hidden network" : "Network unavailable"
-          detail: title + "\n" + subtitle + (modelData ? "\nDevice: " + modelData.device.name : "")
-          subtitle: !modelData ? "Unavailable" : connecting ? "Connecting..."
-            : modelData.connected ? "Connected / " + popup.strengthText(modelData.signalStrength)
-            : "Saved / " + popup.strengthText(modelData.signalStrength)
-          qualityColor: modelData && !connecting
-            ? popup.strengthColor(modelData.signalStrength) : popup.controller.controlSecondaryText
-          qualityText: modelData && !connecting ? popup.strengthText(modelData.signalStrength) : ""
-          iconName: modelData && modelData.connected ? "circle-check" : "wifi"
-          active: modelData && (modelData.connected || connecting)
-          enabled: modelData !== null && popup.service.wifiEnabled && popup.service.wifiHardwareEnabled
-            && !popup.service.wifiConnecting && !modelData.connected
-          onActivated: {
-            popup.requestOpen(true)
-            popup.service.connectNetwork(modelData)
-          }
-        }
-      }
-
-      Label {
-        width: parent.width
-        height: visible ? 30 : 0
-        visible: !popup.bluetoothOnly && popup.service.savedNetworks.length === 0
-        text: popup.service.wifiEnabled ? "No saved networks in range" : "Turn on Wi-Fi to see saved networks"
-        verticalAlignment: Text.AlignVCenter
-      }
-
-      Action {
-        width: parent.width
-        title: "Add Wi-Fi network…"
-        visible: !popup.bluetoothOnly
-        iconName: "wifi"
-        detail: "Create a Wi-Fi profile in Network settings. Enter the network name and security credentials, then save. In-range profiles appear in Saved networks."
-        enabled: popup.service.wifiAvailable
-        onActivated: {
-          popup.requestClose(true)
-          Quickshell.execDetached(["nm-connection-editor", "--create", "--type=802-11-wireless"])
-        }
-      }
-
       OptionalModule {
+        id: controls
         width: parent.width
-        active: !popup.bluetoothOnly && !!popup.controller.vpnService
-        module: "VpnControls.qml"
-        initialProperties: () => ({ popup, service: Qt.binding(() => popup.controller.vpnService) })
-      }
-
-      Action {
-        width: parent.width
-        title: "Bluetooth"
-        visible: popup.bluetoothOnly
-        iconName: "bluetooth"
-        radioSwitch: true
-        active: popup.service.bluetoothEnabled
-        enabled: popup.service.bluetoothAvailable && !popup.service.bluetoothChanging
-          && (popup.service.bluetoothEnabled || !popup.service.bluetoothBlocked)
-        subtitle: !popup.service.bluetoothAvailable ? "No Bluetooth adapter"
-          : popup.service.bluetoothBlocked ? "Hardware blocked"
-          : popup.service.bluetoothChanging ? "Updating radio..."
-          : popup.service.bluetoothConnecting ? "Connecting..."
-          : popup.service.bluetoothEnabled ? "On" : "Off"
-        onActivated: {
-          popup.requestOpen()
-          popup.service.setBluetoothEnabled(!popup.service.bluetoothEnabled)
-        }
-      }
-
-      Label {
-        width: parent.width
-        text: "Connected devices"
-        visible: popup.bluetoothOnly
-        font.pixelSize: 12
-      }
-
-      Label {
-        width: parent.width
-        visible: popup.bluetoothOnly && text !== ""
-        text: popup.service.bluetoothError
-        color: popup.controller.urgent
-        elide: Text.ElideNone
-        wrapMode: Text.Wrap
-      }
-
-      ConnectionDeviceList {
-        id: bluetoothScroll
-        visible: popup.bluetoothOnly
-        width: parent.width
-        maximumHeight: 140
-        entries: popup.bluetoothOnly ? popup.service.connectedBluetoothDevices : []
-        keyForEntry: device => device.dbusPath
-        panelVisible: popup.visible && popup.bluetoothOnly
-        keyboardEnabled: popup.pinned
-        focusFallback: closeButton
-        delegate: Rectangle {
-          id: deviceRow
-          required property var entry
-          readonly property var modelData: entry
-          readonly property string deviceName: modelData ? modelData.name : "Device unavailable"
-          width: bluetoothScroll.rowWidth
-          height: 48
-          radius: 14
-          color: popup.controller.controlSurface
-          activeFocusOnTab: popup.pinned
-          Accessible.role: Accessible.StaticText
-          Accessible.name: deviceName + ", " + batteryLabel.text
-          HoverHandler { id: deviceHover }
-          Hint {
-            visible: popup.visible && (deviceHover.hovered || deviceRow.activeFocus)
-            text: deviceRow.deviceName + "\n" + batteryLabel.text
-          }
-          LucideIcon {
-            anchors.left: parent.left
-            anchors.leftMargin: 12
-            anchors.verticalCenter: parent.verticalCenter
-            width: 18
-            height: 18
-            source: popup.controller.icon("bluetooth-connected")
-            color: popup.controller.controlActiveIcon
-          }
-          Label {
-            anchors.left: parent.left
-            anchors.leftMargin: 40
-            anchors.right: batteryLabel.left
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            text: deviceRow.deviceName
-            font.pixelSize: 12
-            color: popup.controller.controlPrimaryText
-          }
-          Label {
-            id: batteryLabel
-            anchors.right: parent.right
-            anchors.rightMargin: 12
-            anchors.verticalCenter: parent.verticalCenter
-            text: !deviceRow.modelData ? "Unavailable" : deviceRow.modelData.batteryAvailable
-              ? popup.percentageText(deviceRow.modelData.battery) : "Connected"
-            color: deviceRow.modelData && deviceRow.modelData.batteryAvailable
-              ? popup.strengthColor(deviceRow.modelData.battery) : popup.controller.controlSecondaryText
-          }
-        }
-      }
-
-      Label {
-        width: parent.width
-        height: visible ? 30 : 0
-        visible: popup.bluetoothOnly && popup.service.connectedBluetoothDevices.length === 0
-        text: "No connected devices"
-        verticalAlignment: Text.AlignVCenter
+        active: !!popup.service
+        module: popup.bluetoothOnly ? "BluetoothControls.qml" : "NetworkControls.qml"
+        initialProperties: () => ({ popup, closeButtonItem: closeButton })
       }
 
     }

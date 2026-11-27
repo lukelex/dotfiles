@@ -14,9 +14,9 @@ test('Bluetooth has its own bar target and independent hover/click/close lifecyc
   assert.match(bar, /Accessible.name: "Network connections"/);
   assert.doesNotMatch(bar, /Wi-Fi and Bluetooth/);
   assert.match(bar, /Accessible.name: "Bluetooth"[^]*?onEntered:[^\n]*panel.openBluetooth\(\)[^]*?onExited: bluetoothCenter.scheduleClose\(\)[^]*?onClicked: panel.openBluetooth\(true\)/);
-  assert.equal((bar.match(/ConnectivityService \{/g) || []).length, 1);
-  assert.match(bar, /wifiScanningEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible/);
-  assert.match(bar, /trafficMonitoringEnabled: root.connectivityTarget !== null && root.connectivityTarget.visible/);
+  assert.equal((bar.match(/module: "ConnectivityService.qml"/g) || []).length, 1);
+  assert.match(bar, /wifiScanningEnabled: Qt\.binding\(\(\) => root.connectivityTarget !== null && root.connectivityTarget.visible/);
+  assert.match(bar, /trafficMonitoringEnabled: Qt\.binding\(\(\) => root.connectivityTarget !== null && root.connectivityTarget.visible/);
 });
 
 test('opening Bluetooth closes other panels and routes to the current screen instance', () => {
@@ -69,11 +69,11 @@ test('network and Bluetooth can still open when Control Center failed to load', 
 test('Bluetooth-only presentation excludes network controls and network side effects', () => {
   assert.match(center, /if \(!popup.bluetoothOnly\) \{\s+popup.controller.refreshControlStatus\(\)/);
   assert.match(center, /text: popup.bluetoothOnly \? "Bluetooth" : "Network"/);
-  assert.match(center, /title: "Wi-Fi"\s+visible: !popup.bluetoothOnly/);
-  assert.match(center, /active: !popup.bluetoothOnly && !!popup.controller.vpnService/);
-  assert.match(center, /title: "Bluetooth"\s+visible: popup.bluetoothOnly/);
-  assert.match(center, /entries: popup.bluetoothOnly \? popup.service.connectedBluetoothDevices : \[\]/);
-  assert.match(center, /entries: popup.bluetoothOnly \? \[\] : popup.service.savedNetworks/);
+  const network = fs.readFileSync(path.resolve(__dirname, '../NetworkControls.qml'), 'utf8');
+  const bluetooth = fs.readFileSync(path.resolve(__dirname, '../BluetoothControls.qml'), 'utf8');
+  assert.match(center, /module: popup.bluetoothOnly \? "BluetoothControls.qml" : "NetworkControls.qml"/);
+  assert.doesNotMatch(bluetooth, /vpnService|wifiEnabled|Quickshell.Networking/);
+  assert.doesNotMatch(network, /bluetoothEnabled|Quickshell.Bluetooth/);
   assert.match(center, /onActivated: popup.controller.openSystemSettings\(popup.panel.screen, popup.bluetoothOnly \? "bluetooth" : "wifi"\)/);
 });
 

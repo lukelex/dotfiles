@@ -13,6 +13,7 @@ FloatingWindow {
   required property var controller
   required property var service
   required property var connectivity
+  required property var bluetooth
   readonly property var monitors: monitorLoader.item?.monitorService ?? null
   property string section: "system"
   readonly property bool displayPage: section === "monitors" || section === "display"
@@ -648,12 +649,17 @@ FloatingWindow {
             }
           }
         }
-        WifiSettings {
+        OptionalModule {
+          id: wifiSettingsLoader
+          module: "WifiSettings.qml"
           Layout.fillWidth: true
-          visible: window.section === "connectivity"
-          controller: window.controller
-          service: window.connectivity
-          onDisclosureToggled: preferenceScroll.preservePosition()
+          active: !!window.connectivity
+          visible: window.section === "connectivity" && status === Loader.Ready
+          initialProperties: () => ({ controller: window.controller, service: Qt.binding(() => window.connectivity) })
+          Connections {
+            target: wifiSettingsLoader.item
+            function onDisclosureToggled() { preferenceScroll.preservePosition() }
+          }
         }
         OptionalModule {
           module: "UsbStorageSettings.qml"
@@ -709,20 +715,25 @@ FloatingWindow {
             }
           }
         }
-        BluetoothSettings {
+        OptionalModule {
+          id: bluetoothSettingsLoader
+          module: "BluetoothSettings.qml"
           Layout.fillWidth: true
-          visible: window.section === "bluetooth"
-          active: window.visible && visible
-          controller: window.controller
-          service: window.connectivity
-          onDisclosureToggled: preferenceScroll.preservePosition()
-          onRevealRequested: item => {
-            const flick = preferenceScroll.flickable
-            if (!flick || flick.moving || !window.visible || window.section !== "bluetooth") return
-            const top = item.mapToItem(flick.contentItem, 0, 0).y
-            if (top < flick.contentY || top + item.height > flick.contentY + flick.height) {
-              flick.contentY = top
-              flick.returnToBounds()
+          active: !!window.bluetooth
+          visible: window.section === "bluetooth" && status === Loader.Ready
+          initialProperties: () => ({ controller: window.controller, service: Qt.binding(() => window.bluetooth),
+            active: Qt.binding(() => window.visible && window.section === "bluetooth") })
+          Connections {
+            target: bluetoothSettingsLoader.item
+            function onDisclosureToggled() { preferenceScroll.preservePosition() }
+            function onRevealRequested(item) {
+              const flick = preferenceScroll.flickable
+              if (!flick || flick.moving || !window.visible || window.section !== "bluetooth") return
+              const top = item.mapToItem(flick.contentItem, 0, 0).y
+              if (top < flick.contentY || top + item.height > flick.contentY + flick.height) {
+                flick.contentY = top
+                flick.returnToBounds()
+              }
             }
           }
         }

@@ -47,6 +47,7 @@ function serviceForTest(settings = { historyJson: '[]', githubSeenJson: '[]', do
   service.playNotificationSound = () => {};
   service.osdTimer = { restart() {}, stop() {} };
   const Bluetooth = { devices: { values: [] } };
+  Object.defineProperty(service, "bluetoothDevices", { get: () => Bluetooth.devices.values });
   const context = vm.createContext({ service, Date, settings, NotificationDefaults, Bluetooth,
     historyGroupTimer: { start() {} }, popupUpdateTimer: { start() {} },
     Qt: { callLater }, NotificationUrgency: { Critical: 2, Low: 0 },

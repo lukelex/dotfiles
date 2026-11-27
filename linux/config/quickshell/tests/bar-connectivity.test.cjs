@@ -11,7 +11,7 @@ test('wired connectivity is exposed and replaces a disconnected Wi-Fi icon', () 
   assert.match(serviceSource, /readonly property bool ethernetConnected: service\._wiredDevices\.some\(device => device\.connected\)/);
   assert.match(serviceSource, /readonly property var _wiredDevices: Networking\.devices\.values\.filter\(device => device\.type === DeviceType\.Wired\)/);
   assert.match(source, /!connectivity\.wifiConnected && connectivity\.ethernetConnected \? "ethernet-port"/);
-  assert.match(source, /connectivity\.wifiConnected \|\| connectivity\.ethernetConnected \? root\.foreground : root\.muted/);
+  assert.match(source, /connectivity\.wifiConnected \|\| connectivity\.ethernetConnected\) \? root\.foreground : root\.muted/);
 });
 
 test('battery status is hidden when no battery is available', () => {
