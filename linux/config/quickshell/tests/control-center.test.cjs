@@ -90,8 +90,6 @@ test('Control Center attaches temperature to each available processor label', ()
   const source = fs.readFileSync(path.join(__dirname, '..', 'ControlCenter.qml'), 'utf8');
   assert.match(source, /title: "CPU" \+ \(popup\.controller\.cpuTemperatureAvailable/);
   assert.match(source, /title: "GPU" \+ \(popup\.controller\.gpuTemperatureAvailable \? " - " \+ Math\.round\(popup\.controller\.gpuTemperature\)/);
-  assert.match(source, /percentage: popup\.controller\.gpuUsage/);
-  assert.match(source, /visible: popup\.controller\.gpuUsageAvailable/);
 });
 
 test('hover centers do not grab focus from their bar triggers', () => {

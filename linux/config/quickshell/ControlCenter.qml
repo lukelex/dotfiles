@@ -532,9 +532,8 @@ PopupWindow {
               color: popup.controller.controlSecondaryText
               font.family: popup.controller.fontFamily
               font.pixelSize: 11
-              text: popup.controller.idleLockStatus
+              text: popup.controller.idleLockStatus || "Idle lock: —"
               textFormat: Text.PlainText
-              visible: text.length > 0
               width: parent.width
               wrapMode: Text.Wrap
             }
@@ -543,7 +542,6 @@ PopupWindow {
 
         Rectangle {
           height: systemMetrics.implicitHeight + 28
-          visible: popup.controller.systemStatsAvailable
           width: parent.width
           color: popup.controller.controlSurface
           radius: 18
@@ -564,37 +562,34 @@ PopupWindow {
 
             SystemUsage {
               controller: popup.controller
-              visible: popup.controller.cpuUsageAvailable
               iconName: "cpu"
-              percentage: popup.controller.cpuUsage
+              percentage: Number.isFinite(popup.controller.cpuUsage) ? popup.controller.cpuUsage : 0
               title: "CPU" + (popup.controller.cpuTemperatureAvailable
                 ? " - " + Math.round(popup.controller.cpuTemperature) + "\u00b0C" : "")
-              value: popup.controller.cpuUsage + "%"
+              value: Number.isFinite(popup.controller.cpuUsage) ? popup.controller.cpuUsage + "%" : "—"
               width: parent.width
             }
 
             SystemUsage {
               controller: popup.controller
-              visible: popup.controller.memoryAvailable
               iconName: "memory-stick"
               percentage: popup.controller.memoryPercentage
               title: "Memory"
-              value: popup.controller.memoryUsedGib.toFixed(1) + " / " + popup.controller.memoryTotalGib.toFixed(1) + " GiB"
+              value: popup.controller.memoryTotalGib > 0
+                ? popup.controller.memoryUsedGib.toFixed(1) + " / " + popup.controller.memoryTotalGib.toFixed(1) + " GiB" : "—"
               width: parent.width
             }
 
             SystemUsage {
               controller: popup.controller
               iconName: "microchip"
-              percentage: popup.controller.gpuUsage
+              percentage: Number.isFinite(popup.controller.gpuUsage) ? popup.controller.gpuUsage : 0
               title: "GPU" + (popup.controller.gpuTemperatureAvailable ? " - " + Math.round(popup.controller.gpuTemperature) + "\u00b0C" : "")
-              value: popup.controller.gpuUsage + "%"
-              visible: popup.controller.gpuUsageAvailable
+              value: Number.isFinite(popup.controller.gpuUsage) ? popup.controller.gpuUsage + "%" : "—"
               width: parent.width
             }
 
             Row {
-              visible: Number.isFinite(popup.controller.loadAverage)
               height: 18
               spacing: 8
               width: parent.width
@@ -623,7 +618,7 @@ PopupWindow {
                 font.family: popup.controller.fontFamily
                 font.pixelSize: 11
                 horizontalAlignment: Text.AlignRight
-                text: popup.controller.loadAverage.toFixed(2)
+                text: Number.isFinite(popup.controller.loadAverage) ? popup.controller.loadAverage.toFixed(2) : "—"
                 width: parent.width - 16 - loadLabel.width - parent.spacing * 2
               }
             }

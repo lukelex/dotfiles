@@ -25,10 +25,8 @@ Scope {
   readonly property bool notificationCenterOpen: notificationCenterTarget !== null && notificationCenterTarget.visible
   readonly property bool controlCenterVisible: Object.values(root.panelsByScreen).some(panel => panel?.controlCenter?.visible)
   onControlCenterVisibleChanged: {
-    if (!controlCenterVisible) {
+    if (!controlCenterVisible)
       previousCpuTotal = -1
-      cpuUsageAvailable = false
-    }
   }
   property var notificationCenterTarget: null
   property var todayCenterTarget: null
@@ -299,10 +297,7 @@ Scope {
     module: "VpnService.qml"
     initialProperties: () => ({ monitoring: Qt.binding(() => root.connectivityTarget !== null && root.connectivityTarget.visible) })
   }
-  property bool cpuUsageAvailable: false
-  property bool memoryAvailable: false
-  readonly property bool systemStatsAvailable: cpuUsageAvailable || memoryAvailable || gpuUsageAvailable || Number.isFinite(loadAverage)
-  property int cpuUsage: 0
+  property real cpuUsage: NaN
   property int memoryPercentage: 0
   property real memoryUsedGib: 0
   property real memoryTotalGib: 0
@@ -311,8 +306,7 @@ Scope {
   property real cpuTemperature: 0
   property bool gpuTemperatureAvailable: false
   property real gpuTemperature: 0
-  property bool gpuUsageAvailable: false
-  property int gpuUsage: 0
+  property real gpuUsage: NaN
   property real previousCpuTotal: -1
   property real previousCpuIdle: -1
   readonly property date currentDate: clock.date
@@ -670,31 +664,28 @@ Scope {
         const memory = output[1]?.trim().split(/\s+/).map(Number)
         const load = output[2]?.trim() ? Number(output[2]) : NaN
         const gpuUsage = root.readPercentage(output[3])
-        root.cpuUsageAvailable = false
         if (cpu?.length === 2 && cpu.every(Number.isFinite)) {
           if (root.previousCpuTotal >= 0 && cpu[0] > root.previousCpuTotal) {
             const totalDelta = cpu[0] - root.previousCpuTotal
             const idleDelta = Math.max(0, cpu[1] - root.previousCpuIdle)
             root.cpuUsage = Math.round(Math.max(0, Math.min(100, (1 - idleDelta / totalDelta) * 100)))
-            root.cpuUsageAvailable = true
           }
           root.previousCpuTotal = cpu[0]
           root.previousCpuIdle = cpu[1]
         }
 
-        root.memoryAvailable = memory?.length === 2 && memory.every(Number.isFinite) && memory[0] > 0
-          && memory[1] >= 0 && memory[1] <= memory[0]
-        if (root.memoryAvailable) {
+        if (memory?.length === 2 && memory.every(Number.isFinite) && memory[0] > 0
+          && memory[1] >= 0 && memory[1] <= memory[0]) {
           const used = Math.max(0, memory[0] - memory[1])
           root.memoryPercentage = Math.round(used / memory[0] * 100)
           root.memoryUsedGib = used / 1048576
           root.memoryTotalGib = memory[0] / 1048576
         }
 
-        root.loadAverage = load
+        if (Number.isFinite(load) && load >= 0)
+          root.loadAverage = load
 
-        root.gpuUsageAvailable = Number.isFinite(gpuUsage) && gpuUsage >= 0 && gpuUsage <= 100
-        if (root.gpuUsageAvailable)
+        if (Number.isFinite(gpuUsage))
           root.gpuUsage = Math.round(gpuUsage)
       }
     }
