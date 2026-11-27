@@ -48,6 +48,24 @@ test('closing network siblings also closes Bluetooth unless explicitly excluded'
   assert.deepEqual(calls, ['network']);
 });
 
+test('network and Bluetooth can still open when Control Center failed to load', () => {
+  for (const [method, target] of [['openConnectivity', 'connectivity'], ['openBluetooth', 'bluetooth']]) {
+    const root = {};
+    for (const name of ['cancelHoverClose', 'closeBluetooth', 'closeConnectivity', 'closeAudioOutput', 'closeDateTime', 'closeNotifications'])
+      root[name] = () => {};
+    const opened = [];
+    const center = { requestOpen: pin => opened.push(pin) };
+    const body = bar.match(new RegExp(`      function ${method}\\(pin = false\\) \\{([^]*?)\\n      \\}`))[1];
+    const open = vm.runInNewContext(`(function(pin = false) { ${body} })`, {
+      root, controlCenter: null, [`${target}Center`]: center,
+    });
+    open();
+    open(true);
+    assert.deepEqual(opened, [false, true]);
+    assert.equal(root[`${target}Target`], center);
+  }
+});
+
 test('Bluetooth-only presentation excludes network controls and network side effects', () => {
   assert.match(center, /if \(!popup.bluetoothOnly\) \{\s+popup.controller.refreshControlStatus\(\)/);
   assert.match(center, /text: popup.bluetoothOnly \? "Bluetooth" : "Network"/);
