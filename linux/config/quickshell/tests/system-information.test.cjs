@@ -11,12 +11,12 @@ const normalize = data => JSON.parse(JSON.stringify(context.normalize(data)));
 test('generic opening resets the destination while contextual shortcuts retain their section and anchor', () => {
   const source = fs.readFileSync(path.join(__dirname, '../Bar.qml'), 'utf8');
   const start = source.indexOf('  function openSystemSettings(');
-  const end = source.indexOf('\n  SystemSettings {', start);
+  const end = source.indexOf('\n  }', start) + 4;
   const settings = { section: 'audio', open() {} };
   const root = {
     cancelHoverClose() {}, closeNotifications() {}, closeConnectivity() {},
     closeAudioOutput() {}, closeDateTime() {},
-    panelsByScreen: {}, focusedPanel() { return null; }
+    panelsByScreen: {}, systemSettings: settings, focusedPanel() { return null; }
   };
   const routing = vm.createContext({ root, systemSettings: settings });
   vm.runInContext(source.slice(start, end), routing);

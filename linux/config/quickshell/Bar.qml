@@ -298,7 +298,8 @@ Scope {
   property var connectivityTarget: null
   property var bluetoothTarget: null
   property var audioOutputTarget: null
-  readonly property bool wifiSettingsOpen: systemSettings.wifiDiscoveryActive
+  readonly property var systemSettings: settingsLoader.item
+  readonly property bool wifiSettingsOpen: root.systemSettings?.wifiDiscoveryActive ?? false
   property var panelsByScreen: ({})
   property bool resizeMode: false
   property int resizeModeRevision: 0
@@ -819,13 +820,14 @@ Scope {
   }
 
   function openSystemSettings(targetScreen, section = "") {
+    if (!root.systemSettings) return
     root.cancelHoverClose()
     root.closeNotifications()
     root.closeConnectivity()
     root.closeAudioOutput()
     root.closeDateTime()
     for (const name of Object.keys(root.panelsByScreen))
-      root.panelsByScreen[name].closeControlCenter()
+      root.panelsByScreen[name]?.closeControlCenter()
     const panel = root.focusedPanel()
     if (!section)
       systemSettings.section = "system"
@@ -839,11 +841,10 @@ Scope {
     systemSettings.open(targetScreen || (panel ? panel.screen : null))
   }
 
-  SystemSettings {
-    id: systemSettings
-    controller: root
-    service: root.notificationService
-    connectivity: connectivity
+  OptionalModule {
+    id: settingsLoader
+    module: "SystemSettings.qml"
+    initialProperties: () => ({ controller: root, service: root.notificationService, connectivity })
   }
 
   function closeNotifications() {
