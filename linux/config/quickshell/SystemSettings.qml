@@ -445,12 +445,15 @@ FloatingWindow {
         Layout.fillWidth: true
         Layout.fillHeight: true
       }
-      SystemInformation {
-        controller: window.controller
-        active: window.visible && window.section === "system"
-        visible: window.section === "system"
+      OptionalModule {
+        module: "SystemInformation.qml"
+        visible: window.section === "system" && status === Loader.Ready
         Layout.fillWidth: true
         Layout.fillHeight: true
+        initialProperties: () => ({
+          controller: window.controller,
+          active: Qt.binding(() => window.visible && window.section === "system")
+        })
       }
       }
     }
