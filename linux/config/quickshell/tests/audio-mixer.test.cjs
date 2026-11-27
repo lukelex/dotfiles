@@ -188,8 +188,8 @@ test('nuanced mixer controls run only in System Settings Audio, not the bar popu
   const service = fs.readFileSync(path.resolve(__dirname, '../AudioService.qml'), 'utf8');
   const popup = fs.readFileSync(path.resolve(__dirname, '../AudioOutputCenter.qml'), 'utf8');
   assert.match(settings, /property: "mixerSettingsActive"\s+value: window.visible && window.section === "audio"/);
-  assert.match(service, /AudioMixer \{\s+active: service.mixerSettingsActive/);
-  assert.match(settings, /SoundMixerControls \{[^]*?visible: window.section === "audio"/);
+  assert.match(service, /module: "AudioMixer\.qml"[^]*?active: Qt\.binding\(\(\) => service\.mixerSettingsActive/);
+  assert.match(settings, /module: "SoundMixerControls\.qml"[^]*?visible: window.section === "audio"/);
   assert.match(settings, /command: \["pavucontrol"\]/);
   assert.doesNotMatch(popup, /SoundMixerControls|pavucontrol/);
   assert.match(popup, /openSystemSettings\(popup.panel.screen, "audio"\)/);

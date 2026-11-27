@@ -1115,13 +1115,20 @@ FloatingWindow {
           }
           }
         }
-        SoundMixerControls {
+        OptionalModule {
+          id: mixerControls
+          module: "SoundMixerControls.qml"
+          active: !!window.controller.audioService.mixer
+          visible: window.section === "audio" && status === Loader.Ready
           Layout.fillWidth: true
-          visible: window.section === "audio"
-          controller: window.controller
-          mixer: window.controller.audioService.mixer
-          keyboardEnabled: true
-          onDisclosureToggled: preferenceScroll.preservePosition()
+          initialProperties: () => ({
+            controller: window.controller, mixer: Qt.binding(() => window.controller.audioService.mixer),
+            keyboardEnabled: true
+          })
+          Connections {
+            target: mixerControls.item
+            function onDisclosureToggled() { preferenceScroll.preservePosition() }
+          }
         }
         SettingsSubsection {
           Layout.fillWidth: true

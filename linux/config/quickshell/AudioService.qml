@@ -22,9 +22,13 @@ QtObject {
   property int activePanels: 0
   property bool mixerSettingsActive: false
   onMixerSettingsActiveChanged: { if (mixerSettingsActive) service.refresh(true) }
-  readonly property AudioMixer mixer: AudioMixer {
-    active: service.mixerSettingsActive
-    deviceLabel: (device, input) => input ? service.inputDescription(device) : service.outputDescription(device)
+  readonly property var mixer: mixerLoader.item
+  property OptionalModule mixerLoader: OptionalModule {
+    module: "AudioMixer.qml"
+    initialProperties: () => ({
+      active: Qt.binding(() => service.mixerSettingsActive),
+      deviceLabel: (device, input) => input ? service.inputDescription(device) : service.outputDescription(device)
+    })
   }
   property string _requestedSink: ""
   property string _requestedSource: ""
@@ -549,7 +553,7 @@ QtObject {
     function onValuesChanged() {
       service.syncMicrophoneMute()
       if (service.mixerSettingsActive)
-        service.mixer.refresh()
+        service.mixer?.refresh()
       if (service.activePanels > 0 || service.mixerSettingsActive)
         queuedRefresh.restart()
     }
