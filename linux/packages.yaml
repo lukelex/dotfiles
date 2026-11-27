@@ -267,6 +267,10 @@ common:
       neovim:
         configs:
           - linux/config/nvim:$XDG_CONFIG_HOME/nvim
+      networkmanager:
+        services:
+          system:
+            - NetworkManager
       openssh:
       ripgrep:
       tree:
@@ -370,9 +374,6 @@ profiles:
         lm_sensors: {}
         mpv:
         network-manager-applet:
-          services:
-            system:
-              - NetworkManager
         nordvpn-bin:
           groups:
             - nordvpn

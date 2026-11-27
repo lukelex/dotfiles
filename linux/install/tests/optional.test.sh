@@ -46,7 +46,7 @@ grep -q 'Retry: linux/install/optional skills' "$temporary/error"
 if grep -q 'stage completed' "$temporary/error"; then exit 1; fi
 
 # Core maintenance must not invoke either optional installer.
-for helper in preflight bootstrap-yay kmonad-device-manager binaries; do
+for helper in preflight bootstrap-yay kmonad-device-manager wifi-owner binaries; do
   printf '#!/bin/bash\nexit 0\n' > "$temporary/linux/install/$helper"
 done
 for helper in openeffects openeffects-state; do

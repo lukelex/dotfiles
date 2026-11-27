@@ -164,6 +164,14 @@ beside their former targets in `.dotpkg-backup-*` directories. Direct `sync`
 preserves conflicts unless `--replace` is passed. Use `./linux/install/verify`
 to check an existing setup.
 
+On both desktop and server, the manifest enables NetworkManager. Full
+`./linux/install/sync` runs also install an early systemd-networkd rule that
+leaves Wi-Fi to NetworkManager, ahead of Arch ISO's `20-wlan.network`.
+Ethernet and virtual interfaces do not match this rule. On a Wi-Fi-only
+server previously using networkd, configure a NetworkManager Wi-Fi profile
+from a local console before syncing. Bare `dotpkg sync` manages the service;
+use the repository wrapper to reconcile the root-owned rule.
+
 Verification is static by default and works from a TTY. Run
 `./linux/install/verify --session` inside the desktop to additionally check its
 live session and Quickshell service. System configs and helper links preserve

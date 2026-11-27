@@ -79,6 +79,7 @@ done
 
 if [ "$DRY_RUN" -eq 1 ]; then
   if [ "$PACKAGES_ONLY" -eq 0 ]; then
+    bash "$install_dir/wifi-owner" "$@"
     dotpkg_args+=(--resources --root "$DOTFILES")
     [ "$replace" -eq 0 ] || dotpkg_args+=(--replace)
     [ "$restart_services" -eq 0 ] || dotpkg_args+=(--restart-services)
@@ -108,6 +109,10 @@ if [ "$PACKAGES_ONLY" -eq 0 ]; then
   fi
 fi
 "$dotpkg_bin" "${dotpkg_args[@]}"
+
+if [ "$PACKAGES_ONLY" -eq 0 ]; then
+  bash "$install_dir/wifi-owner" "$@"
+fi
 
 if ! is_server && [ "$PACKAGES_ONLY" -eq 0 ]; then
   "$install_dir/binaries" "$@"
