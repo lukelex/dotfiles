@@ -80,7 +80,7 @@ test('device names are passed as arguments with notification markup escaped', ()
 });
 
 test('native watchers cover startup, connections, battery availability and charge updates', () => {
-  assert.match(source, /model: Bluetooth\.devices\.values/);
+  assert.match(source, /_bluetoothBatteryWatchers: Instantiator \{\s+model: Bluetooth\.devices\s*\n/);
   for (const event of ['onConnectedChanged', 'onBatteryAvailableChanged', 'onBatteryChanged']) {
     assert.match(source, new RegExp(`${event}\\(\\) \\{ service\\.checkBluetoothBattery`));
   }

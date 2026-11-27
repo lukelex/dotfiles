@@ -64,8 +64,9 @@ QtObject {
   onBluetoothDevicesChanged: updateDevices()
   onPowerDevicesChanged: updateDevices()
 
+  // Use the native model so a device list change doesn't rebuild every watcher.
   property Instantiator bluetoothWatchers: Instantiator {
-    model: Bluetooth.devices.values
+    model: Bluetooth.devices
     delegate: QtObject {
       id: watcher
       required property var modelData

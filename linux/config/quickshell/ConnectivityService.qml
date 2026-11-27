@@ -280,10 +280,10 @@ QtObject {
     .sort((a, b) => a.name.localeCompare(b.name) || a.dbusPath.localeCompare(b.dbusPath))
 
   // Observe every native device, including connections made while the panel is closed.
-  // Keep deduplication outside delegates: model updates can recreate watchers.
+  // Use the native model to avoid rebuilding watchers on device list changes.
   property var _bluetoothBatteryWarnings: ({})
   readonly property Instantiator _bluetoothBatteryWatchers: Instantiator {
-    model: Bluetooth.devices.values
+    model: Bluetooth.devices
     delegate: QtObject {
       id: watcher
       required property var modelData

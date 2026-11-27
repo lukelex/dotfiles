@@ -133,6 +133,7 @@ test('identically named physical headsets remain separate within and across sour
 });
 
 test('native Bluetooth watchers update the shared snapshot as devices and readings change', () => {
+  assert.match(source, /bluetoothWatchers: Instantiator \{\s+model: Bluetooth\.devices\s*\n/);
   assert.match(source, /onBluetoothDevicesChanged: updateDevices\(\)/);
   for (const event of ['Connected', 'Icon', 'Name', 'BatteryAvailable', 'Battery'])
     assert.match(source, new RegExp(`on${event}Changed\\(\\) \\{ service\\.updateDevices\\(\\) \\}`));
