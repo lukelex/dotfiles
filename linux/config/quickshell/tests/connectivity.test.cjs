@@ -45,8 +45,9 @@ test('Wi-Fi strength colors follow the label thresholds and theme tokens', () =>
   ]) {
     assert.equal(strengthColor(strength), color);
   }
-  assert.match(panel, /text: action\.qualityText\s+color: action\.qualityColor/);
-  assert.match(panel, /text: action\.qualityText \? action\.subtitle\.slice\(0, -action\.qualityText\.length\) : action\.subtitle/);
+  const action = fs.readFileSync(path.join(__dirname, '../ConnectivityAction.qml'), 'utf8');
+  assert.match(action, /text: action\.qualityText\s+color: action\.qualityColor/);
+  assert.match(action, /text: action\.qualityText \? action\.subtitle\.slice\(0, -action\.qualityText\.length\) : action\.subtitle/);
   assert.match(panel, /popup\.strengthColor\(popup\.service\.wifiStrength\)/);
   assert.match(panel, /modelData && !connecting\s*\? popup\.strengthColor\(modelData\.signalStrength\)/);
 });

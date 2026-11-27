@@ -573,8 +573,11 @@ Scope {
   property bool darkMode: true
   property bool nightModeEnabled: false
   property bool keepAwake: false
-  readonly property VpnService vpnService: VpnService {
-    monitoring: root.connectivityTarget !== null && root.connectivityTarget.visible
+  readonly property var vpnService: vpnLoader.item
+  OptionalModule {
+    id: vpnLoader
+    module: "VpnService.qml"
+    initialProperties: () => ({ monitoring: Qt.binding(() => root.connectivityTarget !== null && root.connectivityTarget.visible) })
   }
   property bool powerProfileAvailable: false
   property bool nativePowerProfilesAvailable: false

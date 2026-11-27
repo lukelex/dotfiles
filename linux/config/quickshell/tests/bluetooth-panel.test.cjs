@@ -52,7 +52,7 @@ test('Bluetooth-only presentation excludes network controls and network side eff
   assert.match(center, /if \(!popup.bluetoothOnly\) \{\s+popup.controller.refreshControlStatus\(\)/);
   assert.match(center, /text: popup.bluetoothOnly \? "Bluetooth" : "Network"/);
   assert.match(center, /title: "Wi-Fi"\s+visible: !popup.bluetoothOnly/);
-  assert.match(center, /title: "NordVPN"\s+visible: !popup.bluetoothOnly/);
+  assert.match(center, /active: !popup.bluetoothOnly && !!popup.controller.vpnService/);
   assert.match(center, /title: "Bluetooth"\s+visible: popup.bluetoothOnly/);
   assert.match(center, /entries: popup.bluetoothOnly \? popup.service.connectedBluetoothDevices : \[\]/);
   assert.match(center, /entries: popup.bluetoothOnly \? \[\] : popup.service.savedNetworks/);

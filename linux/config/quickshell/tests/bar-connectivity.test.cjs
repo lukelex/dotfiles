@@ -131,6 +131,6 @@ test('battery icon reserves critical for 0–14% and full for 90–100%', () => 
 });
 
 test('VPN lifecycle is independent of local control status polling', () => {
-  assert.match(source, /readonly property VpnService vpnService: VpnService/);
+  assert.match(source, /module: "VpnService\.qml"/);
   assert.doesNotMatch(source, /nordvpn status|vpn_status/);
 });
