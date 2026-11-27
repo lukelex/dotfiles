@@ -2031,7 +2031,7 @@ Scope {
             onEntered: {
               panel.showNotifications()
             }
-            onExited: notificationCenter?.requestHoverClose()
+            onExited: panel.notificationCenter?.requestHoverClose()
             onClicked: root.toggleDoNotDisturb()
           }
         }
