@@ -13,7 +13,7 @@ test('successful reloads replace the built-in popup with the shared system OSD',
   assert.ok(handler);
   vm.runInNewContext(handler[1], {
     Quickshell: { inhibitReloadPopup: () => calls.push('inhibit') },
-    notifications: { showOsd: (...args) => calls.push(args) },
+    notifications: { item: { showOsd: (...args) => calls.push(args) } },
   });
   assert.deepEqual(calls, ['inhibit', ['Reload', 0, 'refresh-cw', 'Quickshell Reloaded']]);
   assert.doesNotMatch(shell, /onReloadFailed/);

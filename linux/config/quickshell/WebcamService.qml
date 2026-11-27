@@ -11,6 +11,8 @@ QtObject {
   readonly property var cameraNodes: Pipewire.nodes.values.filter(node => node.type === PwNodeType.VideoSource)
   readonly property var cameraLinks: Pipewire.linkGroups.values.filter(group => service.isCamera(group.source) && !service.isEffectsDaemon(group.target))
   readonly property bool inUse: directInUse || cameraLinks.some(group => group.state === PwLinkState.Active)
+  property bool directMonitorReady: false
+  readonly property bool monitoringAvailable: Pipewire.ready && directMonitorReady
   property var directUsage: []
   readonly property var directApplications: directUsage.map(entry => entry.name)
   readonly property bool directInUse: directApplications.length > 0
@@ -81,16 +83,18 @@ QtObject {
 
   // Direct V4L2 users (including browsers on X11) do not appear in PipeWire.
   readonly property Process directAccess: Process {
-    command: ["python3", Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts/webcam-status.py"]
+    command: ["timeout", "--kill-after=1s", "4s", "python3", Quickshell.env("HOME") + "/dotfiles/linux/config/quickshell/scripts/webcam-status.py"]
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
         try {
           const usage = JSON.parse(this.text)
+          service.directMonitorReady = Array.isArray(usage)
           service.directUsage = Array.isArray(usage)
             ? usage.filter(entry => entry && typeof entry.name === "string" && entry.name.length > 0
               && typeof entry.devicePath === "string" && typeof entry.deviceName === "string") : []
         } catch (error) {
+          service.directMonitorReady = false
           service.directUsage = []
         }
       }

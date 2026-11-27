@@ -21,8 +21,8 @@ function loadBarFunction(name, globals) {
 }
 
 test('bar audio volume and mute state use the live PipeWire default sink', () => {
-  assert.match(barSource, /import Quickshell\.Services\.Pipewire/);
-  assert.match(barSource, /PwObjectTracker \{\n\s+objects: \[Pipewire\.defaultAudioSink, Pipewire\.defaultAudioSource\]/);
+  assert.doesNotMatch(barSource, /import Quickshell\.Services\.Pipewire/);
+  assert.match(serviceSource, /PwObjectTracker \{\n\s+objects: \[service\.defaultAudioSink, service\.defaultMicrophone\]/);
   assert.match(barSource, /readonly property real audioVolume: root\.audioAvailable \? root\.defaultAudioSink\.audio\.volume \* 100 : 0/);
   assert.doesNotMatch(barSource, /id: audioStatus|interval: 1000[\s\S]{0,100}audioStatus/);
 

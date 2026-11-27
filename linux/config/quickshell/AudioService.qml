@@ -8,6 +8,13 @@ import QtQml
 QtObject {
   id: service
 
+  readonly property bool monitoringAvailable: Pipewire.ready
+  readonly property var defaultAudioSink: Pipewire.defaultAudioSink
+  readonly property var defaultMicrophone: Pipewire.defaultAudioSource
+  property PwObjectTracker defaultNodes: PwObjectTracker {
+    objects: [service.defaultAudioSink, service.defaultMicrophone].filter(node => node !== null)
+  }
+
   property var outputs: []
   property var inputs: []
   property string defaultSink: ""

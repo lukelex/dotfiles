@@ -66,7 +66,7 @@ ColumnLayout {
   RowLayout {
     Layout.fillWidth: true
     Item { Layout.fillWidth: true }
-    SoundButton { text: "Identify"; iconName: "monitor"; onClicked: monitorIdentify.identify() }
+    SoundButton { text: "Identify"; enabled: !!monitorPage.settingsWindow.controller.notificationService; iconName: "monitor"; onClicked: monitorIdentify.identify() }
   }
   SettingsScrollView {
     id: monitorScroll

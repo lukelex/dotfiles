@@ -4,7 +4,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const vm = require('node:vm');
 
-const source = ['Bar', 'I3Adapter', 'HyprlandAdapter'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
+const source = ['Bar', 'PowerService', 'I3Adapter', 'HyprlandAdapter'].map(name => fs.readFileSync(path.join(__dirname, `../${name}.qml`), 'utf8')).join('\n');
 const serviceSource = fs.readFileSync(path.join(__dirname, '../ConnectivityService.qml'), 'utf8');
 
 test('wired connectivity is exposed and replaces a disconnected Wi-Fi icon', () => {
@@ -19,7 +19,7 @@ test('battery status is hidden when no battery is available', () => {
 });
 
 test('notification indicator reflects active notifications, not retained history', () => {
-  assert.match(source, /visible: root\.notificationService\.popup\.length > 0/);
+  assert.match(source, /visible: \(root\.notificationService\?\.popup\.length \?\? 0\) > 0/);
   assert.match(source, /active notifications/);
   assert.doesNotMatch(source, /visible: root\.notificationService\.history\.length > 0/);
 });

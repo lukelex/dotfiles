@@ -50,7 +50,7 @@ test('only active camera links or direct device access show the shared bar indic
   assert.equal(evaluate([{ state: 1 }]), true);
   assert.equal(evaluate([], true), true);
   assert.match(source, /objects: service\.cameraNodes\.concat\(service\.cameraLinks, service\.cameraLinks\.map\(group => group\.target\)\)/);
-  assert.match(bar, /visible: root\.webcamService\.inUse\n\s+source: root\.icon\("webcam"\)\n\s+color: root\.controlActiveIcon/);
+  assert.match(bar, /visible: root\.webcamService\?\.inUse \?\? false\n\s+source: root\.icon\("webcam"\)\n\s+color: root\.controlActiveIcon/);
   assert.ok(fs.existsSync(path.join(__dirname, '../../lucide/svg/webcam.svg')));
 });
 
@@ -76,9 +76,9 @@ test('webcam hints collect active app names from PipeWire and direct access', ()
 test('both privacy icons show app hints and microphone clicks retain the sound picker', () => {
   const widgets = bar.slice(bar.indexOf('id: rightWidgets'), bar.indexOf('source: root.icon("message-square-quote")'));
   assert.match(widgets, /trigger: microphoneHover/);
-  assert.match(widgets, /recordingApplications\.map\(application => application\.name\)/);
+  assert.match(widgets, /recordingApplications \?\? \[\]\)\.map\(application => application\.name\)/);
   assert.match(widgets, /trigger: webcamHover/);
-  assert.match(widgets, /applications: root\.webcamService\.recordingApplications/);
+  assert.match(widgets, /applications: root\.webcamService\?\.recordingApplications/);
   assert.match(widgets, /onClicked: panel\.openAudioOutput\(true\)/);
   assert.doesNotMatch(widgets, /onEntered: panel\.openAudioOutput/);
 });
@@ -106,12 +106,12 @@ test('webcam details associate actual cameras with each app and deduplicate link
 
 test('microphone and webcam activity indicators lead the right-hand icon list', () => {
   const widgets = bar.slice(bar.indexOf('id: rightWidgets'));
-  const microphone = widgets.indexOf('visible: root.audioService.microphoneInUse');
-  const webcam = widgets.indexOf('visible: root.webcamService.inUse');
+  const microphone = widgets.indexOf('visible: root.audioService?.microphoneInUse');
+  const webcam = widgets.indexOf('visible: root.webcamService?.inUse');
   const network = widgets.indexOf('Accessible.name: "Network connections"');
   assert.ok(microphone > 0 && webcam > microphone && network > webcam);
-  assert.equal((widgets.match(/visible: root.audioService.microphoneInUse/g) || []).length, 1);
-  assert.equal((widgets.match(/visible: root.webcamService.inUse/g) || []).length, 1);
+  assert.equal((widgets.match(/visible: root.audioService\?.microphoneInUse/g) || []).length, 1);
+  assert.equal((widgets.match(/visible: root.webcamService\?.inUse/g) || []).length, 1);
 });
 
 test('direct access scanner handles idle, capture, metadata, unplug and process exit without opening devices', () => {

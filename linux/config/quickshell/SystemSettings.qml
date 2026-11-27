@@ -53,11 +53,12 @@ FloatingWindow {
       soundFileDialog.close()
       wallpaperFileDialog.close()
       wallpaperFolderDialog.close()
-      service.stopSoundPreview()
+      service?.stopSoundPreview()
     }
   }
 
   Binding {
+    when: !!window.controller.audioService
     target: window.controller.audioService
     property: "mixerSettingsActive"
     value: window.visible && window.section === "audio"
@@ -423,10 +424,16 @@ FloatingWindow {
             }
           }
         }
-      NotificationsPage {
+      Loader {
+        active: !!window.service
+        sourceComponent: Component { NotificationsPage {} }
         visible: window.section === "notifications"
         Layout.fillWidth: true
         Layout.fillHeight: true
+      }
+      Label {
+        visible: window.section === "notifications" && !window.service
+        text: "Notifications unavailable"
       }
       PreferencesPage {
         visible: !["system", "notifications", "monitors"].includes(window.section)
@@ -614,11 +621,11 @@ FloatingWindow {
         OptionalModule {
           id: mixerControls
           module: "SoundMixerControls.qml"
-          active: !!window.controller.audioService.mixer
+          active: !!window.controller.audioService?.mixer
           visible: window.section === "audio" && status === Loader.Ready
           Layout.fillWidth: true
           initialProperties: () => ({
-            controller: window.controller, mixer: Qt.binding(() => window.controller.audioService.mixer),
+            controller: window.controller, mixer: Qt.binding(() => window.controller.audioService?.mixer),
             keyboardEnabled: true
           })
           Connections {
@@ -1168,7 +1175,7 @@ FloatingWindow {
       expanded: notificationOptions.soundExpanded
       onToggled: {
         notificationOptions.toggleDetails("soundExpanded")
-        if (!notificationOptions.soundExpanded) window.service.stopSoundPreview()
+        if (!notificationOptions.soundExpanded) window.service?.stopSoundPreview()
       }
     RowLayout {
       Layout.fillWidth: true
@@ -1198,7 +1205,7 @@ FloatingWindow {
         iconName: window.service.soundPreviewPlaying ? "x" : "play"
         description: window.service.soundPreviewPlaying ? "Stop preview" : "Preview sound (up to 10 seconds, even when muted)"
         onClicked: window.service.soundPreviewPlaying
-          ? window.service.stopSoundPreview() : window.service.previewNotificationSound()
+          ? window.service?.stopSoundPreview() : window.service.previewNotificationSound()
       }
       SoundButton {
         iconName: "refresh-cw"

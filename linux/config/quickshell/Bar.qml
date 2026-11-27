@@ -2,8 +2,6 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import Quickshell.Io
-import Quickshell.Services.Pipewire
-import Quickshell.Services.UPower
 import QtCore
 import QtQuick
 import "DesignTokens.js" as Design
@@ -45,10 +43,6 @@ Scope {
     })
   }
   OptionalModule { id: quoteLoader; module: "QuoteService.qml" }
-
-  PwObjectTracker {
-    objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource].filter(node => node !== null)
-  }
 
   function closeDateTime() {
     if (root.todayCenterTarget)
@@ -139,13 +133,13 @@ Scope {
   property string lastLayoutOsdLayout: ""
   property int workspaceTransition: 0
 
-  readonly property var defaultAudioSink: Pipewire.defaultAudioSink
-  readonly property bool audioAvailable: Pipewire.ready && !!root.defaultAudioSink
+  readonly property var defaultAudioSink: root.audioService?.defaultAudioSink ?? null
+  readonly property bool audioAvailable: !!root.audioService?.monitoringAvailable && !!root.defaultAudioSink
     && root.defaultAudioSink.ready && !!root.defaultAudioSink.audio
   readonly property real audioVolume: root.audioAvailable ? root.defaultAudioSink.audio.volume * 100 : 0
   readonly property bool audioMuted: root.audioAvailable && root.defaultAudioSink.audio.muted
-  readonly property var defaultMicrophone: Pipewire.defaultAudioSource
-  readonly property bool microphoneAvailable: Pipewire.ready && !!root.defaultMicrophone
+  readonly property var defaultMicrophone: root.audioService?.defaultMicrophone ?? null
+  readonly property bool microphoneAvailable: !!root.audioService?.monitoringAvailable && !!root.defaultMicrophone
     && root.defaultMicrophone.ready && !!root.defaultMicrophone.audio
   readonly property real microphoneVolume: root.microphoneAvailable ? root.defaultMicrophone.audio.volume * 100 : 0
   readonly property bool microphoneMuted: root.microphoneAvailable && root.defaultMicrophone.audio.muted
@@ -232,7 +226,7 @@ Scope {
     if (mute >= 0 && node.audio.muted !== (mute === 1))
       return
     root.audioControlError = ""
-    root.notificationService.showOsd(microphone ? "Microphone" : "Volume",
+    root.notificationService?.showOsd(microphone ? "Microphone" : "Volume",
       node.audio.muted ? 0 : Math.round(node.audio.volume * 100),
       root.icon(microphone ? (node.audio.muted ? "mic-off" : "mic") : root.audioIcon()))
     if (microphone) {
@@ -267,18 +261,26 @@ Scope {
     if (!microphoneApplyTimer.running)
       microphoneApplyTimer.start()
   }
-  property string batteryState: ""
-  property int batteryPercentage: 0
-  property string batteryTime: ""
-  property bool batteryAvailable: false
-  property real batteryHealth: 0
-  property bool batteryHealthAvailable: false
-  property real batteryWatts: 0
-  property bool batteryRateAvailable: false
-  property bool batteryWarningPending: false
-  property var previousOnBattery: null
+  OptionalModule {
+    id: powerLoader
+    module: "PowerService.qml"
+    initialProperties: () => ({ quickshellScripts: root.quickshellScripts,
+      notificationService: Qt.binding(() => root.notificationService) })
+  }
+  function cyclePowerProfile() { powerLoader.item?.cyclePowerProfile() }
+  readonly property string batteryState: powerLoader.item?.batteryState ?? ""
+  readonly property int batteryPercentage: powerLoader.item?.batteryPercentage ?? 0
+  readonly property string batteryTime: powerLoader.item?.batteryTime ?? ""
+  readonly property bool batteryAvailable: powerLoader.item?.batteryAvailable ?? false
+  readonly property real batteryHealth: powerLoader.item?.batteryHealth ?? 0
+  readonly property bool batteryHealthAvailable: powerLoader.item?.batteryHealthAvailable ?? false
+  readonly property real batteryWatts: powerLoader.item?.batteryWatts ?? 0
+  readonly property bool batteryRateAvailable: powerLoader.item?.batteryRateAvailable ?? false
+  readonly property bool powerProfileAvailable: powerLoader.item?.powerProfileAvailable ?? false
+  readonly property string powerProfile: powerLoader.item?.powerProfile ?? ""
+  readonly property string powerProfileDegradation: powerLoader.item?.powerProfileDegradation ?? ""
   property string idleLockStatus: ""
-  readonly property bool doNotDisturb: root.notificationService.doNotDisturb
+  readonly property bool doNotDisturb: root.notificationService?.doNotDisturb ?? false
   readonly property bool brightnessBusy: brightnessSet.running
   property int brightness: 0
   property bool darkMode: true
@@ -290,10 +292,6 @@ Scope {
     module: "VpnService.qml"
     initialProperties: () => ({ monitoring: Qt.binding(() => root.connectivityTarget !== null && root.connectivityTarget.visible) })
   }
-  property bool powerProfileAvailable: false
-  property bool nativePowerProfilesAvailable: false
-  property string powerProfile: ""
-  property string powerProfileDegradation: ""
   property bool systemStatsAvailable: false
   property int cpuUsage: 0
   property int memoryPercentage: 0
@@ -376,7 +374,7 @@ Scope {
     if (layout === root.lastLayoutOsdLayout)
       return
     root.lastLayoutOsdLayout = layout
-    root.notificationService.showOsd("Layout", 0, iconName, root.layoutDisplayName(layout))
+    root.notificationService?.showOsd("Layout", 0, iconName, root.layoutDisplayName(layout))
   }
 
   function audioIcon() {
@@ -401,80 +399,6 @@ Scope {
     if (root.batteryPercentage < 90)
       return "battery-high"
     return "battery-full"
-  }
-
-  function batteryStateName(state) {
-    switch (state) {
-    case UPowerDeviceState.Charging: return "charging"
-    case UPowerDeviceState.Discharging: return "discharging"
-    case UPowerDeviceState.PendingCharge: return "pending-charge"
-    case UPowerDeviceState.PendingDischarge: return "pending-discharge"
-    case UPowerDeviceState.FullyCharged: return "fully-charged"
-    default: return "unknown"
-    }
-  }
-
-  function formatBatteryTime(seconds) {
-    if (!(seconds > 0))
-      return ""
-
-    const minutes = Math.ceil(seconds / 60)
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return hours ? hours + " hr" + (remainingMinutes ? " " + remainingMinutes + " min" : "") : minutes + " min"
-  }
-
-  function updateBatteryStatus() {
-    const device = UPower.displayDevice
-    if (!device.ready || !device.isPresent) {
-      root.batteryAvailable = false
-      root.batteryHealthAvailable = false
-      root.batteryRateAvailable = false
-      return
-    }
-
-    root.batteryPercentage = Math.round(device.percentage * 100)
-    root.batteryState = root.batteryStateName(device.state)
-    // changeRate is in watts; direction is labelled from the device state.
-    root.batteryWatts = Math.abs(device.changeRate)
-    root.batteryRateAvailable = Number.isFinite(root.batteryWatts) && root.batteryWatts > 0
-    root.batteryHealthAvailable = device.healthSupported
-    root.batteryHealth = device.healthPercentage
-    root.batteryTime = root.formatBatteryTime(root.batteryState === "discharging"
-      ? device.timeToEmpty : root.batteryState === "charging" ? device.timeToFull : 0)
-    root.batteryAvailable = true
-  }
-
-  function checkBatteryWarnings() {
-    if (!root.batteryAvailable || root.batteryState !== "discharging") {
-      root.batteryWarningPending = false
-      return
-    }
-
-    if (batteryWarnings.running)
-      root.batteryWarningPending = true
-    else
-      batteryWarnings.running = true
-  }
-
-  function powerProfileName(profile) {
-    switch (profile) {
-    case PowerProfile.PowerSaver: return "power-saver"
-    case PowerProfile.Balanced: return "balanced"
-    case PowerProfile.Performance: return "performance"
-    default: return "balanced"
-    }
-  }
-
-  function syncPowerProfile() {
-    if (!root.nativePowerProfilesAvailable)
-      return
-
-    root.powerProfile = root.powerProfileName(PowerProfiles.profile)
-    root.powerProfileDegradation = PowerProfiles.degradationReason === PerformanceDegradationReason.HighTemperature
-      ? "Performance reduced due to high temperature"
-      : PowerProfiles.degradationReason === PerformanceDegradationReason.LapDetected
-        ? "Performance reduced by lap detection" : ""
   }
 
   function refreshControlStatus() {
@@ -526,7 +450,7 @@ Scope {
   OptionalModule {
     id: settingsLoader
     module: "SystemSettings.qml"
-    initialProperties: () => ({ controller: root, service: root.notificationService,
+    initialProperties: () => ({ controller: root, service: Qt.binding(() => root.notificationService),
       connectivity: Qt.binding(() => root.connectivity), bluetooth: Qt.binding(() => root.bluetooth) })
   }
 
@@ -536,24 +460,7 @@ Scope {
   }
 
   function toggleDoNotDisturb() {
-    root.notificationService.setDoNotDisturb(!root.notificationService.doNotDisturb)
-  }
-
-  function cyclePowerProfile() {
-    if (!root.powerProfileAvailable)
-      return
-
-    if (root.nativePowerProfilesAvailable) {
-      const profiles = PowerProfiles.hasPerformanceProfile
-        ? [PowerProfile.PowerSaver, PowerProfile.Balanced, PowerProfile.Performance]
-        : [PowerProfile.PowerSaver, PowerProfile.Balanced]
-      const currentIndex = profiles.indexOf(PowerProfiles.profile)
-      PowerProfiles.profile = profiles[(currentIndex + 1 + profiles.length) % profiles.length]
-      return
-    }
-
-    powerProfileNext.running = true
-    controlRefreshTimer.restart()
+    root.notificationService?.setDoNotDisturb(!root.notificationService.doNotDisturb)
   }
 
   function toggleNightMode() {
@@ -589,7 +496,7 @@ Scope {
 
     brightnessSet.value = Math.round(value)
     brightnessSet.running = true
-    root.notificationService.showOsd("Brightness", value, "sun")
+    root.notificationService?.showOsd("Brightness", value, "sun")
   }
 
   function lockScreen() {
@@ -644,12 +551,6 @@ Scope {
     }
   }
 
-  Process {
-    id: powerProfileNext
-    command: ["u_performance-profile", "next"]
-    onExited: fallbackProfileStatus.running = true
-  }
-
   Timer {
     id: audioApplyTimer
     interval: 30
@@ -693,51 +594,6 @@ Scope {
   }
 
   Process {
-    id: fallbackProfileStatus
-    command: ["sh", "-c", "printf '%s\\n' \"$(u_performance-profile if 2>/dev/null)\" \"$(u_performance-profile get 2>/dev/null)\""]
-    running: !root.nativePowerProfilesAvailable
-    stdout: StdioCollector {
-      onStreamFinished: {
-        const output = this.text.trim().split("\n")
-        if (!root.nativePowerProfilesAvailable) {
-          root.powerProfileAvailable = output[0] === "true"
-          root.powerProfile = output[1] || ""
-        }
-      }
-    }
-  }
-
-  Process {
-    id: batteryWarnings
-    command: [root.quickshellScripts + "/battery", "warn"]
-    onExited: {
-      if (root.batteryWarningPending) {
-        root.batteryWarningPending = false
-        batteryWarnings.running = true
-      }
-    }
-  }
-
-  Process {
-    id: nativePowerProfilesCheck
-    command: ["sh", "-c", "busctl --system --no-pager list 2>/dev/null | grep -q '^org\\.freedesktop\\.UPower\\.PowerProfiles[[:space:]]' && printf true || printf false"]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        root.nativePowerProfilesAvailable = this.text.trim() === "true"
-        root.powerProfileAvailable = root.powerProfileAvailable || root.nativePowerProfilesAvailable
-        root.syncPowerProfile()
-      }
-    }
-  }
-
-  Connections {
-    target: PowerProfiles
-    function onProfileChanged() { root.syncPowerProfile() }
-    function onDegradationReasonChanged() { root.syncPowerProfile() }
-  }
-
-  Process {
     id: nightModeToggle
     command: [root.quickshellScripts + "/nightmode", "toggle"]
   }
@@ -771,52 +627,6 @@ Scope {
   Process {
     id: themeToggle
     command: ["u_theme", "toggle"]
-  }
-
-  Process {
-    id: powerNotification
-  }
-
-  function updatePowerSource() {
-    root.updateBatteryStatus()
-    if (!root.batteryAvailable)
-      return
-
-    const onBattery = UPower.onBattery
-    if (root.previousOnBattery !== null && root.previousOnBattery !== onBattery) {
-      if (!onBattery) {
-        root.notificationService.dismissTag("battery-low")
-        root.notificationService.dismissTag("battery-critical")
-      }
-      powerNotification.command = [root.quickshellScripts + "/battery", "power",
-        onBattery ? "unplugged" : "plugged", String(root.batteryPercentage), root.batteryState]
-      powerNotification.running = true
-      batteryWarnings.running = true
-    }
-    root.previousOnBattery = onBattery
-  }
-
-  Component.onCompleted: {
-    root.updatePowerSource()
-    root.checkBatteryWarnings()
-  }
-
-  Connections {
-    target: UPower
-    function onOnBatteryChanged() { root.updatePowerSource() }
-  }
-
-  Connections {
-    target: UPower.displayDevice
-    function onReadyChanged() { root.updatePowerSource(); root.checkBatteryWarnings() }
-    function onPercentageChanged() { root.updateBatteryStatus(); root.checkBatteryWarnings() }
-    function onStateChanged() { root.updateBatteryStatus(); root.checkBatteryWarnings() }
-    function onTimeToEmptyChanged() { root.updateBatteryStatus() }
-    function onTimeToFullChanged() { root.updateBatteryStatus() }
-    function onChangeRateChanged() { root.updateBatteryStatus() }
-    function onIsPresentChanged() { root.updateBatteryStatus() }
-    function onHealthPercentageChanged() { root.updateBatteryStatus() }
-    function onHealthSupportedChanged() { root.updateBatteryStatus() }
   }
 
   Process {
@@ -901,13 +711,6 @@ Scope {
 
   Timer {
     interval: 5000
-    running: !root.nativePowerProfilesAvailable
-    repeat: true
-    onTriggered: fallbackProfileStatus.running = true
-  }
-
-  Timer {
-    interval: 5000
     running: true
     repeat: true
     onTriggered: controlStatus.running = true
@@ -927,7 +730,7 @@ Scope {
     }
 
     function clearVisible() {
-      root.notificationService.clearVisible()
+      root.notificationService?.clearVisible()
     }
   }
 
@@ -1080,8 +883,9 @@ Scope {
 
       OptionalModule {
         id: audioLoader
+        active: !!root.audioService
         module: "AudioOutputCenter.qml"
-        initialProperties: () => ({ controller: root, panel, service: root.audioService, trigger: volumeWidget })
+        initialProperties: () => ({ controller: root, panel, service: Qt.binding(() => root.audioService), trigger: volumeWidget })
       }
 
       OptionalModule {
@@ -1110,18 +914,21 @@ Scope {
 
       OptionalModule {
         id: notificationLoader
+        active: !!root.notificationService
         module: "NotificationCenter.qml"
-        initialProperties: () => ({ controller: root, panel, service: root.notificationService })
+        initialProperties: () => ({ controller: root, panel, service: Qt.binding(() => root.notificationService) })
       }
 
       OptionalModule {
+        active: !!root.notificationService
         module: "NotificationPopup.qml"
-        initialProperties: () => ({ controller: root, panel, service: root.notificationService })
+        initialProperties: () => ({ controller: root, panel, service: Qt.binding(() => root.notificationService) })
       }
 
       OptionalModule {
+        active: !!root.notificationService
         module: "SystemOsd.qml"
-        initialProperties: () => ({ controller: root, panel, service: root.notificationService })
+        initialProperties: () => ({ controller: root, panel, service: Qt.binding(() => root.notificationService) })
       }
 
       OptionalModule {
@@ -1491,17 +1298,32 @@ Scope {
         }
         spacing: panel.width < 900 ? 8 : 12
 
+        LucideIcon {
+          readonly property string missing: [!root.audioService?.monitoringAvailable ? "microphone" : "",
+            !root.webcamService?.monitoringAvailable ? "webcam" : ""].filter(Boolean).join(" and ")
+          visible: missing !== ""
+          width: root.barFontSize
+          height: root.barFontSize
+          source: root.icon("info")
+          color: root.controlWarningText
+          Accessible.role: Accessible.StatusBar
+          Accessible.name: "Privacy monitoring unavailable: " + missing
+          HoverHandler { id: privacyHover }
+          Controls.ToolTip.visible: privacyHover.hovered
+          Controls.ToolTip.text: Accessible.name
+        }
+
         Item {
           height: root.barFontSize
           width: root.barFontSize
-          visible: root.audioService.microphoneInUse
+          visible: root.audioService?.microphoneInUse ?? false
           Accessible.role: Accessible.Button
-          Accessible.name: "Microphone in use by " + root.audioService.recordingApplications.map(application => application.name).join(", ")
-            + (root.audioService.recordingMicrophonesMuted ? "; inputs muted" : "")
+          Accessible.name: "Microphone in use by " + (root.audioService?.recordingApplications ?? []).map(application => application.name).join(", ")
+            + ((root.audioService?.recordingMicrophonesMuted ?? false) ? "; inputs muted" : "")
           LucideIcon {
             anchors.fill: parent
-            source: root.icon(root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic")
-            color: root.audioService.recordingMicrophonesMuted ? root.muted : root.controlActiveIcon
+            source: root.icon((root.audioService?.recordingMicrophonesMuted ?? false) ? "mic-off" : "mic")
+            color: (root.audioService?.recordingMicrophonesMuted ?? false) ? root.muted : root.controlActiveIcon
           }
           MouseArea {
             id: microphoneHover
@@ -1519,11 +1341,11 @@ Scope {
             panel: panel
             trigger: microphoneHover
             title: "Microphone"
-            iconName: root.audioService.recordingMicrophonesMuted ? "mic-off" : "mic"
-            applications: Array.from(new Set(root.audioService.recordingApplications.map(application => application.name)))
+            iconName: (root.audioService?.recordingMicrophonesMuted ?? false) ? "mic-off" : "mic"
+            applications: Array.from(new Set((root.audioService?.recordingApplications ?? []).map(application => application.name)))
             applicationDetails: {
               const details = Object.create(null)
-              for (const application of root.audioService.recordingApplications) {
+              for (const application of root.audioService?.recordingApplications ?? []) {
                 const device = application.inputDescription || application.inputName || "Unknown microphone"
                 const label = device + (application.muted ? " · Muted" : "")
                 details[application.name] = details[application.name]
@@ -1531,18 +1353,18 @@ Scope {
               }
               return details
             }
-            muted: root.audioService.recordingMicrophonesMuted
+            muted: (root.audioService?.recordingMicrophonesMuted ?? false)
           }
         }
 
         LucideIcon {
           height: root.barFontSize
           width: root.barFontSize
-          visible: root.webcamService.inUse
+          visible: root.webcamService?.inUse ?? false
           source: root.icon("webcam")
           color: root.controlActiveIcon
           Accessible.role: Accessible.StatusBar
-          Accessible.name: "Webcam in use by " + root.webcamService.recordingApplications.join(", ")
+          Accessible.name: "Webcam in use by " + (root.webcamService?.recordingApplications ?? []).join(", ")
           MouseArea {
             id: webcamHover
             anchors.fill: parent
@@ -1556,8 +1378,8 @@ Scope {
             trigger: webcamHover
             title: "Webcam"
             iconName: "webcam"
-            applications: root.webcamService.recordingApplications
-            applicationDetails: root.webcamService.applicationDevices
+            applications: root.webcamService?.recordingApplications ?? []
+            applicationDetails: root.webcamService?.applicationDevices ?? ({})
           }
         }
 
@@ -1670,6 +1492,7 @@ Scope {
           height: root.barFontSize
           width: root.barFontSize
 
+          visible: !!root.notificationService
           LucideIcon {
             anchors.fill: parent
             source: root.icon(root.doNotDisturb ? "bell-off" : "bell")
@@ -1686,7 +1509,7 @@ Scope {
             color: root.urgent
             height: 6
             radius: 3
-            visible: root.notificationService.popup.length > 0
+            visible: (root.notificationService?.popup.length ?? 0) > 0
             width: 6
             z: 1
           }
@@ -1696,7 +1519,7 @@ Scope {
             anchors.margins: -4
             Accessible.role: Accessible.Button
             Accessible.name: "Notifications"
-              + (root.notificationService.popup.length > 0 ? "; active notifications" : "; no active notifications")
+              + ((root.notificationService?.popup.length ?? 0) > 0 ? "; active notifications" : "; no active notifications")
               + (root.doNotDisturb ? "; Do Not Disturb on" : "; Do Not Disturb off")
             Accessible.onPressAction: root.toggleDoNotDisturb()
             cursorShape: Qt.PointingHandCursor

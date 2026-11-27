@@ -12,6 +12,6 @@ Scope {
       const index = rootIdentify.outputs.findIndex(output => output.connector === screen.name)
       labels[screen.name] = (index >= 0 ? (index + 1) + " · " : "") + screen.name
     }
-    rootIdentify.controller.notificationService.showOsd("Monitor", 0, "monitor", "Display", labels)
+    rootIdentify.controller.notificationService?.showOsd("Monitor", 0, "monitor", "Display", labels)
   }
 }

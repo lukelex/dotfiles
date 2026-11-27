@@ -8,36 +8,30 @@ Scope {
 
     function onReloadCompleted() {
       Quickshell.inhibitReloadPopup()
-      notifications.showOsd("Reload", 0, "refresh-cw", "Quickshell Reloaded")
+      notifications.item?.showOsd("Reload", 0, "refresh-cw", "Quickshell Reloaded")
     }
   }
 
   SystemPreferences { id: preferences }
-  NotificationService {
+  OptionalModule {
     id: notifications
-    preferences: preferences
-    bluetoothDevices: bar.bluetooth?.connectedBluetoothDevices ?? []
-    historyBeingRead: bar.notificationCenterOpen
+    module: "NotificationService.qml"
+    initialProperties: () => ({
+      preferences, bluetoothDevices: Qt.binding(() => bar.bluetooth?.connectedBluetoothDevices ?? []),
+      historyBeingRead: Qt.binding(() => bar.notificationCenterOpen)
+    })
   }
-
-  // One shared device snapshot backs the output picker on each screen.
-  AudioService {
-    id: audioService
-  }
-
-  WebcamService {
-    id: webcamService
-  }
-
+  OptionalModule { id: audioLoader; module: "AudioService.qml" }
+  OptionalModule { id: webcamLoader; module: "WebcamService.qml" }
   OptionalModule { id: headsets; module: "HeadsetService.qml" }
   OptionalModule { id: openEffects; module: "OpenEffectsService.qml" }
 
   Bar {
     id: bar
     preferences: preferences
-    notificationService: notifications
-    audioService: audioService
-    webcamService: webcamService
+    notificationService: notifications.item
+    audioService: audioLoader.item
+    webcamService: webcamLoader.item
     headsetService: headsets.item
     openEffectsService: openEffects.item
   }
