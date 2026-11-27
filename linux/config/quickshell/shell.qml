@@ -29,7 +29,7 @@ Scope {
   }
 
   OptionalModule { id: headsets; module: "HeadsetService.qml" }
-  OpenEffectsService { id: openEffects }
+  OptionalModule { id: openEffects; module: "OpenEffectsService.qml" }
 
   Bar {
     id: bar
@@ -38,6 +38,6 @@ Scope {
     audioService: audioService
     webcamService: webcamService
     headsetService: headsets.item
-    openEffectsService: openEffects
+    openEffectsService: openEffects.item
   }
 }
