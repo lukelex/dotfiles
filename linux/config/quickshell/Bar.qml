@@ -1443,11 +1443,9 @@ Scope {
         initialProperties: () => ({ controller: root, panel, service: root.notificationService })
       }
 
-      NotificationPopup {
-        id: notificationPopup
-        controller: root
-        panel: panel
-        service: root.notificationService
+      OptionalModule {
+        module: "NotificationPopup.qml"
+        initialProperties: () => ({ controller: root, panel, service: root.notificationService })
       }
 
       SystemOsd {
