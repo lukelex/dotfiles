@@ -194,10 +194,6 @@ FloatingWindow {
       id: monitors
       visible: window.visible && window.section === "monitors"
     }
-    UsbStorageService {
-      id: usbStorage
-      visible: window.visible && window.section === "storage"
-    }
     MonitorIdentify {
       id: monitorIdentify
       controller: window.controller
@@ -1154,12 +1150,14 @@ FloatingWindow {
           service: window.connectivity
           onDisclosureToggled: preferenceScroll.preservePosition()
         }
-        UsbStorageSettings {
+        OptionalModule {
+          module: "UsbStorageSettings.qml"
           Layout.fillWidth: true
-          visible: window.section === "storage"
-          controller: window.controller
-          preferences: window.controller.preferences
-          service: usbStorage
+          visible: window.section === "storage" && status === Loader.Ready
+          initialProperties: () => ({
+            controller: window.controller, preferences: window.controller.preferences,
+            pageActive: Qt.binding(() => window.visible && window.section === "storage")
+          })
         }
         SettingsSubsection {
           id: connectivityPreferences

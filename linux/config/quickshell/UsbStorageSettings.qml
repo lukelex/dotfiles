@@ -8,7 +8,8 @@ ColumnLayout {
   id: page
   required property var controller
   required property var preferences
-  required property var service
+  required property bool pageActive
+  readonly property UsbStorageService service: UsbStorageService { visible: page.pageActive }
   signal disclosureToggled()
   spacing: 16
 
