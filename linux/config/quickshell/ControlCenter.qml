@@ -583,9 +583,10 @@ PopupWindow {
             SystemUsage {
               controller: popup.controller
               iconName: "microchip"
-              percentage: Number.isFinite(popup.controller.gpuUsage) ? popup.controller.gpuUsage : 0
+              visible: Number.isFinite(popup.controller.gpuUsage)
+              percentage: visible ? popup.controller.gpuUsage : 0
               title: "GPU" + (popup.controller.gpuTemperatureAvailable ? " - " + Math.round(popup.controller.gpuTemperature) + "\u00b0C" : "")
-              value: Number.isFinite(popup.controller.gpuUsage) ? popup.controller.gpuUsage + "%" : "—"
+              value: visible ? popup.controller.gpuUsage + "%" : ""
               width: parent.width
             }
 

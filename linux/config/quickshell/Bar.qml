@@ -653,7 +653,7 @@ Scope {
     command: ["timeout", "--kill-after=1s", "4s", "sh", "-c",
       "cpu=$(awk '/^cpu / { for (i=2;i<=NF;i++) total+=$i; print total, $5+$6; exit }' /proc/stat); "
       + "mem=$(awk '/^MemTotal:/ { t=$2 } /^MemAvailable:/ { a=$2 } END { if (t && a!=\"\") print t,a }' /proc/meminfo); "
-      + "load=$(awk '{ print $1 }' /proc/loadavg); gpu=; "
+      + "load=$(awk '{ print $1 }' /proc/loadavg); gpu=absent; "
       + "for f in /sys/class/drm/card*/device/gpu_busy_percent; do [ -r \"$f\" ] && { read -r gpu < \"$f\"; break; }; done; "
       + "printf '%s\\n' \"$cpu\" \"$mem\" \"$load\" \"$gpu\""]
     stdout: StdioCollector {
@@ -687,6 +687,8 @@ Scope {
 
         if (Number.isFinite(gpuUsage))
           root.gpuUsage = Math.round(gpuUsage)
+        else if (output[3] === "absent")
+          root.gpuUsage = NaN
       }
     }
   }
