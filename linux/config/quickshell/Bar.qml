@@ -1457,8 +1457,10 @@ Scope {
       OptionalModule {
         id: todayLoader
         module: "TodayCenter.qml"
-        initialProperties: () => ({ controller: root, panel,
-          weather: Qt.binding(() => weatherLoader.item), quote: Qt.binding(() => quoteLoader.item) })
+        initialProperties: () => ({
+          controller: root, panel,
+          weather: Qt.binding(() => weatherLoader.item), quote: Qt.binding(() => quoteLoader.item)
+        })
       }
 
       Component.onCompleted: {
@@ -1753,7 +1755,7 @@ Scope {
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
               onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openDateTime() }
-              onExited: todayCenter?.scheduleClose()
+              onExited: panel.todayCenter?.scheduleClose()
               onClicked: panel.openDateTime(true)
             }
           }
@@ -1799,7 +1801,7 @@ Scope {
               cursorShape: Qt.PointingHandCursor
               hoverEnabled: true
               onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openDateTime() }
-              onExited: todayCenter?.scheduleClose()
+              onExited: panel.todayCenter?.scheduleClose()
               onClicked: panel.openDateTime(true)
             }
           }
