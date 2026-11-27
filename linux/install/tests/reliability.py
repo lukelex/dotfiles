@@ -162,7 +162,7 @@ fi
   bundle = {"repository": "mattpocock/skills", "target": str(home / ".local/share/dotpkg/opencode-skills"), "commit": "a" * 40, "paths": ["skills/productivity/grill-me", "skills/productivity/grilling", "LICENSE"]}
   original = {"version": 1, "current": {"selections": {"hyprland": True}},
               "unknown": "preserve", "managed": {"packages": ["vim"], "configs": [mapping, "other:target"],
-              "services": ["user:openeffectsd.service", "user:other.service"],
+              "services": ["user:openeffectsd.service", "user:xautolock.service", "user:other.service"],
               "remote_bundles": {"grill-me": bundle, "other": copy.deepcopy(bundle)}},
               "service_tracking": {"user:openeffectsd.service": {"fingerprint": "abc"}}}
   put(core, json.dumps(original))

@@ -30,6 +30,7 @@ INSTALL = Path(__file__).resolve().parent
 CONFIG = "linux/config/openeffects/openeffectsd.service.d/autostart.conf:$XDG_CONFIG_HOME/systemd/user/openeffectsd.service.d/autostart.conf"
 OLD_CONFIG = "linux/config/openeffects/state.toml:$XDG_CONFIG_HOME/openeffects/state.toml"
 SERVICE = "user:openeffectsd.service"
+RETIRED_SERVICE = "user:xautolock.service"
 
 
 def load(path):
@@ -53,6 +54,9 @@ def load(path):
 
 def transfer(core, skills, effects):
   managed = core["managed"]
+  services = managed.get("services", [])
+  if RETIRED_SERVICE in services:
+    services.remove(RETIRED_SERVICE)
   bundles = managed.get("remote_bundles", {})
   if "grill-me" in bundles:
     target = skills["managed"].setdefault("remote_bundles", {})
