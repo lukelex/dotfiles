@@ -8,7 +8,7 @@ Rectangle {
   required property string title
   property string subtitle: ""
   property string qualityText: ""
-  property color qualityColor: host.controller.controlSecondaryText
+  property color qualityColor: action.host.controller.controlSecondaryText
   property string iconName: ""
   property bool active: false
   property bool radioSwitch: false
@@ -22,11 +22,11 @@ Rectangle {
 
   height: subtitle ? 64 : 40
   radius: 14
-  color: active ? host.controller.controlActive : area.containsMouse ? host.controller.controlHover : host.controller.controlSurface
+  color: active ? action.host.controller.controlActive : area.containsMouse ? action.host.controller.controlHover : action.host.controller.controlSurface
   border.width: 1
-  border.color: host.controller.controlSurfaceBorder
+  border.color: action.host.controller.controlSurfaceBorder
   opacity: enabled || active ? 1 : 0.55
-  activeFocusOnTab: enabled && host.pinned
+  activeFocusOnTab: enabled && action.host.pinned
   Accessible.role: radioSwitch ? Accessible.CheckBox : Accessible.Button
   Accessible.name: title
   Accessible.description: detail
@@ -43,8 +43,8 @@ Rectangle {
     width: 18
     height: 18
     visible: action.showIcon
-    source: action.iconName ? host.controller.icon(action.iconName) : ""
-    color: host.controller.controlPrimaryText
+    source: action.iconName ? action.host.controller.icon(action.iconName) : ""
+    color: action.host.controller.controlPrimaryText
   }
 
   Column {
@@ -59,24 +59,22 @@ Rectangle {
     HoverHandler { id: labelHover }
     ConnectivityHint {
       host: action.host
-      visible: host.visible && (labelHover.hovered || action.activeFocus)
+      visible: action.host.visible && (labelHover.hovered || action.activeFocus)
       text: action.detail
     }
 
     ConnectivityLabel {
-
       host: action.host
       width: parent.width
       text: action.title
       font.pixelSize: 12
-      color: host.controller.controlPrimaryText
+      color: action.host.controller.controlPrimaryText
     }
     Row {
       width: parent.width
       visible: action.subtitle !== ""
 
       ConnectivityLabel {
-
         host: action.host
         width: Math.min(implicitWidth, Math.max(0, parent.width - qualityLabel.width))
         text: action.qualityText ? action.subtitle.slice(0, -action.qualityText.length) : action.subtitle
@@ -105,17 +103,17 @@ Rectangle {
       delegate: Row {
         id: trafficRate
         required property string modelData
-        readonly property string rate: host.service.formatSpeed(host.service.connectionSpeed(action.wiredTraffic, modelData, action.trafficDeviceName))
+        readonly property string rate: action.host.service.formatSpeed(action.host.service.connectionSpeed(action.wiredTraffic, modelData, action.trafficDeviceName))
         width: trafficColumn.width
         height: 20
         spacing: 5
         Accessible.role: Accessible.StaticText
         Accessible.name: (modelData === "download" ? "Download " : "Upload ") + rate
-        activeFocusOnTab: host.pinned && action.showTraffic
+        activeFocusOnTab: action.host.pinned && action.showTraffic
         HoverHandler { id: rateHover }
         ConnectivityHint {
           host: action.host
-          visible: host.visible && (rateHover.hovered || trafficRate.activeFocus)
+          visible: action.host.visible && (rateHover.hovered || trafficRate.activeFocus)
           text: (trafficRate.modelData === "download" ? "Download: " : "Upload: ") + trafficRate.rate
             + "\nBytes per second (KiB = 1,024 bytes). Includes local network traffic; this is usage, not available internet bandwidth."
         }
@@ -124,15 +122,15 @@ Rectangle {
           width: 16
           height: 16
           anchors.verticalCenter: parent.verticalCenter
-          source: host.controller.icon(trafficRate.modelData === "download" ? "arrow-down" : "arrow-up")
-          color: trafficRate.modelData === "download" ? host.controller.controlDownloadIcon : host.controller.controlUploadIcon
+          source: action.host.controller.icon(trafficRate.modelData === "download" ? "arrow-down" : "arrow-up")
+          color: trafficRate.modelData === "download" ? action.host.controller.controlDownloadIcon : action.host.controller.controlUploadIcon
         }
         ConnectivityLabel {
           host: action.host
           width: parent.width - 21
           anchors.verticalCenter: parent.verticalCenter
           text: trafficRate.rate
-          color: host.controller.controlPrimaryText
+          color: action.host.controller.controlPrimaryText
           font.pixelSize: 12
           font.bold: true
         }
@@ -148,14 +146,14 @@ Rectangle {
     height: 24
     radius: 12
     visible: action.radioSwitch
-    color: action.active ? host.controller.controlActiveIcon : host.controller.controlSliderTrack
+    color: action.active ? action.host.controller.controlActiveIcon : action.host.controller.controlSliderTrack
     Rectangle {
       x: action.active ? 19 : 3
       y: 3
       width: 18
       height: 18
       radius: 9
-      color: host.controller.controlPrimaryText
+      color: action.host.controller.controlPrimaryText
     }
   }
 
@@ -164,7 +162,7 @@ Rectangle {
     radius: parent.radius
     color: "transparent"
     border.width: 2
-    border.color: host.controller.controlActiveIcon
+    border.color: action.host.controller.controlActiveIcon
     visible: action.activeFocus
   }
 

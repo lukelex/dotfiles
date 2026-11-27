@@ -8,18 +8,18 @@ ToolTip {
   id: hint
   delay: 500
   padding: 10
-  width: Math.min(340, host.width - 24)
+  width: Math.min(340, hint.host.width - 24)
   contentItem: ConnectivityLabel {
     host: hint.host
     text: hint.text
-    color: host.controller.controlPrimaryText
+    color: hint.host.controller.controlPrimaryText
     wrapMode: Text.Wrap
     elide: Text.ElideNone
   }
   background: Rectangle {
     radius: 10
-    color: host.controller.controlSurface
+    color: hint.host.controller.controlSurface
     border.width: 1
-    border.color: host.controller.controlSurfaceBorder
+    border.color: hint.host.controller.controlSurfaceBorder
   }
 }
