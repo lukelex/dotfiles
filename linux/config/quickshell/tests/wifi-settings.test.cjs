@@ -13,7 +13,7 @@ test('System Settings exposes Wi-Fi management and scans only while that page is
   assert.doesNotMatch(settings, /key: "wifi", label: "Wi-Fi networks"/);
   assert.match(settings, /WifiSettings \{[^]*?visible: window\.section === "connectivity"/);
   assert.match(settings, /wifiDiscoveryActive: visible && section === "connectivity"/);
-  assert.match(bar, /readonly property bool wifiSettingsOpen: systemSettings.wifiDiscoveryActive/);
+  assert.match(bar, /readonly property bool wifiSettingsOpen: root\.systemSettings\?\.wifiDiscoveryActive \?\? false/);
   assert.match(bar, /wifiDiscoveryEnabled: root.wifiSettingsOpen/);
   assert.match(settings, /property bool connectivityAdvanced: false/);
   assert.match(settings, /window.connectivityAdvanced && field.kind !== "boolean"/);
