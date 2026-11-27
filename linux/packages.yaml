@@ -238,6 +238,8 @@ common:
       docker-compose:
       downgrade:
       fd:
+      fwupd:
+        source: repo
       fzf:
       git:
       git-delta:
