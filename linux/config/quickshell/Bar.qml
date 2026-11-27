@@ -1299,6 +1299,7 @@ Scope {
         id: panel
 
       required property var modelData
+      readonly property var audioOutputCenter: audioLoader.item
       readonly property var controlCenter: controlLoader.item
       readonly property var todayCenter: todayLoader.item
 
@@ -1377,6 +1378,7 @@ Scope {
       }
 
       function openAudioOutput(pin = false) {
+        if (!audioOutputCenter) return
         root.cancelHoverClose()
         root.closeConnectivity()
         root.closeDateTime()
@@ -1403,12 +1405,10 @@ Scope {
         service: connectivity
       }
 
-      AudioOutputCenter {
-        id: audioOutputCenter
-        controller: root
-        panel: panel
-        service: root.audioService
-        trigger: volumeWidget
+      OptionalModule {
+        id: audioLoader
+        module: "AudioOutputCenter.qml"
+        initialProperties: () => ({ controller: root, panel, service: root.audioService, trigger: volumeWidget })
       }
 
       IdleInhibitor {
@@ -2017,7 +2017,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openAudioOutput() }
-            onExited: audioOutputCenter.scheduleClose()
+            onExited: audioOutputCenter?.scheduleClose()
             onClicked: panel.openAudioOutput(true)
           }
         }
