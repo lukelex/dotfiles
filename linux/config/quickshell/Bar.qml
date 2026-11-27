@@ -1448,10 +1448,9 @@ Scope {
         initialProperties: () => ({ controller: root, panel, service: root.notificationService })
       }
 
-      SystemOsd {
-        controller: root
-        panel: panel
-        service: root.notificationService
+      OptionalModule {
+        module: "SystemOsd.qml"
+        initialProperties: () => ({ controller: root, panel, service: root.notificationService })
       }
 
       OptionalModule {
