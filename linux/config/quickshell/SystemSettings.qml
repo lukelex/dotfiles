@@ -235,21 +235,21 @@ FloatingWindow {
     }
 
     RowLayout {
-      visible: monitors?.pending ?? false
+      visible: window.monitors?.pending ?? false
       Layout.fillWidth: true
       Label {
         Layout.fillWidth: true
-        text: "Keep this display layout? Reverting in " + (monitors?.secondsLeft ?? 0) + " seconds."
+        text: "Keep this display layout? Reverting in " + (window.monitors?.secondsLeft ?? 0) + " seconds."
       }
       SoundButton {
         text: "Revert"
-        enabled: monitors !== null && !monitors.busy
-        onClicked: monitors.run("revert", monitors.snapshot.pending.token)
+        enabled: window.monitors !== null && !window.monitors.busy
+        onClicked: window.monitors.run("revert", window.monitors.snapshot.pending.token)
       }
       SoundButton {
         text: "Keep changes"
-        enabled: monitors !== null && !monitors.busy
-        onClicked: monitors.run("keep", monitors.snapshot.pending.token)
+        enabled: window.monitors !== null && !window.monitors.busy
+        onClicked: window.monitors.run("keep", window.monitors.snapshot.pending.token)
       }
     }
     RowLayout {
