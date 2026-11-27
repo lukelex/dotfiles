@@ -437,9 +437,9 @@ PopupWindow {
 
       onHoveredChanged: {
         if (hovered)
-          popup.controller.cancelHoverClose()
+          popup.panel.cancelHoverClose()
         else if (!trayLoader.item?.menuOpen)
-          popup.controller.requestHoverClose(2)
+          popup.panel.requestHoverClose()
       }
     }
 
@@ -798,12 +798,12 @@ PopupWindow {
           module: "TrayModule.qml"
           width: parent.width
           visible: item?.available ?? false
-          initialProperties: () => ({ controller: popup.controller })
+          initialProperties: () => ({ controller: popup.controller, panel: popup.panel })
           Connections {
             target: trayLoader.item
             function onMenuClosed() {
               if (popup.visible && !popup.closePending && !contentHover.hovered)
-                popup.controller.requestHoverClose(2)
+                popup.panel.requestHoverClose()
             }
           }
         }

@@ -401,13 +401,6 @@ Scope {
     root.toggleDoNotDisturb()
   }
 
-  property int hoverCloseCandidate: 0
-
-  property Timer hoverCloseTimer: Timer {
-    interval: 250
-    onTriggered: root.runHoverClose()
-  }
-
   readonly property var designPalette: Design.palette(root.darkMode)
   readonly property var barMetrics: Design.barMetrics(preferences.value("desktop.density", "comfortable") === "compact")
   readonly property color foreground: designPalette.foreground
@@ -821,7 +814,6 @@ Scope {
 
   function openSystemSettings(targetScreen, section = "") {
     if (!root.systemSettings) return
-    root.cancelHoverClose()
     root.closeNotifications()
     root.closeConnectivity()
     root.closeAudioOutput()
@@ -850,24 +842,6 @@ Scope {
   function closeNotifications() {
     if (root.notificationCenterTarget)
       root.notificationCenterTarget.requestClose()
-  }
-
-  function cancelHoverClose() {
-    root.hoverCloseTimer.stop()
-    root.hoverCloseCandidate = 0
-  }
-
-  function requestHoverClose(kind, delay) {
-    root.hoverCloseCandidate = kind
-    root.hoverCloseTimer.interval = root.preferences.value("desktop.hoverCloseDelayMs", delay || 600)
-    root.hoverCloseTimer.start()
-  }
-
-  function runHoverClose() {
-    if (root.hoverCloseCandidate === 2) {
-      root.controlCenterTarget?.requestClose()
-    }
-    root.hoverCloseCandidate = 0
   }
 
   function toggleDoNotDisturb() {
@@ -1305,7 +1279,15 @@ Scope {
       readonly property var controlCenter: controlLoader.item
       readonly property var todayCenter: todayLoader.item
 
+      Timer {
+        id: controlHoverTimer
+        interval: root.preferences.value("desktop.hoverCloseDelayMs", 600)
+        onTriggered: panel.closeControlCenter()
+      }
+      function requestHoverClose() { controlHoverTimer.restart() }
+      function cancelHoverClose() { controlHoverTimer.stop() }
       function closeControlCenter() {
+        panel.cancelHoverClose()
         controlCenter?.requestClose()
       }
 
@@ -1319,7 +1301,7 @@ Scope {
 
       function showNotifications(pin = false) {
         if (!notificationCenter) return
-        root.cancelHoverClose()
+        panel.cancelHoverClose()
         if (root.notificationCenterTarget !== notificationCenter)
           root.closeNotifications()
         root.notificationCenterTarget = notificationCenter
@@ -1332,7 +1314,7 @@ Scope {
 
       function openDateTime(pin = false) {
         if (!todayCenter) return
-        root.cancelHoverClose()
+        panel.cancelHoverClose()
         root.closeConnectivity()
         root.closeAudioOutput()
         if (root.todayCenterTarget !== todayCenter)
@@ -1344,7 +1326,7 @@ Scope {
       }
 
       function openConnectivity(pin = false) {
-        root.cancelHoverClose()
+        panel.cancelHoverClose()
         root.closeBluetooth()
         root.closeAudioOutput()
         if (root.connectivityTarget !== connectivityCenter)
@@ -1357,7 +1339,7 @@ Scope {
       }
 
       function openBluetooth(pin = false) {
-        root.cancelHoverClose()
+        panel.cancelHoverClose()
         root.closeConnectivity(false)
         root.closeAudioOutput()
         root.closeDateTime()
@@ -1378,12 +1360,12 @@ Scope {
         root.controlCenterTarget = controlCenter
         controlCenter.requestOpen()
         systemStatus.running = true
-        root.cancelHoverClose()
+        panel.cancelHoverClose()
       }
 
       function openAudioOutput(pin = false) {
         if (!audioOutputCenter) return
-        root.cancelHoverClose()
+        panel.cancelHoverClose()
         root.closeConnectivity()
         root.closeDateTime()
         controlCenter?.requestClose()
@@ -1463,8 +1445,14 @@ Scope {
         })
       }
 
+      property string registeredScreen: ""
       Component.onCompleted: {
-        root.panelsByScreen[modelData.name] = panel
+        registeredScreen = modelData.name
+        root.panelsByScreen[registeredScreen] = panel
+      }
+      Component.onDestruction: {
+        if (root.panelsByScreen[registeredScreen] === panel)
+          delete root.panelsByScreen[registeredScreen]
       }
 
       Row {
@@ -2052,7 +2040,7 @@ Scope {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onEntered: { if (root.preferences.value("desktop.hoverPreviews", true)) panel.openControlCenter() }
-            onExited: root.requestHoverClose(2)
+            onExited: panel.requestHoverClose()
             onClicked: panel.openControlCenter()
           }
         }

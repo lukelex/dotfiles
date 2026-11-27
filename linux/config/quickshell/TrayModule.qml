@@ -9,6 +9,7 @@ Item {
   id: tray
 
   required property var controller
+  required property var panel
 
   readonly property var items: SystemTray.items
   readonly property bool available: items.values.length > 0
@@ -31,7 +32,7 @@ Item {
     if (!item.hasMenu)
       return
 
-    tray.controller.cancelHoverClose()
+    tray.panel.cancelHoverClose()
     if (menuAnchor.visible)
       menuAnchor.close()
     tray.activeMenuItem = item

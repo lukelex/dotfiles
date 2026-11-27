@@ -28,7 +28,7 @@ test('opening Bluetooth closes other panels and routes to the current screen ins
   const match = bar.match(/      function openBluetooth\(pin = false\) \{([^]*?)\n      \}/);
   assert.ok(match);
   vm.runInNewContext(`(function(pin) { ${match[1]} })(true)`, {
-    root, bluetoothCenter, controlCenter: { requestClose: () => calls.push(['control']) },
+    root, panel: { cancelHoverClose() {} }, bluetoothCenter, controlCenter: { requestClose: () => calls.push(['control']) },
   });
   assert.equal(root.bluetoothTarget, bluetoothCenter);
   assert.ok(calls.some(c => c[0] === 'closeConnectivity' && c[1] === false));
@@ -57,7 +57,7 @@ test('network and Bluetooth can still open when Control Center failed to load', 
     const center = { requestOpen: pin => opened.push(pin) };
     const body = bar.match(new RegExp(`      function ${method}\\(pin = false\\) \\{([^]*?)\\n      \\}`))[1];
     const open = vm.runInNewContext(`(function(pin = false) { ${body} })`, {
-      root, controlCenter: null, [`${target}Center`]: center,
+      root, panel: { cancelHoverClose() {} }, controlCenter: null, [`${target}Center`]: center,
     });
     open();
     open(true);
